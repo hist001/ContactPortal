@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+
+   <sql-mapping  id="INV_HEAD_B"   value-count="1"  url="지급품의서 생성(HEAD)_외주관리" >  
+   <sql-content>
+   <![CDATA[
+        SELECT DISTINCT BIZACQCD,
+                   '' CONFTITLE,
+                   (select BIZACQACCTCD from bizacqcorp where bizacqcd=A.BIZACQCD) BIZACQACCTCD,
+                   (select bizacqname from bizacqcorp where bizacqcd=A.BIZACQCD) BIZACQNAME,
+               (select bizceoname from bizacqcorp where bizacqcd=A.BIZACQCD) BIZCEONAME,
+                   (select substr(bizregno,1,3)||'-'||substr(bizregno,4,2)||'-'||substr(bizregno,6,5) from bizacqcorp where bizacqcd=A.BIZACQCD) BIZACQREGNO,
+                   INVTYPE BILLTYPE,
+                   SUPPLYAMT,
+                   CASE INVTYPE WHEN '1A' THEN a.totalamt
+                                WHEN '1B' THEN a.totalamt
+				                WHEN '1C' THEN a.totalamt
+				                WHEN '1D' THEN a.totalamt
+				                WHEN '1E' THEN a.totalamt
+                                WHEN '2A' THEN a.SUPPLYAMT
+                                WHEN '2B' THEN a.SUPPLYAMT
+                				WHEN '2C' THEN a.SUPPLYAMT
+                                WHEN '3.' THEN a.SUPPLYAMT
+                                WHEN '6.' THEN a.SUPPLYAMT
+                   END TOTAMT,
+                   CASE INVTYPE WHEN '1A' THEN a.totalamt
+                                WHEN '1B' THEN a.totalamt
+				                WHEN '1C' THEN a.totalamt
+				                WHEN '1D' THEN a.totalamt
+				                WHEN '1E' THEN a.totalamt
+                                WHEN '2A' THEN a.SUPPLYAMT
+                                WHEN '2B' THEN a.SUPPLYAMT
+                				WHEN '2C' THEN a.SUPPLYAMT
+                                WHEN '3.' THEN a.SUPPLYAMT
+                                WHEN '6.' THEN a.SUPPLYAMT
+                   END REALAMT,
+                   CASE INVTYPE WHEN '1A' THEN a.taxamt
+                                WHEN '1B' THEN a.taxamt
+				                WHEN '1C' THEN a.taxamt
+				                WHEN '1D' THEN a.taxamt
+				                WHEN '1E' THEN a.taxamt
+                                WHEN '2A' THEN 0
+                                WHEN '2B' THEN 0
+          						WHEN '2C' THEN 0
+                                WHEN '3.' THEN 0
+                                WHEN '6.' THEN 0
+                   END TAXAMT,
+                   INV_NO CONF_NO, SUBSTR(INV_NO,0,3) CONFTYPE,
+                   SUBSTR(INVISSUEDT,0,4)||'-'||SUBSTR(INVISSUEDT,5,2)||'-'||SUBSTR(INVISSUEDT,7,2) EVENTDT,
+				   D.PMEMPID USEEMPID, TO_EMPKNAME(D.PMEMPID) USEEMPNAME
+        FROM SC_INVOICE A, SC_CONTRACTDETAIL B, CONFER C,PROJECT D
+		WHERE A.CONT_NO = B.CONT_NO
+		AND B.RCONF_NO = C.CONF_NO
+		AND C.PJT_NO = D.PJT_NO
+        AND A.INV_NO = ?
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="INV_SUB_B" value-count="1" url="지급품의서 생성(SUB)_외주관리" >  
+   <sql-content>
+   <![CDATA[
+		SELECT ACCTCD,ACCTNAME,AMOUNT,OBJ_NO,IT_NO, ORGCD, ORGUSERCD, ORGNAME,
+			   JOBNO,JOBUSERNO,JOBNAME
+        FROM
+        (
+           SELECT DISTINCT '50112' ACCTCD,
+                      TO_ACCTNAME('50112') ACCTNAME,
+                      SUPPLYAMT AMOUNT,
+                      INV_NO OBJ_NO, '1' IT_NO, INV_NO,
+					  E.PJT_NO ORGCD, E.PJTCD ORGUSERCD, E.PJTNAME ORGNAME,
+					  E.PJT_NO JOBNO, E.PJTCD JOBUSERNO, E.PJTNAME JOBNAME
+           FROM SC_INVOICE A, SC_CONTRACT B, SC_CONTRACTDETAIL C, CONFER D,PROJECT E
+		   WHERE B.CONT_NO = C.CONT_NO
+			AND C.RCONF_NO = D.CONF_NO
+			AND D.PJT_NO = E.PJT_NO
+			AND B.CONT_NO = A.CONT_NO
+           UNION ALL
+           SELECT DISTINCT '11131' ACCTCD,
+                   TO_ACCTNAME('11131') ACCTNAME,
+                        CASE INVTYPE WHEN '1A' THEN a.taxamt
+                                     WHEN '1B' THEN a.taxamt
+                                     WHEN '1C' THEN a.taxamt
+                                     WHEN '1D' THEN a.taxamt
+                                     WHEN '1E' THEN a.taxamt
+                                     WHEN '2A' THEN 0
+                                     WHEN '2B' THEN 0
+                                     WHEN '2C' THEN 0
+                                     WHEN '3.' THEN 0
+                                     WHEN '6.' THEN 0
+                        END  AMOUNT,
+                   INV_NO OBJ_NO, '' IT_NO, INV_NO,
+					  E.PJT_NO ORGCD, E.PJTCD ORGUSERCD, E.PJTNAME ORGNAME,
+					  E.PJT_NO JOBNO, E.PJTCD JOBUSERNO, E.PJTNAME JOBNAME
+           FROM SC_INVOICE A, SC_CONTRACT B, SC_CONTRACTDETAIL C, CONFER D,PROJECT E
+		   WHERE B.CONT_NO = C.CONT_NO
+			AND C.RCONF_NO = D.CONF_NO
+			AND D.PJT_NO = E.PJT_NO
+			AND B.CONT_NO = A.CONT_NO
+        ) F
+        WHERE AMOUNT !=0
+        AND F.INV_NO =?
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+   
+      <sql-mapping  id="FOOD_INV_HEAD_B"   value-count="1"  url="지급품의서 생성(HEAD)_식대정산" >  
+   <sql-content>
+   <![CDATA[   
+	SELECT '',
+		   '' CONFTITLE,
+		   '' BIZACQACCTCD, 
+		   '' BIZACQNAME,
+	       '' BIZCEONAME,
+		   '' BIZACQREGNO,
+		   '6.' BILLTYPE, 
+			? SUPPLYAMT,   
+	        0 TOTAMT, 
+			0 REALAMT, 
+			0 TAXAMT,
+		   '' CONFTYPE,
+		   TO_CHAR(SYSDATE,'YYYY-MM-DD') EVENTDT
+
+	FROM DUAL
+
+-- ?
+   
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="FOOD_INV_SUB_B" value-count="1" url="지급품의서 생성(SUB)_식대정산" >  
+   <sql-content>
+   <![CDATA[
+	   SELECT '' ACCTCD,   
+	                '' ACCTNAME,
+                    ? AMOUNT,
+	               '' OBJ_NO, 
+	              '' IT_NO, 
+	              '' INV_NO
+	   FROM DUAL
+-- ?
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+   
+      <sql-mapping  id="AIR_HEAD"   value-count="1"  url="지급품의서 생성(HEAD)_항공권할인" >  
+   <sql-content>
+   <![CDATA[   
+	SELECT GET_SEQ('AIRDOCNO','YYYYMMDD','00') AS DOCNO,
+		   '' CONFTITLE,
+		   '' BIZACQACCTCD, 
+		   '' BIZACQNAME,
+	       '' BIZCEONAME,
+		   '' BIZACQREGNO,
+		   '6.' BILLTYPE, 
+			? SUPPLYAMT,   
+	        0 TOTAMT, 
+			0 REALAMT, 
+			0 TAXAMT,
+		   '' CONFTYPE,
+		   TO_CHAR(SYSDATE,'YYYY-MM-DD') EVENTDT
+
+	FROM DUAL
+
+-- ?
+   
+ 	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="AIR_SUB" value-count="1" url="지급품의서 생성(SUB)_항공권할인" >  
+   <sql-content>
+   <![CDATA[
+	   SELECT '' ACCTCD,   
+	          '' ACCTNAME,
+               ? AMOUNT,
+	          '' OBJ_NO,
+	          '' IT_NO, 
+	          '' INV_NO
+	   FROM DUAL
+-- ?
+ 	]]>
+	</sql-content>
+   </sql-mapping>   
+  </sql>

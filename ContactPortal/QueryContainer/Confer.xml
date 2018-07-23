@@ -1,0 +1,1513 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="S_001"   value-count="1" url="판매품의서 검색" >  
+	<sql-content>
+	<![CDATA[
+				SELECT A.CONF_NO,CONFCD,CONFTITLE,CREMPID,TO_EMPKNAME(CREMPID) CREMPNAME, A.IPSCHKFLAG,
+				         STATUS,CONFTYPE,CONFDIV,AMT,TO_CHAR(CRDTM,'YYYYMMDD') CRDTM, TO_CHAR(UPTDTM,'YYYYMMDD') UPTDTM,
+				         PJT_NO,TO_pjtno_tocode(PJT_NO) PJTCD,
+				         SC_TYPE,TO_CDNAME('DG',SC_TYPE) SC_TYPE_NAME,
+				         SC_OBJ,SC_BASE,SC_SVC,
+				         FORCASTMARGIN,FORCASTMARGINRATE,SC_CONTENTS,
+				         C.DELIVERCORPNAME,C.DELIVERDT,
+				         C.DELIVERCORPTEL,C.DELIVERCORPADDR,C.DELIVERCORPFAX,C.DELIVERCORPPERS,
+				         SALECORPCD,TO_BIZACQNAME(SALECORPCD) SALECORPNAME,
+				         UNITTYPE, TO_CDNAME('CDT',UNITTYPE) UNITTYPE_NAME,ISVAT, TO_CDNAME('IV',ISVAT) ISVAT_NAME, TO_CDNAME('PV',CONFDIV) CONFDIV_NAME,
+				         USREMPID,TO_EMPKNAME(USREMPID) USREMPNAME,CONFORG,TO_ORGNONAME(CONFORG) CONFORGNAME,
+				         TO_ORGNOCD_N(CONFORG,TO_CHAR(SYSDATE,'YYYYMMDD')) CONFORGCD, TO_ORGNONAME_N(CONFORG,TO_CHAR(SYSDATE,'YYYYMMDD')) CONFORGNAME
+				 FROM CONFER A, SALECONFER B, ITEMDELIVERY C
+				  WHERE A.CONF_NO=?
+				  AND A.CONF_NO = B.CONF_NO
+				  AND A.CONF_NO=C.OBJ_NO
+				  AND A.CONFTYPE=C.ID_DIV				  				  
+	]]>
+	</sql-content>
+	</sql-mapping>
+			
+	<sql-mapping  id="S_002"   value-count="1" url="품목 검색" >  
+	<sql-content>
+	<![CDATA[
+	
+				SELECT OBJ_NO,
+						MAX(TO_NUMBER(IT_NO)) OVER (PARTITION BY OBJ_NO) IT_NO_MAX,
+				(SELECT FA_CODE
+		              FROM FA_MASTER x
+		              WHERE CONF_NO = a.obj_no
+		              AND PRODUCT_NM = IT_STD
+		              AND FA_COUNT = IT_CNT)FA_CODE,
+				IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,IT_PRICE,IT_AMT,IT_CONTENTS,IT_TYPE,
+						get_codename_n(NVL(FN_SPLIT(IT_TYPE,4,'-'),IT_TYPE) ,'ACD') IT_TYPE_NAME,
+						REFIT_NO,
+						(SELECT 
+							 CASE WHEN  E.UNITTYPE < D.UNITTYPE THEN
+								             TRUNC(IT_PRICE  * 0.001)
+								    WHEN E.UNITTYPE > D.UNITTYPE THEN
+								             IT_PRICE  * 1000
+								    ELSE IT_PRICE 
+							 END  													 
+						 FROM ITEM C ,SALECONFER D, BUYCONFER E
+						 WHERE C.OBJ_NO=B.REFCONF_NO 
+						 AND C.IT_NO=A.REFIT_NO
+						 AND D.CONF_NO=B.REFCONF_NO
+						 AND E.CONF_NO=B.CONF_NO
+						 ) SL_PRICE,
+						(SELECT 
+							 CASE WHEN  E.UNITTYPE < D.UNITTYPE THEN
+								             TRUNC(IT_AMT  * 0.001)
+								    WHEN E.UNITTYPE > D.UNITTYPE THEN
+								             IT_AMT  * 1000
+								    ELSE IT_AMT 
+							 END  													 
+						 FROM ITEM C ,SALECONFER D, BUYCONFER E
+						 WHERE C.OBJ_NO=B.REFCONF_NO 
+						 AND C.IT_NO=A.REFIT_NO
+						 AND D.CONF_NO=B.REFCONF_NO
+						 AND E.CONF_NO=B.CONF_NO						
+						) SL_AMT,
+						TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD, 
+						IVIT_NO, (SELECT IVNAME||'-'||IVNOTE FROM IVPLAN WHERE IVCD=IVIT_NO) IVIT_NAME
+				FROM ITEM A, CONFER B
+  				WHERE B.CONF_NO=?
+                AND CONF_NO=OBJ_NO(+)				
+				ORDER BY TO_NUMBER(IT_NO)
+				
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_003"   value-count="1" url="(상품)구매품의서 검색" >  
+	<sql-content>
+	<![CDATA[
+
+				SELECT A.CONF_NO,A.CONFCD,A.REFCONF_NO,A.REFCONFTYPE, A.IPSCHKFLAG,
+						 (SELECT TO_pjtno_tocode(PJT_NO) FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) PJTCD,
+						 (SELECT PIID FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) PIID,						 
+						 (SELECT FIID FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) FIID,						 						 						 
+						 CONFTITLE,CREMPID,TO_EMPKNAME(CREMPID) CREMPNAME,
+				         STATUS,CONFTYPE,CONFDIV,AMT,TO_CHAR(CRDTM,'YYYYMMDD') CRDTM, TO_CHAR(UPTDTM,'YYYYMMDD') UPTDTM,
+				         SC_BASE,SC_SVC,
+				         D.FORCASTMARGIN,D.FORCASTMARGINRATE,BC_CONTENTS,
+				         C.DELIVERCORPNAME,C.DELIVERDT,
+				         C.DELIVERCORPTEL,C.DELIVERCORPADDR,C.DELIVERCORPFAX,C.DELIVERCORPPERS,
+				         B.UNITTYPE, B.ISVAT, E.UNITTYPE SALE_UNITTYPE,
+				         TO_CDNAME('CDT',B.UNITTYPE) UNITTYPE_NAME, TO_CDNAME('IV',B.ISVAT) ISVAT_NAME, TO_CDNAME('PV',CONFDIV) CONFDIV_NAME,
+				         (SELECT TO_CDNAME('DG',SC_TYPE) FROM SALECONFER C WHERE C.CONF_NO=A.REFCONF_NO) SC_TYPE_NAME,
+				         USREMPID,TO_EMPKNAME(USREMPID) USREMPNAME,CONFORG,TO_ORGNONAME(CONFORG) CONFORGNAME,
+						TO_BIZACQNAME(E.SALECORPCD) SALECORPNAME,				         
+						 A.AMT BUY_AMT ,
+						(SELECT 
+						 CASE WHEN  B.UNITTYPE < E.UNITTYPE THEN
+							             TRUNC(W.AMT  * 0.001)
+							    WHEN B.UNITTYPE > E.UNITTYPE THEN
+							             W.AMT  * 1000
+							    ELSE W.AMT 
+						 END         
+						 FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) SALE_AMT				          
+				 FROM CONFER A, BUYCONFER B, ITEMDELIVERY C, BUYSALE D,SALECONFER E
+				  WHERE A.CONF_NO=?
+				  AND A.CONF_NO = B.CONF_NO				  
+				  AND A.CONF_NO=C.OBJ_NO
+				  AND A.CONF_NO=D.CONF_NO(+)
+				  AND A.REFCONF_NO=E.CONF_NO
+				  AND A.CONFTYPE=C.ID_DIV		
+				  ]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_004"   value-count="1" url="구매요청 검색" >  
+	<sql-content>
+	<![CDATA[
+
+		SELECT A.CONF_NO, CONFCD, CONFTITLE, CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME, 
+				TO_CHAR(CRDTM,'YYYYMMDD') CRDTM, A.IPSCHKFLAG,
+				UPTDTM, STATUS, CONFTYPE, 
+				CONFDIV, AMT, UPTEMPID,USREMPID, TO_EMPKNAME(USREMPID)AS USREMPNAME,
+				PJT_NO,
+			 	(SELECT PIID FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) REFPIID,						 
+			    (SELECT FIID FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) REFFIID,						 						 				
+			    PIID,FIID,
+				(SELECT PJTCD FROM PROJECT H WHERE H.PJT_NO=A.PJT_NO) PJTCD,
+				(SELECT PJTNAME FROM PROJECT H WHERE H.PJT_NO=A.PJT_NO) PJTNAME,
+				BR_TYPE, DECODE(BR_TYPE,'6','상품','1','고정자산',TO_CDNAME('MG',BR_TYPE)) BR_TYPE_NAME, BR_CONTENTS, 
+				ASSETTYPE, TO_CDNAME('AS',ASSETTYPE) ASSETTYPE_NAME,
+				TO_ORGNONAME(CONFORG) CONFORGNAME,
+				C.ID_DIV,  
+	            C.DELIVERCORPNAME,C.DELIVERDT,
+	            C.DELIVERCORPTEL,C.DELIVERCORPADDR,C.DELIVERCORPFAX,C.DELIVERCORPPERS				
+		FROM CONFER A, BUYREQCONFER B, ITEMDELIVERY C
+		WHERE A.CONF_NO= ?
+		AND A.CONF_NO = B.CONF_NO
+	    AND A.CONF_NO=C.OBJ_NO
+	    AND A.CONFTYPE=C.ID_DIV			
+
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	
+	<sql-mapping  id="S_005"   value-count="1" url="구매품의 검색" >  
+
+	<sql-content>
+	<![CDATA[
+				SELECT A.CONF_NO,A.CONFCD,A.REFCONF_NO,A.REFCONFTYPE,A.IPSCHKFLAG,
+						 --(SELECT TO_pjtno_tocode(PJT_NO) FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) PJTCD,
+						 (SELECT PJTCD FROM PROJECT W WHERE A.PJT_NO = W.PJT_NO ) PJTCD,
+						 (SELECT PJTNAME FROM PROJECT W WHERE A.PJT_NO = W.PJT_NO ) PJTNAME,						 
+						 PJT_NO,
+						 (SELECT PIID FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) PIID,						 
+						 (SELECT FIID FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) FIID,
+						 --(SELECT PIID FROM CONFER W WHERE W.CONF_NO=A.CONF_NO ) PIID,						 
+						 --(SELECT FIID FROM CONFER W WHERE W.CONF_NO=A.CONF_NO ) FIID,						 						 
+						 CONFTITLE,CREMPID,TO_EMPKNAME(CREMPID) CREMPNAME,
+				         STATUS,CONFTYPE,CONFDIV,AMT,TO_CHAR(CRDTM,'YYYYMMDD') CRDTM, TO_CHAR(UPTDTM,'YYYYMMDD') UPTDTM,
+				         C.DELIVERCORPNAME,C.DELIVERDT,C.ID_DIV,
+				         C.DELIVERCORPTEL,C.DELIVERCORPADDR,C.DELIVERCORPFAX,C.DELIVERCORPPERS,
+				         B.UNITTYPE, B.ISVAT, B.BC_CONTENTS,
+				         E.BR_TYPE, DECODE(E.BR_TYPE,'6','상품','1','고정자산',TO_CDNAME('MG',E.BR_TYPE)) BR_TYPE_NAME,
+						 B.BC_TYPE, TO_CDNAME('MG',B.BC_TYPE) BC_TYPE_NAME,				         
+				         TO_CDNAME('CDT',B.UNITTYPE) UNITTYPE_NAME, TO_CDNAME('IV',B.ISVAT) ISVAT_NAME, TO_CDNAME('PV',CONFDIV) CONFDIV_NAME,
+				         USREMPID,TO_EMPKNAME(USREMPID) USREMPNAME,CONFORG,TO_ORGNONAME(CONFORG) CONFORGNAME		          
+				 FROM CONFER A, BUYCONFER B, ITEMDELIVERY C, BUYREQCONFER E
+				  WHERE A.CONF_NO=?
+				  AND A.CONF_NO = B.CONF_NO				  
+				  AND A.CONF_NO=C.OBJ_NO
+				  AND A.REFCONF_NO=E.CONF_NO(+)
+				  AND A.CONFTYPE=C.ID_DIV		
+		
+	]]>
+	</sql-content>
+	</sql-mapping>		
+
+	<sql-mapping  id="S_006"   value-count="1" url="첨부파일 검색" >  
+	<sql-content>
+	<![CDATA[
+
+		SELECT * FROM CONFERFILEINFO WHERE CONF_NO=? 
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_007"   value-count="1" url="주문처 검색" >  
+	<sql-content>
+	<![CDATA[
+
+	SELECT DISTINCT
+	TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD
+	FROM ITEM A
+	WHERE A.OBJ_NO=?
+	AND IT_DIV LIKE 'BU%'
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_008"   value-count="1" url="프로젝트CD 생성" >  
+	<sql-content>
+	<![CDATA[
+
+	 SELECT CREATEPJTCD('S',CONFDIV,TO_CHAR(UPTDTM,'YYYY')) PJTCD 
+ 		FROM CONFER   
+ 		WHERE CONF_NO=?	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="S_009"   value-count="2" url="판매 프로젝트 상위등록" >  
+	<sql-content>
+	<![CDATA[
+
+		 INSERT INTO PROJECT 									 							 								 
+		 SELECT project_sn.nextVal PJT_NO,	
+				  ? PJTCD,		   										
+				  CONFTITLE PJTTITLE	,
+				  CONFDIV PJTDIV,
+				  'S' PJTTYPE, 'PGO' PJTSTATUS, 
+				  'WCO' APPRSTATUS, SALECORPCD ORDERCORPCD, 
+				  CONFORG PJTORG_NO,
+				  /**
+				  case confdiv when 'S' then '1310'
+				  	   		   when 'G' then '1023'
+							   when 'I' then '1299'
+							   else '1046'
+				  end PJTORG_NO,
+				  **/
+				  SYSDATE PJTUPDATEDTM,
+				  '' PJTDETAIL ,TO_CHAR(UPTDTM,'YYYYMMDD') PJTSTARTDT,
+				  (SELECT DELIVERDT FROM ITEMDELIVERY WHERE OBJ_NO=A.CONF_NO) PJTENDDT,
+				  USREMPID PMEMPID, CREMPID,SYSDATE CREATEDTM,0 CONTAMT,
+				  TO_CHAR(UPTDTM,'YYYYMMDD') CONTSTARTDT,
+				  (SELECT DELIVERDT FROM ITEMDELIVERY WHERE OBJ_NO=A.CONF_NO) CONTENDDT,'' PLANWORKMH,
+				  'N' ISTASK, '' SALEEMPID							 
+		 FROM SALECONFER A,CONFER B
+		 WHERE A.CONF_NO=B.CONF_NO
+		 AND A.CONF_NO=?
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_010"   value-count="1" url="판매 프로젝트 하위 생성" >  
+	<sql-content>
+	<![CDATA[
+
+		 INSERT INTO SALEPJT VALUES(PROJECT_SN.CURRVAL,?,'S')
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="S_011"   value-count="1" url="판매 품의 프로젝트 등록" >  
+	<sql-content>
+	<![CDATA[
+
+		 UPDATE CONFER SET PJT_NO=PROJECT_SN.CURRVAL WHERE CONF_NO=?
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_012"   value-count="1" url=" 사업조회" >  
+	<sql-content>
+	<![CDATA[
+	
+		SELECT B.BIZCD,A.BIZTYPECD,B.BIZNAME FROM CONFERBIZ A, BIZ B 
+		WHERE CONF_NO=?
+		AND A.BIZCD=B.BIZCD(+)
+		ORDER BY A.BIZTYPECD	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="S_013"   value-count="10" url=" 구매현황조회" >  
+	<sql-content>
+	<![CDATA[
+			SELECT * FROM
+			(
+				SELECT A.CONF_NO, A.CONFCD, A.CONFORG, A.CONFTITLE, A.CREMPID, A.USREMPID, TO_EMPKNAME(A.CREMPID) CREMPNAME, 
+				       TO_CHAR(A.CRDTM, 'YYYYMMDD') CRDTM, TO_CHAR(A.UPTDTM, 'YYYYMMDD') UPTDTM, A.IPSCHKFLAG,		       
+				       A.STATUS, D.BC_ISSUE,
+				       (SELECT CDNAME FROM COCODE WHERE CDTYPE IN ('SB','ST') AND CD=A.STATUS)  STATUSNAME,
+				       A.CONFTYPE,
+					   CASE WHEN D.UNITTYPE = 1 THEN
+					   		A.AMT * 1000
+					   ELSE
+					   	    A.AMT
+					   END BU_AMT,
+					   CASE WHEN B.UNITTYPE = 1 THEN
+					   		C.AMT * 1000
+					   ELSE
+					   	    C.AMT
+					   END SL_AMT,
+					   B.SALECORPCD, NVL(TO_BIZACQNAME(B.SALECORPCD),' ') SALECORPNAME,
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EBA')	ORDERDT,							 			         
+						 (
+						   	SELECT TO_CHAR(MAX(F.IT_DTM),'YYYYMMDD') FROM ITEM F WHERE F.OBJ_NO=A.CONF_NO AND F.OBJ_NO IN (SELECT CONF_NO FROM CONFERHISTORY WHERE AFTER = 'ECA'AND COLUMNNAME='STATUS' AND CONF_NO = A.CONF_NO)
+						   )	CFMDT,						 
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EDA')	ENDDT		
+				 FROM CONFER A ,SALECONFER B, CONFER C, BUYCONFER D
+				 WHERE A.CONFTYPE LIKE 'BU%'
+				 AND A.CONF_NO=D.CONF_NO
+				 AND A.REFCONF_NO=B.CONF_NO(+)
+				 AND A.REFCONF_NO=C.CONF_NO(+)
+				 AND C.CONFTYPE(+)='SAPJ'	
+				 AND A.STATUS IN ('DC0','DD0','DD1','EAA','EBA','ECA','EDA')	
+				 AND A.CONFDELFLAG='N'
+			)
+			WHERE CONFTYPE LIKE ?||'%'
+			AND CONFORG IN
+			(			
+					SELECT ORG_NO FROM ORG A
+					CONNECT BY A.HIGHORGCD = PRIOR TO_CHAR(A.ORG_NO)
+					START WITH A.ORG_NO like ?||'%'
+			)
+			AND STATUS LIKE ?||'%'
+			AND CRDTM>=?
+			AND CRDTM<=?
+			AND CREMPNAME LIKE ?||'%'
+			AND SALECORPNAME LIKE '%'||?||'%'
+			AND CONFTITLE LIKE '%'||?||'%'
+			AND CREMPID LIKE ?||'%'
+			AND USREMPID LIKE ?||'%'						
+--			ORDER BY CONF_NO DESC	 	
+			ORDER BY CONFCD DESC
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_013_Excel"   value-count="10" url=" 구매현황조회 Excel Download" >  
+	<sql-content>
+	<![CDATA[
+               SELECT 
+               			X.CONF_NO, X.CONFCD, X.CONFTITLE, X.ORGNAME, X.CREMPNAME, X.CRDTM,
+                      X.STATUS, X.CONFTYPE,
+                      X.BU_AMT BU_AMT2,
+                      CASE (ROW_NUMBER() OVER (PARTITION BY X.CONF_NO ORDER BY X.IT_NO)) WHEN 1 THEN X.BU_AMT
+                                    ELSE 0
+                      END BU_AMT,
+                      --ROW_NUMBER() OVER (PARTITION BY X.CONF_NO ORDER BY X.IT_NO) MIN_IT_NO,
+                      X.IT_NO,
+                      CASE (ROW_NUMBER() OVER (PARTITION BY X.CONF_NO ORDER BY X.IT_NO)) WHEN 1 THEN X.SL_AMT
+                                    ELSE 0
+                      END SL_AMT,
+                      X.SALECORPNAME,ORDERDT, X.CFMDT, X.ENDDT,
+                      X.OBJ_NO,
+                      X.IT_STD, X.IT_CNT, X.IT_PRICE, X.IT_AMT,
+                      X.IT_CONTENTS, X.BUY_CORPCD, X.BUYNAME, X.IT_DTM,
+               		  Y.MAINNO, Y.CONF_NO, Y.AMOUNT , Y.BUDGETAMT, Y.BUDGETUSEDAMT
+               FROM(
+                     SELECT A.CONF_NO, A.CONFCD, CONFTITLE, (SELECT ORGNAME FROM ORG WHERE ORG_NO = CONFORG) ORGNAME, CREMPNAME, CRDTM,
+                     		STATUS, CONFTYPE, BU_AMT, SL_AMT, SALECORPNAME, ORDERDT, CFMDT , ENDDT,
+                     		OBJ_NO, IT_NO, IT_STD, IT_CNT,
+                     		CASE WHEN A.BUNITTYPE = 1 THEN
+                                                 IT_PRICE * 1000
+                                           ELSE
+                                                 IT_PRICE
+                                END IT_PRICE,
+								CASE WHEN A.BUNITTYPE = 1 THEN
+                                                 IT_AMT * 1000
+                                           ELSE
+                                                 IT_AMT
+                            END IT_AMT, 
+                     		IT_CONTENTS, BUY_CORPCD, TO_BIZACQNAME(BUY_CORPCD)BUYNAME
+                            ,IT_DTM
+                     FROM(
+                        SELECT * FROM
+                        (
+                                SELECT A.CONF_NO, A.CONFCD, A.CONFORG, A.CONFTITLE, A.CREMPID, A.USREMPID, TO_EMPKNAME(A.CREMPID) CREMPNAME,
+                                       TO_CHAR(A.CRDTM, 'YYYYMMDD') CRDTM, TO_CHAR(A.UPTDTM, 'YYYYMMDD') UPTDTM, A.IPSCHKFLAG,
+                                       A.STATUS, D.BC_ISSUE,D.UNITTYPE BUNITTYPE,
+                                       (SELECT CDNAME FROM COCODE WHERE CDTYPE IN ('SB','ST') AND CD=A.STATUS)  STATUSNAME,
+                                       A.CONFTYPE,
+                                           CASE WHEN D.UNITTYPE = 1 THEN
+                                                        A.AMT * 1000
+                                           ELSE
+                                                    A.AMT
+                                           END BU_AMT,
+                                           CASE WHEN B.UNITTYPE = 1 THEN
+                                                        C.AMT * 1000
+                                           ELSE
+                                                    C.AMT
+                                           END SL_AMT,
+                                           B.SALECORPCD, NVL(TO_BIZACQNAME(B.SALECORPCD),' ') SALECORPNAME,
+                                                 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EBA')   ORDERDT,
+                                                 (
+                                                        SELECT TO_CHAR(MAX(F.IT_DTM),'YYYYMMDD') FROM ITEM F WHERE F.OBJ_NO=A.CONF_NO AND F.OBJ_NO IN (SELECT CONF_NO FROM CONFERHISTORY WHERE AFTER = 'ECA'AND COLUMNNAME='STATUS' AND CONF_NO = A.CONF_NO)
+                                                   )    CFMDT,
+                                                 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EDA')   ENDDT
+                                 FROM CONFER A ,SALECONFER B, CONFER C, BUYCONFER D
+                                 WHERE A.CONFTYPE LIKE 'BU%'
+                                 AND A.CONF_NO=D.CONF_NO
+                                 AND A.REFCONF_NO=B.CONF_NO(+)
+                                 AND A.REFCONF_NO=C.CONF_NO(+)
+                                 AND C.CONFTYPE(+)='SAPJ'
+                                 AND A.STATUS IN ('DC0','DD0','DD1','EAA','EBA','ECA','EDA')
+                                 AND A.CONFDELFLAG='N'
+                        )
+                        WHERE CONFTYPE LIKE ?||'%'
+						AND CONFORG IN
+						(			
+								SELECT ORG_NO FROM ORG A
+								CONNECT BY A.HIGHORGCD = PRIOR TO_CHAR(A.ORG_NO)
+								START WITH A.ORG_NO like ?||'%'
+						)
+						AND STATUS LIKE ?||'%'
+						AND CRDTM>=?
+						AND CRDTM<=?
+						AND CREMPNAME LIKE ?||'%'
+						AND SALECORPNAME LIKE '%'||?||'%'
+						AND CONFTITLE LIKE '%'||?||'%'
+						AND CREMPID LIKE ?||'%'
+						AND USREMPID LIKE ?||'%'		
+					)A, ITEM B  --  ITEMORDER 추가
+					WHERE  A.CONF_NO = B.OBJ_NO
+					)X ,
+					(
+					   SELECT A.MAINNO, DOCNO, USEORGNAME, MTITLE, CONF_NO, 
+					   			NVL(IT_NO,1) IT_NO, AMOUNT, BUDGETAMT, BUDGETUSEDAMT, 
+					   			NVL(OBJ_NO,A.CONF_NO) OBJ_NO
+					   FROM ACCTRPTHD A, ACCTRPTSB B
+					          WHERE A.MAINNO = B.MAINNO
+					          AND A.STATUS NOT IN ('DX0','DW0')
+					          AND ACCTCD NOT IN ('21081','11131','21101')
+					)Y
+					 WHERE X.CONF_NO = Y.CONF_NO(+)
+					 AND X.CONF_NO = Y.OBJ_NO(+)
+					 AND X.IT_NO = Y.IT_NO(+)
+                   --  AND X.CONF_NO ='20080818034'
+                   ORDER BY CONFCD DESC, X.CONF_NO
+		
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	
+	<sql-mapping  id="S_014"   value-count="1" url=" 판매프로젝트 조회(PJT번호)" >  
+	<sql-content>
+	<![CDATA[
+				SELECT A.CONF_NO,A.REFCONF_NO,	A.IPSCHKFLAG,					 
+						 CONFTITLE,CREMPID,C.PJT_NO, C.PJTCD, C.PJTNAME,
+				         STATUS, STATUSDESC,CONFTYPE,CONFDIV,TO_CHAR(STATUSDTM,'YYYYMMDD') STATUSDTM, 
+				         SC_BASE,SC_SVC,				         
+				         E.UNITTYPE,E.ISVAT,
+				         TO_CDNAME('CDT',E.UNITTYPE) UNITTYPE_NAME, TO_CDNAME('IV',E.ISVAT) ISVAT_NAME, TO_CDNAME('PV',CONFDIV) CONFDIV_NAME,
+				         (SELECT TO_CDNAME('DG',SC_TYPE) FROM SALECONFER C WHERE C.CONF_NO=A.REFCONF_NO) SC_TYPE_NAME,
+				         USREMPID,TO_EMPKNAME(USREMPID) USREMPNAME,CONFORG,TO_ORGNONAME(CONFORG) CONFORGNAME,
+						 TO_BIZACQNAME(E.SALECORPCD) SALECORPNAME,
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EBA')	ORDERDT,							 			         
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='ECA')	CFMDT,						 
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EDA')	ENDDT								 				         
+				 FROM CONFER A, BUYCONFER B,
+					  (
+						SELECT A.PJT_NO, A.PJTCD, A.PJTNAME, B.SALECONFER_NO CONF_NO FROM 
+						( SELECT PJT_NO, PJTCD,PJTNAME FROM PROJECT WHERE PJT_NO=? ) A,
+						SALEPJT B
+						WHERE A.PJT_NO = B.PJT_NO
+					  )C,				  
+				      SALECONFER E
+				  WHERE E.CONF_NO=C.CONF_NO
+				  AND A.CONF_NO = B.CONF_NO				  		
+				  AND A.REFCONF_NO=E.CONF_NO	 	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>				  		
+	
+	<sql-mapping  id="S_015"   value-count="1" url=" 판매프로젝트 조회(품의번호)" >  
+	<sql-content>
+	<![CDATA[
+				SELECT 
+						C.PJTORG_NO,to_orgnoname_n(C.pjtorg_no,to_char(sysdate,'YYYYMMDD')) PJTORGNAME,
+						to_orgnocd_n(C.pjtorg_no,to_char(sysdate,'YYYYMMDD')) PJTORGCD,
+						A.CONF_NO, A.REFCONF_NO, A.REFCONFTYPE,C.PJTSTATUS,	A.IPSCHKFLAG,					 
+						 A.CONFTITLE, A.CREMPID, C.PJT_NO, C.PJTCD, C.PJTNAME,
+				         A.STATUS, TO_CDNAME('ST',A.STATUS) STATUSNAME, A.STATUSDESC, A.CONFTYPE, A.CONFDIV, TO_CHAR(A.STATUSDTM,'YYYYMMDD') STATUSDTM, 
+				         B.BC_ISSUE,
+				         SC_BASE,SC_SVC,				         
+				         E.UNITTYPE,E.ISVAT,
+				         TO_CDNAME('CDT',E.UNITTYPE) UNITTYPE_NAME, TO_CDNAME('IV',E.ISVAT) ISVAT_NAME, TO_CDNAME('PV',A.CONFDIV) CONFDIV_NAME,
+				         (SELECT TO_CDNAME('DG',SC_TYPE) FROM SALECONFER C WHERE C.CONF_NO=A.REFCONF_NO) SC_TYPE_NAME,
+				         A.USREMPID,TO_EMPKNAME(A.USREMPID) USREMPNAME,A.CONFORG,TO_ORGNONAME(A.CONFORG) CONFORGNAME,
+						 TO_BIZACQNAME(E.SALECORPCD) SALECORPNAME	,
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EBA')	ORDERDT,							 			         
+						 (
+						   	SELECT TO_CHAR(MAX(F.IT_DTM),'YYYYMMDD') FROM ITEM F WHERE F.OBJ_NO=A.CONF_NO AND F.OBJ_NO IN (SELECT CONF_NO FROM CONFERHISTORY WHERE AFTER = 'ECA'AND COLUMNNAME='STATUS' AND CONF_NO = A.CONF_NO)
+						 ) CFMDT,						 
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EDA')	ENDDT		
+				 FROM CONFER A, BUYCONFER B,
+					  PROJECT C,
+					  CONFER D,				  
+				      SALECONFER E
+				  WHERE A.CONF_NO=?
+				  AND A.CONF_NO = B.CONF_NO	
+				  AND A.REFCONF_NO=D.CONF_NO				  			  		
+				  AND A.REFCONF_NO=E.CONF_NO	
+				  AND C.PJT_NO=D.PJT_NO					   	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>				  		
+
+	<sql-mapping  id="S_016"   value-count="1" url=" 구매통합조회(품의번호)" >  
+	<sql-content>
+	<![CDATA[
+				SELECT A.CONF_NO, A.CONFCD, A.REFCONF_NO, A.REFCONFTYPE,	A.IPSCHKFLAG,					 
+						 A.CONFTITLE, A.CREMPID, 
+						 C.PJT_NO, C.PJTCD, C.PJTNAME,
+						 B.BC_ISSUE,
+				         A.STATUS, A.STATUSDESC, A.CONFTYPE, A.CONFDIV, TO_CHAR(A.STATUSDTM,'YYYYMMDD') STATUSDTM, 
+						 TO_CDNAME('PV',A.CONFDIV) CONFDIV_NAME,
+				         A.USREMPID,TO_EMPKNAME(A.USREMPID) USREMPNAME,A.CONFORG,TO_ORGNONAME(A.CONFORG) CONFORGNAME,
+				         (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EBA') ORDERDT
+				 FROM CONFER A, BUYCONFER B,
+					  PROJECT C,
+					  CONFER D,				  
+				      BUYREQCONFER E
+				  WHERE A.CONF_NO=?
+				  AND A.CONF_NO = B.CONF_NO	
+				  AND A.REFCONF_NO=D.CONF_NO(+)				  			  		
+				  AND A.REFCONF_NO=E.CONF_NO(+)	
+				  AND C.PJT_NO(+)=D.PJT_NO					   	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>				  		
+	
+	<sql-mapping  id="S_017"   value-count="5" url=" 구매현황조회" >  
+	<sql-content>
+	<![CDATA[
+			SELECT A.*, 
+				   CASE WHEN PERIOD<0 THEN
+				   		'납기 '||(PERIOD * -1)||'일 지연.' 
+						WHEN PERIOD=0 THEN
+						'납기가 오늘입니다.' 
+				   		WHEN PERIOD>0 THEN
+						'납기가 '||(PERIOD * 1)||'일 남았습니다.' 
+						ELSE ''
+				   END ALERT
+			FROM
+			(
+				SELECT A.CONF_NO, A.CONFTITLE, A.CREMPID, TO_EMPKNAME(A.CREMPID) CREMPNAME, 
+				       TO_CHAR(A.CRDTM, 'YYYYMMDD') CRDTM, TO_CHAR(A.UPTDTM, 'YYYYMMDD') UPTDTM,	 B.DELIVERDT,	       
+				       A.STATUS, (SELECT CDNAME FROM COCODE WHERE CDTYPE IN ('SB','ST') AND CD=A.STATUS)  STATUSNAME,
+				       A.CONFTYPE, A.CONFORG, A.AMT, A.STATUSDESC,
+					   TRUNC((SELECT MAX(F.UPDTM)  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO )- 
+					   TO_DATE(B.DELIVERDT,'YYYYMMDD'),0) PERIOD				       
+				 FROM CONFER A, ITEMDELIVERY B 
+				 WHERE A.CONFTYPE LIKE 'BU%'	
+				 AND A.REFCONF_NO = B.OBJ_NO				 		 
+			) A
+			WHERE CONFTYPE LIKE ?||'%'	
+			AND CONFORG IN
+			(			
+					SELECT ORG_NO FROM ORG A
+					CONNECT BY A.HIGHORGCD = PRIOR TO_CHAR(A.ORG_NO)
+					START WITH A.ORG_NO like ?||'%'
+			)
+			AND STATUS LIKE ?||'%'
+			AND CRDTM>=?
+			AND CRDTM<=?			
+			ORDER BY CONF_NO DESC	 	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_018"   value-count="0" url=" 품의조회(테스트)" >  
+	<sql-content>
+	<![CDATA[
+		 
+		SELECT A.CONF_NO,
+				A.CONFCD,
+				A.CONFTITLE,
+				A.CREMPID,
+				(SELECT EMPKNAME FROM EMPALL WHERE EMPID=A.CREMPID) CREMPNAME,
+				A.IPSCHKFLAG,
+				A.REFCONF_NO,
+				TO_CHAR(A.CRDTM, 'YYYYMMDD') CRDTM,
+				TO_CHAR(A.UPTDTM, 'YYYYMMDD') UPTDTM,
+				A.CONFDELFLAG,
+				A.STATUS, CONFTYPE,
+					(SELECT C.CODENAME
+					FROM COMCODE B,
+						  COMCODE C
+					WHERE B.CODE IN ('SA','RE','BU','OR','DOCNO')
+					AND C.HIGHCODE =B.CODE_NO
+					AND C.CODE=A.CONFTYPE) AS CONFTYPENM,
+				A.AMT,
+				( SELECT C.CODENAME
+				FROM COMCODE B,
+					  COMCODE C
+				WHERE B.CODE IN ('SB','ST')
+				AND   C.HIGHCODE =B.CODE_NO
+				AND C.CODE=A.STATUS) STATUSNAME		
+		FROM CONFER A
+        WHERE TO_CHAR(A.CRDTM, 'YYYYMMDD') BETWEEN REPLACE(S_STARTDT:,'-','') AND REPLACE(S_ENDDT:,'-','')
+        AND STATUS LIKE S_STATUS:||'%'
+        AND CONFTYPE LIKE S_CONFTYPE:||'%'		
+		ORDER BY CRDTM DESC, CONF_NO DESC  
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_019"   value-count="2" url=" 시스템 상태 변경" >  
+	<sql-content>
+	<![CDATA[
+
+						UPDATE CONFER SET STATUS=? WHERE CONF_NO=?
+		
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	
+	<sql-mapping  id="S_020"   value-count="3" url=" 시스템 이력 변경" >  
+	<sql-content>
+	<![CDATA[
+	 insert into  CONFERHISTORY( CONF_NO,CONFHIST_NO,COLUMNNAME,BEFORE,AFTER,UPEMPID,UPDTM) 
+	 values( ?,(SELECT NVL(MAX(CONFHIST_NO),0)+1 FROM CONFERHISTORY),'STATUS','SYSTEM 변경',?,?,sysdate)	
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	
+	<sql-mapping  id="S_021"   value-count="6" url=" 구매품목별 조회" >  
+	<sql-content>
+	<![CDATA[
+			SELECT A.IT_TYPE, A.IT_TYPE01, A.IT_TYPE02, A.IT_TYPE03,
+			         A.IT_TYPE01_NAME, A.IT_TYPE02_NAME, A.IT_TYPE03_NAME,
+			         A.BUY_CORPCD, A.BUY_CORPNAME, A.BIZCEONAME,
+			         SUM(IT_PRICE) IT_PRICE, SUM(IT_AMT) IT_AMT, SUM(IT_CNT) IT_CNT 
+			FROM			
+			(			
+			 SELECT IT_DIV, OBJ_NO, IT_NO,IT_NAME,IT_STD, IT_CNT, 
+					 CASE WHEN UNITTYPE = 1 THEN 
+								   IT_PRICE * 1000
+							ELSE  IT_PRICE
+							END
+					 IT_PRICE, 
+					 CASE WHEN UNITTYPE = 1 THEN 
+								   IT_AMT * 1000
+							ELSE  IT_AMT
+							END			 
+					 IT_AMT, IT_TYPE,
+				    SUBSTR(IT_TYPE,5,2) IT_TYPE01, 
+				    SUBSTR(IT_TYPE,8,4) IT_TYPE02, 
+				    SUBSTR(IT_TYPE,13)  IT_TYPE03,			 
+			        BUY_CORPCD, TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME,
+			        (SELECT BIZCEONAME FROM BIZACQCORP WHERE BIZACQCD = A.BUY_CORPCD) BIZCEONAME,
+			        IT_STATUS,IT_DTM,REFIT_NO, IVIT_NO,
+					(SELECT CDNAME FROM COCODE WHERE CD = SUBSTR(IT_TYPE,5,2) AND HIGHCD='ACD' ) IT_TYPE01_NAME,
+					(SELECT CDNAME FROM COCODE WHERE CD = SUBSTR(IT_TYPE,8,4) AND HIGHCD= SUBSTR(IT_TYPE,5,2) ) IT_TYPE02_NAME,
+					(SELECT CDNAME FROM COCODE WHERE CD = SUBSTR(IT_TYPE,13)  AND HIGHCD= SUBSTR(IT_TYPE,8,4) ) IT_TYPE03_NAME,
+					(SELECT TO_CHAR(CRDTM,'YYYYMMDD')  FROM CONFER B WHERE CONF_NO=A.OBJ_NO) CRDTM										    						
+			 FROM ITEM A	, BUYCONFER B, CONFER C		 
+			 WHERE A.OBJ_NO = B.CONF_NO
+			 AND C.CONF_NO = B.CONF_NO
+			 AND C.STATUS >= 'DD1'
+			) A
+			WHERE A.IT_DIV LIKE 'BU%'
+			AND A.BUY_CORPNAME LIKE '%'||?||'%'
+			AND A.IT_TYPE01 LIKE ?||'%'
+			AND A.IT_TYPE02 LIKE ?||'%'
+			AND A.IT_TYPE03 LIKE ?||'%'	
+			AND CRDTM>=?
+			AND CRDTM<=?
+			GROUP BY 
+					 A.IT_TYPE, A.IT_TYPE01, A.IT_TYPE02, A.IT_TYPE03,
+			         A.IT_TYPE01_NAME, A.IT_TYPE02_NAME, A.IT_TYPE03_NAME,
+			         A.BUY_CORPCD, A.BUY_CORPNAME, A.BIZCEONAME
+			         	
+			--ORDER BY	IT_TYPE01, IT_TYPE02, IT_TYPE03, BUY_CORPNAME							
+	]]>
+	</sql-content>
+	</sql-mapping>				 	
+	
+	<sql-mapping  id="S_022"   value-count="1" url="판매 프로젝트 품목 검색" >  
+	<sql-content>
+	<![CDATA[
+	
+				SELECT OBJ_NO,IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,IT_STATUS, TO_CHAR(IT_DTM, 'YYYYMMDD') IT_DTM,
+						(SELECT CASE WHEN UNITTYPE = 1 THEN 
+						             IT_PRICE * 1000
+									 ELSE
+									 IT_PRICE END FROM ITEM C,BUYCONFER D 
+									 WHERE C.OBJ_NO=B.CONF_NO 
+									 AND C.IT_NO=A.IT_NO 
+									 AND D.CONF_NO=B.CONF_NO) IT_PRICE,
+						(SELECT CASE WHEN UNITTYPE = 1 THEN 
+						             IT_AMT * 1000
+									 ELSE
+									 IT_AMT END FROM ITEM C,BUYCONFER D 
+									 WHERE C.OBJ_NO=B.CONF_NO 
+									 AND C.IT_NO=A.IT_NO 
+									 AND D.CONF_NO=B.CONF_NO) IT_AMT,									
+						IT_CONTENTS,IT_TYPE,
+						--get_acdName(A.IT_TYPE) IT_TYPE_NAME,
+						get_codename_n(NVL(FN_SPLIT(A.IT_TYPE,4,'-'),IT_TYPE) ,'ACD') IT_TYPE_NAME,
+						REFIT_NO,						
+						(SELECT CASE WHEN UNITTYPE = 1 THEN 
+						             IT_PRICE * 1000
+									 ELSE
+									 IT_PRICE END FROM ITEM C,SALECONFER D 
+									 WHERE C.OBJ_NO=B.REFCONF_NO 
+									 AND C.IT_NO=A.REFIT_NO 
+									 AND D.CONF_NO=B.REFCONF_NO) SL_PRICE,						
+						(SELECT CASE WHEN UNITTYPE = 1 THEN 
+						             IT_AMT * 1000
+									 ELSE
+									 IT_AMT END FROM ITEM C,SALECONFER D 
+									 WHERE C.OBJ_NO=B.REFCONF_NO 
+									 AND C.IT_NO=A.REFIT_NO 
+									 AND D.CONF_NO=B.REFCONF_NO) SL_AMT,					
+						TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD, 
+						 (select DISTINCT ODC_ISCFM from ITEMORDER where A.OBJ_NO = CONF_NO AND ODC_CORPCD = BUY_CORPCD AND ODC_ISCFM = 'Y')CHK,
+						IVIT_NO, (SELECT IVNAME||'-'||IVNOTE FROM IVPLAN WHERE IVCD=IVIT_NO) IVIT_NAME
+				FROM ITEM A, CONFER B
+				WHERE A.OBJ_NO=?
+				AND B.CONF_NO=OBJ_NO	
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_023"   value-count="1" url="참조 갯수 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT COUNT(REFCONF_NO) CNT FROM CONFER 
+		WHERE REFCONF_NO=?	
+		AND  	STATUS>='DB0'
+		AND 	STATUS not in ('DX0')
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="S_024"   value-count="3" url="delete confer" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM ? WHERE ? = ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_025"   value-count="1" url="지급/수입품의 금액 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT B.IT_NO, SUM(B.AMOUNT) AMT
+		FROM ACCTRPTHD A, ACCTRPTSB B 
+		       --,TBAA01 C
+		       WHERE A.MAINNO = B.MAINNO
+		       AND A.STATUS NOT IN ('DX0','DW0')
+		       AND ACCTCD NOT IN ('21081','11131','21101')
+		       --AND C.AA01_JPNO  = A.DOCNO
+		       AND A.CONF_NO =?
+		GROUP BY B.IT_NO 
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_026"   value-count="1" url="수입/지급용 거래처 검색" >  
+	<sql-content>
+	<![CDATA[
+
+			SELECT DISTINCT
+			TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD
+	FROM ITEM A
+	WHERE A.OBJ_NO=?
+	AND A.IT_STATUS='ECA'--검수완료 인 경우
+	AND IT_DIV LIKE 'BU%'
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_027"   value-count="3" url="판매 프로젝트 품목 검색" >  
+	<sql-content>
+	<![CDATA[
+	
+SELECT OBJ_NO,CHK,IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,
+	   IT_STATUS,IT_DTM,
+	   IT_PRICE,IT_AMT,IT_CONTENTS,IT_TYPE,
+       IT_TYPE_NAME,REFIT_NO,
+       NVL(SL_PRICE,0) SL_PRICE,
+       NVL(SL_AMT,0) SL_AMT,
+       BUY_CORPNAME, BUY_CORPCD,
+       IVIT_NO, IVIT_NAME,INSEMPID
+FROM
+(
+           SELECT 
+           					D.OBJ_NO,D.IT_NO,D.IT_DIV,D.IT_NAME,D.IT_STD,D.IT_CNT,D.IT_STATUS,
+				   		  CASE WHEN D.UNITTYPE = 1THEN
+		                                                       D.IT_PRICE * 1000
+		                       WHEN D.UNITTYPE =2 THEN
+		                                                       D.IT_PRICE 
+		                  END IT_PRICE,
+		                  CASE WHEN D.UNITTYPE = 1 THEN
+		                                                       IT_AMT * 1000
+		                       WHEN D.UNITTYPE = 2 THEN
+		                                                       IT_AMT
+		                  END IT_AMT,
+						  D.IT_CONTENTS,D.IT_TYPE,
+		                  D.IT_TYPE_NAME,D.REFIT_NO,D.IT_DTM,
+		                  CASE WHEN E.UNITTYPE = 1THEN
+		                                                       SL_PRICE * 1000
+		                       WHEN E.UNITTYPE =2 THEN
+		                                                       SL_PRICE 
+		                       ELSE SL_PRICE
+		                  END SL_PRICE,
+		                  CASE WHEN E.UNITTYPE = 1 THEN
+		                                                       SL_AMT * 1000
+		                       WHEN E.UNITTYPE = 2 THEN
+		                                                       SL_AMT 
+		                       ELSE SL_AMT
+		                  END SL_AMT,
+                           D.BUY_CORPNAME, D.BUY_CORPCD,
+                           D.IVIT_NO, D.IVIT_NAME,D.INSEMPID,
+                           (select DISTINCT ODC_ISCFM from ITEMORDER where D.OBJ_NO = CONF_NO AND ODC_CORPCD = BUY_CORPCD AND ODC_ISCFM = 'Y')CHK
+             FROM
+                    (
+                            SELECT A.REFCONF_NO,C.OBJ_NO,IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,UNITTYPE,IT_STATUS,
+								   TO_CHAR(IT_DTM, 'YYYYMMDD') IT_DTM,C.INSEMPID,
+                             NVL(IT_PRICE,0) IT_PRICE,
+                             IT_AMT,IT_CONTENTS,IT_TYPE,
+                                      --get_acdName(C.IT_TYPE) 
+                                      get_codename_n(NVL(FN_SPLIT(C.IT_TYPE,4,'-'),IT_TYPE) ,'ACD') IT_TYPE_NAME,
+                                       REFIT_NO,
+                                       TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD,                                       
+                                   IVIT_NO, (SELECT IVNAME||'-'||IVNOTE FROM IVPLAN WHERE IVCD=IVIT_NO) IVIT_NAME,A.CONF_NO
+                            FROM CONFER A, BUYCONFER B,ITEM C
+                            WHERE A.CONF_NO = B.CONF_NO
+                            AND A.CONF_NO = C.OBJ_NO
+                            --AND A.CONF_NO = '20080227012'
+                    ) D,
+                    (
+                            SELECT C.OBJ_NO,IT_NO,UNITTYPE,
+                                   -- get_acdName(C.IT_TYPE) 
+                                   get_codename_n(NVL(FN_SPLIT(C.IT_TYPE,4,'-'),IT_TYPE) ,'ACD')  IT_TYPE_NAME,REFIT_NO,
+                                   NVL(IT_PRICE,0) SL_PRICE, NVL(IT_AMT,0) SL_AMT
+                            FROM CONFER A, SALECONFER B,ITEM C
+                            WHERE A.CONF_NO = B.CONF_NO
+                            AND A.CONF_NO = C.OBJ_NO
+                  --AND A.CONF_NO = (SELECT REFCONF_NO FROM CONFER WHERE CONF_NO = '20080227012')
+                    ) E
+             WHERE D.REFCONF_NO = E.OBJ_NO(+)
+             AND D.IT_NO = E.IT_NO(+)
+             AND D.CONF_NO = ?
+)			
+				UNION ALL
+				
+		   		SELECT OBJ_NO,
+		   		(select DISTINCT ODC_ISCFM from ITEMORDER where A.OBJ_NO = CONF_NO AND ODC_CORPCD = BUY_CORPCD AND ODC_ISCFM = 'Y')CHK,
+		   		IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,IT_STATUS, TO_CHAR(IT_DTM, 'YYYYMMDD') IT_DTM,
+							0 IT_PRICE,
+							0 IT_AMT,									
+							IT_CONTENTS,IT_TYPE,
+							--get_acdName(IT_TYPE) IT_TYPE_NAME,
+							get_codename_n(NVL(FN_SPLIT(IT_TYPE,4,'-'),IT_TYPE) ,'ACD') IT_TYPE_NAME,
+							REFIT_NO,						
+							CASE WHEN UNITTYPE = 1 THEN 
+							             IT_PRICE * 1000
+										 ELSE
+										 IT_PRICE END  SL_PRICE,						
+							CASE WHEN UNITTYPE = 1 THEN 
+							             IT_AMT * 1000
+										 ELSE
+										 IT_AMT END  SL_AMT,					
+							TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD, 
+							IVIT_NO, (SELECT IVNAME||'-'||IVNOTE FROM IVPLAN WHERE IVCD=IVIT_NO) IVIT_NAME	, ''		
+				FROM 
+				(			
+					SELECT A.* FROM 
+					(
+					SELECT A.*,B.*,C.UNITTYPE FROM ITEM A, CONFER B, BUYCONFER C
+					WHERE B.CONF_NO=?
+					AND B.REFCONF_NO=A.OBJ_NO
+					AND B.CONF_NO=C.CONF_NO
+					) A,
+					(			
+					SELECT A.*,B.*,1 FROM ITEM A, CONFER B
+					WHERE B.CONF_NO=?			
+					AND B.CONF_NO=A.OBJ_NO			
+					)B
+					WHERE A.IT_NO = B.REFIT_NO(+)
+					AND B.REFIT_NO IS NULL 	
+				)A	
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_028"   value-count="6" url=" 판매품목별 조회" >  
+	<sql-content>
+	<![CDATA[
+			SELECT A.IT_TYPE, A.IT_TYPE01, A.IT_TYPE02, A.IT_TYPE03,
+			         A.IT_TYPE01_NAME, A.IT_TYPE02_NAME, A.IT_TYPE03_NAME,
+			         A.SALECORPCD, A.SALECORPNAME, A.BIZCEONAME,
+			         SUM(IT_PRICE) IT_PRICE, SUM(IT_AMT) IT_AMT, SUM(IT_CNT) IT_CNT 
+			FROM			
+			(			
+			 SELECT IT_DIV, OBJ_NO, IT_NO,IT_NAME,IT_STD, IT_CNT, 
+					 CASE WHEN UNITTYPE = 1 THEN 
+								   IT_PRICE * 1000
+							ELSE  IT_PRICE
+							END
+					 IT_PRICE, 
+					 CASE WHEN UNITTYPE = 1 THEN 
+								   IT_AMT * 1000
+							ELSE  IT_AMT
+							END			 
+					 IT_AMT, IT_TYPE,
+				    SUBSTR(IT_TYPE,5,2) IT_TYPE01, 
+				    SUBSTR(IT_TYPE,8,4) IT_TYPE02, 
+				    SUBSTR(IT_TYPE,13)  IT_TYPE03,			 
+			        B.SALECORPCD, TO_BIZACQNAME(B.SALECORPCD) SALECORPNAME,
+			        (SELECT BIZCEONAME FROM BIZACQCORP WHERE BIZACQCD = B.SALECORPCD) BIZCEONAME,
+			        IT_STATUS,IT_DTM,REFIT_NO, IVIT_NO,
+					(SELECT CDNAME FROM COCODE WHERE CD = SUBSTR(IT_TYPE,5,2) AND HIGHCD='ACD' ) IT_TYPE01_NAME,
+					(SELECT CDNAME FROM COCODE WHERE CD = SUBSTR(IT_TYPE,8,4) AND HIGHCD= SUBSTR(IT_TYPE,5,2) ) IT_TYPE02_NAME,
+					(SELECT CDNAME FROM COCODE WHERE CD = SUBSTR(IT_TYPE,13)  AND HIGHCD= SUBSTR(IT_TYPE,8,4) ) IT_TYPE03_NAME,
+					(SELECT TO_CHAR(CRDTM,'YYYYMMDD')  FROM CONFER B WHERE CONF_NO=A.OBJ_NO) CRDTM										    						
+			 FROM ITEM A	, SALECONFER B, CONFER C		 
+			 WHERE A.OBJ_NO = B.CONF_NO
+			 AND C.CONF_NO = B.CONF_NO
+			 AND C.STATUS >= 'DD1'
+			) A
+			WHERE A.IT_DIV LIKE 'SA%'
+			AND A.SALECORPNAME LIKE '%'||?||'%'
+			AND A.IT_TYPE01 LIKE ?||'%'
+			AND A.IT_TYPE02 LIKE ?||'%'
+			AND A.IT_TYPE03 LIKE ?||'%'	
+			AND CRDTM>=?
+			AND CRDTM<=?
+			GROUP BY 
+					 A.IT_TYPE, A.IT_TYPE01, A.IT_TYPE02, A.IT_TYPE03,
+			         A.IT_TYPE01_NAME, A.IT_TYPE02_NAME, A.IT_TYPE03_NAME,
+			         A.SALECORPCD, A.SALECORPNAME, A.BIZCEONAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_029"   value-count="1" url=" 총무구매품의 조회" >  
+	<sql-content>
+	<![CDATA[
+			SELECT A.CONF_NO,A.CONFCD,A.REFCONF_NO,A.REFCONFTYPE, A.IPSCHKFLAG,
+					 (SELECT TO_pjtno_tocode(PJT_NO) FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) PJTCD,
+					 PJT_NO,
+					 (SELECT PIID FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) PIID,						 
+					 (SELECT FIID FROM CONFER W WHERE W.CONF_NO=A.REFCONF_NO ) FIID,						 						 
+					 CONFTITLE,CREMPID,TO_EMPKNAME(CREMPID) CREMPNAME,
+				 STATUS,CONFTYPE,CONFDIV,AMT,TO_CHAR(CRDTM,'YYYYMMDD') CRDTM, TO_CHAR(UPTDTM,'YYYYMMDD') UPTDTM,
+				 C.DELIVERCORPNAME,C.DELIVERDT,C.ID_DIV,
+				 C.DELIVERCORPTEL,C.DELIVERCORPADDR,C.DELIVERCORPFAX,C.DELIVERCORPPERS,
+				 B.UNITTYPE, B.ISVAT, B.BC_CONTENTS,						 
+				 B.BC_TYPE, DECODE(B.BC_TYPE,'6','상품','1','고정자산',TO_CDNAME('MG',B.BC_TYPE)) BC_TYPE_NAME,
+				 TO_CDNAME('CDT',B.UNITTYPE) UNITTYPE_NAME, TO_CDNAME('IV',B.ISVAT) ISVAT_NAME, TO_CDNAME('PV',CONFDIV) CONFDIV_NAME,
+				 USREMPID,TO_EMPKNAME(USREMPID) USREMPNAME,CONFORG,TO_ORGNONAME(CONFORG) CONFORGNAME		          
+			 FROM CONFER A, BUYCONFER B, ITEMDELIVERY C
+			  WHERE A.CONF_NO=?
+			  AND A.CONF_NO = B.CONF_NO				  
+			  AND A.CONF_NO=C.OBJ_NO
+			  AND A.CONFTYPE=C.ID_DIV	
+  	]]>
+	</sql-content>
+	</sql-mapping>				 	
+				 	
+	<sql-mapping  id="S_030"   value-count="1" url="품목 검색(조회용)" >  
+	<sql-content>
+	<![CDATA[
+SELECT OBJ_NO,IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,IT_PRICE,IT_AMT,IT_CONTENTS,IT_TYPE,
+       IT_TYPE_NAME,REFIT_NO,
+       NVL(SL_PRICE,0) SL_PRICE,
+       NVL(SL_AMT,0) SL_AMT,
+       BUY_CORPNAME, BUY_CORPCD,
+       IVIT_NO, IVIT_NAME
+FROM
+(
+           SELECT D.OBJ_NO,D.IT_NO,D.IT_DIV,D.IT_NAME,D.IT_STD,D.IT_CNT,D.IT_PRICE,D.IT_AMT,D.IT_CONTENTS,D.IT_TYPE,
+                  D.IT_TYPE_NAME,D.REFIT_NO,
+                  CASE WHEN  D.UNITTYPE < E.UNITTYPE THEN
+                                                       TRUNC(SL_PRICE  * 0.001)
+                                              WHEN D.UNITTYPE > E.UNITTYPE THEN
+                                                       SL_PRICE * 1000
+                                              ELSE SL_PRICE
+                                     END SL_PRICE,
+                                     CASE WHEN  D.UNITTYPE < E.UNITTYPE THEN
+                                                       TRUNC(SL_AMT * 0.001)
+                                              WHEN D.UNITTYPE > E.UNITTYPE THEN
+                                                       SL_AMT  * 1000
+                                              ELSE SL_AMT
+                                     END SL_AMT,
+                           D.BUY_CORPNAME, D.BUY_CORPCD,
+                           D.IVIT_NO, D.IVIT_NAME
+             FROM
+                    (
+                            SELECT A.REFCONF_NO,C.OBJ_NO,IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,UNITTYPE,
+                             NVL(IT_PRICE,0) IT_PRICE,
+                             IT_AMT,IT_CONTENTS,IT_TYPE,
+                             get_codename_n(NVL(FN_SPLIT(C.IT_TYPE,4,'-'),IT_TYPE) ,'ACD') IT_TYPE_NAME,
+                             REFIT_NO,
+                                       TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD,
+                                   IVIT_NO, (SELECT IVNAME||'-'||IVNOTE FROM IVPLAN WHERE IVCD=IVIT_NO) IVIT_NAME,A.CONF_NO
+                            FROM CONFER A, BUYCONFER B,ITEM C
+                            WHERE A.CONF_NO = B.CONF_NO
+                            AND A.CONF_NO = C.OBJ_NO
+                            --AND A.CONF_NO = '20080227012'
+                    ) D,
+                    (
+                            SELECT C.OBJ_NO,IT_NO,UNITTYPE,
+                                   -- get_acdName(C.IT_TYPE) IT_TYPE_NAME,
+                                   get_codename_n(NVL(FN_SPLIT(C.IT_TYPE,4,'-'),IT_TYPE) ,'ACD') IT_TYPE_NAME,
+                                   IT_TYPE
+                                   REFIT_NO,
+                                   NVL(IT_PRICE,0) SL_PRICE, NVL(IT_AMT,0) SL_AMT
+                            FROM CONFER A, SALECONFER B,ITEM C
+                            WHERE A.CONF_NO = B.CONF_NO
+                            AND A.CONF_NO = C.OBJ_NO
+                  --AND A.CONF_NO = (SELECT REFCONF_NO FROM CONFER WHERE CONF_NO = '20080227012')
+                    ) E
+             WHERE D.REFCONF_NO = E.OBJ_NO(+)
+             AND D.IT_NO = E.IT_NO(+)
+             AND D.CONF_NO = ?
+             ORDER BY TO_NUMBER(IT_NO)
+)
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_031"   value-count="3" url="검수자 입력" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO BUYCONFSAMPLER
+		(CONF_NO,SAMPLERID,SAMPLERNAME)
+		VALUES
+		(?,?,?)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_032"   value-count="1" url="검수자 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT * FROM BUYCONFSAMPLER
+		WHERE CONF_NO =?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_033"   value-count="4" url="검수자 수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE BUYCONFSAMPLER
+		SET SAMPLERID =? , SAMPLERNAME = ?
+		WHERE CONF_NO =?
+		AND SAMPLERID =?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_034"   value-count="1" url="검수자 삭제" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM BUYCONFSAMPLER
+		WHERE CONF_NO =?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_035"   value-count="1" url="검수자 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT DECODE((SELECT DISTINCT SAMPLERID FROM BUYCONFSAMPLER WHERE SAMPLERID = ?),NULL,'N','Y') ISSAMPLER FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_036"  value-count="10" url=" 구매현황조회" >  
+	<sql-content>
+	<![CDATA[
+			SELECT * FROM
+			(
+				SELECT A.CONF_NO, A.REFCONF_NO,A.CONFCD, A.CONFORG, A.CONFTITLE, A.CREMPID, A.USREMPID, TO_EMPKNAME(A.CREMPID) CREMPNAME, 
+				       TO_CHAR(A.CRDTM, 'YYYYMMDD') CRDTM, TO_CHAR(A.UPTDTM, 'YYYYMMDD') UPTDTM, A.IPSCHKFLAG,		       
+				       A.STATUS, D.BC_ISSUE,
+				       (SELECT CDNAME FROM COCODE WHERE CDTYPE IN ('SB','ST') AND CD=A.STATUS)  STATUSNAME,
+				       A.CONFTYPE,
+					   CASE WHEN D.UNITTYPE = 1 THEN
+					   		A.AMT * 1000
+					   ELSE
+					   	    A.AMT
+					   END BU_AMT,
+					   CASE WHEN B.UNITTYPE = 1 THEN
+					   		C.AMT * 1000
+					   ELSE
+					   	    C.AMT
+					   END SL_AMT,
+					   B.SALECORPCD, NVL(TO_BIZACQNAME(B.SALECORPCD),' ') SALECORPNAME,
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EBA')	ORDERDT,							 			         
+						 (
+						   	SELECT TO_CHAR(MAX(F.IT_DTM),'YYYYMMDD') FROM ITEM F WHERE F.OBJ_NO=A.CONF_NO AND F.OBJ_NO IN (SELECT CONF_NO FROM CONFERHISTORY WHERE AFTER = 'ECA'AND COLUMNNAME='STATUS' AND CONF_NO = A.CONF_NO)
+						   )	CFMDT,						 
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EDA')	ENDDT		
+				 FROM CONFER A ,SALECONFER B, CONFER C, BUYCONFER D
+				 WHERE A.CONFTYPE LIKE 'BU%'
+				 AND A.CONF_NO=D.CONF_NO
+				 AND A.REFCONF_NO=B.CONF_NO(+)
+				 AND A.REFCONF_NO=C.CONF_NO(+)
+				 AND C.CONFTYPE(+)='SAPJ'	
+				 AND A.STATUS IN ('DC0','DD0','DD1','EAA','EBA','ECA','EDA')	
+				 AND A.CONFDELFLAG='N'
+			) --E, BUYCONFSAMPLER F
+			WHERE CONFTYPE LIKE ?||'%'
+		--	AND E.REFCONF_NO = F.CONF_NO
+			AND CONFORG IN
+			(			
+					SELECT ORG_NO FROM ORG A
+					CONNECT BY A.HIGHORGCD = PRIOR TO_CHAR(A.ORG_NO)
+					START WITH A.ORG_NO like ?||'%'
+			)
+			AND STATUS LIKE ?||'%'
+			AND CRDTM>=?
+			AND CRDTM<=?
+			AND CREMPNAME LIKE ?||'%'
+			AND SALECORPNAME LIKE '%'||?||'%'
+			AND CONFTITLE LIKE '%'||?||'%'
+			AND CREMPID LIKE ?||'%'
+			AND USREMPID = ?
+			ORDER BY CONF_NO DESC	 	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_037"   value-count="1" url="주문처 검색_지급수입품의용" >  
+	<sql-content>
+	<![CDATA[
+
+	SELECT BUY_CORPNAME,BUY_CORPCD
+	FROM
+	(
+		SELECT DISTINCT
+		        TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD,OBJ_NO
+		FROM ITEM A
+		WHERE IT_DIV LIKE 'BU%'
+		AND (it_status = 'ECA')
+		MINUS 
+		SELECT DISTINCT
+		        TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD,OBJ_NO
+		FROM ITEM A
+		WHERE IT_DIV LIKE 'BU%'
+		AND (it_status is null or it_status = '')
+	)
+	WHERE OBJ_NO=?
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_038"   value-count="1" url="수입품의서 수입완료 체크" >  
+	<sql-content>
+	<![CDATA[
+	select decode(
+					(
+						select x.conf_no
+						from 
+						(				
+							select a.conf_no,sum(amount) amt 
+							from acctrpthd a, acctrptsb b 
+							where a.mainno = b.mainno 
+							and b.acctcd not in ('21081','11131')
+							and a.status in ('DD1','DE0')
+							group by a.conf_no
+						) x,
+						(
+							select a.conf_no,
+								   CASE WHEN b.UNITTYPE = 1 THEN
+							                AMT * 1000
+							            ELSE
+											AMT 
+										END AMT
+							from confer a, saleconfer b
+							where a.conf_no =b.conf_no
+						) y
+						where y.conf_no = x.conf_no
+						and x.amt = y.amt
+						and y.conf_no = ?
+					),null,'N','Y'
+				) END
+	from dual		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_039"   value-count="1" url="판매품의서의 결재상태 체크" >  
+	<sql-content>
+	<![CDATA[
+	SELECT B.STATUS FROM CONFER A, CONFER B
+	WHERE A.REFCONF_NO = B.CONF_NO
+	AND A.CONF_NO = ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_040"   value-count="1" url=" 판매프로젝트 조회(품의번호)" >  
+	<sql-content>
+	<![CDATA[
+				SELECT 
+						C.PJTORG_NO,to_orgnoname_n(C.pjtorg_no,to_char(sysdate,'YYYYMMDD')) PJTORGNAME,
+						to_orgnocd_n(C.pjtorg_no,to_char(sysdate,'YYYYMMDD')) PJTORGCD,
+						A.CONF_NO, A.REFCONF_NO, A.REFCONFTYPE,C.PJTSTATUS,	A.IPSCHKFLAG,					 
+						 A.CONFTITLE, A.CREMPID, C.PJT_NO, C.PJTCD, C.PJTNAME,
+				         A.STATUS, TO_CDNAME('ST',A.STATUS) STATUSNAME, A.STATUSDESC, A.CONFTYPE, A.CONFDIV, TO_CHAR(A.STATUSDTM,'YYYYMMDD') STATUSDTM, 
+				         B.BC_ISSUE,
+				         SC_BASE,SC_SVC,				         
+				         E.UNITTYPE,E.ISVAT,
+				         TO_CDNAME('CDT',E.UNITTYPE) UNITTYPE_NAME, TO_CDNAME('IV',E.ISVAT) ISVAT_NAME, TO_CDNAME('PV',A.CONFDIV) CONFDIV_NAME,
+				         (SELECT TO_CDNAME('DG',SC_TYPE) FROM SALECONFER C WHERE C.CONF_NO=A.REFCONF_NO) SC_TYPE_NAME,
+				         A.USREMPID,TO_EMPKNAME(A.USREMPID) USREMPNAME,A.CONFORG,TO_ORGNONAME(A.CONFORG) CONFORGNAME,
+						 TO_BIZACQNAME(E.SALECORPCD) SALECORPNAME	,
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EBA')	ORDERDT,							 			         
+						 (
+						   	SELECT TO_CHAR(MAX(F.IT_DTM),'YYYYMMDD') FROM ITEM F WHERE F.OBJ_NO=A.CONF_NO AND F.OBJ_NO IN (SELECT CONF_NO FROM CONFERHISTORY WHERE AFTER = 'ECA'AND COLUMNNAME='STATUS' AND CONF_NO = A.CONF_NO)
+						 ) CFMDT,						 
+						 (SELECT TO_CHAR(MAX(F.UPDTM), 'YYYYMMDD')  FROM CONFERHISTORY F WHERE COLUMNNAME='STATUS' AND F.CONF_NO=A.CONF_NO AND AFTER='EDA')	ENDDT		
+				 FROM CONFER A, BUYCONFER B,
+					  PROJECT C,
+					  CONFER D,				  
+				      SALECONFER E
+				  WHERE E.CONF_NO=?
+				  AND A.CONF_NO = B.CONF_NO	
+				  AND A.REFCONF_NO=D.CONF_NO				  			  		
+				  AND A.REFCONF_NO=E.CONF_NO	
+				  AND C.PJT_NO=D.PJT_NO		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_041"   value-count="3" url="판매 프로젝트 품목 검색" >   
+	<sql-content>
+	<![CDATA[
+SELECT OBJ_NO,CHK,IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,
+	   IT_STATUS,IT_DTM,
+	   IT_PRICE,IT_AMT,IT_CONTENTS,IT_TYPE,
+       IT_TYPE_NAME,REFIT_NO,
+       NVL(SL_PRICE,0) SL_PRICE,
+       NVL(SL_AMT,0) SL_AMT,
+       BUY_CORPNAME, BUY_CORPCD,
+       IVIT_NO, IVIT_NAME,INSEMPID
+FROM
+(
+           SELECT 
+           					D.OBJ_NO,D.IT_NO,D.IT_DIV,D.IT_NAME,D.IT_STD,D.IT_CNT,D.IT_STATUS,
+				   		  CASE WHEN D.UNITTYPE = 1THEN
+		                                                       D.IT_PRICE * 1000
+		                       WHEN D.UNITTYPE =2 THEN
+		                                                       D.IT_PRICE 
+		                  END IT_PRICE,
+		                  CASE WHEN D.UNITTYPE = 1 THEN
+		                                                       IT_AMT * 1000
+		                       WHEN D.UNITTYPE = 2 THEN
+		                                                       IT_AMT
+		                  END IT_AMT,
+						  D.IT_CONTENTS,D.IT_TYPE,
+		                  D.IT_TYPE_NAME,D.REFIT_NO,D.IT_DTM,
+		                  CASE WHEN E.UNITTYPE = 1THEN
+		                                                       SL_PRICE * 1000
+		                       WHEN E.UNITTYPE =2 THEN
+		                                                       SL_PRICE 
+		                       ELSE SL_PRICE
+		                  END SL_PRICE,
+		                  CASE WHEN E.UNITTYPE = 1 THEN
+		                                                       SL_AMT * 1000
+		                       WHEN E.UNITTYPE = 2 THEN
+		                                                       SL_AMT 
+		                       ELSE SL_AMT
+		                  END SL_AMT,
+                           D.BUY_CORPNAME, D.BUY_CORPCD,
+                           D.IVIT_NO, D.IVIT_NAME,D.INSEMPID,
+                           (select DISTINCT ODC_ISCFM from ITEMORDER where D.OBJ_NO = CONF_NO AND ODC_CORPCD = BUY_CORPCD AND ODC_ISCFM = 'Y')CHK
+             FROM
+                    (
+                            SELECT A.REFCONF_NO,C.OBJ_NO,IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,UNITTYPE,IT_STATUS,
+								   TO_CHAR(IT_DTM, 'YYYYMMDD') IT_DTM,C.INSEMPID,
+                             NVL(IT_PRICE,0) IT_PRICE,
+                             IT_AMT,IT_CONTENTS,IT_TYPE,
+                                       --get_acdName(C.IT_TYPE) IT_TYPE_NAME,
+                                       get_codename_n(NVL(FN_SPLIT(C.IT_TYPE,4,'-'),IT_TYPE) ,'ACD') IT_TYPE_NAME,
+                                       REFIT_NO,
+                                       TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD,                                       
+                                   IVIT_NO, (SELECT IVNAME||'-'||IVNOTE FROM IVPLAN WHERE IVCD=IVIT_NO) IVIT_NAME,A.CONF_NO
+                            FROM CONFER A, BUYCONFER B,ITEM C
+                            WHERE A.CONF_NO = B.CONF_NO
+                            AND A.CONF_NO = C.OBJ_NO
+                            and a.confdelflag = 'N'
+							and a.status not in ('DX0')
+                            --AND A.CONF_NO = '20080227012'
+                    ) D,
+                    (
+                            SELECT C.OBJ_NO,IT_NO,UNITTYPE,
+                                   --get_acdName(C.IT_TYPE) IT_TYPE_NAME,
+                                   get_codename_n(NVL(FN_SPLIT(C.IT_TYPE,4,'-'),IT_TYPE) ,'ACD') IT_TYPE_NAME,
+                                   REFIT_NO,
+                                   NVL(IT_PRICE,0) SL_PRICE, NVL(IT_AMT,0) SL_AMT
+                            FROM CONFER A, SALECONFER B,ITEM C
+                            WHERE A.CONF_NO = B.CONF_NO
+                            AND A.CONF_NO = C.OBJ_NO
+                            and a.confdelflag = 'N'
+							and a.status not in ('DX0')
+                  --AND A.CONF_NO = (SELECT REFCONF_NO FROM CONFER WHERE CONF_NO = '20080227012')
+                    ) E
+             WHERE D.REFCONF_NO = E.OBJ_NO(+)
+             AND D.IT_NO = E.IT_NO(+)
+             AND D.REFCONF_NO = ?
+)			
+				UNION ALL
+				
+		   		SELECT OBJ_NO,
+		   		(select DISTINCT ODC_ISCFM from ITEMORDER where A.OBJ_NO = CONF_NO AND ODC_CORPCD = BUY_CORPCD AND ODC_ISCFM = 'Y')CHK,
+		   		IT_NO,IT_DIV,IT_NAME,IT_STD,IT_CNT,IT_STATUS, TO_CHAR(IT_DTM, 'YYYYMMDD') IT_DTM,
+							0 IT_PRICE,
+							0 IT_AMT,									
+							IT_CONTENTS,IT_TYPE,
+							--get_acdName(IT_TYPE) IT_TYPE_NAME,
+							get_codename_n(NVL(FN_SPLIT(IT_TYPE,4,'-'),IT_TYPE) ,'ACD') IT_TYPE_NAME,
+							REFIT_NO,						
+							CASE WHEN UNITTYPE = 1 THEN 
+							             IT_PRICE * 1000
+										 ELSE
+										 IT_PRICE END  SL_PRICE,						
+							CASE WHEN UNITTYPE = 1 THEN 
+							             IT_AMT * 1000
+										 ELSE
+										 IT_AMT END  SL_AMT,					
+							TO_BIZACQNAME(BUY_CORPCD) BUY_CORPNAME, BUY_CORPCD, 
+							IVIT_NO, (SELECT IVNAME||'-'||IVNOTE FROM IVPLAN WHERE IVCD=IVIT_NO) IVIT_NAME	, ''		
+				FROM 
+				(			
+					SELECT A.* FROM 
+					(
+					SELECT A.*,B.*,C.UNITTYPE FROM ITEM A, CONFER B, BUYCONFER C
+					WHERE B.REFCONF_NO=?
+					AND B.REFCONF_NO=A.OBJ_NO
+					AND B.CONF_NO=C.CONF_NO
+					and b.confdelflag = 'N'
+					and b.status not in ('DX0')
+					) A,
+					(			
+					SELECT A.*,B.*,1 FROM ITEM A, CONFER B
+					WHERE B.REFCONF_NO=?			
+					AND B.CONF_NO=A.OBJ_NO
+					and b.confdelflag = 'N'
+					and b.status not in ('DX0')	
+					)B
+					WHERE A.IT_NO = B.REFIT_NO(+)
+					AND B.REFIT_NO IS NULL 	
+				)A	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_042"   value-count="1" url="품의전표조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT 	A.MAINNO,
+            A.DOCNO,
+            A.BIZACQACCTCD,
+            TO_BIZACQ_CD_NAME(A.BIZACQACCTCD) AS BIZACQNAME,
+            A.TOTAMT,
+            A.MTITLE,
+            TO_ORGNOCD_N(A.CRORGCD,TO_CHAR(SYSDATE,'YYYYMM')) AS ORGCD,
+            TO_ORGNONAME_N(A.CRORGCD,TO_CHAR(SYSDATE,'YYYYMM')) AS ORGNAME,
+            TO_EMPKNAME(A.CREMPID) AS CREMPKNAME,
+            A.CREMPID,
+            TO_EMPKNAME(A.USEEMPID) AS USEEMPKNAME,
+            A.USEEMPID,
+            A.STATUS,
+            GET_CODENAME('ST',A.STATUS) AS STATUSNAME,
+            A.PAYTYPE,
+            A.DOCTYPE,
+            A.FIID,
+            A.PIID
+	FROM ACCTRPTHD A
+	WHERE A.CRORGCD IN ( 	SELECT ORG_NO 
+						FROM ORG WHERE ORG_NO LIKE [S_ORG_NO]||'%'
+						AND ORGCD LIKE [S_ORGCD]||'%'
+						AND ORGNAME LIKE '%'||[S_ORGNAME]||'%')
+    AND A.EVENTDT BETWEEN REPLACE([S_STARTDT],'-','') AND REPLACE([S_ENDDT],'-','')
+    AND STATUS LIKE [S_STATUS]||'%'
+    AND A.TOTAMT LIKE [S_AMT]||'%'
+    AND DECODE([S_ASTYPE],	'AS_01',A.DOCNO,
+						    'AS_02',A.MTITLE,
+						    'AS_03',A.DETAIL,
+						    'AS_04',TO_BIZACQ_CD_NAME(A.BIZACQACCTCD)) LIKE '%'||[S_DOCNO]||'%'
+    AND DECODE([S_USER_TYPE],'G',A.CREMPID,						    
+							 'S',A.USEEMPID,
+							 '' ,A.CREMPID) 
+							 IN (SELECT EMPID 
+			 					FROM EMPALL 
+			 					WHERE EMPKNAME LIKE '%'||[S_EMPKNAME]||'%'
+			  					AND EMPID LIKE [S_EMPID]||'%')
+	AND DELFLAG = 'N'
+	AND STATUS NOT IN ('DA0','DB0')	
+		AND (A.USEORGCD LIKE DECODE(
+							 		 (
+										SELECT 1
+										FROM AUTH
+										WHERE EMPID = [USEEMPID]
+										AND (TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN AUTHSTARTDT AND AUTHENDDT)
+										AND AUTHTYPE IN ('admin','fiAdmin')
+										AND ROWNUM = 1									 
+									 )
+									 ,1,'%','***')||'%'
+		OR A.USEORGCD IN (SELECT ORG_NO FROM EMP_ORG
+						    WHERE USEFLAG = 'Y'
+							AND EMPID = [USEEMPID]))	
+	
+			  					
+	UNION ALL
+
+	SELECT  AA11_JPNO AS MAINNO
+			,AA11_JPNO AS DOCNO
+			,AA11_CUST_CD AS BIZACQACCTCD
+			,AA11_CUST_NM AS BIZACQNAME
+			,AA11_AMT AS TOTAMT
+			,AA11_DPJYO AS MTITLE
+			,AA11_JBSCD AS ORGCD
+			,TO_ORGCDNAME_N(AA11_JBSCD,TO_CHAR(SYSDATE,'YYYYMM')) AS ORGNAME
+			,TO_EMPKNAME(AA11_JSBN) AS CREMPKNAME
+			,AA11_JSBN AS CREMPID
+			,TO_EMPKNAME(AA11_SSBN) AS USEEMPKNAME
+			,AA11_SSBN AS USEEMPID
+			,AA11_STAT AS STATUS
+			,GET_CODENAME('ACCT_RT',AA11_STAT) AS STATUSNAME
+			,SUBSTR(AA11_JPNO,1,1) AS PAYTYPE
+			,'ACCT' AS DOCTYPE
+			,'' FIID
+			,'' PIID
+	FROM TBAA11@TO_INHAUH A
+	WHERE (AA11_JPNO LIKE 'A%'OR AA11_JPNO LIKE 'B%')
+	AND AA11_HGIL BETWEEN REPLACE([S_STARTDT],'-','') AND REPLACE([S_ENDDT],'-','')
+    AND A.AA11_JBSCD IN (SELECT ORGCD
+						FROM ORG WHERE ORG_NO LIKE [S_ORG_NO]||'%'
+						AND ORGCD LIKE [S_ORGCD]||'%'
+						AND ORGNAME LIKE '%'||[S_ORGNAME]||'%')
+    AND A.AA11_STAT LIKE [S_STATUS]||'%'
+    AND A.AA11_AMT LIKE [S_AMT]||'%'
+    AND DECODE([S_ASTYPE], 'AS_01',A.AA11_JPNO,
+                       'AS_02',A.AA11_DPJYO,
+                       'AS_03',A.AA11_DPJYO,
+                       'AS_04',TO_BIZACQ_CD_NAME(A.AA11_CUST_CD)) LIKE '%'||[S_DOCNO]||'%'
+    AND DECODE([S_USER_TYPE],'G',A.AA11_JSBN,
+               'S',A.AA11_SSBN,
+               '' ,A.AA11_JSBN)
+               IN (SELECT EMPID
+                      FROM EMPALL
+                      WHERE EMPKNAME LIKE '%'||[S_EMPKNAME]||'%'
+                      AND EMPID LIKE [S_EMPID]||'%')
+	AND (A.AA11_JBSCD LIKE DECODE(
+                            (
+                      		SELECT 1
+                             FROM AUTH
+                             WHERE EMPID = [USEEMPID]
+                             AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN AUTHSTARTDT AND AUTHENDDT
+                             AND AUTHTYPE IN ('admin','fiAdmin')
+                             AND ROWNUM = 1
+                            )
+                            ,1,'%','***')||'%'
+	OR A.AA11_JBSCD IN (SELECT TO_ORGNOCD(ORG_NO) FROM EMP_ORG
+					WHERE USEFLAG = 'Y'
+					AND EMPID = [USEEMPID]))   
+	AND  NOT EXISTS (SELECT *
+					 FROM ACCTRPTHD
+					 WHERE DOCNO = AA11_JPNO)	
+	ORDER BY DOCNO	DESC				 				                   
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_043"   value-count="1" url="재무접수 대상 전표조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+		   TO_CHAR(TO_DATE(EVENTDT,'YYYYMMDD'),'YYYY-MM-DD') AS EVENTDT,
+		   MAINNO,
+		   DOCNO,
+		   MTITLE,
+           TO_ORGNOCD_N(USEORGCD,TO_CHAR(SYSDATE,'YYYYMM')) AS USEORGCD,
+		   USEORGNAME,
+		   BIZACQACCTCD,
+	       TO_BIZACQ_CD_NAME(BIZACQACCTCD) AS BIZACQNAME,
+		   TOTAMT,
+		   CREMPID,
+		   TO_EMPKNAME(CREMPID) AS CREMPKNAME,
+		   STATUS,
+		   DOCTYPE,
+		   PAYTYPE,
+		   GET_CODENAME('ST',STATUS) AS STATUSNAME
+	FROM  ACCTRPTHD
+	WHERE STATUS LIKE [S_STATUS]||'%'
+	AND DELFLAG = 'N'
+	AND STATUS NOT IN ('DA0','DB0')
+	AND EVENTDT BETWEEN REPLACE([S_STARTDT],'-','') AND REPLACE([S_ENDDT],'-','')
+	AND USEORGCD LIKE '%'||[S_ORG_NO]||'%'
+	AND USEORGNAME LIKE '%'||[S_ORGNAME]||'%' 	
+	AND DOCNO LIKE[S_DOCNO]||'%'
+	ORDER BY DOCNO DESC
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+</sql>

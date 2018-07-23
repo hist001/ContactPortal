@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+    <sql-mapping  id="bizPlan_01"   value-count="3" url="사업계획" >  
+    <sql-content>
+    <![CDATA[
+		select * from planNarration
+		where cd = '?'
+		and year = '?'
+		and orgcd  = '?'
+	]]>     
+	</sql-content>
+	</sql-mapping>
+
+    <sql-mapping  id="bizPlan_02"   value-count="3" url="사업계획" >  
+    <sql-content>
+    <![CDATA[
+		select * from planNarration
+		where cd = '?'
+		and year = '?'
+		and orgcd  = '?'
+	]]>     
+	</sql-content>
+
+	</sql-mapping>
+	
+    <sql-mapping  id="bizPlan_03"   value-count="3" url="사업계획" >  
+    <sql-content>
+    <![CDATA[
+		SELECT * FROM PLANTIMEWORKTG
+		WHERE CD = '?'
+		AND YEAR = '?'
+	]]>     
+	</sql-content>
+	</sql-mapping>
+	
+    <sql-mapping  id="BIZ_001"   value-count="0" url="사업계획 List" >  
+    <sql-content>
+    <![CDATA[
+	SELECT 	YEARVIEW,
+			CDVIEW,
+			CDNAME,
+			NVL(TO_CDNAME('BR',BIZORGCDVIEW),BIZORGCDVIEW) AS BIZORGCDVIEW,
+			NVL(TO_CDNAME('BR',ORGGRCDVIEW),ORGGRCDVIEW) AS ORGGRCDVIEW,
+			BIZORGCDVIEW AS BIZORGCD,
+			ORGGRCDVIEW AS ORGGRCD,
+			TO_CHAR(TO_DATE(UPDATEDT,'YYYYMMDD'),'YYYY-MM-DD') AS UPDATEDT
+	FROM(
+			SELECT DISTINCT
+				   YEAR AS YEARVIEW,
+				   CD AS CDVIEW,
+				   CDNAME,
+				   BIZORGCD AS BIZORGCDVIEW ,
+				   '' AS ORGGRCDVIEW ,
+				   UPDATEDT
+			FROM PLANRSLTANALYZE
+		UNION ALL
+			SELECT YEAR, CD, CDNAME, ORGCD, ORGGRCD, UPDATEDT
+			FROM PLANNARRATION
+		UNION ALL
+			SELECT YEAR, CD, CDNAME, ORGCD, ORGGRCD, UPDATEDT
+			FROM PLANSWOT
+		UNION ALL
+			SELECT DISTINCT YEAR, CD, CDNAME, PLANTGORGCD, ORGGRCD, UPDATEDT
+			FROM PLANBSCTG
+		)
+	WHERE YEARVIEW 		LIKE 	YEARVIEW:||'%'
+	AND  CDVIEW 		LIKE 	CDVIEW:||'%'
+	AND  BIZORGCDVIEW 	LIKE 	BIZORGVIEW:||'%'
+	AND  (ORGGRCDVIEW 	LIKE 	ORGGRVIEW:||'%' OR   ORGGRVIEW: IS NULL)
+	AND  CDVIEW NOT LIKE '1%'
+	ORDER BY YEARVIEW DESC, CDVIEW, BIZORGCDVIEW, ORGGRCDVIEW
+	]]>     
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="BIZ_002"   value-count="0" url="그룹별 SWOT분석" >  
+    <sql-content>
+    <![CDATA[
+	 SELECT 	YEAR,
+				CD,
+				CDNAME,
+				ORGCD,
+				STRENGTH,
+				WEAKNESS,
+				OPPORTUNITY,
+				THREAT,
+				SO,
+				WO,
+				ST,
+				WT,
+				SUBJECTNOTE,
+				CREATEDT,
+				UPDATEDT,
+				ORGGRCD
+	  FROM PLANSWOT
+	  WHERE YEAR= YEAR:
+--	  AND ORGCD  = ORGCD:
+	  AND ORGGRCD  = ORGGRCD:
+
+	]]>     
+	</sql-content>
+	</sql-mapping>
+	
+    <sql-mapping  id="BIZ_003"   value-count="0" url="그룹별 BSC 전략목표" >  
+    <sql-content>
+    <![CDATA[
+		SELECT A.YEAR,
+				A.CD,
+				A.CDNAME,
+				A.OMTTGNAME,
+				A.PLANTGORGCD,
+				A.PLANBSCFLAG,
+				A.PARITEM,
+				A.DRVSUBJECTNAME,
+				A.HEAVYRATIO,
+				A.PLANTG,
+				A.PLANRSLT,
+				A.ATTAINRATIO,
+				A.MEASURE,
+				A.CREATEDT,
+				A.UPDATEDT,
+				A.ORGGRCD,
+				B.BIZNOTE
+		FROM PLANBSCTG A, PLANNARRATION B
+		WHERE A.YEAR = YEAR:
+		AND A.CD = '2.4'
+--		AND A.PLANTGORGCD = PLANTGORGCD:
+		AND A.YEAR = B.YEAR
+		AND A.CD = B.CD
+		AND A.ORGGRCD LIKE  ORGGRCD:||'%'
+		AND A.ORGGRCD=B.ORGGRCD
+		AND A.PLANTGORGCD = B.ORGCD
+		ORDER BY PLANBSCFLAG ASC
+
+	]]>     
+	</sql-content>
+	</sql-mapping>
+	
+    <sql-mapping  id="BIZ_004"   value-count="0" url="사업별 시장 전망" >  
+    <sql-content>
+    <![CDATA[
+	 SELECT 	YEAR,
+				CD,
+				CDNAME,
+				BIZNOTE,
+				CREATEDT,
+				UPDATEDT,
+				ORGCD,
+				ORGGRCD
+	  FROM PLANNARRATION
+	  WHERE YEAR= SUBSTR(YEAR:,1,4) 
+	  AND CD  = '2.2' 
+	  AND ORGCD  = ORGCD:
+
+	]]>     
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="BIZ_005"   value-count="0" url="전년도 사업실적 조회" >  
+    <sql-content>
+    <![CDATA[
+
+	 SELECT YEAR,
+			CD,
+			CDNAME,
+			BIZORGCD, 
+			BIZORGCD ORGCD,
+			BIZACTUALFLAG,
+			BIZBFPLAN,
+			BIZBFTOT,
+			BIZBFGUESS,
+			BIZINCREASE,
+			BIZANACONT,
+			CREATEDT,
+			UPDATEDT
+	 FROM PLANRSLTANALYZE
+	 WHERE YEAR= SUBSTR(YEAR:,1,4)
+	 AND CD = '2.1'
+	 AND BIZORGCD=ORGCD:
+
+	]]>     
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="BIZ_006"   value-count="0" url="사업전략조회" >  
+    <sql-content>
+    <![CDATA[
+
+	SELECT 	UI_NO,
+			OBJ_NO,
+            SUBSTR(OBJ_NO,6,LENGTH(OBJ_NO)) AS  OBJ_DIV,
+			FILE_NO,
+			FILETYPE,
+			DIR,
+			FILEORIGINNAME,
+			FILESYSTEMNAME,
+			DELFLAG,
+			CREMPID,
+			CREATEDTM
+	FROM  COM_FILES
+	WHERE UI_NO='BizPlan'
+	AND   OBJ_NO LIKE S_YEAR:||'%'
+	AND   DELFLAG='N'
+	ORDER BY FILESYSTEMNAME
+	
+	]]>     
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="BIZ_007"   value-count="0" url="엑셀 업로드 파일 조회 " >  
+    <sql-content>
+    <![CDATA[
+
+	SELECT filesystemname,DIR
+	FROM COM_FILES
+	WHERE UI_NO='BizPlan'
+	AND OBJ_NO LIKE OBJ_NO:||'%'
+	AND DELFLAG !='Y'
+	ORDER BY CREATEDTM DESC
+
+	]]>     
+	</sql-content>
+	</sql-mapping>
+	
+</sql>

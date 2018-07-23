@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="euc-kr"?>
+
+<sql>
+
+	<sql-mapping  id="HTPA09_001"   value-count="0" url="자격정보조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 
+		   C_CODE, 
+		   EMP_ID, 
+		   SEQ,
+		   QUAL_CODE,
+		   GET_CODENAME('QUAL_CODE', QUAL_CODE) AS QUAL_CODE_NM, 
+		   QUAL_NO, 
+		   QUAL_INSTITUTION, 
+		   QUAL_ACQ_DATE, 
+		   QUAL_EXP_DATE, 
+		   QUAL_BENEFIT_YN,
+		   QUAL_STATUS, 
+		   NOTE,
+		   REG_DT, REG_ID, 
+		   UPD_DT, UPD_ID
+		FROM HTPA09
+ 	    WHERE C_CODE = [C_CODE]
+	       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="HTPA09_002"   value-count="0" url="자격정보등록" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO HTPA09 (
+		   C_CODE, 
+		   EMP_ID, 
+		   SEQ,
+		   QUAL_CODE, 
+		   QUAL_NO, 
+		   QUAL_INSTITUTION, 
+		   QUAL_ACQ_DATE, 
+		   QUAL_EXP_DATE, 
+		   QUAL_BENEFIT_YN,
+		   QUAL_STATUS, 
+		   NOTE
+		   REG_DT, REG_ID, 
+		   UPD_DT, UPD_ID) 
+		VALUES (
+			[C_CODE],
+		 	[EMP_ID],
+			(SELECT NVL(MAX(TO_NUMBER(SEQ),0)+1
+				FROM HTPA09
+				WHERE C_CODE = [C_CODE]
+				AND EMP_ID = [EMP_ID]),
+		 	[QUAL_CODE],
+			[QUAL_NO],
+			[QUAL_INSTITUTION],
+			REPLACE(TRIM([QUAL_ACQ_DATE]),'-',''),
+			REPLACE(TRIM([QUAL_EXP_DATE]),'-',''),
+			[QUAL_BENEFIT_YN],
+			[QUAL_STATUS],
+			[NOTE],
+			SYSDATE,
+			[REG_ID],
+			SYSDATE,
+			[UPD_ID] )
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="HTPA09_003"   value-count="0" url="자격정보수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE HTPA09
+		SET    QUAL_CODE        = [QUAL_CODE],
+		       QUAL_NO          = [QUAL_NO],
+		       QUAL_INSTITUTION = [QUAL_INSTITUTION],
+		       QUAL_ACQ_DATE     = NVL(REPLACE(TRIM([QUAL_ACQ_DATE]),'-',''), ''),
+		       QUAL_EXP_DATE     = NVL(REPLACE(TRIM([QUAL_EXP_DATE]),'-',''), ''),
+		       QUAL_BENEFIT_YN  = [QUAL_BENEFIT_YN],
+       		   QUAL_STATUS      = [QUAL_STATUS],
+		       NOTE      		= [NOTE],
+		       UPD_DT           = SYSDATE,
+		       UPD_ID           = [UPD_ID]
+		WHERE  C_CODE           = [C_CODE]
+		AND    EMP_ID           = [EMP_ID]
+		AND		SEQ				= [SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="HTPA09_004"   value-count="0" url="자격정보삭제" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM HTPA09 
+		WHERE  C_CODE         = [C_CODE]
+		AND    EMP_ID         = [EMP_ID]
+		AND		SEQ			  = [SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+</sql>

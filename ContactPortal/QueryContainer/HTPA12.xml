@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sql>
+ <sql-mapping  id="HTPA12_001"   value-count="0"  url="징계정보조회" >  
+   	<sql-content>
+  		<![CDATA[		   
+		SELECT 	C_CODE,
+			    EMP_ID,
+			    SEQ, 
+				DIS_DT,
+		        DIS_CDT,
+		        DIS_NAME,
+		        GET_CODENAME('DNAME', DIS_NAME) AS DIS_NAME2,
+		        DIS_REASON,
+		        ORGNAME,
+		        RESULT,
+   		        REG_ID,
+		        REG_DT,
+		        UPD_ID,
+		        UPD_DT
+		 FROM HTPA12
+		 WHERE C_CODE = [C_CODE] AND EMP_ID = [EMP_ID]
+   	]]>
+	</sql-content>
+    </sql-mapping>
+
+    <sql-mapping  id="HTPA12_002"   value-count="0"  url="징계정보등록" >  
+   	<sql-content>
+   		<![CDATA[
+		   		INSERT INTO HTPA12 (
+				   C_CODE, EMP_ID, SEQ, 
+				   DIS_DT, DIS_CDT, DIS_NAME, 
+				   DIS_REASON, ORGNAME, RESULT, 
+				   REG_ID, REG_DT, UPD_ID, 
+				   UPD_DT) 
+				VALUES ([C_CODE], [EMP_ID], (SELECT NVL(MAX(TO_NUMBER(SEQ)),0)+1 FROM HTPA12 WHERE C_CODE = [C_CODE] AND EMP_ID = [EMP_ID]),
+				 NVL(REPLACE(TRIM([DIS_DT]),'-',''), ''),
+				 NVL(REPLACE(TRIM([DIS_CDT]),'-',''), ''),
+				 [DIS_NAME],
+				 [DIS_REASON],
+				 [ORGNAME],
+				 [RESULT],
+				 [REG_ID],
+				 SYSDATE,
+				 [UPD_ID],
+				 SYSDATE )
+	]]>
+	</sql-content>
+    </sql-mapping>
+    	 
+  	<sql-mapping  id="HTPA12_003"   value-count="0"  url="징계정보수정" >  
+   	<sql-content>
+  		<![CDATA[		   
+			  		UPDATE HTPA12
+			SET   
+			       DIS_DT     = NVL(REPLACE(TRIM([DIS_DT]),'-',''), ''),
+			       DIS_CDT    = NVL(REPLACE(TRIM([DIS_CDT]),'-',''), ''),
+			       DIS_NAME   = [DIS_NAME],
+			       DIS_REASON = [DIS_REASON],
+			       ORGNAME    = [ORGNAME],
+			       RESULT     = [RESULT],
+			       UPD_ID     = [UPD_ID],
+			       UPD_DT     = SYSDATE
+			WHERE  C_CODE     = [C_CODE]
+			AND    EMP_ID     = [EMP_ID]
+			AND    SEQ        = [SEQ]
+			
+   	]]>
+	</sql-content>
+    </sql-mapping>
+    	
+    <sql-mapping  id="HTPA12_004"   value-count="0"  url="징계정보삭제" >  
+   	<sql-content>
+  		<![CDATA[		   
+			DELETE FROM HTPA12
+			WHERE C_CODE = [C_CODE] AND EMP_ID = [EMP_ID] AND SEQ = [SEQ]
+   	]]>
+	</sql-content>
+    </sql-mapping>
+</sql>	  		

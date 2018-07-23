@@ -1,0 +1,1491 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping id="PD_001" value-count="0" url="산출문서 등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO PRODUCTDOC  (	DOCNO, 
+						HIGHDOCNO, 
+						DOCTYPE, 
+						TITLE, 
+						DETAIL, 
+						P_TITLE, 
+						L_TITLE, 
+						DIV, 
+						EMPID, 
+						USETYPE, 
+						CREATEDT, 
+						MODIFYDT,
+						URL)
+		VALUES(
+						GET_SEQ('PROD'), 
+						HIGHDOC:, 
+						DOCTYPE:, 
+						TITLE:, 
+						DETAIL:, 
+						TITLE_P:, 
+						TITLE_L:, 
+						DIV:, 
+						EMPID:, 
+						USETYPE:, 
+						SYSDATE, 
+						SYSDATE,
+						URL:)
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_002" value-count="0" url="산출문서 수정">
+		<sql-content>
+	<![CDATA[
+		UPDATE PRODUCTDOC SET
+			HIGHDOCNO = HIGHDOC:,
+			DOCTYPE   = DOCTYPE:,
+			TITLE     = TITLE:  ,
+			DETAIL    = DETAIL: ,
+			P_TITLE   = TITLE_P:,
+			L_TITLE   = TITLE_L:,
+			DIV       = DIV:    ,
+			EMPID     = EMPID:  ,
+			USETYPE   = USETYPE:,
+			MODIFYDT  = SYSDATE,
+			URL		  =URL:
+		WHERE DOCNO = DOCNO:
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_003" value-count="0" url="산출문서 삭제">
+		<sql-content>
+	<![CDATA[
+		DELETE FROM  PRODUCTDOC 
+		WHERE DOCNO = DOCNO:
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+
+	<sql-mapping id="PD_004" value-count="0" url="산출문서 리스트">
+		<sql-content>
+	<![CDATA[
+		SELECT 	LEVEL AS LEV,
+				DOCNO AS CODENO, 
+				HIGHDOCNO AS HIGHCODE,
+				DOCNO, 
+				HIGHDOCNO,
+					(SELECT MAX(CODENAME)
+					FROM COMCODE
+					WHERE LEVEL>=1
+					AND  (CODE LIKE DOCTYPE
+							OR CODE_NO LIKE DOCTYPE)					
+					START WITH  CODE='PDL'
+					CONNECT BY PRIOR CODE_NO=HIGHCODE) 
+			    AS DOCTYPE_NAME,	 
+				DOCTYPE, 
+				TITLE, 
+				DETAIL, 
+				P_TITLE, 
+				L_TITLE, 
+				DECODE(DIV,'%','',DIV) AS DIV, 
+				EMPID, 
+	                (SELECT EMPKNAME FROM EMPALL A 
+	                WHERE A.EMPID=B.EMPID) 
+                AS EMPNAME,
+					(SELECT CDNAME FROM COCODE
+				    WHERE CDTYPE='UF'
+				    AND  CD=USETYPE) 
+			    AS USETYPE_NAME,				
+				USETYPE, 
+			  TO_CHAR(CREATEDT,'YYYY-MM-DD') AS CREATEDT,
+              TO_CHAR(MODIFYDT,'YYYY-MM-DD') AS MODIFYDT,
+					(SELECT L_TITLE 
+					FROM PRODUCTDOC 
+					WHERE DOCNO=B.HIGHDOCNO) 
+				AS L_TITLE_H,
+					(SELECT (DECODE(COUNT(DOCNO),0,'',TO_CHAR('['||COUNT(DOCNO)||']')))
+					FROM PRODUCTDOC A
+					WHERE A.HIGHDOCNO = B.DOCNO)
+				AS LEVELSUBCNT,
+				URL,
+				IDX
+		FROM    PRODUCTDOC B
+		WHERE   LEVEL<=	S_LEVEL:
+		AND (TITLE LIKE '%'||S_TITLE:||'%' OR S_TITLE: IS NULL)
+		AND     (P_TITLE LIKE '%'||[S_P_TITLE]||'%' OR [S_P_TITLE] IS NULL)
+		AND     (L_TITLE LIKE '%'||[S_L_TITLE]||'%' OR [S_L_TITLE] IS NULL)
+		AND     (DIV LIKE S_DIV:||'%' OR S_DIV: IS NULL)
+		AND     (DOCTYPE LIKE S_DOCTYPE:||'%' OR S_DOCTYPE: IS NULL)
+		AND     (USETYPE LIKE S_USETYPE:||'%' OR S_USETYPE: IS NULL)
+		START WITH DOCNO LIKE DECODE(S_DOCNO:,'','SYSTEM',S_DOCNO:)||'%'
+		CONNECT BY PRIOR DOCNO=HIGHDOCNO
+		ORDER SIBLINGS BY IDX,DOCTYPE,DOCNO,P_TITLE
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_005" value-count="0" url="산출문서 세부 조회">
+		<sql-content>
+	<![CDATA[
+	SELECT *
+	FROM
+	(SELECT
+                        DOCNO,
+                        HIGHDOCNO,
+                        DOCTYPE,
+                        GET_CODENAME('DOCTYPE',DOCTYPE) AS DOCTYPE_NM,
+                        TITLE,
+                        DETAIL,
+                        P_TITLE,
+                        L_TITLE,
+                        DIV,
+                        EMPID,
+			                (SELECT EMPKNAME FROM EMPALL A
+			                WHERE A.EMPID=B.EMPID)
+		      			  AS EMPNAME,
+                        USETYPE,
+                        CREATEDT,
+                        MODIFYDT,
+                        URL,
+                        IDX,
+                        (SELECT HIGHDOCNO FROM PRODUCTDOC C WHERE C.DOCNO=B.HIGHDOCNO) AS TOPDOCNO,
+                        (SELECT MAX('Y') FROM PRODUCTDOC C WHERE C.HIGHDOCNO=B.DOCNO) AS SUBDOCNO,
+							(SELECT SYS_CONNECT_BY_PATH((L_TITLE),'>') AS PATH
+							FROM PRODUCTDOC A
+							where A.DOCNO=[S_HIGHDOCNO]
+							START WITH  A.DOCNO= 'SYSTEM'
+							CONNECT BY PRIOR  DOCNO=HIGHDOCNO
+							)
+						 AS PATH
+
+        FROM  PRODUCTDOC B
+        WHERE HIGHDOCNO=[S_HIGHDOCNO]
+        AND   (USETYPE  LIKE  [S_USETYPE]||'%' OR [S_USETYPE] IS NULL)
+        )
+        WHERE  (EMPNAME  LIKE  [S_EMPKNAME]||'%' OR [S_EMPKNAME] IS NULL)
+        ORDER BY IDX,L_TITLE
+	
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+
+	<sql-mapping id="PD_006" value-count="0" url="산출문서  등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO  PRODUCTDOC (	
+			DOCNO, 
+			HIGHDOCNO, 
+			DOCTYPE, 
+			TITLE, 
+			DETAIL, 
+			P_TITLE, 
+			L_TITLE, 
+			DIV, 
+			EMPID, 
+			USETYPE, 
+			CREATEDT, 
+			MODIFYDT,
+			IDX)
+		VALUES(	GET_SEQ('PROD'), 
+				[HIGHDOCNO], 
+				[DOCTYPE], 
+				[TITLE], 
+				[DETAIL], 
+				[P_TITLE], 
+				[L_TITLE], 
+				[DIV], 
+				[EMPID], 
+				[USETYPE], 			
+				SYSDATE,  
+				SYSDATE,
+				NVL([IDX],(SELECT MAX(IDX)+1 FROM PRODUCTDOC WHERE HIGHDOCNO=[HIGHDOCNO]))
+				)
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_007" value-count="0" url="산출문서 삭제">
+		<sql-content>
+	<![CDATA[
+		DELETE
+		FROM  PRODUCTDOC
+		WHERE DOCNO = [DOCNO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_008" value-count="0" url="산출문서 수정">
+		<sql-content>
+	<![CDATA[
+		UPDATE  PRODUCTDOC SET   
+				HIGHDOCNO=[HIGHDOCNO],
+				DOCTYPE=[DOCTYPE],
+				TITLE=[TITLE],
+				DETAIL=[DETAIL],
+				P_TITLE=[P_TITLE],
+				L_TITLE=[L_TITLE],
+				DIV=[DIV],
+				EMPID=[EMPID],
+				USETYPE=[USETYPE],
+				IDX=[IDX],
+				MODIFYDT=SYSDATE
+		WHERE DOCNO = [DOCNO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_109" value-count="0" url="부가세 환급 조회">
+		<sql-content>
+	<![CDATA[
+		SELECT  DOCNO,
+				B.CERTIFNO,
+				B.CDAPPLNO,
+				A.EVENTDT,
+				A.TOTAMT,
+				A.SUPPLYAMT,
+				TAXAMT,
+				B.AMOUNT,
+				CASE SUBSTR (b.acctcd, 1, 1)
+		            WHEN '5'
+		               THEN CASE SUBSTR (TO_ORGNOCD(b.jobno)||
+				   (SELECT TO_ORGNOCD(PJTORG_NO)
+				    FROM PROJECT
+				    WHERE PJT_NO= b.jobno), 1, 2)
+		              WHEN 'CP'
+		                 THEN '59' || SUBSTR (b.acctcd, 3, 3)
+		              WHEN 'CQ'
+		                 THEN '59' || SUBSTR (b.acctcd, 3, 3)
+		              WHEN 'CR'
+		                 THEN '59' || SUBSTR (b.acctcd, 3, 3)
+		              ELSE '51' || SUBSTR (b.acctcd, 3, 3)
+		         		   END
+		            ELSE SUBSTR(b.acctcd,1,5)
+		         END  AS ACCT,
+				TO_ACCTNAME(ACCTCD) AS ACCTNAME,
+		    		CASE SUBSTR (b.MAINNO, 1, 1)
+		                   WHEN 'B'
+		                   THEN
+								(TO_ORGNOCD(b.jobno)||
+							   (SELECT TO_ORGNOCD(PJTORG_NO)
+							   FROM PROJECT
+							   WHERE PJT_NO= b.jobno))
+							ELSE
+							   TO_ORGNOCD(b.orgcd)
+						END	  BSCD
+		FROM ACCTRPTHD A, ACCTRPTSB B
+		WHERE A.MAINNO=B.MAINNO
+		AND (A.DOCNO LIKE '%'||TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(FR_YYMM:,'-',''),'YYYYMM'),0),'YYYYMM')||'%'
+		OR   A.DOCNO LIKE '%'||TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(FR_YYMM:,'-',''),'YYYYMM'),1),'YYYYMM')||'%'
+		OR   A.DOCNO LIKE '%'||TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(FR_YYMM:,'-',''),'YYYYMM'),2),'YYYYMM')||'%'
+		)
+		AND PCARDYN='Y'
+		AND STATUS='DE0'
+		ORDER BY DOCNO
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_110" value-count="0" url="산출문서 발급내역">
+		<sql-content>
+	<![CDATA[
+		SELECT *
+		FROM (SELECT
+				DECODE (AZ28_FGBN,'N','사용','미사용') AS AZ28_FGBN,
+				DECODE (AZ28_USEBN,'P','개별카드','무기명 카드')
+				||' '||COUNT(AZ28_USEBN) OVER(PARTITION BY AZ28_USEBN,AZ28_FGBN)||'매'
+				AS AZ28_USEBN,
+				SUBSTR(AZ28_CARD,1,4)||'-'||
+				SUBSTR(AZ28_CARD,5,4)||'-'||
+				SUBSTR(AZ28_CARD,9,4)||'-'||
+				SUBSTR(AZ28_CARD,13,4)
+				AS AZ28_CARD,
+				(SELECT (SELECT  EMPKNAME FROM EMPALL WHERE EMPID =AZ29_SABN)
+				FROM    A
+				          WHERE  AZ29_CARD=AZ28_CARD
+				          AND   AZ29_USIL=(SELECT MAX(AZ29_USIL)
+				                          FROM   B
+				                          WHERE B.AZ29_CARD=A.AZ28_CARD))
+				   AS AZ28_HYUSER, --사용자명
+				(SELECT (SELECT (SELECT CDNAME
+				                                FROM COCODE
+				                                WHERE CDTYPE='ED'
+				                                AND CD=EDUTY)
+				                           FROM EMPALL WHERE EMPID =AZ29_SABN)
+				FROM    A
+				          WHERE  AZ29_CARD=AZ28_CARD
+				          AND   AZ29_USIL=(SELECT MAX(AZ29_USIL)
+				                          FROM   B
+				                          WHERE B.AZ29_CARD=A.AZ28_CARD))
+				   AS AZ28_HYUSER_ED, --직책
+				AZ28_DESC
+		FROM  PRODUCTDOC A
+			WHERE AZ28_CARD LIKE  REPLACE('%'||S_AZ28_CARD:||'%','-','')
+	        AND   AZ28_NAME LIKE  '%'||S_AZ28_NAME:||'%'
+	        AND   AZ28_FGBN LIKE  S_AZ28_FGBN:
+	        AND   AZ28_TYPE LIKE  S_AZ28_TYPE:
+	        AND   AZ28_USEBN LIKE S_AZ28_USEBN:
+	        )
+        WHERE (AZ28_HYUSER LIKE  '%'||S_AZ28_HYUSER:||'%' OR S_AZ28_HYUSER: IS NULL)
+		ORDER BY AZ28_FGBN DESC ,AZ28_USEBN,AZ28_HYUSER_ED
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_111" value-count="0" url="산출문서 사용건수">
+		<sql-content>
+	<![CDATA[
+		SELECT  MAX(COUNT(AUTH_NUM)) OVER() AS AUTH_CNT
+		FROM ACCT.CARD_AP_TMP@T_MASM C,
+		        (SELECT A.MAINNO ,STATUS, CERTIFNO, CDAPPLNO
+		         FROM ACCTRPTSB A, ACCTRPTHD B
+		         WHERE B.PAYTYPE='S'
+		         AND  B.PCARDYN='Y'
+		         AND A.MAINNO=B.MAINNO) A
+		WHERE  AUTH_DATE BETWEEN TO_CHAR(ADD_MONTHS(SYSDATE,-1),'YYYYMMDD') AND TO_CHAR(SYSDATE,'YYYYMMDD')
+		AND    A.CERTIFNO(+)=C.CARD_NUM
+		AND    A.CDAPPLNO(+)=C.AUTH_NUM
+		AND    CARD_NUM IN (SELECT AZ29_CARD
+		                    FROM 
+		                    WHERE AZ29_SABN= EMPID:)
+		AND STATUS IS NULL
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="MENU_001" value-count="0" url="매뉴조회(산출물 TYPE)">
+		<sql-content>
+	<![CDATA[
+	SELECT COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT,
+			A.*
+	FROM ( 	
+        SELECT  ROWNUM AS SN,
+        		COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT,
+        		CODENO,
+		        CODE,
+		        CODENAME AS L_TITLE,
+		        HIGHCODE,
+		        DOCTYPE,
+		        'N' AS DELFLAG,
+		        DECODE(USETYPE,'N','N','',SELECTFLAG) AS USETYPE, --사용여부  '선택'
+		        REARRANGEFLAG,
+		        LEVEL-2 AS LEV,
+	            DECODE(USETYPE,'Y','',DECODE(SELECTFLAG,'Y','',URL)) AS URL
+        FROM (
+        SELECT  DISTINCT A.*,
+                        min(DECODE(B.PARAMTYPE,'D',DECODE(PARAM3,'Y','N','Y'),(SELECT decode(TO_EMPORGNO(EMPID:),'1046','','Y') FROM DUAL))) over(partition by codeno) as delFlag,
+                        min(DECODE(B.PARAMTYPE,'S',DECODE(PARAM3,'Y','N','Y'),'')) over(partition by  codeno) as selectFlag,
+                        min(DECODE(B.PARAMTYPE,'R',param3,'D',PARAM3,'')) over(partition by codeno) as rearrangeFlag
+        FROM
+         (
+         SELECT  G.*
+         FROM
+           (SELECT   TEMP.*,
+                    MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+                    + NVL((SELECT K.PARAM3
+                       FROM INITPOPUP  K
+                       WHERE PARAMID='mnu_0'
+                       AND   PARAMTYPE='R'
+                       AND   PARAM3<>'Y'
+                       AND   PARAM1=CODENO),0) AS SORT
+            FROM (
+                                --표준공통 Query Start
+                                        SELECT DOCNO AS CODENO,P_TITLE AS CODE,L_TITLE AS CODENAME,HIGHDOCNO AS HIGHCODE,B.*
+                                        FROM  PRODUCTDOC B
+                                        WHERE  DOCTYPE IN  ('JSPID','PKG','PRG','SYS')
+                                --표준공통 Query End
+                  )  TEMP
+            ORDER BY SORT) G
+         ) A,
+         (
+         SELECT PARAMTYPE,PARAM3,PARAM1
+		 FROM INITPOPUP
+		 WHERE PARAMID='mnu_0'
+		 AND EXISTS (SELECT ORG_NO
+					FROM ORG
+					WHERE TO_CHAR(ORG_NO)=PARAM2
+					OR PARAM2=EMPID:
+					START WITH ORG_NO=(SELECT TO_EMPORGNO(EMPID:)FROM DUAL)
+					CONNECT BY PRIOR HIGHORGCD=ORG_NO
+					)
+         ) B
+         where a.codeno=b.param1(+)
+         ) D
+        WHERE  DOCTYPE IN  ('JSPID','PKG')
+        START WITH DOCNO = '10000000338'
+        CONNECT BY PRIOR CODENO= HIGHCODE    
+        ORDER BY IDX,REARRANGEFLAG,DOCTYPE,L_TITLE
+        ) A
+    ORDER BY SN
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="MENU_002" value-count="0" url="매뉴조회(MENU 구조)">
+		<sql-content>
+	<![CDATA[
+	SELECT  SN,
+         COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS MU_CNT,
+		CODENO       ,
+		P_TITLE AS 	CODE         ,
+		L_TITLE      ,
+		HIGHCODE     ,
+		DOCTYPE      ,
+		DELFLAG      ,
+		USETYPE      ,
+		'Y' REARRANGEFLAG,
+		LEV-1 AS LEV          ,
+		 DECODE(P_TITLE,'*','common/empty.html',URL) AS URL,
+        NVL((SELECT MAX('Y') FROM PRODUCT_MANUAL B WHERE P_TITLE=B.MU_CD),
+        DECODE(DOCTYPE,'PKG','C','N'))
+         AS  MU_ST
+
+	FROM
+	(          SELECT ROWNUM AS SN,
+          			 LEVEL AS LEV,	
+                           DOCNO AS CODENO,
+                           HIGHDOCNO AS HIGHCODE,
+                           DOCNO,
+                           HIGHDOCNO,
+                         (SELECT CODENAME FROM COMCODE WHERE CODE=DOCTYPE
+						  START WITH  CODE='PDL'
+ 						 CONNECT BY PRIOR CODE_NO=HIGHCODE) AS DOCTYPE_NAME,
+						 DECODE(SUBSTR(DOCTYPE,1,1),'F','PKG','JSPID') AS DOCTYPE,
+                           TITLE,
+                           DETAIL,
+                           P_TITLE,
+                           L_TITLE,
+                           DECODE(DIV,'%','',DIV) AS DIV,
+                           EMPID,
+                   (SELECT EMPKNAME FROM EMPALL A
+                   WHERE A.EMPID=B.EMPID)            AS EMPNAME,
+                                   (SELECT CDNAME FROM COCODE
+                               WHERE CDTYPE='UF'
+                               AND  CD=USETYPE)
+                       AS USETYPE_NAME,
+                           USETYPE,
+                           CREATEDT,
+                           MODIFYDT,
+                                   (SELECT L_TITLE
+                                   FROM PRODUCTDOC
+                                   WHERE DOCNO=B.HIGHDOCNO)
+                           AS L_TITLE_H,
+                                   (SELECT (DECODE(COUNT(DOCNO),0,'',TO_CHAR(''||COUNT(DOCNO)||'')))
+                                   FROM PRODUCTDOC A
+                                   WHERE A.HIGHDOCNO = B.DOCNO)
+                          AS LEVELSUBCNT,
+                         (SELECT A.URL FROM PRODUCTDOC A WHERE A.DOCNO=TRIM(B.P_TITLE)) AS  URL,
+						(SELECT 
+								NVL(DECODE(MIN(PARAMTYPE||PARAM3),'DY','N','Y'),'Y')
+		                 FROM INITPOPUP
+		                 WHERE PARAMID='mnu_0'
+		                 AND EXISTS (SELECT ORG_NO
+		                                        FROM ORG
+                                             WHERE TO_CHAR(ORG_NO)=PARAM2
+		                                        OR PARAM2=EMPID:
+		                                        START WITH ORG_NO=(SELECT TO_EMPORGNO(EMPID:)FROM DUAL)
+		                                        CONNECT BY PRIOR HIGHORGCD=ORG_NO
+		                                        )
+						AND PARAM1 = NVL(P_TITLE,'10000000622')
+						) AS DELFLAG
+
+           FROM    PRODUCTDOC B
+       		WHERE LEVEL>1
+       		AND P_TITLE IS NOT NULL
+--           START WITH DOCNO LIKE DECODE('PROD-20090225-001','','SYSTEM','PROD-20090225-001')||'%'
+           START WITH DOCNO LIKE DECODE([S_MENU_ID],'','PROD-20090225-001',[S_MENU_ID])||'%'
+           CONNECT BY PRIOR DOCNO=HIGHDOCNO
+           ORDER SIBLINGS BY IDX,P_TITLE
+	)
+	ORDER BY SN
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="MENU_003" value-count="0" url="매뉴조회(즐겨찾기 구조)">
+		<sql-content>
+	<![CDATA[
+	SELECT  SN,
+         COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS MU_CNT,
+        'F_'||CODENO  AS CODENO     ,
+        P_TITLE AS      CODE         ,
+        L_TITLE      ,
+        'F_'||HIGHCODE   AS HIGHCODE  ,
+		DOCTYPE      ,
+		DELFLAG      ,
+		USETYPE      ,
+		'Y' REARRANGEFLAG,
+		1 AS LEV          ,
+		 DECODE(P_TITLE,'*','common/empty.html',URL) AS URL,
+        NVL((SELECT MAX('Y') FROM PRODUCT_MANUAL B WHERE P_TITLE=B.MU_CD),
+        DECODE(DOCTYPE,'PKG','C','N'))
+         AS  MU_ST
+
+	FROM
+	(          SELECT NVL(PARAM3,999) AS SN,
+                           DOCNO AS CODENO,
+                           HIGHDOCNO AS HIGHCODE,
+                           DOCNO,
+                           HIGHDOCNO,
+                         (SELECT CODENAME FROM COMCODE WHERE CODE=DOCTYPE
+						  START WITH  CODE='PDL'
+ 						 CONNECT BY PRIOR CODE_NO=HIGHCODE) AS DOCTYPE_NAME,
+						 DECODE(SUBSTR(DOCTYPE,1,1),'F','PKG','JSPID') AS DOCTYPE,
+                           TITLE,
+                           DETAIL,
+                           P_TITLE,
+                           L_TITLE,
+                           DECODE(DIV,'%','',DIV) AS DIV,
+                           EMPID,
+                   (SELECT EMPKNAME FROM EMPALL A
+                   WHERE A.EMPID=B.EMPID)            AS EMPNAME,
+                                   (SELECT CDNAME FROM COCODE
+                               WHERE CDTYPE='UF'
+                               AND  CD=USETYPE)
+                       AS USETYPE_NAME,
+                           USETYPE,
+                           CREATEDT,
+                           MODIFYDT,
+                                   (SELECT L_TITLE
+                                   FROM PRODUCTDOC
+                                   WHERE DOCNO=B.HIGHDOCNO)
+                           AS L_TITLE_H,
+                                   (SELECT (DECODE(COUNT(DOCNO),0,'',TO_CHAR(''||COUNT(DOCNO)||'')))
+                                   FROM PRODUCTDOC A
+                                   WHERE A.HIGHDOCNO = B.DOCNO)
+                          AS LEVELSUBCNT,
+                         (SELECT A.URL FROM PRODUCTDOC A WHERE A.DOCNO=TRIM(B.P_TITLE)) AS  URL,
+						'N' AS DELFLAG,
+						IDX
+
+           FROM    PRODUCTDOC B,
+		           INITPOPUP A
+		   WHERE DOCNO =PARAM2
+			AND PARAMID LIKE 'fav_0'
+			AND PARAM1=[EMPID]
+			CONNECT BY PRIOR docno=highdocno
+	)
+	ORDER BY L_TITLE,SN,IDX
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_010" value-count="0" url="MENU LIST">
+		<sql-content>
+	<![CDATA[
+	SELECT  LEVEL-3 AS LEV,
+                          DOCNO AS CODENO,
+                          HIGHDOCNO AS HIGHCODE,
+                          DOCNO,
+                          (SELECT COUNT(*)
+                          FROM PRODUCT_MANUAL C,
+                          		PRODUCTDOC A
+                          WHERE B.DOCNO=A.HIGHDOCNO
+                          AND   A.DOCNO=C.MU_CD
+					) AS MU_CNT,                          
+                          HIGHDOCNO,
+                                  (SELECT CDNAME
+                                  FROM COCODE
+                                  WHERE CDTYPE='PDL'
+                                  AND  CD=DOCTYPE)
+                      AS DOCTYPE_NAME,
+                          DOCTYPE,
+                          TITLE,
+                          DETAIL,
+                          URL,
+                          P_TITLE,
+                          L_TITLE,
+                                  (SELECT L_TITLE
+                                  FROM PRODUCTDOC A
+                                  WHERE A.DOCNO=B.HIGHDOCNO)
+                          AS L_TITLE_H,
+                          DECODE(DIV,'%','',DIV) AS DIV,
+                          EMPID,
+		                  (SELECT EMPKNAME FROM EMPALL A
+		                  WHERE A.EMPID=B.EMPID)
+						AS EMPNAME,
+                          (SELECT CDNAME FROM COCODE
+                           WHERE CDTYPE='UF'
+                           AND  CD=USETYPE)
+                       AS USETYPE_NAME,
+                          USETYPE,
+                          CREATEDT,
+                          MODIFYDT,
+    					  NVL((SELECT MAX(DECODE(C.MU_CD,NULL,'N','Y'))
+                          FROM PRODUCT_MANUAL C
+                          WHERE B.DOCNO=C.MU_CD),DECODE(DOCTYPE,'PKG','C','N'))
+                      AS MU_ST                        
+          FROM    PRODUCTDOC B
+		  WHERE DOCTYPE IN ('JSPID','PKG')
+          START WITH DOCNO IN  ('SYSTEM')
+          CONNECT BY PRIOR DOCNO=HIGHDOCNO
+          ORDER SIBLINGS BY L_TITLE
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_011" value-count="0" url="MANUAL LIST">
+		<sql-content>
+	<![CDATA[
+          SELECT  LEVEL-3 AS LEV,
+                          DOCNO AS CODENO,
+                          HIGHDOCNO AS HIGHCODE,
+                          DOCNO,
+                          HIGHDOCNO,
+                                  (SELECT CDNAME
+                                  FROM COCODE
+                                  WHERE CDTYPE='PDL'
+                                  AND  CD=DOCTYPE)
+                      AS DOCTYPE_NAME,
+                          DOCTYPE,
+                          TITLE,
+                          DETAIL,
+                          URL,
+                          P_TITLE,
+                          L_TITLE,
+                                  (SELECT L_TITLE
+                                  FROM PRODUCTDOC A
+                                  WHERE A.DOCNO=B.HIGHDOCNO)
+                          AS L_TITLE_H,
+                          DECODE(DIV,'%','',DIV) AS DIV,
+                          EMPID,
+                  (SELECT EMPKNAME FROM EMPALL A
+                  WHERE A.EMPID=B.EMPID)
+          AS EMPNAME,
+                                  (SELECT CDNAME FROM COCODE
+                              WHERE CDTYPE='UF'
+                              AND  CD=USETYPE)
+                      AS USETYPE_NAME,
+                          USETYPE,
+                          CREATEDT,
+                          MODIFYDT
+          FROM    PRODUCTDOC B
+          WHERE   (TITLE LIKE ''||'%' OR '' IS NULL)
+          AND     (P_TITLE LIKE ''||'%' OR '' IS NULL)
+          AND     (L_TITLE LIKE ''||'%' OR '' IS NULL)
+          AND     (DIV LIKE '%'||'%' OR '%' IS NULL)
+          AND     (DOCTYPE LIKE '%'||'%' OR '%' IS NULL)
+          AND     (USETYPE LIKE '%'||'%' OR '%' IS NULL)
+		  and doctype IN  ('JSPID','PKG')
+          START WITH DOCNO IN  ('SYSTEM')
+          CONNECT BY PRIOR DOCNO=HIGHDOCNO
+          ORDER SIBLINGS BY L_TITLE
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_012" value-count="0" url="MENU LIST(검색)">
+		<sql-content>
+	<![CDATA[
+          SELECT 	DECODE(MAX(LEVEL) OVER(),1,LEVEL,1) as  LEV,
+          		  	     --LEVEL as  LEV,
+				          DOCNO AS CODE,
+                          DOCNO AS CODENO,
+                          HIGHDOCNO AS HIGHCODE,
+                          DOCNO,
+                          (SELECT COUNT(*)
+                          FROM PRODUCT_MANUAL C,
+                          		PRODUCTDOC A
+                          WHERE B.DOCNO=A.HIGHDOCNO
+                          AND   A.DOCNO=C.MU_CD
+					) AS MU_CNT,                          
+                          HIGHDOCNO,
+	                      GET_CODENAME('PDL',DOCTYPE) 
+                      AS DOCTYPE_NAME,
+                          DOCTYPE,
+                          TITLE,
+                          DETAIL,
+                          URL,
+                          P_TITLE,
+                          L_TITLE,
+                                  (SELECT L_TITLE
+                                  FROM PRODUCTDOC A
+                                  WHERE A.DOCNO=B.HIGHDOCNO)
+                          AS L_TITLE_H,
+                          DECODE(DIV,'%','',DIV) AS DIV,
+                          EMPID,
+		                  (SELECT EMPKNAME FROM EMPALL A
+		                  WHERE A.EMPID=B.EMPID)
+						AS EMPNAME,
+                          (SELECT CDNAME FROM COCODE
+                           WHERE CDTYPE='UF'
+                           AND  CD=USETYPE)
+                       AS USETYPE_NAME,
+                          USETYPE,
+                          CREATEDT,
+                          MODIFYDT,
+    					  NVL((SELECT MAX(DECODE(C.MU_CD,NULL,'N','Y'))
+                          FROM PRODUCT_MANUAL C
+                          WHERE B.DOCNO=C.MU_CD),'N') 
+                      AS MU_ST                        
+          FROM    PRODUCTDOC B
+          WHERE 1=1
+          AND     DOCNO IN (	SELECT A.DOCNO FROM PRODUCTDOC A WHERE UPPER(A.L_TITLE) LIKE UPPER('%'||[S_TITLE_L]||'%') OR [S_TITLE_L] IS NULL
+          					UNION 
+								(SELECT MU_CD FROM PRODUCT_MANUAL  --매뉴얼 제목/상세내역 검색
+								WHERE (DECODE([S_MU_DIV],'MU01',TITLE,'*') 		LIKE DECODE([S_MU_DIV],'MU01', [S_SEARCH],'*') OR DECODE([S_MU_DIV],'MU01',TITLE,[S_SEARCH]) IS NULL)
+								AND   (DECODE([S_MU_DIV],'MU02',DETAIL,'*') 	LIKE DECODE([S_MU_DIV],'MU02', [S_SEARCH],'*') OR DECODE([S_MU_DIV],'MU02',DETAIL,[S_SEARCH]) IS NULL)
+								AND   (DECODE([S_MU_DIV],'MU03',CREMPID,'*') 	LIKE DECODE([S_MU_DIV],'MU03', [S_SEARCH],'*') OR DECODE([S_MU_DIV],'MU03',CREMPID,[S_SEARCH]) IS NULL)
+                                AND   (DECODE('','',UPPER(TITLE),'*')    LIKE '%'||UPPER(DECODE('','', [S_SEARCH],'*')) OR DECODE('','',UPPER(DETAIL),'*')  LIKE '%'||UPPER(DECODE('','', [S_SEARCH],'*'))||'%')
+                                  )
+          					)
+                    START WITH DOCNO = DECODE([S_DOCNO],'','PROD-20090225-001',[S_DOCNO])
+          CONNECT BY PRIOR DOCNO=HIGHDOCNO          
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_013" value-count="0" url="문서 매뉴얼 LIST">
+		<sql-content>
+	<![CDATA[
+	
+	SELECT	SN,
+	        LEV+ DECODE([S_MU_CD],'',-1,0) AS LEV,
+	        DOCNO AS CODENO,
+	        HIGHDOCNO AS HIGHCODE,
+	        DOCNO,
+	        COUNT(DOCNO) OVER(PARTITION BY HIGHDOCNO) AS MU_CNT,
+	        HIGHDOCNO,
+	       	(SELECT CDNAME FROM COCODE WHERE CDTYPE='PDL' AND  CD=DOCTYPE)
+	        AS DOCTYPE_NAME,
+	        DOCTYPE,
+	        TITLE,
+	        DETAIL,
+	        URL,
+	        P_TITLE,
+	        L_TITLE-- DECODE(LEV,1,GET_CODENAME('CD-20090210-017',DOCTYPE),L_TITLE)
+	         AS  L_TITLE,
+	          (SELECT L_TITLE  FROM PRODUCTDOC A WHERE A.DOCNO=B.HIGHDOCNO)
+	        AS L_TITLE_H,
+	        DECODE(DIV,'%','',DIV) AS DIV,
+	        EMPID,
+	          (SELECT EMPKNAME FROM EMPALL A  WHERE A.EMPID=B.EMPID)
+	        AS EMPNAME,
+	        (SELECT CDNAME FROM COCODE  WHERE CDTYPE='UF' AND  CD=USETYPE)
+	        AS USETYPE_NAME,
+	        USETYPE,
+	        CREATEDT,
+	        MODIFYDT,
+	        NVL((SELECT MAX(DECODE(C.MU_CD,NULL,'N','Y'))FROM PRODUCT_MANUAL C WHERE B.DOCNO=C.MU_CD AND C.MU_TYPE=[S_MU_TYPE])
+	    	,DECODE(SUBSTR(DOCTYPE,1,3),'TIT','C','PKG','C','PRG','C','N'))
+		    AS MU_ST,
+		    DOCNO  AS CODE
+		    
+	FROM (
+		SELECT ROWNUM AS SN,B.*, LEVEL AS LEV
+		FROM    PRODUCTDOC B
+		WHERE LEVEL> DECODE([S_MU_CD],'',1,0)
+		AND (DOCTYPE LIKE DECODE([S_MU_CD],'','%','JSPID') OR [S_MU_CD] IS NULL)
+		START WITH DOCNO  =  [S_DOCNO] --PROD-20090210-017
+		CONNECT BY PRIOR DOCNO=HIGHDOCNO
+		ORDER SIBLINGS BY  IDX,L_TITLE
+		) B
+	ORDER BY SN
+  		
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_014" value-count="0" url="문서상세 조회">
+		<sql-content>
+	<![CDATA[
+		SELECT --LEVEL AS LEV,
+				DOCNO AS CODENO, 
+				HIGHDOCNO AS HIGHCODE,
+				DOCNO, 
+				HIGHDOCNO,
+					(SELECT MAX(CODENAME)
+					FROM COMCODE
+					WHERE LEVEL>=1
+					AND  (CODE LIKE DOCTYPE
+							OR CODE_NO LIKE DOCTYPE)					
+					START WITH  CODE='PDL'
+					CONNECT BY PRIOR CODE_NO=HIGHCODE) 
+			    AS DOCTYPE_NAME,	 
+				DOCTYPE, 
+				TITLE, 
+				DETAIL, 
+				P_TITLE, 
+				L_TITLE, 
+				DECODE(DIV,'%','',DIV) AS DIV, 
+				EMPID, 
+	                (SELECT EMPKNAME FROM EMPALL A 
+	                WHERE A.EMPID=B.EMPID) 
+                AS EMPNAME,
+					(SELECT CDNAME FROM COCODE
+				    WHERE CDTYPE='UF'
+				    AND  CD=USETYPE) 
+			    AS USETYPE_NAME,				
+				USETYPE, 
+				CREATEDT, 
+				 TO_CHAR(MODIFYDT,'YYYY-MM-DD HH24:MM:SS') AS MODIFYDT,
+					(SELECT L_TITLE 
+					FROM PRODUCTDOC 
+					WHERE DOCNO=B.HIGHDOCNO) 
+				AS L_TITLE_H,
+					(SELECT (DECODE(COUNT(DOCNO),0,'',TO_CHAR('['||COUNT(DOCNO)||']')))
+					FROM PRODUCTDOC A
+					WHERE A.HIGHDOCNO = B.DOCNO)
+				AS LEVELSUBCNT,
+				URL,
+				IDX
+		FROM    PRODUCTDOC B
+		WHERE DOCNO =[S_DOCNO]
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_015" value-count="0" url="메뉴 링크">
+		<sql-content>
+	<![CDATA[
+		UPDATE PRODUCTDOC SET
+		P_TITLE=[p0]
+		WHERE docno =[p1]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_016" value-count="0" url="표준 산출물등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO  PRODUCTDOC (
+						        DOCNO,
+						        HIGHDOCNO,
+						        DOCTYPE,
+						        TITLE,
+						        DETAIL,
+						        P_TITLE,
+						        L_TITLE,
+						        DIV,
+						        EMPID,
+						        USETYPE,
+						        CREATEDT,
+						        MODIFYDT,
+						        IDX)	
+		SELECT
+			GET_SEQ('PROD'),
+			[p0],
+			 CODE   AS DOCTYPE,
+			 CODENAME AS TITLE,
+			 CDDS AS DETAIL,
+			 CODE AS P_TITLE,
+			 CODENAME AS L_TITLE,
+			 'C' AS DIV,
+			 [p1] AS EMPID,
+			 'N' AS USETYPE,
+			 SYSDATE AS CREATEDT,
+			 '' AS MODIFYDT,
+				(SELECT NVL(MAX(IDX),0)+1
+				FROM PRODUCTDOC
+				WHERE HIGHDOCNO=[p0])
+			AS IDX
+		FROM COMCODE A
+		WHERE CODE_NO =[p2]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_017" value-count="0" url="산출물등록(MultiPopup)">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO  PRODUCTDOCSUB (
+						        DOCNO,
+						        SUBDOCNO,
+						        CREMPID,
+						        CREATEDT)		
+		SELECT
+			[p0] AS DOCNO,
+			[p2] AS HIGHDOCNO,
+			[p1] AS EMPID,
+			 SYSDATE AS CREATEDT
+		FROM DUAL
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_018" value-count="0" url="산출물등록(MultiPopup)">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO  PRODUCTDOC (
+						        DOCNO,
+						        HIGHDOCNO,
+						        DOCTYPE,
+						        TITLE,
+						        DETAIL,
+						        P_TITLE,
+						        L_TITLE,
+						        DIV,
+						        EMPID,
+						        USETYPE,
+						        CREATEDT,
+						        MODIFYDT,
+						        IDX)	
+	SELECT
+			GET_SEQ('PROD'),
+			[p0],
+            (SELECT DOCTYPE
+				FROM PRODUCTDOC
+				WHERE DOCNO=[p0]) AS DOCTYPE,
+            A.TITLE AS TITLE,
+            A.DETAIL AS DETAIL,
+            A.L_TITLE AS P_TITLE,
+            A.L_TITLE AS L_TITLE,
+			 'C' AS DIV,
+			 [p1] AS EMPID,
+			 'N' AS USETYPE,
+			 SYSDATE AS CREATEDT,
+			 '' AS MODIFYDT,
+				(SELECT NVL(MAX(IDX),0)+1
+				FROM PRODUCTDOC
+				WHERE HIGHDOCNO=[p0])
+			AS IDX
+		FROM PRODUCTDOC A
+        WHERE A.DOCNO=[p2]
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+
+	<sql-mapping id="PD_019" value-count="0" url="관린문서 조회">
+		<sql-content>
+	<![CDATA[
+		SELECT LEVEL,A.* FROM PRODUCTDOC A
+		WHERE LEVEL = 2
+		START WITH DOCNO = 'PROD-20090210-002'
+		CONNECT BY PRIOR DOCNO = HIGHDOCNO
+		ORDER BY DOCNO
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_020" value-count="0" url="관린문서 조회">
+		<sql-content>
+	<![CDATA[
+		SELECT LEVEL,A.* FROM PRODUCTDOC A
+		WHERE LEVEL = 3	
+		AND   (EXISTS (SELECT OBJ  FROM COM_AUTH1
+							  WHERE OBJ_USER = [S_EMPID]
+							  AND AUTH_YN IS NOT NULL
+							  AND DOCNO=OBJ)
+					 OR DECODE('MuAdmin',[S_AUTH],'Y','N')='Y')
+		START WITH DOCNO = 'PROD-20090210-002'
+		CONNECT BY PRIOR DOCNO = HIGHDOCNO
+		ORDER BY IDX,L_TITLE,HIGHDOCNO, DOCNO
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_021" value-count="0" url="관린문서 조회">
+		<sql-content>
+	<![CDATA[
+
+    SELECT *
+    FROM
+    (SELECT
+                    DOCNO CODE_NO,
+                    HIGHDOCNO,
+                    DOCTYPE,
+                    GET_CODENAME('DOCTYPE',DOCTYPE) AS DOCTYPE_NM,
+                    TITLE,
+                    DETAIL,
+                    P_TITLE,
+                    L_TITLE CODENAME,
+                    DIV,
+                    EMPID,
+                                    (SELECT EMPKNAME FROM EMPALL A
+                                    WHERE A.EMPID=B.EMPID)
+                                      AS EMPNAME,
+                    USETYPE,
+                    CREATEDT,
+                    MODIFYDT,
+                    URL,
+                    IDX,
+                    (SELECT HIGHDOCNO FROM PRODUCTDOC C WHERE C.DOCNO=B.HIGHDOCNO) AS TOPDOCNO,
+                    (SELECT MAX('Y') FROM PRODUCTDOC C WHERE C.HIGHDOCNO=B.DOCNO) AS SUBDOCNO,
+                                                    (SELECT SYS_CONNECT_BY_PATH((L_TITLE),'>') AS PATH
+                                                    FROM PRODUCTDOC A
+                                                    where A.DOCNO=[S_DOCNO]
+                                                    START WITH  A.DOCNO= 'SYSTEM'
+                                                    CONNECT BY PRIOR  DOCNO=HIGHDOCNO
+                                                    )
+                                             AS PATH
+
+    FROM  PRODUCTDOC B
+    WHERE HIGHDOCNO=[S_DOCNO]
+    )
+    ORDER BY IDX,CODENAME
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_022" value-count="7" url="ProductDoc 순번수정">
+		<sql-content>
+	<![CDATA[
+		UPDATE PRODUCTDOC SET	 
+		IDX		= [p0]
+		WHERE DOCNO = [p1]
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_023" value-count="0"
+		url="ProductDoc 업무관련테이블 조회">
+		<sql-content>
+	<![CDATA[
+		SELECT LEVEL AS LEV,
+		DOCNO,
+		HIGHDOCNO,
+		
+		      DOCTYPE,
+		      TITLE,
+		      trim(P_TITLE) P_TITLE,
+		      trim(L_TITLE) L_TITLE,
+		      trim(DETAIL) DETAIL,
+		      DIV,
+		      EMPID,
+		      USETYPE,
+		      CREATEDT,
+		      DOCTYPE,
+		      MODIFYDT,
+		      URL,
+		      IDX,
+		      STARTDT,
+		      ENDDT
+		FROM PRODUCTDOC A
+		WHERE DOCTYPE IN ('PRG','TAB','DB')
+		START WITH DOCNO = 'PROD-20100621-005'
+		CONNECT BY PRIOR DOCNO=HIGHDOCNO
+		ORDER SIBLINGS BY IDX
+		
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="PD_024" value-count="0"
+		url="ProductDoc 업무관련테이블  상세조회">
+		<sql-content>
+	<![CDATA[
+			 SELECT
+		 A.TABLE_NAME,
+		 A.COLUMN_NAME,
+		 (SELECT COMMENTS FROM ALL_COL_COMMENTS B
+		 WHERE A.TABLE_NAME=B.TABLE_NAME
+		 AND A.COLUMN_NAME=B.COLUMN_NAME)AS COMMENTS,
+		 A.DATA_TYPE || '('||
+		  DECODE(
+		    A.DATA_TYPE,
+		     'NUMBER',
+		    A.DATA_PRECISION ||
+		      DECODE(A.DATA_SCALE,0,'',',' || A.DATA_SCALE),
+		    A.DATA_LENGTH) ||')'AS DATA_TYPE,--타입
+		(SELECT B.CONSTRAINT_TYPE
+		 FROM     USER_CONSTRAINTS B,
+		                   USER_CONS_COLUMNS C
+		 WHERE A.TABLE_NAME=C.TABLE_NAME
+		 AND C.TABLE_NAME=B.TABLE_NAME
+		 AND C.CONSTRAINT_NAME=B.CONSTRAINT_NAME
+		 AND B.CONSTRAINT_TYPE='p')PK,
+		 DECODE(A.NULLABLE,'N','Y')AS NULLABLE
+		 --A.COLUMN_ID,
+		 --A.OWNER
+		 FROM ALL_TAB_COLUMNS A
+		 WHERE
+		 A.TABLE_NAME=[JOBDS]
+		 ORDER BY COLUMN_ID
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+
+	<sql-mapping id="PD_025" value-count="0"
+		url="ProductDoc 등록 쿼리 리스트조회">
+		<sql-content>
+	<![CDATA[
+		SELECT 	LEV,
+				MU_SEQ,
+				MU_CD,
+				GET_TREEIMG(DECODE(LEV,1,LEV-1,LEV))||TITLE AS TITLE,
+				DETAIL,
+				DIV,
+				HIGHMU_SEQ,
+				IDX,
+				CREMPID,
+			    TO_EMPKNAME(CREMPID) AS CREMPKNAME,				
+				TO_CHAR(CREATEDT,'YYYY-MM-DD') AS CREATEDT,
+				TO_CHAR(NVL(MODIFYDT,CREATEDT),'YYYY-MM-DD') AS MODIFYDT,
+				VER,
+				MU_TYPE
+		FROM (SELECT LEVEL AS LEV,ROWNUM AS SN,A.* 
+			  FROM PRODUCT_MANUAL A 
+			  START WITH (HIGHMU_SEQ='PROD-20120719-004' AND TITLE LIKE '%'||[S_TITLE]||'%')
+			  CONNECT BY PRIOR MU_SEQ=HIGHMU_SEQ
+			  ORDER SIBLINGS BY MODIFYDT DESC ,CREATEDT DESC	)
+		WHERE MU_CD ='PROD-20120719-004'
+		--AND TITLE LIKE '%'||[S_TITLE]||'%'
+		AND CREATEDT BETWEEN TO_DATE(REPLACE([FR_YYMM],'-',''),'YYYYMMDD') 
+					 AND TO_DATE(REPLACE([TO_YYMM],'-',''),'YYYYMMDD')+1
+		AND CREMPID IN (SELECT EMPID 
+						FROM EMPALL 
+						WHERE EMPKNAME LIKE '%'||[S_EMPID]||'%'
+						OR EMPID LIKE [S_EMPID]||'%')
+		AND (UPPER(DETAIL) LIKE UPPER('%'||[S_DETAIL]||'%') OR [S_DETAIL] IS NULL)
+		ORDER BY NVL(MODIFYDT,CREATEDT) DESC ,SN	
+	]]>
+		</sql-content>
+	</sql-mapping>	
+	<sql-mapping id="PD_026" value-count="0" url="공통문서  수정">
+		<sql-content>
+	<![CDATA[
+		UPDATE COM_DOCU SET
+		HIGHDOC_NO = [HIGHDOC_NO] 
+		,ITEMNAME  = [ITEMNAME]  
+		,ITEMDIV   = [ITEMDIV]   
+		,ITEM1     = [ITEM1]     
+		,ITEM2     = [ITEM2]     
+		,ITEM3     = [ITEM3]     
+		,ITEM4     = [ITEM4]     
+		,ITEM5     = [ITEM5]     
+		,ITEM6     = [ITEM6]     
+		,ITEM7     = [ITEM7]     
+		,ITEM8     = [ITEM8]     
+		,ITEM9     = [ITEM9]     
+		,ITEM10    = [ITEM10]    
+		,ITEM11    = [ITEM11]    
+		,ITEM12    = [ITEM12]    
+		,ITEM13    = [ITEM13]    
+		,ITEM14    = [ITEM14]    
+		,ITEM15    = [ITEM15]    
+		,ITEM16    = [ITEM16]    
+		,ITEM17    = [ITEM17]    
+		,ITEM18    = [ITEM18]    
+		,ITEM19    = [ITEM19]    
+		,ITEM20    = [ITEM20]    
+		,IDX        = [IDX]                 
+		WHERE DOC_NO =[DOC_NO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_027" value-count="0" url="공통문서  등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO COM_DOCU (	DOC_NO, 
+								HIGHDOC_NO, 
+								ITEMNAME, 
+								ITEMDIV, 
+								ITEM1, 
+								ITEM2, 
+								ITEM3, 
+								ITEM4, 
+								ITEM5, 
+								ITEM6, 
+								ITEM7, 
+								ITEM8, 
+								ITEM9, 
+								ITEM10, 
+								ITEM11, 
+								ITEM12, 
+								ITEM13, 
+								ITEM14, 
+								ITEM15, 
+								ITEM16, 
+								ITEM17, 
+								ITEM18, 
+								ITEM19, 
+								ITEM20, 
+								IDX)
+		VALUES( [DOC_NO]    
+				,[HIGHDOC_NO]
+				,[ITEMNAME]   
+				,[ITEMDIV]    
+				,[ITEM1]      
+				,[ITEM2]      
+				,[ITEM3]      
+				,[ITEM4]      
+				,[ITEM5]      
+				,[ITEM6]      
+				,[ITEM7]      
+				,[ITEM8]      
+				,[ITEM9]      
+				,[ITEM10]     
+				,[ITEM11]     
+				,[ITEM12]     
+				,[ITEM13]     
+				,[ITEM14]     
+				,[ITEM15]     
+				,[ITEM16]     
+				,[ITEM17]     
+				,[ITEM18]     
+				,[ITEM19]     
+				,[ITEM20]     
+				,[IDX]       
+		)
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_028" value-count="0" url="공통문서  삭제">
+		<sql-content>
+	<![CDATA[
+		DELETE FROM COM_DOCU       
+		WHERE DOC_NO =[DOC_NO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="PD_029" value-count="0" url="공통문서  신규등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO COM_DOCU (	DOC_NO,
+								HIGHDOC_NO,
+								ITEMDIV,
+								ITEMNAME	)
+		VALUES(	GET_SEQ('COMD'),
+				'1',
+				'M',
+				'새문서' )
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="PD_030" value-count="0" url="공통문서  1줄추가">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO COM_DOCU (	DOC_NO,
+								HIGHDOC_NO,
+								ITEMDIV	)
+		VALUES(	GET_SEQ('COMD'),
+				[DOC_NO],
+				'D' )
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="PD_031" value-count="0" url="산출물매뉴등록">
+		<sql-content>
+	<![CDATA[
+		BEGIN CR_DOC_MU([DOCNM],[DOCMUGB]) ; end; 
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="PD_032" value-count="0" url="산출물 권한설정 그룹 및 직원 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT A.*, LEVEL
+					,NVL(AUTH_NO,'N') AS AUTH_NO
+                    ,B.OBJ
+                    ,B.OBJ_USER
+                    ,B.AUTH
+                    ,B.AUTH_YN
+                    ,B.STARTDT
+                    ,B.ENDDT
+                    ,B.CREMPID
+                    ,B.CREATEDT
+					,CHKSRC
+                    ,CHKUPT
+                    ,CHKDEL
+                    ,CHKDOWN 
+					,F_TYPE 
+					,AUTH_DIV
+					,DECODE(AUTH_NO,'','N','R') AS dflag 		                    
+          FROM (
+                SELECT  DISTINCT
+            	    	TO_CHAR(ORG_NO) AS CODENO,
+			            TO_CHAR(ORGCD) AS CODE ,
+	        		    ORGNAME CODENAME,
+			            HIGHORGCD AS HIGHCODE,
+	        		    ORGCD,
+			            ORGNAME,
+			            'D' AS DIV,
+                        '' AS SGRADE,
+                        '' AS SNAME
+    		 	 FROM ORG
+                START WITH ORG_NO IN(SELECT ORG_NO
+                                       FROM ORG    A
+                                      WHERE   (ORG_NO IN (SELECT ORG_NO
+                                                            FROM ORGHISTORY
+                                                           WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+                                                         ) OR  org_no='1006')
+                                        AND ORGNAME LIKE '%'||[ORGNAME]||'%'
+                                        AND ORG_NO IN ( SELECT ORGCD
+                                                          FROM EMPALL
+                                                         WHERE EMPKNAME LIKE '%'||[CODENAME]||'%'
+                                                           AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN WSTARTDT AND WENDDT
+                                                       )
+                                    )
+              CONNECT BY PRIOR HIGHORGCD=ORG_NO
+
+		      UNION ALL
+
+		      SELECT  EMPID,
+	          		  EMPID,
+	          		  EMPKNAME,
+	          		  A.ORGCD AS ORG_NO ,
+	          		  (SELECT ORGCD FROM ORG B WHERE B.ORG_NO=A.ORGCD) AS ORGCD,
+	          		  (SELECT ORGNAME FROM ORG B WHERE B.ORG_NO=A.ORGCD) AS ORGNAME,
+	          		  'S' AS DIV,
+	          		  A.EGRADE AS SGRADE, 
+                      A.EMPKNAME AS SNAME
+	            FROM EMPALL A ,ORG B
+               WHERE EMPKNAME LIKE '%'||[CODENAME]||'%'
+	             AND  A.ORGCD=B.ORG_NO
+	             AND B.ORGNAME LIKE '%'||[ORGNAME]||'%'
+	             AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN WSTARTDT AND WENDDT
+	           ORDER BY SGRADE,SNAME
+	          )   A
+            ,(SELECT AUTH_NO
+						,OBJ
+						,OBJ_USER
+						,AUTH
+						,AUTH_YN
+						,STARTDT
+						,ENDDT
+						,CREMPID
+						,CREATEDT
+						,DECODE(AUTH_YN,'C','Y','R','Y','U','Y','') AS CHKSRC
+                        ,DECODE(AUTH_YN,'C','Y','R','','U','Y','') AS CHKUPT
+                        ,DECODE(AUTH_YN,'C','Y','R','','U','','') AS CHKDEL
+                        ,DECODE(AUTH_YN,'C','Y','R','','U','','') AS CHKDOWN --등록기능 대체
+						,'' AS F_TYPE 
+						,'Y' AS AUTH_DIV 						
+				FROM COM_AUTH1
+				WHERE 1=1
+				AND OBJ = [S_DOCNO]
+             ) B
+     WHERE A.CODENO = B.OBJ_USER(+)
+     AND (AUTH_YN =AUTH_YN OR [AUTH] IS NULL)
+     START WITH CODE = '9999'
+     CONNECT BY PRIOR A.CODENO = A.HIGHCODE
+
+	]]>
+	</sql-content>
+	</sql-mapping>			
+	
+	<sql-mapping id="PD_033" value-count="7" url="공통문서 순번수정">
+		<sql-content>
+	<![CDATA[
+		UPDATE COM_DOCU SET	 
+		IDX		= [p0]
+		WHERE DOC_NO = [p1]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="PD_034" value-count="0" url="공통문서 정렬리스트조회">
+		<sql-content>
+	<![CDATA[
+    SELECT *
+    FROM
+    (SELECT
+                    DOC_NO AS CODE_NO,
+                    HIGHDOC_NO AS HIGHDOCNO,
+                    ITEM1||'/'||ITEM2||'/'||ITEM3  AS  CODENAME,
+					IDX
+	FROM COM_DOCU					
+    WHERE  HIGHDOC_NO IN (SELECT DOC_NO 
+								    FROM COM_DOCU A  
+								    WHERE ITEMDIV='T' 
+								    START WITH DOC_NO =[S_DOCNO] 
+								    CONNECT BY PRIOR DOC_NO=HIGHDOC_NO)
+    AND ITEMDIV='D'
+	AND (ITEM1 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM2 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM3 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM4 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM5 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM6 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM7 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM8 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM9 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM10 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM11 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM12 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM13 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM14 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM15 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM16 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM17 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM18 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM19 LIKE '%'||[S_DETAIL] ||'%'
+		   OR ITEM20 LIKE '%'||[S_DETAIL] ||'%' )    
+    )
+    ORDER BY IDX,CODENAME
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_035" value-count="0" url="공통문서 여러 줄 추가">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO  COM_DOCU
+		SELECT
+		GET_SEQ('COMD') DOC_NO,
+		[S_DOC_NO]	HIGHDOC_NO,
+		''	ITEMNAME,
+		'D'	ITEMDIV,
+		''	ITEM1,
+		''	ITEM2,
+		''	ITEM3,
+		''	ITEM4,
+		''	ITEM5,
+		''	ITEM6,
+		''	ITEM7,
+		''	ITEM8,
+		''	ITEM9,
+		''	ITEM10,
+		''	ITEM11,
+		''	ITEM12,
+		''	ITEM13,
+		''	ITEM14,
+		''	ITEM15,
+		''	ITEM16,
+		''	ITEM17,
+		''	ITEM18,
+		''	ITEM19,
+		''	ITEM20,
+		''	IDX,
+		''	ITEM21,
+		''	ITEM22,
+		''	ITEM23,
+		''	ITEM24,
+		''	ITEM25,
+		''	ITEM26,
+		''	ITEM27,
+		''	ITEM28,
+		''	ITEM29,
+		''	ITEM30
+		FROM COM_DOCU
+		WHERE   ROWNUM<=[S_ROW]
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="PD_036" value-count="0" url="산출문서  등록(팝업))">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO  PRODUCTDOC (	
+			DOCNO, 
+			HIGHDOCNO, 
+			DOCTYPE, 
+			TITLE, 
+			DETAIL, 
+			P_TITLE, 
+			L_TITLE, 
+			DIV, 
+			EMPID, 
+			USETYPE, 
+			CREATEDT, 
+			MODIFYDT,
+			IDX)
+		VALUES(	GET_SEQ('PROD'), 
+				[p0], 
+				[p1], 
+				[p2], 
+				[p3], 
+				[p4], 
+				[p5], 
+				[p6], 
+				[p7], 
+				[p8], 			
+				SYSDATE,  
+				SYSDATE,
+				NVL([p9],(SELECT MAX(IDX)+1 FROM PRODUCTDOC WHERE HIGHDOCNO=[p10]))
+				)
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+</sql>

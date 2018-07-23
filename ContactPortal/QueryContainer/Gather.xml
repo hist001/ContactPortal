@@ -1,0 +1,4805 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="BasicDeptList"   value-count="3" url="원가 기본조직 리스트" >  
+	<sql-content>
+	<![CDATA[
+			SELECT ORG_NO,DEPTCODE,DEPTNAME,
+			TO_CHAR(TO_DATE(SDATE,'YYYYMMDD'),'YYYY-MM-DD') AS SDATE,
+			TO_CHAR(TO_DATE(EDATE,'YYYYMMDD'),'YYYY-MM-DD') AS EDATE
+            FROM
+	             (SELECT
+	                           (SELECT MAX(ORG_NO) FROM ORGHISTORY WHERE ORGCD=DEPTCODE) AS ORG_NO,
+	                           DEPTCODE,
+	                           DEPTNAME,
+	                           SDATE,
+	                           EDATE
+	             FROM MASM_DEPT)
+			WHERE   ORG_NO   LIKE ?||'%'
+			AND   DEPTCODE LIKE ?||'%'
+			AND DEPTNAME LIKE '%'||?||'%'
+			ORDER BY 2
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+   <sql-mapping  id="BasicEmpList"   value-count="8" url="개인별 소속" >  
+   <sql-content>
+   <![CDATA[
+			SELECT TO_CHAR(TO_DATE(YYMM,'YYYYMM'),'YYYY-MM') AS YYMM,
+					SBN,
+					NAME,
+					ORG_NO,
+					DEPT,
+					DEPTNAME,
+					POSITION,
+					POSITIONNAME					
+			FROM 
+			(SELECT
+					YYMM,
+					SBN,
+					NAME,
+			        (SELECT SUBSTR(MAX(STARTDT||ORG_NO),9,10)
+               		 FROM ORGHISTORY
+               		 WHERE ORGCD=DEPT) AS ORG_NO,					
+					DEPT,
+					(SELECT DEPTNAME FROM MASM_DEPT WHERE DEPTCODE=DEPT) AS DEPTNAME,
+					POSITION,
+					(SELECT NAME FROM MASM_POSITION WHERE TRIM(CODE)=POSITION) AS POSITIONNAME
+			FROM BBDBO_MASTER  
+			) 
+			WHERE YYMM = REPLACE(?,'-','')
+			AND   SBN LIKE ?||'%' 
+			AND   NAME LIKE '%'||?||'%' 
+			AND   ORG_NO LIKE ?||'%'
+			AND   DEPT LIKE ?||'%' 
+			AND   DEPTNAME LIKE '%'||?||'%' 
+			AND   POSITION LIKE ?||'%' 
+			AND   POSITIONNAME LIKE '%'||?||'%' 
+			ORDER BY DEPT
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="BasicLaborCostList"   value-count="19" url="부서/직급별 노무비" >  
+   <sql-content>
+   <![CDATA[
+		SELECT YYMM,
+				DEPT,
+				POSITION,
+	            ACCTCD,
+	            ACCTNAME,
+	            ORG_NO,
+	            DEPTNAME,
+	            POSITIONNAME,
+	            AMT,
+	            TO_CHAR(SUM(T_AMT) OVER(),'999,999,999,999') AS SUM_AMT
+		FROM (
+		SELECT YYMM,
+				DEPT,
+				POSITION,
+	            A.ACCTCD,
+	            B.ACCTKNAME AS ACCTNAME,
+				TO_CHAR(AMT,'999,999,999,999') AS AMT,
+				AMT AS T_AMT,
+                TO_ORGCDNO_N(DEPT,YYMM) AS ORG_NO,
+                TO_ORGCDNAME_N(DEPT,YYMM) AS DEPTNAME,				
+				(SELECT NAME FROM BBDBO.MASM_POSITION WHERE TRIM(CODE)=POSITION) AS POSITIONNAME
+		FROM (
+				--정규직 직원
+				SELECT  YYMM,
+                        TO_ORGNOCD_N (DEPT,YYMM) AS DEPT,
+                        TRIM(POSITION) AS POSITION,
+                        DIVTYPE,
+                      DECODE((DIVTYPE),'1','50021'
+                                      ,'2','50031'
+                                      ,'3','50141'
+                                      ,'4','50142'
+                                      ,'5','50143'
+                                      ,'6','50145'
+                                      ,'7','5014912' --주택 이자보조
+                        ) AS ACCTCD,
+                        DECODE((DIVTYPE),'1',(SALARY)
+                                        ,'2',(ADJUSTBONUS)
+                                        ,'3',(GUKMIN)
+                                        ,'4',(MEDICAL)
+                                        ,'5',(YUNGUMBOJO)
+                                        ,'6',(SHINHUPBOJO)
+                                        ,'7',(INTERESTBOJO)
+                        ) AS AMT
+                 FROM 	BBDBO_LABORCOST A ,
+                         (SELECT ROWNUM AS DIVTYPE
+                          FROM MONTHS
+                          WHERE ROWNUM<8 ) B
+                 WHERE A.YYMM=REPLACE(?,'-','')
+			UNION ALL
+				SELECT YYMM,
+				       (SELECT B.DEPT
+				       FROM BBDBO_MASTER B
+				       WHERE B.SBN=A.EMPID
+				        AND B.YYMM=A.YYMM) AS DEPT,
+				       (SELECT B.POSITION
+				       FROM BBDBO_MASTER B
+				       WHERE B.SBN=A.EMPID
+				       AND B.YYMM=A.YYMM) AS POSITION,
+				       DIVTYPE,
+				       DECODE((DIVTYPE),'1','5014913' --이동전화보조
+				                           ) AS ACCTCD,
+				       TELBOJO AS AMT
+				FROM   BBDBO_TELBOJO A ,
+				        (SELECT ROWNUM AS DIVTYPE
+				         FROM MONTHS
+				         WHERE ROWNUM<2 ) B
+				WHERE A.YYMM=REPLACE(?,'-','')			                 
+			UNION ALL
+			--정규직 퇴직충당금
+				SELECT  YYMM,
+				     	TO_ORGNOCD_N(DEPT,YYMM) AS DEPT,
+				   	 	TRIM(POSITION) AS POSITION,
+				     	DIVTYPE,
+				    	DECODE((DIVTYPE),'1','50061'
+				                    	,'2','50147'
+				     	) AS ACCTCD,
+				     	DECODE((DIVTYPE),'1',TJAMT
+				                     ,'2',SJAMT
+				     ) AS AMT
+				FROM BBDBO_TJAMT A ,
+				(SELECT ROWNUM AS DIVTYPE
+				FROM MONTHS
+				WHERE ROWNUM<3 ) B
+				WHERE A.YYMM=REPLACE(?,'-','')
+			UNION ALL
+				--계약직 직원
+                SELECT  YYMM,
+                        DEPT,
+                        TRIM(POSITION) AS POSITION ,
+                               1 AS DIVTYPE,
+                              '50051' AS ACCTCD,
+                               SUM(SALARY+BONUS+GUKMIN+MEDICAL) AS AMT 
+                        FROM   BBDBO_TMPEMP_LABORCOST A ,
+                                (SELECT ROWNUM AS DIVTYPE
+                                 FROM MONTHS
+                                 WHERE ROWNUM<2 ) B
+                WHERE A.YYMM=REPLACE(?,'-','')							
+			    GROUP BY YYMM,DEPT,POSITION	
+				UNION ALL
+		         SELECT  YYMM,
+		                 DEPT,
+		                 TRIM(POSITION) AS POSITION ,
+		                        1 AS DIVTYPE,
+		                       '50147' AS ACCTCD,
+		                        SUM(KY_SJAMT) AS AMT
+		                 FROM   BBDBO_TMPEMP_LABORCOST A ,
+		                         (SELECT ROWNUM AS DIVTYPE
+		                          FROM MONTHS
+		                          WHERE ROWNUM<2 ) B
+		         WHERE A.YYMM=REPLACE(?,'-','')
+                 GROUP BY YYMM,DEPT,POSITION			    		
+			) A,
+			ACCTTB B
+		WHERE A.ACCTCD=B.ACCTCD(+)
+		 AND AMT<>0
+		)
+		WHERE(ORG_NO 		LIKE  ?||'%'       OR ? IS  NULL)
+		AND (DEPT 			LIKE  ?||'%'       OR ? IS  NULL)
+		AND (DEPTNAME 		LIKE  '%'||?||'%'  OR ? IS  NULL)
+		AND (POSITION 		LIKE  ?||'%'       OR ? IS  NULL)
+		AND (POSITIONNAME 	LIKE  '%'||?||'%'  OR ? IS  NULL)
+		AND (ACCTCD 		LIKE  ?||'%'       OR ? IS  NULL)
+		AND	(ACCTNAME 		LIKE  '%'||?||'%'  OR ? IS  NULL)
+--		OR   POSITION IS NULL 
+		ORDER BY DEPT,POSITION,ACCTCD		
+
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="MonthlyEmpOrg"   value-count="8" url="개인별 MM" >  
+   <sql-content>
+   <![CDATA[
+    SELECT *
+    FROM (
+	SELECT  TO_CHAR(TO_DATE(A.YYMM,'YYYYMM'),'YYYY-MM') AS YYMM,
+			A.EMPID,
+			TRIM(A.EMPKNAME) AS EMPKNAME,
+			A.POSITION,
+			A.POSITIONNAME,
+			A.ORG_NO,
+			A.ORGCD,
+			A.ORGNAME,
+			TO_CHAR(A.MMRATE,'0.00') AS MMRATE,
+			A.CREATEDTM,
+			TO_CHAR(SUM(A.MMRATE)OVER(),'9,990.00') AS TOT_MM
+			,B.YYYY ||'-'|| B.MM AS P_YYMM
+			,B.EMPID    AS P_EMPID	
+			,B.EMPKNAME AS P_EMPKNAME
+			,B.EGRADE   AS P_EGRADE
+			,B.EGRADE   AS P_POSITION
+			,(SELECT NAME FROM MASM_POSITION WHERE TRIM(CODE)=B.EGRADE) AS P_POSITIONNAME			
+			,B.ORGNO    AS P_ORGNO
+            ,TO_ORGNOCD_N(B.ORGNO,TO_CHAR(TO_DATE([yymm],'YYYY-MM')-1,'YYYYMM'))    AS P_ORGCD
+            ,TO_ORGNONAME_N(B.ORGNO,TO_CHAR(TO_DATE([yymm],'YYYY-MM')-1,'YYYYMM'))    AS P_ORGNAME			
+			,TO_CHAR(B.MMRATE,'0.00') AS P_MMRATE,
+             DECODE(
+             DECODE(A.POSITION,B.EGRADE,0,1)+
+             DECODE(A.POSITIONNAME,(SELECT NAME FROM MASM_POSITION WHERE TRIM(CODE)=B.EGRADE),0,1)+
+             DECODE(A.ORG_NO,B.ORGNO,0,1)+
+             DECODE(A.ORGNAME,TO_ORGNONAME_N(B.ORGNO,[yymm]),0,1)+
+             DECODE(TO_CHAR(A.MMRATE,'0.00'),TO_CHAR(B.MMRATE,'0.00'),0,1),0,'N','Y') AS CHK_FLAG			
+	FROM
+			(SELECT YYYY||MM  as YYMM,
+			       EMPID,
+			       EMPKNAME,
+			       EGRADE AS POSITION,
+			       (SELECT NAME FROM MASM_POSITION WHERE TRIM(CODE)=EGRADE) AS POSITIONNAME,
+			       ORGNO AS  ORG_NO,
+			       ORGCD,
+			       ORGNAME,
+			       MMRATE,
+			       CREATEDTM
+			FROM MONTHLYEMPORG A,
+			    ORG B
+			WHERE A.ORGNO=B.ORG_NO
+			AND YYYY IN ( SUBSTR(REPLACE([yymm],'-',''),1,4) )
+			AND MM IN ( SUBSTR(REPLACE([yymm],'-',''),5,6))
+			) A
+			,MONTHLYEMPORG B
+        WHERE A.YYMM  =  REPLACE([yymm],'-','')
+		AND (A.EMPID LIKE [empId]||'%'         OR A.EMPID IS NULL)
+		AND (A.EMPKNAME LIKE '%'||[empName]||'%' OR A.EMPKNAME IS NULL)
+		AND (A.ORG_NO LIKE [org_no]||'%' 		OR A.ORG_NO IS NULL)
+		AND (A.ORGCD LIKE [orgcd]||'%' 		OR A.ORGCD IS NULL)
+		AND (A.ORGNAME LIKE '%'||[orgName]||'%' 	OR A.ORGNAME IS NULL)
+		AND (A.POSITION LIKE [positionCd]||'%' 	OR A.POSITION IS NULL)
+		AND (A.POSITIONNAME LIKE '%'||[positionName]||'%'  OR A.POSITIONNAME IS NULL)	
+		AND A.EMPID =B.EMPID(+)
+		AND B.YYYY(+)=TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([yymm],'-',''),'YYYYMM'),-1),'YYYY')
+		AND B.MM(+)  =TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([yymm],'-',''),'YYYYMM'),-1),'MM')
+		)
+		WHERE CHK_FLAG LIKE [S_CHECK_FLAG]||'%'
+		ORDER BY MMRATE,ORGCD,POSITION
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="GA_021"   value-count="16" url="개인별 MH 비율" >  
+   <sql-content>
+   <![CDATA[
+		SELECT YYMM,
+				EMPID,
+				EMPNAME,
+				MAINOBJ_CD,
+				MAINOBJ_NO,
+				MAINOBJNAME,
+				SUBOBJ_NO,
+				SUBOBJNAME,
+				COSTTYPE,
+				SUM(MM) AS MM,
+				SUM(MHRATE) AS MHRATE,
+				TOTMM,
+				TOTMHRATE
+
+		FROM
+               (   
+		SELECT  TO_CHAR(TO_DATE(YYMM,'YYYYMM'),'YYYY-MM') AS YYMM,
+				EMPID,
+				EMPNAME,
+				(SELECT PJTCD FROM PROJECT WHERE PJT_NO=TO_NUMBER(MAINOBJ_NO))||
+				(SELECT ORGCD FROM ORG WHERE ORG_NO=TO_NUMBER(MAINOBJ_NO)) MAINOBJ_CD,
+				MAINOBJ_NO,
+				MAINOBJNAME,
+				SUBOBJ_NO,
+				SUBOBJNAME,
+				COSTTYPE,
+				MM,
+				TO_CHAR(MHRATE,'0.00') AS MHRATE,
+				TOTMM,
+				TO_CHAR((SUM(MHRATE) OVER()),'990.00') AS TOTMHRATE
+		FROM
+				(SELECT
+					YEAR||MONTH AS YYMM,
+					B.EMPID,
+						 (SELECT NAME FROM BBDBO_MASTER
+												WHERE YYMM=YEAR||MONTH
+												AND   SBN=B.EMPID)
+					AS EMPNAME,
+		                (SELECT DEPT 
+		                FROM BBDBO_MASTER 
+		                WHERE SBN=B.EMPID 
+		                AND YYMM=YEAR||MONTH ) AS DEPT,						
+						MAINOBJ_NO,
+						(SELECT ORGNAME 
+						FROM ORG
+						WHERE ORG_NO=TO_NUMBER(MAINOBJ_NO))||
+						(SELECT PJTNAME 
+						FROM PROJECT 
+						WHERE PJT_NO=TO_NUMBER(MAINOBJ_NO)) 
+					AS MAINOBJNAME,
+						SUBOBJ_NO,
+						(SELECT JOBNAME 
+						FROM HISTJOB 
+						WHERE JOBCD=SUBOBJ_NO)||
+	                    (SELECT PRCSNAME 
+	                    FROM PRCS 
+	                    WHERE PRCSCD=SUBOBJ_NO) 
+                    AS SUBOBJNAME,
+					COSTTYPE,
+					B.MM,
+					B.MHRATE  AS MHRATE,
+					B.TOTMM
+				FROM DailyReport_RptMh B,MONTHLYEMPORG C
+				WHERE YEAR = SUBSTR(REPLACE(?,'-',''),1,4)
+   				AND  MONTH  = SUBSTR(REPLACE(?,'-',''),5,2) 
+				AND  YEAR=C.YYYY
+				AND MONTH=C.MM
+				AND B.EMPID=C.EMPID    				
+				AND (B.EMPID LIKE ?||'%' OR ? IS NULL)
+				AND (MAINOBJ_NO LIKE ?||'%' OR ? IS NULL)
+				AND (SUBOBJ_NO LIKE ?||'%' OR ? IS NULL)
+				AND (COSTTYPE LIKE ?||'%' OR ? IS NULL)
+				)
+		WHERE (EMPNAME LIKE '%'||?||'%' OR ? IS NULL)
+		AND (MAINOBJNAME LIKE '%'||?||'%' OR ? IS NULL)
+		AND (SUBOBJNAME LIKE '%'||?||'%' OR ? IS NULL)
+		ORDER BY YYMM,DEPT,EMPID,MAINOBJ_NO,SUBOBJ_NO
+		)
+        GROUP BY YYMM,
+				EMPID,
+				EMPNAME,
+				MAINOBJ_CD,
+				MAINOBJ_NO,
+				MAINOBJNAME,
+				SUBOBJ_NO,
+				SUBOBJNAME,
+				COSTTYPE,
+				TOTMM,
+				TOTMHRATE
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="GA_007"   value-count="10" url="개인별 노무비 리스트" >  
+   <sql-content>
+   <![CDATA[
+			SELECT
+				 TO_CHAR(TO_DATE(YYMM,'YYYYMM'),'YYYY-MM') AS YYMM,
+				 EMPID,
+				 EMPNAME,
+				 ACCTCD,
+				 ACCTNAME,
+				 TO_CHAR(AMT,'999,999,999,999') AS AMT,
+				 TO_CHAR(CREATEDTM,'YYYY/MM/DD HH:MI:SS') AS CREATEDTM,
+				 TO_CHAR(MODIFYDTM,'YYYY/MM/DD HH:MI:SS') AS MODIFYDTM,
+				  TO_CHAR(SUM(AMT) OVER(),'999,999,999,999') AS TOTAMT
+			FROM
+				(SELECT
+					YYYY||MM AS YYMM,
+					EMPID,
+		                (SELECT B.NAME FROM BBDBO_MASTER B 
+		                WHERE B.SBN=A.EMPID AND YYMM=YYYY||MM) 
+	                AS EMPNAME,					
+					ACCTCD,
+						(SELECT ACCTKNAME FROM ACCTTB B 
+						WHERE B.ACCTCD=A.ACCTCD) 
+					AS ACCTNAME,
+					AMT,
+					CREATEDTM,
+					MODIFYDTM
+				FROM LABORCOST A
+				WHERE	YYYY = SUBSTR(REPLACE(?,'-',''),1,4)
+				AND     MM = SUBSTR(REPLACE(?,'-',''),5,2)
+				AND (EMPID LIKE ?||'%' OR ? IS NULL)
+				AND (ACCTCD LIKE ?||'%' OR ? IS NULL)
+				)
+			WHERE  	(EMPNAME LIKE '%'||?||'%' OR ? IS NULL)
+			 AND 	(ACCTNAME LIKE '%'||?||'%' OR ? IS NULL)
+			ORDER BY YYMM,EMPNAME,EMPID,ACCTCD
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="GA_010"   value-count="0" url="전표 리스트" >  
+   <sql-content>
+   <![CDATA[
+	SELECT YYMM,
+			DOCNO,
+			GET_MAINNO(DOCNO) MAINNO,
+			SEQ,
+			USEORGCD,
+			USEORGNAME,
+			EMPID,
+			EMPNAME,
+			ACCTCD,
+			ACCTNAME,
+			TITLE,
+			ORG_NO,
+			ORGCD,
+			ORGNAME,
+			JOBCD,
+			JOBNO,
+			JOBNAME,
+			TO_CHAR(AMT,'999,999,999,999') AS AMOUNT,
+			TO_CHAR(SUM(AMT) OVER(),'999,999,999,999') AS TOTAMT,					
+			ERRFLAG
+	FROM
+	(
+	SELECT SUBSTR(AA12_JPNO,2,6) AS YYMM,
+		AA11_JPNO AS DOCNO,
+		AA12_HGNO AS SEQ,
+			(SELECT ORGCD
+			FROM EMPALL
+			WHERE EMPID=AA11_JSBN )
+		AS USEORGCD,
+			(SELECT ORGNAME
+			FROM EMPALL A, ORG B
+			WHERE EMPID=AA11_JSBN
+			AND   A.ORGCD=B.ORG_NO )
+		AS USEORGNAME ,
+			NVL((SELECT CREMPID FROM ACCTRPTHD
+			WHERE DOCNO=AA12_JPNO
+			),AA11_JSBN)
+		AS EMPID,
+			(SELECT EMPKNAME
+			FROM EMPALL
+			WHERE EMPID=NVL((SELECT CREMPID
+			FROM ACCTRPTHD B
+			WHERE  B.DOCNO=AA12_JPNO),AA11_JSBN))
+		AS  EMPNAME,
+			 NVL((SELECT DECODE(SUBSTR(B.ACCTCD,1,1),'5',
+			 		'50'||SUBSTR(B.ACCTCD,3,3),B.ACCTCD)
+                        FROM  ACCTRPTSB B,ACCTRPTHD C
+                        WHERE C.DOCNO=AA12_JPNO
+                        AND   C.MAINNO=B.MAINNO
+                        AND   B.SN=AA12_HGNO),
+                        DECODE(SUBSTR(AA12_GJCD,1,1),'5',
+                        	'50'||SUBSTR(AA12_GJCD,3,3),AA12_GJCD))
+		AS ACCTCD,
+			(SELECT A.ACCTKNAME
+			FROM ACCTTB A
+			WHERE A.ACCTCD=NVL((SELECT DECODE(SUBSTR(AA12_GJCD,1,1),
+			'5',SUBSTR(AA12_GJCD,1,1)||'0'||SUBSTR(AA12_GJCD,3,3)
+                  ,AA12_GJCD)
+			FROM  ACCTRPTSB B,ACCTRPTHD C
+			WHERE C.DOCNO=AA12_JPNO
+			AND   C.MAINNO=B.MAINNO
+			AND   B.SN=AA12_HGNO),
+			DECODE(SUBSTR(AA12_GJCD,1,1),
+			'5',SUBSTR(AA12_GJCD,1,1)||'0'||SUBSTR(AA12_GJCD,3,3)
+                  ,AA12_GJCD)))
+		AS ACCTNAME,
+		AA12_JYO AS TITLE,
+                     NVL((SELECT B.JOBNO
+                     FROM ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO)
+                     ,TO_ORGCDNO_N(AA12_BSCD,SUBSTR(AA12_JPNO,2,6)))
+             AS ORG_NO,
+                     NVL((SELECT
+                             TO_ORGNOCD_N(B.JOBNO,SUBSTR(AA12_JPNO,2,6))
+                             ||(SELECT PJTCD
+                                     FROM PROJECT D
+                                     WHERE TO_CHAR(D.PJT_NO)=B.JOBNO)
+                                     FROM  ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO),AA12_BSCD)
+             AS ORGCD,
+                     NVL((SELECT
+
+                       TO_ORGNONAME_N(B.JOBNO,SUBSTR(AA12_JPNO,2,6))
+                             ||(SELECT PJTNAME
+                                     FROM PROJECT D
+                                     WHERE TO_CHAR(D.PJT_NO)=B.JOBNO)
+                                     FROM ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO
+                     ),  TO_ORGCDNAME_N(AA12_BSCD,SUBSTR(AA12_JPNO,2,6)))
+
+             AS ORGNAME,
+             	 DECODE(SUBSTR(AA12_JPNO,1,1),'A',-1,1)*DECODE(AA12_CDGB,'D',-1,1)*AA12_AMT AS AMT,
+                     (SELECT B.ORGCD
+                     FROM ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO)
+             AS JOBNO,
+                     (SELECT
+                             TO_ORGNOCD_N(B.ORGCD,SUBSTR(AA12_JPNO,2,6))
+                             ||(SELECT PJTCD
+                                     FROM PROJECT D
+                                     WHERE D.PJT_NO=B.ORGCD)
+                     FROM  ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO)
+             AS JOBCD,
+                     (SELECT
+                             TO_ORGNONAME_N(B.ORGCD,SUBSTR(AA12_JPNO,2,6))
+                             ||(SELECT PJTNAME
+                             FROM PROJECT D
+                             WHERE D.PJT_NO=B.ORGCD)
+                     FROM ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO
+                     )
+             AS JOBNAME,
+		C.JPNO AS ERRFLAG
+	FROM  ACCTN.TBAA11 A, ACCTN.TBAA12 B,ACCTRPT_ERR C
+	WHERE A.AA11_JPNO=B.AA12_JPNO
+	AND  AA11_HGIL BETWEEN  REPLACE(FR_YYMM:,'-','') 
+		AND REPLACE(TO_YYMM:,'-','')	
+	AND  AA11_JPNO  LIKE '%'||DOCNO: ||'%' 
+	AND  AA12_HGNO  LIKE SN: ||'%' 
+	AND (AA11_JPJG  LIKE '%'||ACCTGB:||'%' OR AA11_JPJG IS NULL)
+	AND (AA12_JYO  LIKE '%'|| TITLE: ||'%' OR AA12_JYO IS NULL)
+	AND AA12_GJCD  LIKE  SUBSTR(ACCTCD:,1,1)||'%'||SUBSTR(ACCTCD:,3,3)
+	AND SUBSTR(AA12_GJCD,1,1) IN ('4','5')
+          AND C.JPNO(+)=AA12_JPNO
+          AND C.SN  (+)=AA12_HGNO
+	) 
+	WHERE (EMPNAME LIKE '%'|| EMPNAME: ||'%' OR EMPNAME: IS NULL)
+	AND   (EMPID   LIKE '%'|| EMPID: ||'%' OR EMPID: IS NULL)
+	AND   (ACCTCD LIKE  ACCTCD:||'%' OR  ACCTCD: IS NULL)
+	AND   (ACCTNAME LIKE '%'||ACCTNAME:||'%' OR  ACCTNAME: IS NULL)
+	AND   (ORG_NO LIKE ORGNO: ||'%' OR  ORGNO: IS NULL)
+	AND   (ORGCD LIKE ORGCD: ||'%' OR   ORGCD: IS NULL)
+    AND   (AMT LIKE AMT:||'%'  OR   AMT: IS NULL)	
+	]]>
+	</sql-content>
+   </sql-mapping>      
+   <sql-mapping  id="GA_020"   value-count="0" url="PJT전표 리스트" >  
+   <sql-content>
+   <![CDATA[
+			SELECT YYMM,
+					DOCNO,
+					GET_MAINNO(DOCNO) MAINNO,
+					SEQ,
+					USEORGCD,
+					USEORGNAME,
+					EMPID,
+					EMPNAME,
+					ACCTCD,
+					ACCTNAME,
+					TITLE,
+					ORG_NO,
+					ORGCD,
+					ORGNAME,
+					JOBCD,
+					JOBNO,
+					JOBNAME,
+					TO_CHAR(AMT,'999,999,999,999') AS AMOUNT,
+					ERRFLAG,
+					SUM(AMT) OVER() AS TOT_AMOUNT
+			FROM
+			(
+			SELECT  SUBSTR(AA12_JPNO,2,6) AS YYMM,
+					AA11_JPNO AS DOCNO,
+					AA12_HGNO AS SEQ,
+			        (SELECT ORGCD
+			        FROM EMPALL
+			        WHERE EMPID=AA11_JSBN ) AS USEORGCD,
+			        (SELECT ORGNAME
+			        FROM EMPALL A, ORG B
+			        WHERE EMPID=AA11_JSBN
+			        AND   A.ORGCD=B.ORG_NO ) AS USEORGNAME ,
+	                NVL((SELECT CREMPID FROM ACCTRPTHD
+	                WHERE DOCNO=AA12_JPNO
+	                ),AA11_JSBN) AS EMPID,
+					(SELECT EMPKNAME
+					FROM EMPALL
+					WHERE EMPID=NVL((SELECT CREMPID
+									FROM ACCTRPTHD B
+									WHERE  B.DOCNO=AA12_JPNO),AA11_JSBN)) AS  EMPNAME,
+                    NVL((SELECT B.ACCTCD
+                    FROM  ACCTRPTSB B,ACCTRPTHD C
+                    WHERE C.DOCNO=AA12_JPNO
+                    AND   C.MAINNO=B.MAINNO
+                    AND   B.SN=AA12_HGNO),AA12_GJCD) AS ACCTCD,
+					(SELECT A.ACCTKNAME
+					FROM ACCTTB A
+					WHERE A.ACCTCD=NVL((SELECT REPLACE(REPLACE(B.ACCTCD,'51','50'),'59','50')
+						FROM  ACCTRPTSB B,ACCTRPTHD C
+						WHERE C.DOCNO=AA12_JPNO
+						AND   C.MAINNO=B.MAINNO
+						AND   B.SN=AA12_HGNO),REPLACE(REPLACE(AA12_GJCD,'51','50'),'59','50'))) AS ACCTNAME,
+					AA12_JYO AS TITLE,
+	                (SELECT B.JOBNO
+		                FROM ACCTRPTSB B,ACCTRPTHD C
+		                WHERE C.DOCNO=AA12_JPNO
+		                AND   C.MAINNO=B.MAINNO
+		                AND   B.SN=AA12_HGNO)
+	                 AS ORG_NO,
+					(SELECT 
+							(SELECT ORGCD FROM ORG D WHERE TO_CHAR(D.ORG_NO)=B.JOBNO)
+							||(SELECT PJTCD FROM PROJECT D WHERE TO_CHAR(D.PJT_NO)=B.JOBNO)
+						FROM  ACCTRPTSB B,ACCTRPTHD C
+						WHERE C.DOCNO=AA12_JPNO
+						AND   C.MAINNO=B.MAINNO
+						AND   B.SN=AA12_HGNO)
+					AS ORGCD,
+					(SELECT 
+							(SELECT ORGNAME FROM ORG D WHERE TO_CHAR(D.ORG_NO)=B.JOBNO)
+							||(SELECT PJTNAME FROM PROJECT D WHERE TO_CHAR(D.PJT_NO)=B.JOBNO)															
+						FROM ACCTRPTSB B,ACCTRPTHD C
+						WHERE C.DOCNO=AA12_JPNO
+						AND   C.MAINNO=B.MAINNO
+						AND   B.SN=AA12_HGNO
+						)
+	  				AS ORGNAME,
+					AA12_AMT AS AMT,
+			         (SELECT B.ORGCD
+			                FROM ACCTRPTSB B,ACCTRPTHD C
+			                WHERE C.DOCNO=AA12_JPNO
+			                AND   C.MAINNO=B.MAINNO
+			                AND   B.SN=AA12_HGNO)
+			         AS JOBNO,
+                    (SELECT 
+							(SELECT ORGCD FROM ORG D WHERE D.ORG_NO=B.ORGCD)
+							||(SELECT PJTCD FROM PROJECT D WHERE D.PJT_NO=B.ORGCD)															
+                     FROM  ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO)
+                    AS JOBCD,
+                    (SELECT 
+							(SELECT ORGNAME FROM ORG D WHERE D.ORG_NO=B.ORGCD)
+							||(SELECT PJTNAME FROM PROJECT D WHERE D.PJT_NO=B.ORGCD)															
+                     FROM ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO
+                     )
+                    AS JOBNAME,				
+					C.JPNO AS ERRFLAG
+			FROM  ACCTN.TBAA11 A, ACCTN.TBAA12 B,ACCTRPT_ERR C,
+					(SELECT DISTINCT DOCNO FROM ACCTRPTHD A, ACCTRPTSB B, PROJECT C
+            								WHERE ((PJTCD LIKE ORGCD:||'%' OR  ORGCD: IS NULL))
+            								AND   (PJT_NO LIKE ORGNO:||'%' OR  ORGNO: IS NULL)
+            								AND  (PJT_NO=B.ORGCD OR TO_CHAR(PJT_NO)=B.JOBNO)
+            								AND  B.MAINNO=A.MAINNO) D
+			WHERE A.AA11_JPNO=B.AA12_JPNO
+			AND  AA11_HGIL  BETWEEN REPLACE(FR_YYMM:,'-','') AND  REPLACE(TO_YYMM:,'-','')
+			AND  AA11_JPNO  LIKE DOCNO:||'%' 
+--			AND (AA11_JPJG  LIKE '%'||ACCTGB:||'%' OR AA11_JPJG IS NULL)
+			AND (AA11_JSBN  LIKE EMPID:||'%' OR AA11_JSBN IS NULL)
+			AND (AA12_JYO  LIKE '%'||TITLE:||'%' OR AA12_JYO IS NULL)
+			AND AA12_GJCD  LIKE  SUBSTR(ACCTCD:,1,1)||'_'||SUBSTR(ACCTCD:,3,3)||'%'
+			AND SUBSTR(AA12_GJCD,1,1) IN ('4','5')
+            AND C.JPNO(+)=AA12_JPNO
+            AND C.SN  (+)=AA12_HGNO
+            AND AA11_JPNO=D.DOCNO
+			) 
+			WHERE (EMPNAME LIKE '%'||EMPNAME:||'%' OR EMPNAME: IS NULL)
+			AND   (ACCTNAME LIKE '%'||ACCTNAME:||'%' OR  ACCTNAME: IS NULL)
+			AND   (ORG_NO LIKE ORGNO:||'%' OR  ORGNO: IS NULL)
+			AND   (ORGCD LIKE ORGCD:||'%' OR  ORGCD: IS NULL)
+			AND   (ORGNAME LIKE ORGNAME:||'%' OR   ORGNAME: IS NULL)			
+			ORDER BY USEORGCD,ACCTCD,ORGCD,DOCNO,SEQ
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="GT_008"   value-count="0" url="업무보고 리스트" >  
+   <sql-content>
+   <![CDATA[
+	SELECT  REPORTDT,
+			ORG_CDNAME,
+			REEMPID,
+			EMPNAME,
+			SN,
+			JOBNO,
+			NVL(JOBCD,'-') AS JOBCD,
+			JOBNAME,
+			PRCSNO,
+			NVL(PRCSCD,'-') AS PRCSCD,				
+			PRCSNAME,
+			JOBTITLE,
+			STARTDT,
+			ENDDT,
+			JOBDETAIL,
+			MH,
+			HH,
+			MM,
+			(HH*60)+MM AS TOTMH,
+			DELFLAG,
+			ACTFLAG,
+			STATUSFLAG
+	FROM
+	(SELECT REPORTDT,
+				REEMPID,
+				EMPNAME,
+				ORG_CDNAME,
+				SN,
+				JOBNO,
+				JOBCD,
+				JOBNAME,
+				PRCSNO,
+				PRCSCD,
+				PRCSNAME,
+				STARTDT,
+				ENDDT,
+				DECODE(SUBSTR(STATUSFLAG,1,1),
+					 'E',(SELECT CDNAME FROM COCODE
+							WHERE CDTYPE='UM'
+							AND CD= STATUSFLAG),
+					 JOBTITLE) 
+				AS JOBTITLE,
+				JOBDETAIL,
+				MH,
+				HH,
+				MM,
+				DELFLAG,
+				ACTFLAG,
+				STATUSFLAG
+			 FROM	(SELECT REPORTDT,
+					REEMPID,
+					(SELECT EMPKNAME 
+					FROM EMPALL 
+					WHERE EMPID=REEMPID) AS EMPNAME,
+                       (SELECT B.ORGCD||'_'||B.ORGNAME
+                       FROM EMPALL A, ORG B
+                       WHERE A.EMPID=REEMPID
+                       AND A.ORGCD=B.ORG_NO) AS ORG_CDNAME,						
+					SN,
+					JOBNO,
+					DECODE(ACTFLAG,
+							'D',
+							(SELECT PJTCD 
+							FROM PROJECT 
+							WHERE PJT_NO=TO_NUMBER(JOBNO)),
+						   'I',
+						   	(SELECT JOBCD 
+							 FROM HISTJOB 
+							 WHERE JOBCD=JOBNO))  AS JOBCD,
+					JOBNAME,
+					PRCSNO,
+					DECODE(ACTFLAG,
+							'D',
+							(SELECT PRCSCD FROM PRCS WHERE PRCSCD=PRCSNO),
+						   'I',
+						    (SELECT ORGCD FROM ORG WHERE TO_CHAR(ORG_NO)=PRCSNO)||
+						   	(SELECT PJTCD FROM PROJECT WHERE TO_CHAR(PJT_NO)=PRCSNO))  AS PRCSCD,
+					PRCSNAME,
+					JOBTITLE,
+					STARTDT,
+					ENDDT,
+					JOBDETAIL,
+					MH,
+					HH,
+					MM,
+					DELFLAG,
+					ACTFLAG,
+					 (SELECT STATUSFLAG
+                                                FROM DAILYREPORT B
+                                                WHERE B.REPORTDT=A.REPORTDT
+                                                AND B.REEMPID=A.REEMPID
+	                                            AND STATUSFLAG IN 
+	                                            	(SELECT CD FROM COCODE WHERE CDTYPE='UM')
+                                                )
+                       AS STATUSFLAG
+			FROM DAILYREPORTDETAIL A
+			WHERE  REPORTDT BETWEEN  REPLACE(FR_YYMM:,'-','') AND REPLACE(TO_YYMM:,'-','')
+			AND    DELFLAG='N'
+			AND    REEMPID LIKE EMPID:||'%'
+			AND	   (JOBNO 		LIKE JOBNO:||'%'	 		OR JOBNO: IS NULL)
+			AND	   (JOBNAME 	LIKE '%'||JOBNAME:||'%' 	OR JOBNAME: IS NULL)
+			AND	   (PRCSNO 		LIKE PRCSNO:||'%' 		    OR PRCSNO: IS NULL)
+			AND	   (PRCSNAME 	LIKE '%'||PRCSNAME:||'%' 	OR PRCSNAME: IS NULL)
+			AND	   (JOBDETAIL 	LIKE '%'||JOBDETAIL:||'%' 	OR JOBDETAIL: IS NULL)			
+	)
+	WHERE
+			(DECODE(CHKERR:,'Y',JOBCD,CHKERR:)  IS NULL 
+	OR 		DECODE(CHKERR:,'Y',PRCSCD,CHKERR:)  IS NULL)
+	)
+	WHERE 	(JOBCD LIKE JOBCD:||'%' OR JOBCD: IS NULL)
+	AND 	(PRCSCD LIKE PRCSCD:||'%' OR PRCSCD: IS NULL)
+	AND 	 EMPNAME  LIKE '%'||EMPNAME:||'%' 
+	AND      (ORG_CDNAME LIKE UPPER('%'||ORGCDNAME:||'%') OR ORGCDNAME: IS NULL)
+	AND (MM >0  
+		 OR HH>0 
+--		 OR STATUSFLAG  IN (SELECT CD FROM COCODE WHERE CDTYPE='UM')
+		 )
+	AND	   (JOBTITLE 	LIKE '%'||JOBTITLE:||'%' 	OR JOBTITLE: IS NULL)	 
+	ORDER BY    
+			ORG_CDNAME,
+	        EMPNAME,
+			REPORTDT DESC,
+	        JOBCD,
+	        PRCSCD,
+	        SN		
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="GA_016"   value-count="8" url="[조회]전표데이터 수집" >  
+   <sql-content>
+   <![CDATA[
+			SELECT YYMM,
+					DOCNO,
+					SEQ,
+					USEORGCD,
+					 (SELECT ORGCD FROM ORG WHERE ORG_NO=USEORGCD) AS USEORGNO,
+					USEORGNAME,
+					EMPID,
+					EMPNAME,
+					ACCTCD,
+					ACCTNAME,
+					TITLE,
+					ORG_NO,
+					ORGCD,
+					ORGNAME,
+					TO_CHAR(AMT,'999,999,999,999') AS AMOUNT
+			FROM
+			(
+			SELECT  SUBSTR(AA12_JPNO,2,6) AS YYMM,
+					AA11_JPNO AS DOCNO,
+					AA12_HGNO AS SEQ,
+			        (SELECT ORGCD
+			        FROM EMPALL
+			        WHERE EMPID=AA11_JSBN ) AS USEORGCD,
+			        (SELECT ORGNAME
+			        FROM EMPALL A, ORG B
+			        WHERE EMPID=AA11_JSBN
+			        AND   A.ORGCD=B.ORG_NO ) AS USEORGNAME ,
+			        AA11_JSBN AS EMPID,
+					(SELECT EMPKNAME
+					FROM EMPALL
+					WHERE EMPID=AA11_JSBN ) AS EMPNAME,
+					AA12_GJCD AS ACCTCD,
+					(SELECT ACCTKNAME FROM ACCTTB WHERE ACCTCD=REPLACE(REPLACE(AA12_GJCD,'51','50'),'59','50')) AS ACCTNAME,
+					AA12_JYO AS TITLE,
+					(SELECT ORG_NO FROM ORG WHERE ORGCD=AA12_BSCD) AS ORG_NO,
+					AA12_BSCD AS ORGCD,
+					(SELECT DEPTNAME
+					FROM BBDBO.MASM_DEPT
+					WHERE DEPTCODE=	AA12_BSCD) AS ORGNAME,
+					AA12_AMT AS AMT
+			FROM  ACCTN.TBAA11 A, ACCTN.TBAA12 B
+			WHERE A.AA11_JPNO=B.AA12_JPNO
+			AND  AA11_JPNO  LIKE  '%'||REPLACE(?,'-','')||'%'
+			AND  AA11_JPNO  LIKE '%'||?||'%' 
+			AND (AA11_JPJG  LIKE '%'||?||'%' OR AA11_JPJG IS NULL)
+			AND (AA11_JSBN  LIKE ?||'%' OR AA11_JSBN IS NULL)
+			AND (AA12_JYO  LIKE '%'||?||'%' OR AA12_JYO IS NULL)
+			AND AA12_GJCD  LIKE ?||'%'
+			)
+			WHERE (EMPNAME LIKE ?||'%' OR EMPNAME IS NULL)
+			AND   ACCTNAME LIKE ?||'%'
+			ORDER BY USEORGCD,EMPNAME,DOCNO,SEQ
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   
+   <sql-mapping  id="DailyReport"   value-count="11" url="업무보고 리스트" >  
+   <sql-content>
+   <![CDATA[
+		SELECT REPORTDT,
+				(SELECT DEPT FROM BBDBO_MASTER WHERE SBN=REEMPID AND YYMM=REPORTDT) AS ORG_CD,
+				REEMPID,
+				EMPNAME,
+				SN,
+				JOBNO,
+				NVL(JOBCD,'-') AS JOBCD,
+				JOBNAME,
+				PRCSNO,
+				NVL(PRCSCD,'-') AS PRCSCD,				
+				PRCSNAME,
+				JOBTITLE,
+				STARTDT,
+				ENDDT,
+				JOBDETAIL,
+				MH,
+				HH,
+				MM,
+				(HH*60)+MM AS TOTMH,
+				DELFLAG,
+				ACTFLAG
+		FROM
+				(SELECT REPORTDT,
+						REEMPID,
+						(SELECT EMPKNAME FROM EMPALL WHERE EMPID=REEMPID) AS EMPNAME,
+						SN,
+						JOBNO,
+						DECODE(ACTFLAG,'D',(SELECT PJTCD FROM PROJECT WHERE TO_CHAR(PJT_NO)=JOBNO),
+									   'I',(SELECT JOBCD FROM HISTJOB WHERE JOBCD=JOBNO))  AS JOBCD,
+						JOBNAME,
+						PRCSNO,
+						DECODE(ACTFLAG,'D',(SELECT PRCSCD FROM PRCS WHERE PRCSCD=PRCSNO),
+									   'I',(SELECT ORGCD FROM ORG WHERE TO_CHAR(ORG_NO)=PRCSNO)||
+									   	   (SELECT PJTCD FROM PROJECT WHERE TO_CHAR(PJT_NO)=PRCSNO))  AS PRCSCD,
+						PRCSNAME,
+						JOBTITLE,
+						STARTDT,
+						ENDDT,
+						JOBDETAIL,
+						MH,
+						HH,
+						MM,
+						DELFLAG,
+						ACTFLAG
+				FROM DAILYREPORTDETAIL
+				WHERE  REPORTDT BETWEEN  REPLACE(?,'-','') AND REPLACE(?,'-','')
+				AND    REEMPID LIKE ?||'%'
+				AND	   JOBNO LIKE ?||'%'
+				AND	   (JOBNAME LIKE '%'||?||'%' OR JOBNAME IS NULL)
+				AND	   PRCSNO LIKE ?||'%'
+				AND	   (PRCSNAME LIKE '%'||?||'%' OR PRCSNAME IS NULL)
+				AND	   JOBTITLE LIKE '%'||?||'%'
+		)
+		WHERE (JOBCD LIKE ?||'%' OR JOBCD IS NULL)
+		AND (PRCSCD  LIKE ?||'%' OR PRCSCD IS NULL)
+		AND EMPNAME  LIKE '%'||?||'%'
+		ORDER BY    NVL(PRCSCD,'-')  ,NVL(JOBCD,'-') ,
+					(SELECT DEPT 
+					FROM BBDBO_MASTER 
+					WHERE SBN=REEMPID 
+					AND YYMM=REPORTDT),
+					REPORTDT,EMPNAME,SN
+
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   
+   <sql-mapping  id="GatherMain"   value-count="1" url="업무보고 리스트" >  
+   <sql-content>
+   <![CDATA[
+		(SELECT COUNT(DEPTCODE) AS FLAG ,
+					'MASM_DEPT' AS STEP   ,
+					'부서코드' AS STEPNAME , 
+					'' AS EXECUTE ,
+					'' AS PARAM,
+					'CostArs/Gather/basicDeptList.jsp' AS URL					
+					FROM MASM_DEPT WHERE ROWNUM=1) 
+		UNION ALL
+			(SELECT COUNT(CODE)  ,
+			'MASM_POSITION',
+			'직급정보', 
+			'' AS EXECUTE ,
+			'' AS PARAM,
+			'' AS URL	
+			FROM MASM_POSITION WHERE ROWNUM=1) 
+		UNION ALL
+			(SELECT COUNT(YYMM), 
+			'BBDBO_MASTER' ,
+			'개인기초정보', 
+			'' AS EXECUTE ,
+			'' AS PARAM,
+			'CostArs/Gather/basicEmpList.jsp' AS URL	
+			FROM BBDBO_MASTER WHERE YYMM=REPLACE(YYMM:,'-','') AND ROWNUM=1) 
+		UNION ALL
+			(SELECT COUNT(YYMM) ,
+			'MASM_LABORCOST',
+			'부서별/직급별 노무비 ', 
+			'' AS EXECUTE ,
+			'' AS PARAM,
+			'CostArs/Gather/basicLaborCostList.jsp' AS URL	
+			FROM BBDBO_LABORCOST WHERE YYMM=REPLACE(YYMM:,'-','') AND ROWNUM=1) 
+		UNION ALL
+			(SELECT COUNT(YYMM),
+			'MASM_TMPEMP_LABORCOST' ,
+			'부서별/직급별 계약직 노무비 ', 
+            '' AS EXECUTE ,
+            '' AS PARAM,
+            'CostArs/Gather/tempLaborCostList.jsp' AS URL
+			FROM BBDBO_TMPEMP_LABORCOST   WHERE YYMM=REPLACE(YYMM:,'-','') AND ROWNUM=1) 
+		UNION ALL
+			(SELECT COUNT(YYMM) ,
+			'MASM_TJAMT' ,
+			'부서별/직급별 퇴직충당금', 
+			'Y' AS EXECUTE ,
+			'GATH_GATHERINSABASIC' AS PARAM,
+			'CostARs/Gather/ basicTjAmtList.jsp' AS URL	  
+			FROM BBDBO_TJAMT WHERE YYMM=REPLACE(YYMM:,'-','') AND ROWNUM=1) 
+		UNION ALL
+			(SELECT COUNT(YYYY),
+					'MONTHLYEMPORG',
+					'월별개인별조직', 
+					'Y' AS EXECUTE,
+					'createMonthlyEmpOrg' AS PARAM,
+					'CostArs/Gather/monthlyEmpOrgList.jsp' AS URL	
+			FROM MONTHLYEMPORG 
+			WHERE YYYY= TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'YYYY')
+			AND   MM=TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM')
+			AND ROWNUM=1
+			GROUP BY YYYY,MM
+					
+			) 
+		UNION ALL
+			(SELECT COUNT(YEAR),
+			'DAILYREPORT_RPTMH',
+			'월별 조직별/개인별MM ', 
+			'Y' AS EXECUTE  ,
+			'createDailyReport_RptMh' AS PARAM,
+			'CostArs/Gather/CostActualResultsRptmhList.jsp' AS URL	
+			FROM DailyReport_RptMh 
+			WHERE YEAR= TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'YYYY')
+			AND   MONTH=TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM')
+			AND ROWNUM=1) 
+		UNION ALL
+			(SELECT COUNT(YYYY),
+			'LABORCOST',
+			'노무비생성', 
+			'Y' AS EXECUTE ,
+			'createLaborCost' AS PARAM,
+			'CostArs/Gather/LaborCostList.jsp' AS URL	
+			FROM LABORCOST 
+			WHERE YYYY= TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'YYYY')
+			AND   MM=TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM')			
+			AND ROWNUM=1) 
+		UNION ALL
+			(SELECT COUNT(YYYY),
+			'SLIP',
+			'제비용수집', 
+			'Y' AS EXECUTE ,
+			'createSlip' AS PARAM,
+			'CostArs/Gather/basicSlipList.jsp' AS URL	 
+			FROM SLIP 
+			WHERE YYYY= TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'YYYY')
+			AND   MM=TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM')					
+			AND ROWNUM=1) 
+		UNION ALL
+			(SELECT COUNT(YYYY),
+			'FIXASST',
+			'고정자산수집', 
+			'Y' AS EXECUTE,
+			'createFixasst' AS PARAM,
+			'CostArs/Gather/basicFixAsstList.jsp' AS URL	  
+			FROM FIXASST 
+			WHERE YYYY= TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'YYYY')
+			AND   MM=TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM')			
+			AND ROWNUM=1) 
+        UNION ALL
+       		 SELECT COUNT(AA01_SEQ),
+					'DISTRIBUTION',
+					'원가배부(일괄처리)',
+					'Y',
+					'createDistribution',
+					'CostArs/Gather/GatherReport.jsp'
+			FROM TBAA01
+			WHERE AA01_HGIL LIKE REPLACE(YYMM:,'-','')||'%'
+			AND ROWNUM=1	
+		UNION ALL
+                 SELECT COUNT(AA01_SEQ),
+                                        'CREATE_DSLIP',
+                                        '재무전표 생성',
+                                        'Y',
+                                        'createDistributionSlip',
+                                        'CostARs/Gather/basicSlipList.jsp'
+                  FROM ACCTN.TBAA01
+	 			  WHERE AA01_HGIL LIKE REPLACE(YYMM:,'-','')||'%'     
+	 			  AND AA01_JPNO LIKE 'I%'             
+  				  AND ROWNUM=1
+		UNION ALL
+            SELECT SIGN(MAX(AMT)),
+                                   'SALES',
+                                   '매출액계산',
+                                   'Y',
+                                   'createSales',
+                                   'CostArs/Gather/pjtSalesList.jsp'
+            FROM PJTCOSTDETAIL_DW
+			WHERE YEAR= TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'YYYY')
+			AND   MONTH=TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM')
+			AND COSTTYPE='S' --실적
+            AND ROWNUM=1				
+	]]>
+	</sql-content>
+   </sql-mapping>   
+
+	<sql-mapping  id="GA_003"   value-count="2" url="월별개인별조직 수집" >  
+	<sql-content>
+	<![CDATA[
+			begin gather_monthlyEmpOrg(?,?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping> 
+	  
+	<sql-mapping  id="GA_004"   value-count="1" url="월별 조직별/개인별MM 수집" >  
+	<sql-content>
+	<![CDATA[
+			begin gather_DailyReport_RptMh(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping>   
+	
+	<sql-mapping  id="GA_006"   value-count="1" url="노무비 수집" >  
+	<sql-content>
+	<![CDATA[
+			begin gather_laborcost(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping>   
+	
+	<sql-mapping  id="GA_008"   value-count="1" url="전표 수집" >  
+	<sql-content>
+	<![CDATA[
+			begin gather_slip(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping>   
+	
+	<sql-mapping  id="GA_009"   value-count="1" url="고정자산수집" >  
+	<sql-content>
+	<![CDATA[
+			begin gather_fixasst(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping>  
+	 
+	<sql-mapping  id="GA_018"   value-count="1" url="원가배부" >  
+	<sql-content>
+	<![CDATA[
+			begin GATH_COSTACTUALRESULTS(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping>  	
+
+	<sql-mapping  id="GA_019"   value-count="1" url="원가배부" >  
+	<sql-content>
+	<![CDATA[
+			begin GATH_COSTACTUALRESULTS(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping>  
+		
+ 	<sql-mapping  id="GA_036"   value-count="1" url="인사기초수집" >  
+	<sql-content>
+	<![CDATA[
+			begin GATH_GATHERINSABASIC(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping> 
+	
+	<sql-mapping  id="basicFixAsst"   value-count="3" url="고정자산조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	YYYY||'-'||MM AS YYMM, 
+				MAINOBJ_NO, 
+		         (SELECT ORGCD FROM ORG WHERE ORG_NO=MAINOBJ_NO) ORGCD,
+		         (SELECT ORGNAME FROM ORG WHERE ORG_NO=MAINOBJ_NO) ORGNAME,
+				ACCTCD, 
+				(SELECT A.ACCTKNAME
+				FROM ACCTTB A
+				WHERE A.ACCTCD=C.ACCTCD) AS ACCTNAME,
+				TO_CHAR(ACCTAMT,'999,999,999,999') AS ACCTAMT,				
+				FIXASSTNO, 
+				COSTTYPE 
+		FROM 	FIXASST C
+              WHERE   YYYY=SUBSTR(REPLACE(?,'-',''),1,4)
+			  AND     MM =SUBSTR(REPLACE(?,'-',''),5,2)
+              AND     FIXASSTNO LIKE ?||'%'
+              ORDER BY ORGCD,acctcd,acctamt desc
+
+	]]>
+	</sql-content>
+	</sql-mapping>  	
+
+	<sql-mapping  id="GA_002"   value-count="0" url="월별 조직별/개인별MM" >  
+	<sql-content>
+	<![CDATA[
+			UPDATE DAILYREPORTDETAIL SET
+			JOBNO= [djobNo],
+			JOBNAME=DECODE(NVL((SELECT 'I' 
+							FROM HISTJOB
+							WHERE JOBCD=[djobNo]
+							AND (EXISTS(SELECT * FROM ORG WHERE TO_CHAR(ORG_NO)=[dprcsNo])
+                         	OR  EXISTS (SELECT * FROM PROJECT WHERE TO_CHAR(PJT_NO)=[dprcsNo]))							
+							),'D') ,
+							'D',
+							(SELECT PJTNAME 
+							FROM PROJECT 
+							WHERE TO_CHAR(PJT_NO)=[djobNo]),
+							(SELECT JOBNAME 
+							FROM HISTJOB  
+							WHERE JOBCD=[djobNo])
+	                )
+					,
+			PRCSNO=[dprcsNo],
+			PRCSNAME= DECODE(NVL((SELECT 'I' 
+							FROM HISTJOB
+							WHERE JOBCD=[djobNo]
+							AND (EXISTS(SELECT * FROM ORG WHERE TO_CHAR(ORG_NO)=[dprcsNo])
+                         	OR  EXISTS (SELECT * FROM PROJECT WHERE TO_CHAR(PJT_NO)=[dprcsNo]))							
+							),'D'),
+							'D',
+							(SELECT PRCSNAME 
+							FROM PRCS    --공정
+							WHERE PRCSCD=[dprcsNo])
+							,
+							(SELECT ORGNAME 
+							FROM ORG 
+							WHERE TO_CHAR(ORG_NO)=[dprcsNo])||
+							(SELECT PJTNAME 
+							FROM PROJECT 
+							WHERE TO_CHAR(PJT_NO)=[dprcsNo])
+							)							 
+					 ,
+			ACTFLAG=NVL((SELECT 'I' 
+							FROM HISTJOB
+							WHERE JOBCD=[djobNo]
+							AND (EXISTS(SELECT * FROM ORG WHERE TO_CHAR(ORG_NO)=[dprcsNo])
+                         	OR  EXISTS (SELECT * FROM PROJECT WHERE TO_CHAR(PJT_NO)=[dprcsNo]))							
+							),'D')							
+			WHERE REPORTDT= [dreportDt]
+			AND REEMPID= [dreEmpId]
+			AND SN= [dsn]		
+	]]>
+	</sql-content>
+	</sql-mapping>  	
+	<sql-mapping  id="GA_001"   value-count="0" url="업무보고 수정 History 등록" >  
+	<sql-content>
+	<![CDATA[
+			INSERT INTO DAILYREPORTDETAIL_HISTORY VALUE
+			SELECT 	DAILYDETAIL_SN.NEXTVAL,
+					REPORTDT, REEMPID, 
+					SN, 
+					JOBNO, 
+					JOBNAME, 
+					PRCSNO, 
+					PRCSNAME, 
+					ACTFLAG,
+					[djobNo] TO_JOBNO,
+	                DECODE(NVL((SELECT 'I' 
+							FROM HISTJOB
+							WHERE JOBCD=[djobNo]
+							AND (EXISTS(SELECT * FROM ORG WHERE TO_CHAR(ORG_NO)=[dprcsNo])
+                         	OR  EXISTS (SELECT * FROM PROJECT WHERE TO_CHAR(PJT_NO)=[dprcsNo]))							
+							),'D'),'D',TO_PJTNAME([djobNo]),TO_JOBNAME([djobNo]))
+	                AS TO_JOBNAME,	                
+					[dprcsNo] AS TO_PRCSNO,
+					DECODE(NVL((SELECT 'I' 
+							FROM HISTJOB
+							WHERE JOBCD=[djobNo]
+							AND (EXISTS(SELECT * FROM ORG WHERE TO_CHAR(ORG_NO)=[dprcsNo])
+                         	OR  EXISTS (SELECT * FROM PROJECT WHERE TO_CHAR(PJT_NO)=[dprcsNo]))							
+							),'D'),'D',TO_PRCSNAME([dprcsNo]),TO_ORGNONAME([dprcsNo])||TO_PJTNAME([dprcsNo]))
+	                AS TO_PRCSNAME,							
+					NVL((SELECT 'I' 
+							FROM HISTJOB
+							WHERE JOBCD=[djobNo]
+							AND (EXISTS(SELECT * FROM ORG WHERE TO_CHAR(ORG_NO)=[dprcsNo])
+                         	OR  EXISTS (SELECT * FROM PROJECT WHERE TO_CHAR(PJT_NO)=[dprcsNo]))							
+							),'D') AS COSTTYPE,
+					[empId],
+					SYSDATE
+			FROM  DAILYREPORTDETAIL
+			WHERE REPORTDT= [dreportDt]
+			AND   REEMPID= [dreEmpId]
+			AND SN= [dsn]
+	]]>
+	</sql-content>
+	</sql-mapping>  	
+	
+	<sql-mapping  id="GA_040"   value-count="3" url="전표 원가 귀속부서 수정" >  
+	<sql-content>
+	<![CDATA[
+			UPDATE ACCTRPTSB SET 
+			JOBNO = [JOBNO]
+			WHERE MAINNO LIKE GET_MAINNO([DOCNO])
+			AND SN =[SN]
+	]]>
+	</sql-content>
+	</sql-mapping>  
+	<sql-mapping  id="updateSlip"   value-count="3" url="전표 원가 귀속부서수정" >  
+	<sql-content>
+	<![CDATA[
+			UPDATE ACCTN.TBAA12 SET  
+			AA12_BSCD=?
+			WHERE AA12_JPNO=?
+			AND AA12_HGNO=?	
+	]]>
+	</sql-content>
+	</sql-mapping>  
+	
+	<sql-mapping  id="GA_011"   value-count="3" url="전표 에러체크 등록" >  
+	<sql-content>
+	<![CDATA[
+			INSERT INTO ACCTRPT_ERR VALUE
+			SELECT
+				B.DOCNO AS JPNO,
+				SN,
+				ACCTCD,
+				JOBNO,
+				ORGCD AS ORGNO,
+				? 	  AS CREMPID,
+				SYSDATE AS CREATEDT
+			FROM ACCTRPTSB A, ACCTRPTHD B
+			WHERE B.MAINNO=GET_MAINNO(?)
+			AND SN=?
+			AND A.MAINNO=B.MAINNO
+	]]>
+	</sql-content>
+	</sql-mapping>  
+		
+	<sql-mapping  id="GA_013"   value-count="13" url="[조회]부서별 직급별 노무비 수집" >  
+	<sql-content>
+	<![CDATA[
+               SELECT   YYMM,
+						ORGCD,
+						ORG_NO,
+						ORGNAME,
+						POSITIONNAME,
+						POSITION,
+						TO_CHAR(SALARY,'999,999,999,999') AS SALARY,
+						TO_CHAR(BONUS,'999,999,999,999') AS BONUS,
+						TO_CHAR(GUKMIN,'999,999,999,999') AS GUKMIN,
+						TO_CHAR(MEDICAL,'999,999,999,999') AS MEDICAL,
+						TO_CHAR(YUNGUMBOJO,'999,999,999,999') AS YUNGUMBOJO,
+						TO_CHAR(SHINHUPBOJO,'999,999,999,999') AS SHINHUPBOJO,
+						TO_CHAR(TJAMT,'999,999,999,999') AS TJAMT,
+						TO_CHAR(TEMPAMT,'999,999,999,999') AS TEMPAMT,
+						TO_CHAR(EJA,'999,999,999,999') AS EJA,
+						TO_CHAR(TELBOJO,'999,999,999,999') AS TELBOJO,
+						TO_CHAR(TOTAMT,'999,999,999,999') AS TOTAMT,
+						TO_CHAR(SUM(SALARY) OVER(),'999,999,999,999') AS TOT_SALARY,
+						TO_CHAR(SUM(BONUS) OVER(),'999,999,999,999') AS TOT_BONUS,
+						TO_CHAR(SUM(GUKMIN) OVER(),'999,999,999,999') AS TOT_GUKMIN,
+						TO_CHAR(SUM(MEDICAL) OVER(),'999,999,999,999') AS TOT_MEDICAL,
+						TO_CHAR(SUM(MEDICAL) OVER(),'999,999,999,999') AS TOT_MEDICAL,
+						TO_CHAR(SUM(YUNGUMBOJO) OVER(),'999,999,999,999') AS TOT_YUNGUMBOJO,
+						TO_CHAR(SUM(SHINHUPBOJO) OVER(),'999,999,999,999') AS TOT_SHINHUPBOJO,
+						TO_CHAR(SUM(TJAMT) OVER(),'999,999,999,999') AS TOT_TJAMT,
+						TO_CHAR(SUM(TEMPAMT) OVER(),'999,999,999,999') AS TOT_TEMPAMT,
+						TO_CHAR(SUM(EJA) OVER(),'999,999,999,999') AS TOT_EJA,
+						TO_CHAR(SUM(TELBOJO) OVER(),'999,999,999,999') AS TOT_TELBOJO,
+						TO_CHAR(SUM(TOTAMT) OVER(),'999,999,999,999') AS TOT_TOTAMT
+               FROM
+               (
+                       SELECT  TO_CHAR(TO_DATE(YYMM,'YYYYMM'),'YYYY-MM') AS YYMM,
+             DEPT AS  ORGCD,
+            TO_ORGCDNO_N(DEPT,YYMM) AS ORG_NO,
+            TO_ORGCDNAME_N(DEPT,YYMM) AS ORGNAME,            
+            (SELECT NAME FROM BBDBO.MASM_POSITION WHERE TRIM(CODE)=POSITION) AS POSITIONNAME,
+		            POSITION,
+		            nvl(SUM(A),0) AS SALARY,
+		            nvl(SUM(B),0) AS BONUS,
+		            nvl(SUM(D),0) AS GUKMIN,
+		            nvl(SUM(E),0) AS MEDICAL,
+		            nvl(SUM(F),0) AS YUNGUMBOJO,
+		            nvl(SUM(G),0) AS SHINHUPBOJO,
+		            nvl(SUM(H),0) AS TJAMT,
+					nvl(SUM(I),0) AS TEMPAMT,
+					nvl(SUM(K),0) AS EJA,
+					nvl(SUM(L),0) AS TELBOJO,
+		    	    SUM( nvl(A,0)
+						+nvl(B,0)
+						+nvl(D,0)
+						+nvl(E,0)
+						+nvl(F,0)
+						+nvl(G,0)
+						+nvl(H,0)
+						+nvl(I,0)
+						+nvl(K,0)
+						+nvl(L,0)
+		            ) AS TOTAMT
+			
+			FROM
+			(
+			SELECT YYYY||MM AS YYMM,
+				   (SELECT DEPT FROM BBDBO_MASTER
+					WHERE SBN = EMPID AND YYMM=REPLACE(?,'-','')  ) AS DEPT,
+			   	   (SELECT POSITION FROM BBDBO_MASTER
+				   WHERE SBN = EMPID AND YYMM=REPLACE(?,'-','')  ) AS POSITION,
+			       ROUND(DECODE(ACCTCD,'50021',AMT),0) AS A,--'임직원급여',
+			       ROUND(DECODE(ACCTCD,'50031',AMT),0) AS B,--'임직원상여',
+			       ROUND(DECODE(ACCTCD,'50141',AMT),0) AS D,--'국민연금',
+			       ROUND(DECODE(ACCTCD,'50142',AMT),0) AS E,--'건강보험료',
+			       ROUND(DECODE(ACCTCD,'50143',AMT),0) AS F,-- '개인연금보조금',
+			       ROUND(DECODE(ACCTCD,'50145',AMT),0) AS G,--'신협보조금',
+			       ROUND(DECODE(ACCTCD,'50061',AMT),0) AS H,--'퇴직충당금'
+	               ROUND(DECODE(ACCTCD,'50051',AMT),0) AS I,--'임시고용인보수'
+		   	   	   ROUND(DECODE(ACCTCD,'5014912',AMT),0) AS K, --'주택자금이자보조'
+		   	   	   ROUND(DECODE(ACCTCD,'5014913',AMT),0) AS L --'이동전화보조'
+			FROM LABORCOST
+			WHERE YYYY||MM = REPLACE(?,'-','')
+			)
+            WHERE DEPT IS NOT NULL
+			GROUP BY YYMM,DEPT,POSITION
+		)
+		WHERE (YYMM IS NOT NULL
+		OR    ( ORGCD IS  NULL
+				AND ORG_NO IS  NULL
+				AND POSITION IS  NULL))	
+		AND (POSITION LIKE ?||'%' OR  ? IS NULL)
+		AND (ORGCD LIKE  ?||'%' OR  ? IS NULL)
+		AND (POSITIONNAME LIKE  ?||'%' OR  ? IS NULL)
+		AND (ORGNAME LIKE  ?||'%'  OR  ? IS NULL )
+		AND (ORG_NO LIKE  ?||'%'OR  ? IS NULL   )
+	]]>
+	</sql-content>
+	</sql-mapping> 
+	
+	<sql-mapping  id="GA_015_WELFARE"   value-count="0" url="[조회]부서별 복리후생비 수집" >  
+	<sql-content>
+	<![CDATA[
+			SELECT B.YYYYMM, B.ORGCD, B.ORGNO ORG_NO, B.ORGNAME, 
+			       TO_CHAR(B.MM,'999990.00') MM, 
+			       TO_CHAR(B.MHRATE,'990.00') MHRATE, 
+				   DECODE(A.ACCTCD_01,'',0,A.ACCTCD_01) ACCTCD_01,
+--				   DECODE(A.ACCTCD_02,'',0,A.ACCTCD_02) ACCTCD_02,
+   				   DECODE(A.ACCTCD_03,'',0,A.ACCTCD_03) ACCTCD_03,
+				   DECODE(A.ACCTCD_04,'',0,A.ACCTCD_04) ACCTCD_04,
+				   DECODE(A.ACCTCD_05,'',0,A.ACCTCD_05) ACCTCD_05,
+				   DECODE(A.ACCTCD_06,'',0,A.ACCTCD_06) ACCTCD_06,
+   				   DECODE(A.ACCTCD_07,'',0,A.ACCTCD_07) ACCTCD_07,
+				   DECODE(A.ACCTCD_08,'',0,A.ACCTCD_08) ACCTCD_08,
+				   DECODE(A.ACCTCD_09,'',0,A.ACCTCD_09) ACCTCD_09,
+				   DECODE(A.ACCTCD_10,'',0,A.ACCTCD_10) ACCTCD_10,
+   				   DECODE(A.ACCTCD_11,'',0,A.ACCTCD_11) ACCTCD_11,
+				   DECODE(A.ACCTCD_12,'',0,A.ACCTCD_12) ACCTCD_12, 
+				   DECODE(A.ACCTCD_13,'',0,A.ACCTCD_13) ACCTCD_13,
+				   DECODE(A.ACCTCD_14,'',0,A.ACCTCD_14) ACCTCD_14,
+   				   DECODE(A.ACCTCD_15,'',0,A.ACCTCD_15) ACCTCD_15,
+				   DECODE(A.ACCTCD_16,'',0,A.ACCTCD_16) ACCTCD_16,
+				   DECODE(A.ACCTCD_17,'',0,A.ACCTCD_17) ACCTCD_17,
+				   DECODE(A.ACCTCD_18,'',0,A.ACCTCD_18) ACCTCD_18,
+   				   DECODE(A.ACCTCD_19,'',0,A.ACCTCD_19) ACCTCD_19,
+				   DECODE(A.TOT      ,'',0,A.TOT      ) TOT
+			FROM
+			(			
+			SELECT    YYYYMM
+				    , ORGCD
+					, SUM(ACCTCD_01) AS ACCTCD_01
+--					, SUM(ACCTCD_02) AS ACCTCD_02
+					, SUM(ACCTCD_03) AS ACCTCD_03
+					, SUM(ACCTCD_04) AS ACCTCD_04
+					, SUM(ACCTCD_05) AS ACCTCD_05
+					, SUM(ACCTCD_06) AS ACCTCD_06
+					, SUM(ACCTCD_07) AS ACCTCD_07
+					, SUM(ACCTCD_08) AS ACCTCD_08
+					, SUM(ACCTCD_09) AS ACCTCD_09
+					, SUM(ACCTCD_10) AS ACCTCD_10
+					, SUM(ACCTCD_11) AS ACCTCD_11
+					, SUM(ACCTCD_12) AS ACCTCD_12
+					, SUM(ACCTCD_13) AS ACCTCD_13
+					, SUM(ACCTCD_14) AS ACCTCD_14
+					, SUM(ACCTCD_15) AS ACCTCD_15
+					, SUM(ACCTCD_16) AS ACCTCD_16
+					, SUM(ACCTCD_17) AS ACCTCD_17 	
+					, SUM(ACCTCD_18) AS ACCTCD_18
+					, SUM(ACCTCD_19) AS ACCTCD_19 	 	
+					, SUM(SUM(ACCTCD_01)
+--					  	+SUM(ACCTCD_02)
+						+SUM(ACCTCD_03)
+						+SUM(ACCTCD_04)
+						+SUM(ACCTCD_05)
+						+SUM(ACCTCD_06)
+						+SUM(ACCTCD_07)
+						+SUM(ACCTCD_08)
+						+SUM(ACCTCD_09)
+						+SUM(ACCTCD_10)
+						+SUM(ACCTCD_11)
+						+SUM(ACCTCD_12)
+						+SUM(ACCTCD_13)
+						+SUM(ACCTCD_14)
+						+SUM(ACCTCD_15)
+						+SUM(ACCTCD_16)
+						+SUM(ACCTCD_17)
+						+SUM(ACCTCD_18)
+						+SUM(ACCTCD_19)) OVER(PARTITION BY YYYYMM, ORGCD
+						ORDER BY 1) TOT
+			FROM(
+				SELECT YEAR||MONTH YYYYMM
+					   , MAINOBJ_NO ORGCD
+					   , ACCTCD
+					   , DECODE(ACCTCD,50144,AMT,0)	  ACCTCD_01
+--					   , DECODE(ACCTCD,50147,AMT,0)	  ACCTCD_02
+					   , DECODE(ACCTCD,50148,AMT,0)   ACCTCD_03
+					   , DECODE(ACCTCD,5014901,AMT,0) ACCTCD_04
+					   , DECODE(ACCTCD,5014902,AMT,0) ACCTCD_05
+					   , DECODE(ACCTCD,5014903,AMT,0) ACCTCD_06
+					   , DECODE(ACCTCD,5014904,AMT,0) ACCTCD_07
+					   , DECODE(ACCTCD,5014905,AMT,0) ACCTCD_08
+					   , DECODE(ACCTCD,5014906,AMT,0) ACCTCD_09
+					   , DECODE(ACCTCD,5014907,AMT,0) ACCTCD_10
+					   , DECODE(ACCTCD,5014908,AMT,0) ACCTCD_11
+					   , DECODE(ACCTCD,5014909,AMT,0) ACCTCD_12
+					   , DECODE(ACCTCD,5014910,AMT,0) ACCTCD_13
+					   , DECODE(ACCTCD,5014911,AMT,0) ACCTCD_14
+					   , DECODE(ACCTCD,5014912,AMT,0) ACCTCD_15
+					   , DECODE(ACCTCD,5014913,AMT,0) ACCTCD_16
+					   , DECODE(ACCTCD,5014915,AMT,0) ACCTCD_17
+					   , DECODE(ACCTCD,5014917,AMT,0) ACCTCD_18
+					   , DECODE(ACCTCD,5014999,AMT,0) ACCTCD_19
+					   , AMT                       
+                FROM	((SELECT YEAR,MONTH,ACCTCD,
+                				NVL((SELECT PJTORG_NO 
+                				FROM PROJECT 
+                				WHERE PJT_NO=MAINOBJ_NO),MAINOBJ_NO) AS MAINOBJ_NO,
+                				AMT
+                   		FROM ACCT_COSTARTS_ORG)
+
+                   		UNION ALL
+	                   		(SELECT YYYY,MM,ACCTCD,TO_CHAR(ORG),SUM(AMT) AS AMT
+							FROM
+								(SELECT YYYY,MM,
+								 		ACCTCD,
+									 	(SELECT TO_ORGCDNO_N(A.DEPT,YYMM:)
+								        FROM BBDBO_MASTER  A
+								        WHERE A.SBN=B.EMPID
+								        AND YYMM=B.YYYY||B.MM) AS ORG,
+									    AMT AS  AMT
+							FROM LABORCOST B
+							WHERE YYYY=SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+							AND MM=SUBSTR(REPLACE(YYMM:,'-',''),5,2)
+							AND ACCTCD IN ('5014912','5014913')
+							AND AMT>0 )
+							GROUP BY YYYY,MM,ACCTCD,ORG))
+
+			    WHERE YEAR=SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+			    AND   MONTH=SUBSTR(REPLACE(YYMM:,'-',''),5,2)
+			    AND (ACCTCD IN ('50144','50147','50148')
+			    		OR ACCTCD LIKE '50149%')
+	
+				)
+			GROUP BY YYYYMM , ORGCD
+			)A,
+				(				
+				SELECT YYYYMM
+				   , SUM(MM) MM
+				   , ROUND(SUM(MHRATE),2) MHRATE
+				   , ORGCD
+				   , TO_ORGNOCD(ORGCD)ORGNO
+				   , (SELECT ORGNAME FROM ORG Y WHERE TO_CHAR(Y.ORG_NO) = X.ORGCD) ORGNAME
+			FROM(	
+				SELECT YEAR||MONTH YYYYMM
+					   , EMPID
+					   , MAINOBJ_NO
+					   , SUBOBJ_NO
+					   , COSTTYPE
+					   , MM
+					   , MHRATE
+					   ,DECODE((SELECT B.ORG_NO
+						FROM PROJECT A,
+						ORG B
+						WHERE A.PJT_NO=MAINOBJ_NO
+						AND   A.PJTORG_NO=ORG_NO),
+						NULL,(SELECT ORG_NO FROM ORG WHERE ORG_NO=MAINOBJ_NO),
+						DECODE(COSTTYPE,'D',
+							  (SELECT B.ORG_NO
+						             FROM PROJECT A,
+										  ORG B
+						             WHERE A.PJT_NO=MAINOBJ_NO
+						             AND  A.PJTORG_NO=B.ORG_NO)
+				     		  ,
+						      (SELECT B.ORG_NO
+						       FROM BBDBO_MASTER A,
+						            ORG B,
+                                    ORGHISTORY C
+                               WHERE A.SBN=C.EMPID
+                               AND   A.DEPT=B.ORGCD
+                               AND   A.YYMM=C.YEAR||C.MONTH
+                               and   b.org_no=c.org_no
+                               and   c.enddt>to_char(sysdate,'yyyymmdd'))
+						)
+						)
+				AS ORGCD									   
+				FROM  ACCT_COSTARTS_RPTMH C
+				WHERE YEAR||MONTH = REPLACE(YYMM:,'-','')
+				AND EXISTS (SELECT YYYY FROM monthlyEmpOrg_view B
+							WHERE WEFLAG='Y'
+							AND YYYY=SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+							AND MM=SUBSTR(REPLACE(YYMM:,'-',''),5,2)
+							AND B.EMPID=C.EMPID)
+				)X
+				WHERE ORGCD IS NOT NULL				
+				GROUP BY YYYYMM, ORGCD
+				)B
+			WHERE A.ORGCD(+) = B.ORGCD
+			AND B.ORGNO LIKE DEPT:||'%'
+			AND B.ORGNAME LIKE DEPTNAME:||'%'
+			ORDER BY B.ORGNO
+ 			]]>
+	</sql-content>
+	</sql-mapping>  
+	 
+
+	<sql-mapping  id="GA_015"   value-count="4" url="[조회]부서별 노무비 수집" >  
+	<sql-content>
+	<![CDATA[
+  				SELECT  SUBSTR(C.YYMM,1,4)||'-'||SUBSTR(C.YYMM,5,2) AS YYMM ,
+                        C.MAINOBJ_NO AS ORG_NO,
+                        DEPT,
+                        DEPTNAME,
+                        TO_CHAR(MAX(RESULT_MM) ,'999,990.00') AS  MM,
+                        SUM(TO_CHAR(MAX(RESULT_MM) ,'9,990.00')) OVER(PARTITION BY MAINOBJ_NO)  AS  SUM_MM,
+                        TO_CHAR(SUM(A),'999,999,999,999') SALARY,
+                        TO_CHAR(SUM(B),'999,999,999,999') BONUS,
+                        TO_CHAR(SUM(D),'999,999,999,999') GUKMIN,
+                        TO_CHAR(SUM(E),'999,999,999,999') MEDICAL,
+                        TO_CHAR(SUM(F),'999,999,999,999') YUNGUMBOJO,
+                        TO_CHAR(SUM(G),'999,999,999,999') SHINHUPBOJO,
+                        TO_CHAR(SUM(H),'999,999,999,999') TJAMT,
+                        TO_CHAR(SUM(I),'999,999,999,999') TEMPLABOR,
+                        TO_CHAR(SUM(J),'999,999,999,999') SANJE,
+                        TO_CHAR(SUM(A)+SUM(B)+SUM(D)+SUM(E)+SUM(F)+
+                        SUM(G)+SUM(H)+SUM(I)+SUM(J),'999,999,999,999,999,999') AS TOT_AMT,
+                        TO_CHAR(SUM(SUM(A)) OVER(),'999,999,999,999') AS A_TOT_SUM,
+                        TO_CHAR(SUM(SUM(B)) OVER(),'999,999,999,999') AS B_TOT_SUM,
+                        TO_CHAR(SUM(SUM(D)) OVER(),'999,999,999,999') AS D_TOT_SUM,
+                        TO_CHAR(SUM(SUM(E)) OVER(),'999,999,999,999') AS E_TOT_SUM,
+                        TO_CHAR(SUM(SUM(F)) OVER(),'999,999,999,999') AS F_TOT_SUM,
+                        TO_CHAR(SUM(SUM(G)) OVER(),'999,999,999,999') AS G_TOT_SUM,
+                        TO_CHAR(SUM(SUM(H)) OVER(),'999,999,999,999') AS H_TOT_SUM,
+                        TO_CHAR(SUM(SUM(I)) OVER(),'999,999,999,999') AS I_TOT_SUM,
+                        TO_CHAR(SUM(SUM(J)) OVER(),'999,999,999,999') AS J_TOT_SUM,
+                        TO_CHAR(SUM(SUM(A)+SUM(B)+SUM(D)+SUM(E)+SUM(F)+
+                        SUM(G)+SUM(H)+SUM(I)+SUM(J)) OVER(),'999,999,999,999') AS TOT_SUM
+          FROM
+          (
+          SELECT  B.YEAR||B.MONTH AS YYMM,
+                           (SELECT ORGCD
+                           FROM ORG
+                           WHERE ORG_NO=A.MAINOBJ_NO)
+                          AS DEPT,
+                           (SELECT ORGNAME
+                           FROM ORG
+                           WHERE ORG_NO=A.MAINOBJ_NO)
+                          AS DEPTNAME,
+                          A.MAINOBJ_NO,
+                          ACCTCD,
+                                                  MHRATE AS  RESULT_MM,
+                          NVL(ROUND(DECODE(ACCTCD,'50021',AMT),0),0) AS A,--'임직원급여'
+                          NVL(ROUND(DECODE(ACCTCD,'50031',AMT),0),0) AS B,--'임직원상여'
+                          NVL(ROUND(DECODE(ACCTCD,'50141',AMT),0),0) AS D,--'국민연금'
+                          NVL(ROUND(DECODE(ACCTCD,'50142',AMT),0),0) AS E,--'건강보험료'
+                          NVL(ROUND(DECODE(ACCTCD,'50143',AMT),0),0) AS F,-- '개인연금보조금'
+                          NVL(ROUND(DECODE(ACCTCD,'50145',AMT),0),0) AS G,--'신협보조금'
+                          NVL(ROUND(DECODE(ACCTCD,'50061',AMT),0),0) AS H, --'퇴직충당금',
+                          NVL(ROUND(DECODE(ACCTCD,'50051',AMT),0),0) AS I, --'임시고용인'
+                          NVL(ROUND(DECODE(ACCTCD,'50147',AMT),0),0) AS J --'고용산재보험'
+          FROM (
+                                SELECT  YEAR,
+                                        MONTH,
+                                                NVL((SELECT PJTORG_NO FROM PROJECT
+                                                        WHERE PJT_NO=MAINOBJ_NO),MAINOBJ_NO)
+                                                AS MAINOBJ_NO,
+                                        ACCTCD,
+                                        SUM(AMT) AMT
+                                FROM ACCT_COSTARTS_LABOR
+				WHERE YEAR||MONTH BETWEEN  TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([yymm],'-',''),'YYYYMM'),-1*TO_NUMBER([S_PRE_MONTHS])),'YYYYMM')
+						   AND REPLACE([yymm],'-','')
+                                GROUP BY YEAR,MONTH,MAINOBJ_NO,ACCTCD
+
+                                )   A,
+               (SELECT  YEAR,MONTH,ORG_NO,SUM(MHRATE) AS MHRATE
+                                FROM
+                                        (
+                                        SELECT year,month,NVL((SELECT PJTORG_NO FROM PROJECT
+                                        WHERE PJT_NO=MAINOBJ_NO),
+                                        MAINOBJ_NO) ORG_NO,MHRATE
+                                        FROM
+                                                (SELECT  year,month,mainobj_no,SUM(MHRATE) MHRATE
+                                                FROM ACCT_COSTARTS_RPTMH  B
+				WHERE YEAR||MONTH BETWEEN  TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([yymm],'-',''),'YYYYMM'),-1*TO_NUMBER([S_PRE_MONTHS])),'YYYYMM')
+						   AND REPLACE([yymm],'-','')
+                                                GROUP BY B.MAINOBJ_NO,B.YEAR,B.MONTH
+                                                )
+                                        )
+                                GROUP BY ORG_NO,YEAR,MONTH)B
+                  WHERE  A.MAINOBJ_NO=B.ORG_NO
+				  AND A.YEAR=B.YEAR
+				  AND A.MONTH=B.MONTH
+          ) C
+          WHERE   DEPT LIKE '' ||'%'
+          AND   DEPTNAME LIKE ''||'%'
+          GROUP BY C.YYMM, DEPT, DEPTNAME,C.MAINOBJ_NO
+          ORDER BY DEPT,C.YYMM DESC
+
+	]]>
+	</sql-content>
+	</sql-mapping> 
+	 
+	<sql-mapping  id="GA_015D"   value-count="0" url="[조회]부서별 노무비 세부내역 수집" >  
+	<sql-content>
+	<![CDATA[
+          SELECT  SUBSTR(C.YYMM,1,4)||SUBSTR(C.YYMM,5,2) AS YYMM ,
+                        C.MAINOBJ_NO AS ORG_NO,
+                        OP_NO,
+                        (SELECT PJTNAME FROM PROJECT WHERE PJT_NO=OP_NO) AS OP_NAME,
+                        DEPT,
+                        DEPTNAME,
+                        TO_CHAR(MAX(RESULT_MM),'990.00') AS  MM,
+                        TO_CHAR(MAX(MAX(OP_MHRATE)) OVER(PARTITION BY MAINOBJ_NO,OP_NO),'990.00') AS  MM,
+                        TO_CHAR(SUM(MAX(OP_MHRATE)) OVER(),'99,990.00')  AS  SUM_MM,
+                        TO_CHAR(SUM(A),'999,999,999,999') SALARY,
+                        TO_CHAR(SUM(B),'999,999,999,999') BONUS,
+                        TO_CHAR(SUM(D),'999,999,999,999') GUKMIN,
+                        TO_CHAR(SUM(E),'999,999,999,999') MEDICAL,
+                        TO_CHAR(SUM(F),'999,999,999,999') YUNGUMBOJO,
+                        TO_CHAR(SUM(G),'999,999,999,999') SHINHUPBOJO,
+                        TO_CHAR(SUM(H),'999,999,999,999') TJAMT,
+                        TO_CHAR(SUM(I),'999,999,999,999') TEMPLABOR,
+                        TO_CHAR(SUM(J),'999,999,999,999') SANJE,
+                        TO_CHAR(SUM(A)+SUM(B)+SUM(D)+SUM(E)+SUM(F)+
+                        SUM(G)+SUM(H)+SUM(I)+SUM(J),'999,999,999,999') AS TOT_AMT,
+                        TO_CHAR(SUM(SUM(A)) OVER(),'999,999,999,999') AS A_TOT_SUM,
+                        TO_CHAR(SUM(SUM(B)) OVER(),'999,999,999,999') AS B_TOT_SUM,
+                        TO_CHAR(SUM(SUM(D)) OVER(),'999,999,999,999') AS D_TOT_SUM,
+                        TO_CHAR(SUM(SUM(E)) OVER(),'999,999,999,999') AS E_TOT_SUM,
+                        TO_CHAR(SUM(SUM(F)) OVER(),'999,999,999,999') AS F_TOT_SUM,
+                        TO_CHAR(SUM(SUM(G)) OVER(),'999,999,999,999') AS G_TOT_SUM,
+                        TO_CHAR(SUM(SUM(H)) OVER(),'999,999,999,999') AS H_TOT_SUM,
+                        TO_CHAR(SUM(SUM(I)) OVER(),'999,999,999,999') AS I_TOT_SUM,
+                        TO_CHAR(SUM(SUM(J)) OVER(),'999,999,999,999') AS J_TOT_SUM,
+                        TO_CHAR(SUM(SUM(A)+SUM(B)+SUM(D)+SUM(E)+SUM(F)+
+                        SUM(G)+SUM(H)+SUM(I)+SUM(J)) OVER(),'999,999,999,999') AS TOT_SUM
+          FROM
+          (
+          SELECT  YEAR||MONTH AS YYMM,
+                           (SELECT ORGCD
+                           FROM ORG
+                           WHERE ORG_NO=A.MAINOBJ_NO)
+                          AS DEPT,
+                           (SELECT ORGNAME
+                           FROM ORG
+                           WHERE ORG_NO=A.MAINOBJ_NO)
+                          AS DEPTNAME,
+                          A.MAINOBJ_NO,
+                          B.OP_NO,
+                          ACCTCD,
+                          ORG_MHRATE
+                           AS  RESULT_MM,
+						  OP_MHRATE,
+						  COUNT(A.OP_NO) OVER(PARTITION BY A.OP_NO,ACCTCD) AS DCNT,
+                          NVL(ROUND(DECODE(ACCTCD,'50021',AMT),0),0)*(OP_MHRATE/ORG_MHRATE) AS A,--'임직원급여'
+                          NVL(ROUND(DECODE(ACCTCD,'50031',AMT),0),0)*(OP_MHRATE/ORG_MHRATE) AS B,--'임직원상여'
+                          NVL(ROUND(DECODE(ACCTCD,'50141',AMT),0),0)*(OP_MHRATE/ORG_MHRATE) AS D,--'국민연금'
+                          NVL(ROUND(DECODE(ACCTCD,'50142',AMT),0),0)*(OP_MHRATE/ORG_MHRATE) AS E,--'건강보험료'
+                          NVL(ROUND(DECODE(ACCTCD,'50143',AMT),0),0)*(OP_MHRATE/ORG_MHRATE) AS F,-- '개인연금보조금'
+                          NVL(ROUND(DECODE(ACCTCD,'50145',AMT),0),0)*(OP_MHRATE/ORG_MHRATE) AS G,--'신협보조금'
+                          NVL(ROUND(DECODE(ACCTCD,'50061',AMT),0),0)*(OP_MHRATE/ORG_MHRATE) AS H, --'퇴직충당금',
+                          NVL(ROUND(DECODE(ACCTCD,'50051',AMT),0),0)*(OP_MHRATE/ORG_MHRATE) AS I, --'임시고용인'
+                          NVL(ROUND(DECODE(ACCTCD,'50147',AMT),0),0)*(OP_MHRATE/ORG_MHRATE) AS J --'고용산재보험'
+          FROM (
+                          SELECT  YEAR,
+                                  MONTH,
+                                  NVL((SELECT PJTORG_NO FROM PROJECT
+                                          WHERE PJT_NO=MAINOBJ_NO),MAINOBJ_NO)
+                                  AS MAINOBJ_NO,
+									MAINOBJ_NO AS OP_NO,
+                                  ACCTCD,
+                                  SUM(AMT) AMT
+                          FROM ACCT_COSTARTS_ORG
+                          WHERE YEAR||MONTH = REPLACE(YYMM:,'-','')
+                          AND  MAINOBJ_NO IN (SELECT PJT_NO--,PJTNAME    --****
+							FROM PROJECT A,
+								(SELECT  ORG_NO  FROM ORG
+								START WITH ORG_NO = ORG_NO:   --관련 팀
+								CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD) B
+								WHERE A.PJTORG_NO=B.ORG_NO
+							UNION ALL
+								SELECT  ORG_NO  FROM ORG
+								START WITH ORG_NO = ORG_NO:   --관련 팀
+								CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD
+							UNION ALL
+								SELECT TO_NUMBER(ORG_NO:) FROM DUAL															
+							)
+                          GROUP BY YEAR,MONTH,MAINOBJ_NO,ACCTCD
+
+                          )   A,
+         					(SELECT ORG_NO,
+           					OP_NO,
+           					SUM(SUM(MHRATE)) OVER(PARTITION BY ORG_NO) AS ORG_MHRATE,
+           					SUM(SUM(MHRATE)) OVER(PARTITION BY OP_NO) AS OP_MHRATE
+
+                          FROM
+                               (
+                               SELECT NVL((SELECT PJTORG_NO FROM PROJECT
+                               			WHERE PJT_NO=MAINOBJ_NO),
+                               			MAINOBJ_NO) ORG_NO,
+                                 MAINOBJ_NO AS OP_NO,
+                                 MHRATE
+                               FROM
+								(SELECT  year,month,mainobj_no,SUM(MHRATE) MHRATE
+								FROM ACCT_COSTARTS_RPTMH  B
+								WHERE YEAR||MONTH = REPLACE(YYMM:,'-','')
+								AND  MAINOBJ_NO IN (SELECT PJT_NO
+								FROM PROJECT A,
+								(SELECT  ORG_NO  FROM ORG
+								START WITH ORG_NO = ORG_NO:   --관련 팀
+								CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD) B
+								WHERE A.PJTORG_NO=B.ORG_NO
+							UNION ALL
+								SELECT  ORG_NO  FROM ORG
+								START WITH ORG_NO = ORG_NO:   --관련 팀
+								CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD
+							UNION ALL
+								SELECT TO_NUMBER(ORG_NO:) FROM DUAL
+								)
+							GROUP BY B.MAINOBJ_NO,B.YEAR,B.MONTH
+							)
+						)
+					GROUP BY ORG_NO,OP_NO)B
+            WHERE  A.MAINOBJ_NO=B.ORG_NO
+          ) C
+--          WHERE   DEPT LIKE DEPT: ||'%'
+--          AND   DEPTNAME LIKE DEPTNAME:||'%'
+          GROUP BY C.YYMM, DEPT, DEPTNAME,C.MAINOBJ_NO,OP_NO
+          ORDER BY DEPT
+	]]>
+	</sql-content>
+	</sql-mapping>  
+
+	<sql-mapping  id="GA_014"   value-count="10" url="[조회]개인별 MM 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT  TO_CHAR(TO_DATE(YYMM,'YYYYMM'),'YYYYMM') AS YYMM,
+				DEPT,
+					(SELECT DEPTNAME
+					FROM BBDBO.MASM_DEPT
+					WHERE DEPTCODE=DEPT)
+				AS DEPTNAME,
+					(SELECT MAX(ORG_NO)
+					FROM ORG
+					WHERE ORGCD=DEPT)
+				AS ORG_NO,
+				EMPID,
+				EMPNAME,
+				MAINOBJ_NO,
+				DECODE(COSTTYPE,'D','직접','간접') AS ACTFLAG,
+--                DECODE(COSTTYPE,'D','직접',DECODE(SUM(DECODE(SUBOBJ_NO,'80000',1,0)),1,'간접(업무외)','간접')) AS ACTFLAG,
+				MAINOBJCODE,
+				MAINOBJNAME,
+				TO_CHAR(SUM(MHRATE),'0.00') AS MHRATE,
+				TRIM(TO_CHAR((SUM(MM)/60),'999,990.00')) AS MM,
+				TO_CHAR(MAX(MAX(TOTMM)/60) over(partition by empid),'999,990.00') AS TOTMM,
+				COSTTYPE,
+				TO_CHAR(SUM(SUM(MHRATE)) OVER() ,'999,990.00') AS SUB_SUM,
+				SUM(DECODE(SUBOBJ_NO,'80000',1,0)) AS SUBOBJ_CNT
+		FROM
+				(SELECT YEAR||MONTH AS YYMM,
+		               (SELECT DEPT
+		               FROM BBDBO_MASTER  B
+		               WHERE SBN=A.EMPID
+		               AND B.YYMM=YEAR||MONTH) AS DEPT,
+		               A.EMPID,
+		               (SELECT NAME
+		               FROM BBDBO_MASTER B
+		               WHERE B.SBN=A.EMPID
+		               AND B.YYMM=YEAR||MONTH) AS EMPNAME,
+		               MAINOBJ_NO,
+				               (SELECT ORGCD
+				               FROM ORG
+				               WHERE ORG_NO=REPLACE(MAINOBJ_NO,'$',''))||
+				               (SELECT PJTCD
+				               FROM PROJECT
+				               WHERE PJT_NO=REPLACE(MAINOBJ_NO,'$',''))
+				               AS MAINOBJCODE,
+				               (SELECT ORGNAME
+				               FROM ORG
+				               WHERE ORG_NO=REPLACE(MAINOBJ_NO,'$',''))||
+				               (SELECT PJTNAME
+				               FROM PROJECT
+				               WHERE PJT_NO=REPLACE(MAINOBJ_NO,'$',''))
+		                AS MAINOBJNAME,
+		               A.SUBOBJ_NO,
+		               A.COSTTYPE,
+		               A.MM,
+		               A.MHRATE AS MHRATE ,
+		               A.TOTMM
+			FROM    DailyReport_RptMh A
+			WHERE   YEAR = SUBSTR(REPLACE(?,'-',''),1,4)
+			AND     MONTH = SUBSTR(REPLACE(?,'-',''),5,6)
+			AND     SUBOBJ_NO LIKE  ?||'%'			
+			AND     LENGTH(COSTTYPE) LIKE ?||'%'
+			AND     MAINOBJ_NO <'9999'
+			)
+		WHERE  (DEPT LIKE ?||'%'  OR ? IS NULL)
+		AND    (EMPNAME LIKE ?||'%' OR ? IS NULL)
+		AND    MAINOBJCODE LIKE ?||'%'
+		AND    MAINOBJNAME LIKE '%'||?||'%'
+		GROUP BY YYMM,DEPT,EMPNAME,EMPID,
+		         MAINOBJ_NO,MAINOBJCODE,MAINOBJNAME,COSTTYPE
+		ORDER BY DEPT,EMPNAME,COSTTYPE,MAINOBJCODE DESC
+		
+	]]>
+	</sql-content>
+	</sql-mapping>  			
+	<sql-mapping  id="GA_014_1"   value-count="9" url="팀장 회의보고_[조회]개인별 MM 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT  TO_CHAR(TO_DATE(YYMM,'YYYYMM'),'YYYY-MM') AS YYMM,
+				DEPT,
+					(SELECT DEPTNAME
+					FROM BBDBO.MASM_DEPT
+					WHERE DEPTCODE=DEPT)
+				AS DEPTNAME,
+					(SELECT ORG_NO
+					FROM ORG
+					WHERE ORGCD=DEPT)
+				AS ORG_NO,
+				EMPID,
+				EMPNAME,
+				MAINOBJ_NO,
+				DECODE(COSTTYPE,'D','직접','간접') AS ACTFLAG,
+				MAINOBJCODE,
+				MAINOBJNAME,
+				TO_CHAR(SUM(MHRATE),'0.00') AS MHRATE,
+				TRIM(TO_CHAR((SUM(MM)/60),'999,990.00')) AS MM,
+				TO_CHAR(MAX(MAX(TOTMM)/60) over(partition by empid),'999,990.00') AS TOTMM,
+				COSTTYPE,
+				TO_CHAR(SUM(SUM(MHRATE)) OVER() ,'999,990.00') AS SUB_SUM,
+				SUM(DECODE(SUBOBJ_NO,'80000',1,0)) AS SUBOBJ_CNT
+		FROM
+				(SELECT YEAR||MONTH AS YYMM,
+		               (SELECT DEPT
+		               FROM BBDBO_MASTER  B
+		               WHERE SBN=A.EMPID
+		               AND B.YYMM=YEAR||MONTH) AS DEPT,
+		               A.EMPID,
+		               (SELECT NAME
+		               FROM BBDBO_MASTER B
+		               WHERE B.SBN=A.EMPID
+		               AND B.YYMM=YEAR||MONTH) AS EMPNAME,
+		               MAINOBJ_NO,
+				               (SELECT ORGCD
+				               FROM ORG
+				               WHERE ORG_NO=REPLACE(MAINOBJ_NO,'$',''))||
+				               (SELECT PJTCD
+				               FROM PROJECT
+				               WHERE PJT_NO=REPLACE(MAINOBJ_NO,'$',''))
+				               AS MAINOBJCODE,
+				               (SELECT ORGNAME
+				               FROM ORG
+				               WHERE ORG_NO=REPLACE(MAINOBJ_NO,'$',''))||
+				               (SELECT PJTNAME
+				               FROM PROJECT
+				               WHERE PJT_NO=REPLACE(MAINOBJ_NO,'$',''))
+		                AS MAINOBJNAME,
+		               A.SUBOBJ_NO,
+		               A.COSTTYPE,
+		               A.MM,
+		               A.MHRATE AS MHRATE ,
+		               A.TOTMM
+			FROM    DailyReport_RptMh A
+			WHERE   YEAR||MONTH = REPLACE(?,'-','')
+			AND     SUBOBJ_NO LIKE  ?||'%'			
+			AND     LENGTH(COSTTYPE) LIKE ?||'%'
+			AND     MAINOBJ_NO <'9999'
+			AND EMPID NOT IN ('00001411',    --김성수   2007-05-03
+							  '00001400',    --박무화
+							  '00001013',    --조양호
+							  '00001466',    --조원태
+							  '00001422',    --전장식  
+							  '00001433'     --이강원
+								  )    
+			)
+		WHERE  (DEPT LIKE ?||'%'  OR ? IS NULL)
+		AND    (EMPNAME LIKE ?||'%' OR ? IS NULL)
+		AND    MAINOBJCODE LIKE ?||'%'
+		AND    MAINOBJNAME LIKE '%'||?||'%'
+		GROUP BY YYMM,DEPT,EMPNAME,EMPID,
+		         MAINOBJ_NO,MAINOBJCODE,MAINOBJNAME,COSTTYPE
+		ORDER BY DEPT,EMPNAME,COSTTYPE,MAINOBJCODE DESC
+		
+	]]>
+	</sql-content>
+	</sql-mapping>  			
+	<sql-mapping  id="GA_017"   value-count="3" url="[조회]부서별 MM 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+		      TO_CHAR(TO_DATE(YYMM,'YYYYMM'),'YYYY-MM') AS YYMM,
+		      DEPT_NO,
+		      DEPT_CD,
+		      DEPT_NAME,
+			  TO_CHAR(MM,'999,990.00') AS MM,
+		      TO_CHAR(SUM(MM)  OVER(),'999,990.00') AS SUB_SUM
+		FROM(
+			SELECT   YYMM,ORG_NO AS DEPT_NO,
+			 		(SELECT A.ORGCD FROM ORG A WHERE A.ORG_NO=C.ORG_NO) AS DEPT_CD,
+		            (SELECT A.ORGNAME FROM ORG A WHERE A.ORG_NO=C.ORG_NO) AS DEPT_NAME,
+		             SUM(MHRATE) AS MM
+		
+			FROM
+				(
+				SELECT YYMM,NVL((SELECT PJTORG_NO FROM PROJECT
+							WHERE PJT_NO=MAINOBJ_NO),
+							MAINOBJ_NO) ORG_NO,MHRATE
+				FROM
+					(SELECT  MAX(YEAR||MONTH) AS YYMM,MAINOBJ_NO,SUM(MHRATE) MHRATE
+					FROM ACCT_COSTARTS_RPTMH  C
+					WHERE YEAR||MONTH=REPLACE(?,'-','')
+					GROUP BY MAINOBJ_NO)) C
+			GROUP BY ORG_NO,YYMM)
+		WHERE DEPT_CD LIKE ?||'%'
+		AND   DEPT_NAME LIKE '%'||?||'%'
+		ORDER BY DEPT_CD
+		
+	
+	]]>
+	</sql-content>
+	</sql-mapping>  			
+   <sql-mapping  id="GA_005"   value-count="4"   url="일일보고 수정 이력조회" >  
+   <sql-content>
+   <![CDATA[
+		SELECT *
+		FROM
+		(SELECT
+			SEQ,
+			TO_CHAR(TO_DATE(REPORTDT,'YYYYMMDD'),'YYYY-MM-DD') AS REPORTDT,
+			REEMPID,
+			TO_EMPKNAME(REEMPID) AS REEMPNAME,
+			SN,
+			DECODE(ACTFLAG,'D',TO_PJTNO_TOCODE(JOBNO),JOBNO) AS JOBNO,
+			JOBNAME AS JOBNAME,
+			DECODE(ACTFLAG,'D',PRCSNO,TO_ORGNOCD_N(PRCSNO,SUBSTR(REPORTDT,1,8))) AS PRCSNO,
+			PRCSNAME AS PRCSNAME,
+			ACTFLAG,
+			DECODE(TO_ACTFLAG,'D',TO_PJTNO_TOCODE(TO_JOBNO),TO_JOBNO) AS TO_JOBNO,
+			TO_JOBNAME AS TO_JOBNAME,
+			DECODE(TO_ACTFLAG,'D',TO_PRCSNO,TO_ORGNOCD_N(TO_PRCSNO,
+				SUBSTR(REPORTDT,1,8))||TO_PJTNO_TOCODE(TO_PRCSNO)) AS TO_PRCSNO,
+			TO_PRCSNAME AS TO_PRCSNAME,
+			TO_ACTFLAG,
+			CREMPID,
+			TO_EMPKNAME(CREMPID) AS 	CREMPNAME,
+			TO_CHAR(CREATEDT,'YYYY-MM-DD') AS CREATEDT
+		FROM DAILYREPORTDETAIL_HISTORY
+		WHERE 	REPORTDT BETWEEN REPLACE(?,'-','') AND REPLACE(?,'-','')
+		AND   	REEMPID LIKE	?||'%'
+		)
+		WHERE   REEMPNAME LIKE 	?||'%'
+		order by SEQ DESC
+		
+		]]>
+	</sql-content>
+   </sql-mapping>		
+   <sql-mapping  id="GA_012"   value-count="4"   url="전표 에러 리스트  조회" >  
+   <sql-content>
+   <![CDATA[
+		SELECT *
+			FROM
+			(SELECT
+					ROWNUM AS SEQ,
+					B.MAINNO,
+					A.JPNO,
+					A.SN,
+					A.ACCTCD,
+					TO_ACCTNAME(A.ACCTCD) AS ACCTNAME,
+					A.JOBNO,
+					TO_ORGNOCD(A.JOBNO)||TO_PJTNO_TOCODE(A.JOBNO) AS JOBCD,
+					TO_ORGNONAME(A.JOBNO)||TO_PJTNAME(A.JOBNO) AS JOBNAME,
+					ORGNO,
+					TO_ORGNOCD(A.ORGNO)||TO_PJTNO_TOCODE(A.ORGNO) AS ORGCD,
+					TO_ORGNONAME(A.ORGNO)||TO_PJTNAME(A.ORGNO) AS ORGNAME,
+					TO_EMPKNAME(B.CREMPID)||'('||B.CREMPID||')' AS  REEMPNAME,
+					TO_CHAR(B.CREATEDTM,'YYYY-MM-DD') AS REPORTDT,
+					TO_EMPKNAME(A.CREMPID)||'('||A.CREMPID||')' AS CREMPNAME,
+					 TO_CHAR(A.CREATEDT,'YYYY-MM-DD') AS CREATEDT
+			FROM MASM.ACCTRPT_ERR A, MASM.ACCTRPTHD B
+			WHERE   SUBSTR(A.JPNO,2,8) BETWEEN REPLACE(?,'-','') AND REPLACE(?,'-','')
+			AND     B.CREMPID LIKE    ?||'%'
+			AND     A.JPNO=B.DOCNO
+			)
+			WHERE   REEMPNAME LIKE 	?||'%'
+			order by SEQ DESC
+		
+		]]>
+	</sql-content>
+   </sql-mapping>		
+   <sql-mapping  id="SM_001"   value-count="0"   url="일일업무보고평가대상" >  
+   <sql-content>
+   <![CDATA[
+	SELECT
+			REEMPID,
+			DECODE(CODE,'D','직접','간접') AS CODE,
+			CODENAME,
+			NVL(A,0) AS A,
+			NVL(B,0) AS B,
+			NVL(C,0) AS C,
+			NVL(MH,0) AS MH,
+			CODENO,
+			HIGHCODE,LEVEL
+	FROM   ( SELECT B.*
+			FROM (
+				SELECT '' REEMPID,
+						'' CODE,
+						'' CODENAME,
+						0 A,
+						0 B,
+						0 C,
+						0 MH,
+						'0000' CODENO,
+						'' HIGHCODE
+				FROM DUAL
+				UNION ALL
+
+				SELECT
+								REEMPID,
+								ACTFLAG,
+								MAX(JOBTITLE) AS CODENAME,
+								SUM(A) AS A,
+								SUM(B) AS B,
+								SUM(C) AS C,
+								SUM(MM) AS MH,
+								JOBNO AS CODENO,
+								'0000' AS HIGHCODE
+				FROM(
+					SELECT
+							REEMPID,
+							CASE WHEN SUBSTR(REPORTDT,1,6)  LIKE '200610' THEN SUM(HH*60+MM)  END AS A,
+							CASE WHEN SUBSTR(REPORTDT,1,6)  LIKE '200611' THEN SUM(HH*60+MM)  END AS B,
+							CASE WHEN SUBSTR(REPORTDT,1,6)  LIKE '200612' THEN SUM(HH*60+MM)  END AS C,
+							ACTFLAG,
+							JOBNO,
+							MAX(DECODE(ACTFLAG,'I', JOBNO||'_'||JOBNAME,TO_PJTNO_TOCODE(JOBNO)||'_'||JOBNAME))
+							AS JOBTITLE,
+							SUM(HH*60+MM) AS  MM
+					FROM DAILYREPORTDETAIL
+					WHERE REPORTDT BETWEEN  '20061001' AND '20061231'
+					AND REEMPID='20059185'
+					GROUP BY REEMPID,SUBSTR(REPORTDT,1,6),ACTFLAG,JOBNO
+						)
+				GROUP BY REEMPID,ACTFLAG,JOBNO
+				UNION ALL
+				SELECT
+						REEMPID,
+						ACTFLAG,
+						MAX(JOBTITLE) AS CODENAME,
+						SUM(A) AS A,
+						SUM(B) AS B,
+						SUM(C) AS C,
+						SUM(MM) AS MH,
+						'' AS CODENO,
+						JOBNO AS HIGHCODE
+				FROM(
+					SELECT
+						REEMPID,
+						CASE WHEN SUBSTR(REPORTDT,1,6)  LIKE '200610' THEN SUM(HH*60+MM)  END AS A,
+						CASE WHEN SUBSTR(REPORTDT,1,6)  LIKE '200611' THEN SUM(HH*60+MM)  END AS B,
+						CASE WHEN SUBSTR(REPORTDT,1,6)  LIKE '200612' THEN SUM(HH*60+MM)  END AS C,
+						ACTFLAG,
+						JOBNO,
+						REPLACE(DECODE(ACTFLAG,'I', JOBNO,TO_PJTNO_TOCODE(JOBNO))||'_'||JOBTITLE,' ','')
+						AS JOBTITLE_CP,
+						MAX(DECODE(ACTFLAG,'I', JOBNO,TO_PJTNO_TOCODE(JOBNO))||'_'||JOBTITLE)
+						AS JOBTITLE,
+						SUM(HH*60+MM) AS  MM
+					FROM DAILYREPORTDETAIL
+					WHERE REPORTDT BETWEEN  '20061001' AND '20061231'
+					AND REEMPID='20059185'
+					GROUP BY REEMPID,
+							SUBSTR(REPORTDT,1,6),
+							ACTFLAG,JOBNO,
+							REPLACE(DECODE(ACTFLAG,'I', JOBNO,TO_PJTNO_TOCODE(JOBNO))||'_'||JOBTITLE,' ','')
+						)
+				GROUP BY REEMPID,ACTFLAG,JOBNO,JOBTITLE
+				)  B
+				ORDER BY CODE,MH DESC
+			) A
+	WHERE LEVEL>1
+	START WITH A.CODENO = '0000'
+	CONNECT BY PRIOR A.CODENO = A.HIGHCODE
+
+		]]>
+	</sql-content>
+   </sql-mapping>		
+   <sql-mapping  id="SM_002"   value-count="0"   url="공통코드" >  
+   <sql-content>
+   <![CDATA[
+		SELECT 	ORG_NO AS CODENO, 
+				ORGCD AS CODE, 
+				TO_ORGCDNAME(ORGCD) AS CODENAME,
+				LEVEL
+		FROM ORGHISTORY A
+		WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+		AND ORG_NO IS NOT NULL
+		AND  (LEVEL=2 or LEVEL=3)
+		CONNECT BY A.HIGHORGCD = PRIOR TO_CHAR(A.ORG_NO)
+		START WITH A.ORG_NO = '1051'
+		]]>
+	</sql-content>
+   </sql-mapping>	
+   	
+   <sql-mapping  id="SM_002"   value-count="1"   url="공통코드" >  
+   <sql-content>
+   <![CDATA[
+		SELECT 	ORG_NO AS CODENO, 
+				ORGCD AS CODE, 
+				TO_ORGCDNAME(ORGCD) AS CODENAME,
+				LEVEL
+		FROM ORGHISTORY A
+		WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+		AND ORG_NO IS NOT NULL
+		AND  LEVEL=3
+		CONNECT BY A.HIGHORGCD = PRIOR TO_CHAR(A.ORG_NO)
+		START WITH A.ORG_NO = ?
+		ORDER BY 2
+		]]>
+	</sql-content>
+   </sql-mapping>		
+   <sql-mapping  id="GA_022$"   value-count="7"   url="팀별 일일보고 MM 실적보고" >  
+   <sql-content>
+   <![CDATA[
+	SELECT  YEAR||'-'||MONTH AS YYMM,
+			B.HIGHORGCD AS HIGHCODE,
+			B.ORG_NO AS CODENO,
+	     	TO_ORGNOCD(B.ORG_NO) AS CODE,
+			TO_ORGNONAME(B.ORG_NO) AS CODENAME,
+			 TO_CHAR(ROUND((PD_MM + PI_MM),2),'990.99') AS EMPCNT,
+			 TO_CHAR(ROUND(PD_MM,2),'990.99') AS DMRAT,
+			 TO_CHAR(ROUND(PI_MM,2),'990.99') AS IMRAT,
+			 TO_CHAR(ROUND(PD_MH /DECODE(PD_MH+PI_MH,0,1,PD_MH+PI_MH),1),'990.9') AS DRATE,
+			 '' PMRAT,
+			 '' PDRATE,
+			PD_MH,
+			PI_MH,
+			B.LEV,
+			DECODE(RANK,NULL,0,RANK) AS RANK,
+			NVL((SELECT 'T' FROM DUAL
+             WHERE B.ORG_NO IN (SELECT ORG_NO
+                         FROM ORG A
+                         WHERE   ORG_NO IN
+                              (SELECT ORG_NO
+                              FROM ORGHISTORY
+                              WHERE ENDDT>= TO_CHAR(SYSDATE,'YYYYMMDD'))
+                              AND ORG_NO IS NOT NULL
+                               CONNECT BY PRIOR  A.HIGHORGCD = TO_CHAR(A.ORG_NO)
+                              START WITH A.ORG_NO = '1002')),'F')
+             AS ADMINCHK			
+	FROM
+		(SELECT YEAR,MONTH,HIGHORGCD,
+			DECODE(ORG_NO,NULL,HIGHORGCD,ORG_NO) AS ORG_NO,
+			PD_MM,PI_MM,PD_MH,PI_MH
+			FROM
+			(SELECT  YEAR,MONTH,
+					HIGHORGCD,
+					ORG_NO,
+					SUM(PD_MM) AS PD_MM,
+					SUM(PI_MM) AS PI_MM,
+					SUM(PD_MH) AS PD_MH,
+					SUM(PI_MH) AS PI_MH
+			FROM
+				(SELECT  YEAR,MONTH,
+						(SELECT B.HIGHORGCD FROM ORG B WHERE A.ORG_NO=B.ORG_NO)
+						AS HIGHORGCD,
+						ORG_NO,
+						SUM(PD_MM) AS PD_MM,
+						SUM(PI_MM) AS PI_MM,
+						SUM(PD_MH) AS PD_MH,
+						SUM(PI_MH) AS PI_MH
+				FROM
+					(SELECT
+					       YEAR,
+					       MONTH,
+					       (SELECT ORG_NO
+					       FROM BBDBO_MASTER A, ORG B
+					       WHERE EMPID=SBN
+					       AND DEPT=ORGCD
+					       AND YYMM=YEAR||MONTH) AS ORG_NO,
+					       EMPID,
+				--	       MAINOBJ_NO,
+				--	       SUBOBJ_NO,
+				--	       DECODE(COSTTYPE,'D','D','I') AS COSTTYPE,
+					       DECODE(COSTTYPE,'D',MHRATE,0) AS PD_MM,
+					       DECODE(COSTTYPE,'D',0,MHRATE) AS PI_MM,
+					       DECODE(COSTTYPE,'D',MM,0) AS PD_MH,
+					       DECODE(COSTTYPE,'D',0,MM) AS PI_MH
+					FROM ACCT_COSTARTS_RPTMH
+					WHERE YEAR ='2007'
+					AND   MONTH='02') A
+					WHERE A.ORG_NO IN 	(SELECT  ORG_NO
+										FROM ORG
+										START WITH ORG_NO = '1007'
+										CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)
+				GROUP BY YEAR,MONTH,ORG_NO
+				)
+			GROUP BY YEAR,MONTH,ROLLUP(HIGHORGCD,ORG_NO)
+	       )
+		) A
+		,(SELECT ORG_NO,HIGHORGCD,
+				ORGCD,
+				LEVEL AS LEV,
+				ROWNUM AS RANK
+		FROM (SELECT * FROM ORG ORDER BY ORGCD)
+		START WITH ORG_NO = '1007'
+		CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD
+		) B
+	WHERE A.ORG_NO=B.ORG_NO(+)
+	
+	
+	UNION ALL
+
+	SELECT MONRPTYM,'',0,'','',MONRPTNOTE,'','','','','',0,0,0,0,''
+
+	FROM MONRPTNOTE
+	WHERE MONRPTYM= REPLACE('2007-02','-','')
+	AND MONRPTORGCD= '1007'
+	
+--	???????
+	ORDER BY YYMM,RANK
+		]]>
+	</sql-content>
+   </sql-mapping>		
+   <sql-mapping  id="GA_022"   value-count="0"   url="팀별 일일보고 MM 실적보고" >  
+   <sql-content>
+   <![CDATA[
+	SELECT  '' AS YYMM,
+			HIGHORGCD AS HIGHCODE,
+			TO_ORGNOCD_N(HIGHORGCD,YYMM:) AS HIGHCD,
+			ORG_NO AS CODENO,
+			TO_ORGNOCD_N(ORG_NO,YYMM:) AS CODE,
+			TO_ORGNONAME_N(ORG_NO,YYMM:) AS CODENAME,
+			TO_CHAR(ROUND((PD_MM + PI_MM),2),'990.99') AS EMPCNT,
+			TO_CHAR(ROUND(PD_MM,2),'990.99') AS DMRAT,
+			TO_CHAR(ROUND(PI_MM,2),'990.99') AS IMRAT,
+			TO_CHAR(ROUND(PD_MH *100 /DECODE(PD_MH+PI_MH,0,1,PD_MH+PI_MH),1),'990.9') 
+			AS DRATE,
+			TO_CHAR(ROUND(FD_MM,2),'990.99') FMRAT,
+			TO_CHAR(ROUND(FD_MH *100 /DECODE(FD_MH+FI_MH,0,1,FD_MH+FI_MH),1),'990.9') 
+			AS FDRATE,
+			FD_MH,
+			FI_MH,
+			LEVEL AS LEV,
+			ROWNUM AS RANK,
+	  		NVL((SELECT 'T' FROM DUAL
+	             WHERE ORG_NO IN (SELECT ORG_NO
+	                         FROM ORG A
+	                         WHERE   ORG_NO IN
+	                              (SELECT ORG_NO
+	                              FROM ORGHISTORY
+	                              WHERE ENDDT>= TO_CHAR(SYSDATE,'YYYYMMDD'))
+	                              AND ORG_NO IS NOT NULL
+	                              CONNECT BY PRIOR  A.HIGHORGCD = TO_CHAR(A.ORG_NO)
+	                              START WITH A.ORGCD IN (EMPORGCD:)
+	                              
+	                              
+	                              )),'F')
+	       AS ADMINCHK
+	
+	FROM(
+	 SELECT
+	   (SELECT C.HIGHORGCD FROM ORG C WHERE C.ORG_NO=N.ORG_NO) AS HIGHORGCD,
+			   N.ORG_NO,
+			  SUM(PD_MM)PD_MM,
+			  SUM(PI_MM)PI_MM,
+			  SUM(PD_MH)PD_MH,
+			  SUM(PI_MH)PI_MH,
+			  SUM(FD_MM)FD_MM,
+			  SUM(FI_MM)FI_MM,
+			  SUM(FD_MH)FD_MH,
+			  SUM(FI_MH)FI_MH
+	 FROM
+	   (SELECT 
+		     B.ORG_NO,
+		     PD_MM,
+		     PI_MM,
+		     PD_MH,
+		     PI_MH,
+		     FD_MM,
+		     FI_MM,
+		     FD_MH,
+		     FI_MH,
+		     LEV5,LEV4,LEV3,LEV2,LEV1,LEV0
+	   FROM   (SELECT
+	         ORG_NO,
+              NVL(SUM(PD_MM),0) AS PD_MM,
+              NVL(SUM(PI_MM),0) AS PI_MM,
+              NVL(SUM(PD_MH),0) AS PD_MH,
+              NVL(SUM(PI_MH),0) AS PI_MH,
+              NVL(SUM(FD_MM),0) AS FD_MM,
+              NVL(SUM(FI_MM),0) AS FI_MM,
+              NVL(SUM(FD_MH),0) AS FD_MH,
+              NVL(SUM(FI_MH),0) AS FI_MH
+	       FROM
+		        (SELECT  YEAR,MONTH,
+			          ORG_NO,
+			          DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),
+			          'MM')  ,SUM(PD_MM)) AS PD_MM,
+			          DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),
+			          'MM')  ,SUM(PI_MM)) AS PI_MM,
+			          DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),
+			          'MM')  ,SUM(PD_MH)) AS PD_MH,
+			          DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),
+			          'MM')  ,SUM(PI_MH)) AS PI_MH,
+			          DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),
+			          'YYYYMM'),-1),'MM'),SUM(PD_MM)) AS FD_MM,
+			          DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),
+			          'YYYYMM'),-1),'MM'),SUM(PI_MM)) AS FI_MM,
+			          DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),
+			          'YYYYMM'),-1),'MM'),SUM(PD_MH)) AS FD_MH,
+			          DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),
+			          'YYYYMM'),-1),'MM'),SUM(PI_MH)) AS FI_MH
+	        FROM
+	         (
+				SELECT  YEAR,MONTH,
+					   --2007-10 임시 MM집계 처리	
+	                   DECODE(REPLACE(YYMM:,'-',''),'200710',DECODE(ORG_NO,'1003','1287',
+                     									   '1005','1287',
+                     									   '1018','1288',
+                     									   '1019','1288',ORG_NO),ORG_NO) AS ORG_NO,
+					(DECODE(COSTTYPE,'D',MM,0))  AS PD_MM,
+					(DECODE(COSTTYPE,'D',0,MM))  AS PI_MM,
+					(DECODE(COSTTYPE,'D',MH,0))  AS PD_MH,
+					(DECODE(COSTTYPE,'D',0,MH))  AS PI_MH
+				FROM DAILYREPORT_MH A
+			 	WHERE YEAR||MONTH BETWEEN TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),-1),'YYYYMM')
+              					   AND TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'YYYYMM')         
+                AND  A.ORG_NO  IN  (SELECT  ORG_NO
+				                     FROM ORGHISTORY
+				                     WHERE TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([YYMM],'-','')||'01','YYYYMMDD'),1)-1,'YYYYMMDD') BETWEEN STARTDT AND ENDDT
+				                     START WITH ORG_NO = SETTEAM:
+				                     CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)              					   
+	               ) E
+	        GROUP BY YEAR,MONTH,E.ORG_NO
+	        )
+	       GROUP BY ORG_NO) A
+	        ,
+		      	(
+		      SELECT *
+		      FROM ORG_LEV
+		      WHERE SETTEAM: IN (LEV5,LEV4,LEV3,LEV2,LEV1,LEV0)) B
+			 WHERE A.ORG_NO(+)=B.ORG_NO
+			 ) M,ORG N
+		WHERE N.ORG_NO IN (LEV5,LEV4,LEV3,LEV2,LEV1,LEV0)
+		AND  N.ORG_NO  IN  (SELECT  ORG_NO
+		                     FROM ORGHISTORY
+		                     WHERE TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([YYMM],'-','')||'01','YYYYMMDD'),1)-1,'YYYYMMDD') BETWEEN STARTDT AND ENDDT						     
+						     START WITH ORG_NO = SETTEAM:
+						     CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)
+		GROUP BY N.ORG_NO
+		ORDER BY TO_ORGNOCD(ORG_NO)
+	)  G
+	WHERE  PD_MM IS NOT NULL
+	START WITH ORG_NO = SETTEAM:
+	CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD
+		]]>
+	</sql-content>
+   </sql-mapping>		
+   <sql-mapping  id="GA_023"   value-count="0"   url="팀별 일일보고 MM 세부내역" >  
+   <sql-content>
+   <![CDATA[
+	SELECT
+			DECODE(COSTTYPE,'D','B',
+							 'I','D',
+							 'M','F','G') AS GB,
+			COSTTYPE,
+			'0000' AS HIGHCODE,
+			COSTTYPE||'0000' AS CODENO,
+			DECODE(COSTTYPE,'D','PJT업무',
+							 'I','지원업무',
+							 'M','휴가,교육 등 업무외','합계') AS CODE,
+			'' AS CODENAME,
+			TO_CHAR(PD_MM,'9,990.0') AS PD_MM,
+			TO_CHAR(PD_MH/60,'999,999,990')	AS PD_MH,
+			TO_CHAR(PD_MH *100 /(SUM(PD_MH) OVER()/2),'990.0') AS PRATE,
+			TO_CHAR(FD_MM,'9,990.0') AS FD_MM,
+			TO_CHAR(FD_MH/60,'999,999,990') AS FD_MH,
+			TO_CHAR(FD_MH *100 /(SUM(FD_MH) OVER()/2),'990.0')	 AS FRATE,
+			TO_CHAR(TOT_MM,'9,990.0')	AS TOT_MM,
+			TO_CHAR(TOT_MH/60,'999,999,990')AS TOT_MH,
+			TO_CHAR(TOT_MH *100 /(SUM(TOT_MH) OVER()/2),'990.0')AS TOTRATE,
+			1  AS LEV,
+			(SELECT SUBSTR(ORGCD,1,2) FROM ORG WHERE ORG_NO=SETTEAM:)	AS ORGCD,
+			ROWNUM  AS SEQ
+
+	FROM
+	(
+	SELECT
+	        COSTTYPE,
+			SUM(PD_MH) AS PD_MH,
+			SUM(PD_MM) AS PD_MM,
+			SUM(FD_MH) AS FD_MH,
+			SUM(FD_MM) AS FD_MM,
+			SUM(TOT_MH) AS TOT_MH,
+			SUM(TOT_MM) AS TOT_MM
+	FROM
+		(
+		SELECT  SUBSTR(MAX(YEAR||MONTH) OVER(),1,4) AS YEAR,
+         		SUBSTR(MAX(YEAR||MONTH) OVER(),5,6) AS MONTH,
+                COSTTYPE,
+				DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),
+	                  'MM') ,MHRATE) AS PD_MH,
+				DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),
+	                  'MM') ,MM) AS PD_MM,
+				DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),
+	                  'YYYYMM'),-1),'MM'),MHRATE) AS FD_MH,
+				DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),
+	                  'YYYYMM'),-1),'MM'),MM) AS FD_MM,
+				MHRATE AS TOT_MH,
+				MM AS TOT_MM
+		FROM
+			(
+			SELECT  YEAR,MONTH,COSTTYPE,SUM(MH) AS MHRATE,SUM(MM) AS MM,
+					SUM(DECODE(COSTTYPE,'D',SUM(MH))) OVER() AS TOT_DMH,
+					SUM(DECODE(COSTTYPE,'I',SUM(MH))) OVER() AS TOT_IMH,
+					SUM(DECODE(COSTTYPE,'D',SUM(MM))) OVER() AS TOT_DMM,
+					SUM(DECODE(COSTTYPE,'I',SUM(MM))) OVER() AS TOT_IMM
+			FROM
+				(
+				SELECT 	YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,
+                        DECODE(SUBSTR(SUBOBJ_NO,1,1),'8','M',COSTTYPE) AS COSTTYPE,MM,MH,TOTMM
+				FROM DAILYREPORT_MH
+				WHERE ((YEAR =SUBSTR(YYMM:,1,4)
+						AND   MONTH <= SUBSTR(REPLACE(YYMM:,'-',''),5,2)
+						)
+						OR    YEAR||MONTH  = TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),-1),'YYYYMM')
+						)
+				AND  ORG_NO IN (SELECT  ORG_NO	FROM ORG
+								START WITH ORG_NO = SETTEAM:   --관련 팀
+								CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)
+				) E
+			GROUP BY YEAR,MONTH,COSTTYPE)
+		)
+	GROUP BY YEAR,ROLLUP(COSTTYPE)
+	)
+
+	UNION ALL
+--**************세부조회****************
+	SELECT A.GB,
+			COSTTYPE,
+			DECODE(LEVEL,2,COSTTYPE)|| REPLACE(A.HIGHCODE,'$','') AS HIGHCODE,
+			REPLACE(A.CODENO,'$','') AS CODENO,
+                        DECODE(COSTTYPE,'D',DECODE(DIV,'2',(SELECT PJTCD FROM PROJECT
+                                                            WHERE PJT_NO=A.CODENO),
+                                                            REPLACE(REPLACE(A.CODENO,'$',''),'*','')),
+                                                            DECODE(LEVEL,2,SUBSTR(REPLACE(A.CODENO,'$',''),1,3)||'**'
+		                                                            ,REPLACE(A.CODENO,'$','')))
+			AS CODE,
+			DECODE(COSTTYPE,'D',DECODE(DIV,'2',(SELECT PJTNAME FROM PROJECT WHERE PJT_NO=A.CODENO),
+										   '3',(SELECT PRCSNAME FROM PRCS WHERE PRCSCD=A.CODENO),
+										   '1',(SELECT DECODE(LENGTH(A.CODENO),6,'[수행]','[영업]')||BIZNAME FROM BIZ WHERE BIZTYPECD='1' AND BIZCD = REPLACE(A.CODENO,'*',''))),
+								(SELECT JOBNAME FROM HISTJOB WHERE JOBCD=REPLACE(A.CODENO,'$',''))) AS CODENAME,
+			TO_CHAR(A.P_MM,'990.0') AS P_MM,
+			TO_CHAR(A.P_MH/60,'999,999,990') AS P_MH,
+			TO_CHAR(A.P_MH *100/DECODE(SUM(A.P_MH) OVER(PARTITION BY LEVEL),0,1,SUM(A.P_MH) OVER(PARTITION BY LEVEL)),'990.0') AS PT_MH,
+			TO_CHAR(A.F_MM,'990.0') AS F_MM,
+			TO_CHAR(A.F_MH/60,'999,999,990') AS F_MH,
+			TO_CHAR(A.F_MH *100/DECODE(SUM(A.F_MH) OVER(PARTITION BY LEVEL),0,1,SUM(A.F_MH) OVER(PARTITION BY LEVEL)),'990.0') AS FT_MH,
+			TO_CHAR(A.T_MM,'990.0') AS T_MM,
+			TO_CHAR(A.T_MH/60,'999,999,990') AS T_MH,
+			TO_CHAR(A.T_MH *100/DECODE(SUM(A.T_MH) OVER(PARTITION BY LEVEL),0,1,SUM(A.T_MH) OVER(PARTITION BY LEVEL)),'990.0') AS TT_MH,
+			LEVEL AS LEV,
+			'',
+			ROWNUM   AS SEQ
+	FROM
+	(
+	SELECT 	GB,DIV,
+			DECODE(DIV,'2',DECODE(COSTTYPE,'I',''))||HIGHCODE AS HIGHCODE,
+			DECODE(DIV,'1',DECODE(COSTTYPE,'I','$$'))||CODENO AS CODENO,
+			YEAR,COSTTYPE,
+	        SUM(P_MM) AS P_MM,
+			SUM(P_MH) AS P_MH,
+			SUM(F_MM) AS F_MM,
+			SUM(F_MH) AS F_MH,
+			SUM(T_MM) AS T_MM,
+			SUM(T_MH) AS T_MH
+	FROM
+		(SELECT G.GB,G.DIV,G.HIGHCODE,G.CODENO,G.YEAR,G.COSTTYPE,
+				K.P_MM,K.P_MH,K.F_MM,K.F_MH,K.T_MM,K.T_MH
+		FROM    --년도를 걸쳐서 조회시 2중 조회가 됨 (DISTINCT 처리)
+        (SELECT DISTINCT GB,DIV,HIGHCODE,CODENO,MAX(YEAR) OVER() AS YEAR,COSTTYPE 
+		FROM
+		(
+		SELECT
+			   DECODE(A.COSTTYPE,'I','E','M','F','C')  AS GB,
+			   B.DIV,
+		       CASE WHEN DIV = '1' THEN '0000'
+			      	WHEN DIV = '2' THEN
+						CASE WHEN COSTTYPE ='D' THEN
+						(SELECT C.BIZCD||DECODE(D.PJTTYPE,'B','*','**')
+						FROM   PJTBIZ B,BIZ C,PROJECT D
+						WHERE MAINOBJ_NO=B.PJT_NO
+						AND   B.BIZCD=C.BIZCD
+						AND   C.BIZTYPECD='1'
+						AND   B.BIZTYPECD=C.BIZTYPECD
+						AND   D.PJT_NO=B.PJT_NO)
+						ELSE '$$'||SUBSTR(SUBOBJ_NO,1,3)||'00' END
+			      	WHEN DIV = '3' THEN  MAINOBJ_NO END
+			  AS HIGHCODE,
+		       CASE WHEN DIV = '1' THEN
+		       CASE WHEN COSTTYPE ='D' THEN
+     							(SELECT C.BIZCD||DECODE(D.PJTTYPE,'B','*','**')
+								FROM   PJTBIZ B,BIZ C,PROJECT D
+								WHERE MAINOBJ_NO=B.PJT_NO
+								AND   B.BIZCD=C.BIZCD
+								AND   C.BIZTYPECD='1'
+								AND   B.BIZTYPECD=C.BIZTYPECD
+								AND   D.PJT_NO=B.PJT_NO)
+				ELSE SUBSTR(SUBOBJ_NO,1,3)||'00' END
+				WHEN DIV = '2' THEN
+			    CASE WHEN COSTTYPE ='D' THEN MAINOBJ_NO
+				ELSE '$'||SUBOBJ_NO END
+				WHEN DIV = '3' THEN  SUBOBJ_NO END
+			  AS CODENO,
+			A.YEAR,
+			A.COSTTYPE
+
+		FROM
+			(
+			SELECT YEAR,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE
+			FROM
+				(SELECT	YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE
+				FROM
+					(
+					SELECT 	YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,	 
+							DECODE(SUBSTR(SUBOBJ_NO,1,1),'8','M',COSTTYPE) AS COSTTYPE
+					FROM DAILYREPORT_MH
+					WHERE (	(YEAR =SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+							AND MONTH <=SUBSTR(REPLACE(YYMM:,'-',''),5,2)
+							)
+							OR    YEAR||MONTH  = TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),-1),'YYYYMM')					
+							)
+					AND  ORG_NO IN (SELECT  ORG_NO
+									FROM ORG
+									START WITH ORG_NO = SETTEAM:   --관련 팀
+									CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)
+					)
+				)
+			GROUP BY YEAR,COSTTYPE,ORG_NO,MAINOBJ_NO,SUBOBJ_NO
+			) A,
+			(SELECT ROWNUM AS DIV FROM ORG WHERE ROWNUM<4) B
+			WHERE COSTTYPE ='D'
+			OR (COSTTYPE ='I' AND DIV<3)
+    		OR (COSTTYPE ='M' AND DIV<3)
+			)
+			GROUP BY GB,DIV,HIGHCODE,CODENO,YEAR,COSTTYPE
+		) G,
+		(SELECT LEV2,LEV1,LEV0,COSTTYPE,
+			SUM(P_MM) AS P_MM,
+			SUM(P_MH) AS P_MH,
+			SUM(F_MM) AS F_MM,
+			SUM(F_MH) AS F_MH,
+			SUM(T_MM) AS T_MM,
+			SUM(T_MH) AS T_MH
+		FROM(SELECT
+               DECODE(COSTTYPE,'I',''||SUBSTR(SUBOBJ_NO,1,3)||'00',
+                    'M',''||SUBSTR(SUBOBJ_NO,1,3)||'00',
+                       (SELECT C.BIZCD||DECODE(D.PJTTYPE,'B','*','**')
+                       FROM   PJTBIZ B,BIZ C,PROJECT D
+                       WHERE MAINOBJ_NO=B.PJT_NO
+                       AND   B.BIZCD=C.BIZCD
+                       AND   C.BIZTYPECD='1'
+                       AND   B.BIZTYPECD=C.BIZTYPECD
+                       AND   D.PJT_NO=B.PJT_NO)) AS LEV2,
+               DECODE(COSTTYPE,'I','$'||SUBOBJ_NO,
+                    'M','$'||SUBOBJ_NO,
+               				MAINOBJ_NO) AS LEV1,
+               DECODE(COSTTYPE,'I','',
+                    'M','',SUBOBJ_NO) AS LEV0,
+				COSTTYPE,
+				SUM(P_MM) AS P_MM,
+				SUM(P_MH) AS P_MH,
+				SUM(F_MM) AS F_MM,
+				SUM(F_MH) AS F_MH,
+				SUM(T_MM) AS T_MM,
+				SUM(T_MH) AS T_MH
+			FROM
+			(SELECT
+					YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE,
+					DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM'),MM) AS P_MM,
+					DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM'),MH) AS P_MH,
+					DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),-1),'MM'),MM) AS F_MM,
+					DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),-1),'MM'),MH) AS F_MH,
+					SUM(MM) OVER(PARTITION BY YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE) AS T_MM,
+					SUM(MH) OVER(PARTITION BY YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE) AS T_MH
+
+			FROM
+				(
+				SELECT 	YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,
+						DECODE(SUBSTR(SUBOBJ_NO,1,1),'8','M',COSTTYPE) AS  COSTTYPE,
+						MM,MH,TOTMM
+				FROM DAILYREPORT_MH
+				WHERE (	(
+						YEAR =SUBSTR(YYMM:,1,4)
+						AND MONTH <= SUBSTR(REPLACE(YYMM:,'-',''),5,2)
+						)
+						OR   YEAR||MONTH  = TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),-1),'YYYYMM')
+						)
+				AND  ORG_NO IN (SELECT  ORG_NO	FROM ORG
+								START WITH ORG_NO = SETTEAM:   --관련 팀
+								CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)
+				))
+				GROUP BY COSTTYPE,MAINOBJ_NO,SUBOBJ_NO
+			)GROUP BY COSTTYPE,LEV2,LEV1,LEV0
+			) K
+		WHERE G.CODENO IN (LEV2,LEV1)
+		OR    G.HIGHCODE||G.CODENO IN (LEV1||LEV0)
+			)
+		GROUP BY GB,COSTTYPE,DIV,HIGHCODE,CODENO,YEAR
+
+		UNION ALL
+
+		SELECT 'A',0 ,'9999','0000','','',0,0,0,0,0,0 FROM DUAL
+		
+        ORDER BY GB,COSTTYPE,DIV,T_MH DESC,HIGHCODE,CODENO,YEAR
+	)
+	  A
+	START WITH CODENO='0000'
+	CONNECT BY PRIOR CODENO=HIGHCODE
+	ORDER BY GB,SEQ
+
+
+		]]>
+	</sql-content>
+   </sql-mapping>	
+   <sql-mapping  id="GA_023$"   value-count="0"   url="팀별 일일보고 MM 세부내역" >  
+   <sql-content>
+   <![CDATA[   	
+	SELECT
+		 	'B' AS GB,
+			'S' COSTTYPE,
+			'0000' AS HIGHCODE,
+			ROWNUM||'' AS CODENO,
+			DECODE(COSTTYPE,'D','PJT업무','I','지원업무','합계')	AS CODE,
+			'' AS CODENAME,
+			TO_CHAR(PD_MM,'9,990.0') AS PD_MM,
+			TO_CHAR(PD_MH/60,'999,999,990')	AS PD_MH,
+			TO_CHAR(PD_MH *100 /(SUM(PD_MH) OVER()/2),'990.0') AS PRATE,
+			TO_CHAR(FD_MM,'9,990.0') AS FD_MM,
+			TO_CHAR(FD_MH/60,'999,999,990') AS FD_MH,
+			TO_CHAR(FD_MH *100 /(SUM(FD_MH) OVER()/2),'990.0')	 AS FRATE,
+			TO_CHAR(TOT_MM,'9,990.0')	AS TOT_MM,
+			TO_CHAR(TOT_MH/60,'999,999,990')AS TOT_MH,
+			TO_CHAR(TOT_MH *100 /(SUM(TOT_MH) OVER()/2),'990.0')AS TOTRATE,
+			2  AS LEV,
+			(SELECT SUBSTR(ORGCD,1,2) FROM ORG WHERE ORG_NO=SETTEAM:)	AS ORGCD
+
+	FROM
+	(
+	SELECT
+	        COSTTYPE,
+			SUM(PD_MH) AS PD_MH,
+			SUM(PD_MM) AS PD_MM,
+			SUM(FD_MH) AS FD_MH,
+			SUM(FD_MM) AS FD_MM,
+			SUM(TOT_MH) AS TOT_MH,
+			SUM(TOT_MM) AS TOT_MM
+	FROM
+		(
+		SELECT YEAR,MONTH,COSTTYPE,
+				DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),
+	                  'MM') ,MHRATE) AS PD_MH,
+				DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),
+	                  'MM') ,MM) AS PD_MM,
+				DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),
+	                  'YYYYMM'),-1),'MM'),MHRATE) AS FD_MH,
+				DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),
+	                  'YYYYMM'),-1),'MM'),MM) AS FD_MM,
+				MHRATE AS TOT_MH,
+				MM AS TOT_MM
+		FROM
+			(
+			SELECT  YEAR,MONTH,COSTTYPE,SUM(MH) AS MHRATE,SUM(MM) AS MM,
+					SUM(DECODE(COSTTYPE,'D',SUM(MH))) OVER() AS TOT_DMH,
+					SUM(DECODE(COSTTYPE,'I',SUM(MH))) OVER() AS TOT_IMH,
+					SUM(DECODE(COSTTYPE,'D',SUM(MM))) OVER() AS TOT_DMM,
+					SUM(DECODE(COSTTYPE,'I',SUM(MM))) OVER() AS TOT_IMM
+			FROM
+				(
+				SELECT 	YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,
+						COSTTYPE,MM,MH,TOTMM
+				FROM DAILYREPORT_MH
+				WHERE YEAR =SUBSTR(YYMM:,1,4)
+				AND   MONTH <= SUBSTR(REPLACE(YYMM:,'-',''),5,2)
+				AND  ORG_NO IN (SELECT  ORG_NO	FROM ORG
+								START WITH ORG_NO = SETTEAM:   --관련 팀
+								CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)
+				) E
+			GROUP BY YEAR,MONTH,COSTTYPE)
+		)
+	GROUP BY YEAR,ROLLUP(COSTTYPE)
+	)
+
+	UNION ALL
+--**************세부조회****************
+	SELECT A.GB,
+			A.COSTTYPE,
+			REPLACE(A.HIGHCODE,'$','') AS HIGHCODE,
+			REPLACE(A.CODENO,'$','') AS CODENO,
+			DECODE(COSTTYPE,'D',DECODE(DIV,'2',(SELECT PJTCD FROM PROJECT 
+												WHERE PJT_NO=A.CODENO),
+												REPLACE(REPLACE(A.CODENO,'$',''),'*','')),
+												REPLACE(A.CODENO,'$',''))		
+			AS CODE,
+			DECODE(COSTTYPE,'D',DECODE(DIV,'2',(SELECT PJTNAME FROM PROJECT WHERE PJT_NO=A.CODENO),
+										   '3',(SELECT PRCSNAME FROM PRCS WHERE PRCSCD=A.CODENO),
+										   '1',(SELECT DECODE(LENGTH(A.CODENO),6,'[수행]','[영업]')||BIZNAME FROM BIZ WHERE BIZTYPECD='1' AND BIZCD = REPLACE(A.CODENO,'*',''))),
+								(SELECT JOBNAME FROM HISTJOB WHERE JOBCD=REPLACE(A.CODENO,'$',''))) AS CODENAME,
+			TO_CHAR(A.P_MM,'990.0') AS P_MM,
+			TO_CHAR(A.P_MH/60,'999,999,990') AS P_MH,
+			TO_CHAR(A.P_MH *100/(SUM(A.P_MH) OVER())*3,'990.0') AS PT_MH,
+			TO_CHAR(A.F_MM,'990.0') AS F_MM,
+			TO_CHAR(A.F_MH/60,'999,999,990') AS F_MH,
+			TO_CHAR(A.F_MH *100/(SUM(A.F_MH) OVER())*3,'990.0') AS FT_MH,
+			TO_CHAR(A.T_MM,'990.0') AS T_MM,
+			TO_CHAR(A.T_MH/60,'999,999,990') AS T_MH,
+			TO_CHAR(A.T_MH *100/(SUM(A.T_MH) OVER())*3,'990.0') AS TT_MH,
+			LEVEL AS LEV,
+			'' -- ORGCD
+	FROM
+	(
+	SELECT 	GB,DIV,
+			DECODE(DIV,'2',DECODE(COSTTYPE,'I',''))||HIGHCODE AS HIGHCODE,
+			DECODE(DIV,'1',DECODE(COSTTYPE,'I','$$'))||CODENO AS CODENO,
+			YEAR,COSTTYPE,
+	        SUM(P_MM) AS P_MM,
+			SUM(P_MH) AS P_MH,
+			SUM(F_MM) AS F_MM,
+			SUM(F_MH) AS F_MH,
+			SUM(T_MM) AS T_MM,
+			SUM(T_MH) AS T_MH
+	FROM
+		(SELECT G.GB,G.DIV,G.HIGHCODE,G.CODENO,G.YEAR,G.COSTTYPE,
+				K.P_MM,K.P_MH,K.F_MM,K.F_MH,K.T_MM,K.T_MH
+		FROM
+		(SELECT GB,DIV,HIGHCODE,CODENO,YEAR,COSTTYPE
+		FROM
+		(
+		SELECT
+			   'C' AS GB,
+			   B.DIV,
+		       CASE WHEN DIV = '1' THEN '0000'
+			      	WHEN DIV = '2' THEN
+						CASE WHEN COSTTYPE ='D' THEN 
+						(SELECT C.BIZCD||DECODE(D.PJTTYPE,'B','*','**')
+						FROM   PJTBIZ B,BIZ C,PROJECT D
+						WHERE MAINOBJ_NO=B.PJT_NO
+						AND   B.BIZCD=C.BIZCD
+						AND   C.BIZTYPECD='1'
+						AND   B.BIZTYPECD=C.BIZTYPECD
+						AND   D.PJT_NO=B.PJT_NO)
+						ELSE '$$'||SUBSTR(SUBOBJ_NO,1,3)||'00' END
+			      	WHEN DIV = '3' THEN  MAINOBJ_NO END
+			  AS HIGHCODE,
+		       CASE WHEN DIV = '1' THEN
+		       CASE WHEN COSTTYPE ='D' THEN
+     							(SELECT C.BIZCD||DECODE(D.PJTTYPE,'B','*','**')
+								FROM   PJTBIZ B,BIZ C,PROJECT D
+								WHERE MAINOBJ_NO=B.PJT_NO
+								AND   B.BIZCD=C.BIZCD
+								AND   C.BIZTYPECD='1'
+								AND   B.BIZTYPECD=C.BIZTYPECD
+								AND   D.PJT_NO=B.PJT_NO)
+				ELSE SUBSTR(SUBOBJ_NO,1,3)||'00' END
+				WHEN DIV = '2' THEN
+			    CASE WHEN COSTTYPE ='D' THEN MAINOBJ_NO
+				ELSE '$'||SUBOBJ_NO END
+				WHEN DIV = '3' THEN  SUBOBJ_NO END
+			  AS CODENO,
+			A.YEAR,
+			A.COSTTYPE
+	
+		FROM
+			(
+			SELECT YEAR,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE
+			FROM
+				(SELECT	YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE
+				FROM
+					(
+					SELECT 	YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,	COSTTYPE
+					FROM DAILYREPORT_MH
+					WHERE YEAR =SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+					AND   MONTH <=SUBSTR(REPLACE(YYMM:,'-',''),5,2)
+					AND  ORG_NO IN (SELECT  ORG_NO
+									FROM ORG
+									START WITH ORG_NO = SETTEAM:   --관련 팀
+									CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)
+					)
+				)
+			GROUP BY YEAR,COSTTYPE,ORG_NO,MAINOBJ_NO,SUBOBJ_NO
+			) A,
+			(SELECT ROWNUM AS DIV FROM ORG WHERE ROWNUM<4) B
+			WHERE COSTTYPE ='D' 
+			OR (COSTTYPE ='I' AND DIV<3)
+	
+--			UNION ALL
+--			 	SELECT 'A',0 ,'9999','0000','','' FROM DUAL
+			)
+			GROUP BY GB,DIV,HIGHCODE,CODENO,YEAR,COSTTYPE
+		) G,
+		(SELECT LEV2,LEV1,LEV0,COSTTYPE,
+			SUM(P_MM) AS P_MM,
+			SUM(P_MH) AS P_MH,
+			SUM(F_MM) AS F_MM,
+			SUM(F_MH) AS F_MH,
+			SUM(T_MM) AS T_MM,
+			SUM(T_MH) AS T_MH
+		FROM(SELECT
+				DECODE(COSTTYPE,'I',''||SUBSTR(SUBOBJ_NO,1,3)||'00',
+					(SELECT C.BIZCD||DECODE(D.PJTTYPE,'B','*','**')
+					FROM   PJTBIZ B,BIZ C,PROJECT D
+					WHERE MAINOBJ_NO=B.PJT_NO
+					AND   B.BIZCD=C.BIZCD
+					AND   C.BIZTYPECD='1'
+					AND   B.BIZTYPECD=C.BIZTYPECD
+					AND   D.PJT_NO=B.PJT_NO)) AS LEV2,
+				DECODE(COSTTYPE,'I','$'||SUBOBJ_NO,MAINOBJ_NO) AS LEV1,
+				DECODE(COSTTYPE,'I','',SUBOBJ_NO) AS LEV0,
+				COSTTYPE,
+				SUM(P_MM) AS P_MM,
+				SUM(P_MH) AS P_MH,
+				SUM(F_MM) AS F_MM,
+				SUM(F_MH) AS F_MH,
+				SUM(T_MM) AS T_MM,
+				SUM(T_MH) AS T_MH
+			FROM
+			(SELECT
+					YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE,
+					DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM'),MM) AS P_MM,
+					DECODE(MONTH,TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM'),MH) AS P_MH,
+					DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),-1),'MM'),MM) AS F_MM,
+					DECODE(MONTH,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),-1),'MM'),MH) AS F_MH,
+					SUM(MM) OVER(PARTITION BY YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE) AS T_MM,
+					SUM(MH) OVER(PARTITION BY YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,COSTTYPE) AS T_MH
+		
+			FROM
+				(
+				SELECT 	YEAR,MONTH,ORG_NO,MAINOBJ_NO,SUBOBJ_NO,
+						COSTTYPE,MM,MH,TOTMM
+				FROM DAILYREPORT_MH
+				WHERE YEAR =SUBSTR(YYMM:,1,4)
+				AND   MONTH <= SUBSTR(REPLACE(YYMM:,'-',''),5,2)
+				AND  ORG_NO IN (SELECT  ORG_NO	FROM ORG
+								START WITH ORG_NO = SETTEAM:   --관련 팀
+								CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)
+				))
+				GROUP BY COSTTYPE,MAINOBJ_NO,SUBOBJ_NO
+			)GROUP BY COSTTYPE,LEV2,LEV1,LEV0
+			) K
+		WHERE G.CODENO IN (LEV2,LEV1)
+		OR    G.HIGHCODE||G.CODENO IN (LEV1||LEV0)
+			)
+		GROUP BY GB,COSTTYPE,DIV,HIGHCODE,CODENO,YEAR
+	
+		UNION ALL
+		
+		SELECT 'A',0 ,'9999','0000','','',0,0,0,0,0,0 FROM DUAL
+	
+	)
+	  A
+	START WITH CODENO='0000'
+	CONNECT BY PRIOR CODENO=HIGHCODE
+	ORDER BY GB
+		]]>
+	</sql-content>
+   </sql-mapping>		
+   <sql-mapping  id="TM_001"   value-count="0"   url="팀별 MM NOTE 저장" >  
+   <sql-content>
+   <![CDATA[
+		INSERT INTO  MMRPTNOTE VALUES
+		(REPLACE(MONRPTYM:,'-',''), empty_clob(),'팀MM NOTE',SYSDATE,MONRPTORGCD:,MONRPTSN:)
+		]]>
+	</sql-content>
+   </sql-mapping>				
+   <sql-mapping  id="TM_002"   value-count="3"   url="팀별 MM NOTE 수정" >  
+   <sql-content>
+   <![CDATA[
+		UPDATE MMRPTNOTE SET
+			MONRPTNOTE=empty_clob(),
+			MONRPTDATE = SYSDATE,
+			MONRPTSN = ?
+		WHERE MONRPTYM = REPLACE(?,'-','')
+		AND MONRPTORGCD = ?
+		AND MONRPTFLAG='팀MM NOTE'
+		]]>
+	</sql-content>
+   </sql-mapping>				
+   <sql-mapping  id="TM_003"   value-count="3"   url="팀별 일일보고 MM 실적보고 조회" >   
+   <sql-content>
+   <![CDATA[
+		SELECT  A.YEAR||'-'||A.MONTH AS YYMM,
+				A.ORG_NO,
+				A.ORGCD,
+				A.ORGNAME,
+				TO_CHAR(A.EMPCNT,'990.99') AS EMPCNT,
+				A.DMRAT,
+				A.IMRAT,
+				TO_CHAR((100 *A.DRATE),'990.9') AS DRATE,
+				B.PMRAT,
+				TO_CHAR((100 *B.PDRATE),'990.9') AS PDRATE,
+				TO_CHAR(ROUND(SUM(A.EMPCNT) OVER(),2),'990.99') AS TOT_EMPCNT,
+				TO_CHAR(ROUND(SUM(A.DMRAT) OVER(),2),'990.99') AS TOT_DMRAT,
+				TO_CHAR(ROUND(SUM(A.IMRAT) OVER(),2),'990.99') AS TOT_IMRAT,
+				TO_CHAR(ROUND(100 * SUM(A.DRATE) OVER()/ COUNT(YEAR) OVER(),2),'990.9') AS TOT_DRATE,
+				TO_CHAR(ROUND(SUM(B.PMRAT) OVER(),2),'990.99') AS TOT_PMRAT,
+				TO_CHAR(ROUND(100 * SUM(B.PDRATE) OVER()/ COUNT(YEAR) OVER(),2),'990.9') AS TOT_PRATE
+	
+	 FROM
+	(SELECT 	YEAR,
+			MONTH,
+			ORG_NO,
+			ORGCD,
+			ORGNAME,
+			MAX(EMPCNT) AS EMPCNT,
+			TO_CHAR(ROUND(SUM(PD_MRAT),2),'990.99') AS DMRAT,
+			TO_CHAR(ROUND(SUM(PI_MRAT),2),'990.99') AS IMRAT,
+			TO_CHAR(SUM(DRATE),'990.99') AS DRATE,
+			SUM(PD_MM) AS DMH,
+			SUM(PI_MM) AS IMH
+	FROM(
+			SELECT 	YEAR,
+					MONTH,
+					ORG_NO ,
+					TO_ORGNOCD(ORG_NO) AS ORGCD,
+					TO_ORGNONAME(ORG_NO) AS ORGNAME,
+					MAX(EMPCNT)  AS EMPCNT,
+					SUM(PD_MRAT) AS PD_MRAT,
+					SUM(PI_MRAT) AS PI_MRAT,
+					ROUND(SUM(PD_MM)/DECODE(SUM(PD_MM)+SUM(PI_MM),0,1,SUM(PD_MM)+SUM(PI_MM)),2) AS  DRATE,
+					SUM(PD_MM) AS PD_MM,
+					SUM(PI_MM) AS PI_MM
+			FROM
+				(
+				SELECT  DISTINCT
+						YEAR,
+						MONTH,
+						ORGINORG_NO AS ORG_NO,
+						EMPID,
+						COUNT(EMPID) OVER(PARTITION BY YEAR,MONTH,ORGINORG_NO) AS EMPCNT,
+						SUM(PD_MHRATE) AS PD_MRAT,
+						SUM(PI_MHRATE) AS PI_MRAT,
+						SUM(PD_MM) AS PD_MM,
+						SUM(PI_MM) AS PI_MM,
+						SUM(PD_MM)+SUM(PI_MM) AS PTOTMM
+				FROM
+					(
+					SELECT YEAR,
+							MONTH,
+							(SELECT ORG_NO
+							FROM BBDBO_MASTER A,
+								 ORG B
+							WHERE EMPID=SBN
+							AND DEPT=ORGCD
+							AND YYMM=YEAR||MONTH) AS ORGINORG_NO,
+							EMPID,
+							MAINOBJ_NO,
+							SUBOBJ_NO,
+							DECODE(COSTTYPE,'D','D','I') AS COSTTYPE,
+							DECODE(COSTTYPE,'D',MHRATE,0) AS PD_MHRATE,
+							DECODE(COSTTYPE,'D',0,MHRATE) AS PI_MHRATE,
+							DECODE(COSTTYPE,'D',MM,0) AS PD_MM,
+							DECODE(COSTTYPE,'D',0,MM) AS PI_MM
+					FROM ACCT_COSTARTS_RPTMH
+					WHERE YEAR||MONTH=REPLACE(?,'-','')
+					)
+					GROUP BY YEAR,MONTH,ORGINORG_NO,EMPID
+				)
+			GROUP BY YEAR,MONTH,ORG_NO
+			)
+	GROUP BY YEAR,MONTH,ORG_NO,ORGCD,ORGNAME
+	)   A,
+	(SELECT ORG_NO,
+			TO_CHAR(ROUND(SUM(PD_MRAT),2),'990.99') AS PMRAT,
+			TO_CHAR(SUM(DRATE),'990.99') AS PDRATE
+	FROM(
+			SELECT 	ORG_NO ,
+					SUM(PD_MRAT) AS PD_MRAT,
+					ROUND(SUM(PD_MM)/DECODE(SUM(PD_MM)+SUM(PI_MM),0,1,SUM(PD_MM)+SUM(PI_MM)),2) AS  DRATE
+			FROM
+				(
+				SELECT  DISTINCT
+						ORG_NO,
+						SUM(PD_MHRATE) AS PD_MRAT,
+						SUM(PD_MM) AS PD_MM,
+						SUM(PI_MM) AS PI_MM
+				FROM
+					(
+					SELECT YEAR,
+							MONTH,
+							(SELECT ORG_NO
+							FROM BBDBO_MASTER A,
+								 ORG B
+							WHERE EMPID=SBN
+							AND DEPT=ORGCD
+							AND YYMM=YEAR||MONTH) AS ORG_NO,
+							EMPID,
+							MAINOBJ_NO,
+							SUBOBJ_NO,
+							DECODE(COSTTYPE,'D','D','I') AS COSTTYPE,
+							DECODE(COSTTYPE,'D',MHRATE,0) AS PD_MHRATE,
+							DECODE(COSTTYPE,'D',0,MHRATE) AS PI_MHRATE,
+							DECODE(COSTTYPE,'D',MM,0) AS PD_MM,
+							DECODE(COSTTYPE,'D',0,MM) AS PI_MM
+					FROM ACCT_COSTARTS_RPTMH
+					WHERE YEAR||MONTH=TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(?,'-',''),'YYYYMM'),-1),'YYYYMM')
+					)
+					GROUP BY ORG_NO,EMPID
+				)
+			GROUP BY ORG_NO
+			)
+	GROUP BY ORG_NO
+	)   B
+	WHERE A.ORG_NO=B.ORG_NO(+)
+	AND A.ORG_NO IN (	SELECT ORG_NO
+					FROM ORG A
+					WHERE	ORG_NO IN (	SELECT ORG_NO
+										FROM ORGHISTORY
+										WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+					AND ORG_NO IS NOT NULL
+					CONNECT BY A.HIGHORGCD = PRIOR TO_CHAR(A.ORG_NO)
+					START WITH A.ORG_NO = ?) --팀
+	ORDER BY ORGCD
+	
+		]]>
+	</sql-content>
+   </sql-mapping>				
+
+   <sql-mapping  id="TM_010"   value-count="0"   url="팀별 MM NOTE조회(CLOB)" >  
+   <sql-content>
+   <![CDATA[
+			SELECT MONRPTNOTE 
+			FROM MMRPTNOTE 
+			WHERE MONRPTYM= REPLACE(MONRPTYM:,'-','')
+			AND MONRPTORGCD= MONRPTORGCD:
+			AND MONRPTFLAG='팀MM NOTE'
+			FOR UPDATE
+		]]>
+	</sql-content>
+   </sql-mapping>		
+   
+   <sql-mapping  id="TM_005"   value-count="6"   url="팀별 업무현황 저장" >  
+   <sql-content>
+   <![CDATA[
+		INSERT INTO DAILYRPTNOTE  VALUES
+		(REPLACE(?,'-',''), 
+		?, 
+		?, 
+		?, 
+		SYSDATE, 
+		?, 
+		?)   
+		]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="TM_006"   value-count="6"   url="팀별 업무현황 수정" >  
+   <sql-content>
+   <![CDATA[
+		UPDATE DAILYRPTNOTE SET       
+			NOTE_CURRENT=?, 
+			NOTE_NEXT = ?, 
+			MODIFYDT =SYSDATE, 
+			EMPID =?
+		WHERE YYMM = REPLACE(?,'-','')
+		AND ORG_NO = ?
+		AND SEQ = ?
+		]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="TM_007"   value-count="2"   url="팀별 업무현황 조회" >  
+   <sql-content>
+   <![CDATA[
+		SELECT 	YYMM, 
+				SEQ, 
+				NOTE_CURRENT, 
+				NOTE_NEXT, 
+				MODIFYDT, 
+				ORG_NO, 
+				EMPID 
+		FROM   DAILYRPTNOTE
+		WHERE YYMM = REPLACE(?,'-','')
+		AND ORG_NO = ?
+		ORDER BY SEQ
+		]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="TM_008"   value-count="2"   url="팀별 업무현황 삭제" >  
+   <sql-content>
+   <![CDATA[
+		DELETE FROM  DAILYRPTNOTE
+		WHERE YYMM = REPLACE(?,'-','')
+		AND ORG_NO = ?			 	
+		]]>
+	</sql-content>
+   </sql-mapping>   
+
+   <sql-mapping  id="TM_009"   value-count="2"   url="분석노트 조회" >  
+   <sql-content>
+   <![CDATA[
+	   	SELECT MONRPTYM,'',0,'0000','',MONRPTNOTE,'','','','','',0,0,99,9999,''
+		FROM MMRPTNOTE
+		WHERE MONRPTYM= REPLACE(?,'-','')
+		AND MONRPTORGCD= ?	 	
+		]]>
+	</sql-content>
+   </sql-mapping>   
+
+   <sql-mapping  id="GA_024"   value-count="0"   url="원가수집분석" >  
+   <sql-content>
+   <![CDATA[
+	SELECT
+		ACCTCD,
+		TO_ACCTNAME(ACCTCD) AS ACCTNAME,
+		TO_CHAR(SUM(S1),'999,999,999,990') AS LABORCOST, --인사노무비,   --A
+		TO_CHAR(SUM(S2),'999,999,999,990') AS SLIP,--재무전표,     	--B
+--		SUM(S2)-SUM(S1) AS CHK1,  --C
+		TO_CHAR(SUM(M3),'999,999,999,990') AS G_SLIP,--전표수집,       --D
+		TO_CHAR(SUM(M1),'999,999,999,990') AS G_LABORCOST, --노무비수집,       --D
+           TO_CHAR(DECODE(SUM(S1),'0','0',
+           		DECODE(SUM(S2),'0','0',
+           		SUM(S1)-SUM(S2))),'999,999,999,990')
+           AS CHK2,
+		TO_CHAR(DECODE(SUM(M3),'0','0',
+				SUM(M3)-SUM(M1)),'999,999,999,990') AS DIS1,--배부전표1,
+		TO_CHAR(SUM(B1),'999,999,999,990') AS DIS2,--배부전표3,
+--			SUM(B1)-SUM(M3) AS CHK4,
+		TO_CHAR(SUM(B1)-SUM(M1),'999,999,999,990') AS CHK5
+	FROM
+	(
+	--A  (인사노무비)
+	
+		SELECT
+				 ACCTCD,
+				 SUM(AMT) AS S1 ,
+				 0 AS S2,
+				 0 AS M1,
+				 0 AS M2,
+				 0 AS B1,
+				 0 AS M3
+		FROM
+		(SELECT
+				 YYMM ,
+		 		 DEPT,
+				 POSITION,
+				 ACCTCD,
+				 AMT
+		FROM
+				(SELECT 	YYMM,        --급여
+								DEPT,
+								POSITION,
+								'50021' AS ACCTCD,
+								SALARY AS AMT
+						FROM BBDBO_LABORCOST
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+	
+					UNION ALL
+						SELECT 	YYMM,         --상여
+								DEPT,
+								POSITION,
+								'50031' AS ACCTCD,
+								ADJUSTBONUS AS AMT
+						FROM BBDBO_LABORCOST
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+	
+					UNION ALL
+						SELECT 	YYMM,         --국민연금
+								DEPT,
+								POSITION,
+								'50141' AS ACCTCD,
+								GUKMIN AS AMT
+						FROM BBDBO_LABORCOST
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+	
+					UNION ALL
+						SELECT 	YYMM,         --의료보험
+								DEPT,
+								POSITION,
+								'50142' AS ACCTCD,
+								MEDICAL AS AMT
+						FROM BBDBO_LABORCOST
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+	
+					UNION ALL
+						SELECT 	YYMM,         --연금보조
+								DEPT,
+								POSITION,
+								'50143' AS ACCTCD,
+								YUNGUMBOJO AS AMT
+						FROM BBDBO_LABORCOST
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+	
+					UNION ALL
+						SELECT 	YYMM,       --신협보조금
+								DEPT,
+								POSITION,
+								'50145' AS ACCTCD,
+								SHINHUPBOJO AS AMT
+						FROM BBDBO_LABORCOST
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+	
+					UNION ALL
+						SELECT 	YYMM,       --주택이자보조
+								DEPT,
+								POSITION,
+								'5014912' AS ACCTCD,
+		  					    INTERESTBOJO AS AMT
+						FROM BBDBO_LABORCOST
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+	
+					UNION ALL
+						SELECT 	YYMM,       --퇴직 충당금
+								DEPT,
+								POSITION,
+								'50061' AS ACCTCD,
+								TJAMT
+						FROM BBDBO_TJAMT --MASM_TJAMT
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+						) B
+		UNION ALL
+				(SELECT SUBSTR(YYMM,1,4) AS YYYY,
+						SUBSTR(YYMM,5,2) AS MM,
+						EMPID,ACCTCD,GAMT
+				FROM (
+						SELECT 	YYMM,
+								SBN AS EMPID,
+								'50051' AS ACCTCD,
+								SALARY+BONUS+GUKMIN+MEDICAL+KY_SJAMT AS GAMT ---YUNCHA
+								--+YUNGUMBOJO+SHINHUPBOJO 임시고용인보수에서는 제외
+								--+yuncha+TMPTJ 임시고용인보수 제외 2009-01-12
+						FROM BBDBO_TMPEMP_LABORCOST       --MASM_TMPEMP_LABORCOST
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+				UNION ALL
+						SELECT 	YYMM,       --이동전화보조
+								EMPID,
+								'5014913' AS ACCTCD,
+								TELBOJO
+						FROM BBDBO_TELBOJO
+						WHERE YYMM=REPLACE(YYMM:,'-','')
+						))
+		)
+		GROUP BY ACCTCD
+	
+	
+	UNION ALL
+	--B  (재무전표)
+		SELECT
+			      ACCTCD,
+				 0 ,
+				 SUM(AMT)  ,
+				 0 ,
+				 0 ,
+				 0 ,
+				 0 AS M3
+		FROM
+			(
+			SELECT  NVL((SELECT DECODE(B.ACCTCD,'59051','50051',B.ACCTCD) --2009-01-12 수정
+			               FROM  ACCTRPTSB B,ACCTRPTHD C
+			               WHERE C.DOCNO=AA12_JPNO
+			               AND   C.MAINNO=B.MAINNO
+			               AND   B.SN=AA12_HGNO),SUBSTR(AA12_GJCD,1,1)||'0'||SUBSTR(AA12_GJCD,3,3))
+			       AS ACCTCD,
+			      DECODE(AA12_CDGB,'D',-1,1)* DECODE(SUBSTR(AA12_JPNO,1,1),'A',-1,1)*AA12_AMT AS AMT
+			FROM  ACCTN.TBAA11 A, ACCTN.TBAA12 B,ACCTRPT_ERR C
+			WHERE A.AA11_JPNO=B.AA12_JPNO
+			AND AA11_JPNO NOT LIKE 'I%'
+			AND AA12_BSCD IN ('CQ01 ','CQ02 ','CQ03 ', 'CQ04 ') --인재 /총무/외주  2009.01.13 대상변경(전사) 급여 
+			AND AA11_HGIL LIKE  REPLACE( YYMM: ,'-','')||'%'
+			AND EXISTS  (SELECT CD FROM COCODE
+                 			WHERE  AA12_GJCD LIKE '__'||SUBSTR(CD,3,3)
+                 			AND  CDTYPE='RG')
+			AND AA12_GJCD LIKE  '5%'
+			AND B.AA12_GJCD NOT IN ( '51148','59148')
+			AND C.JPNO(+)=AA12_JPNO
+			AND C.SN  (+)=AA12_HGNO
+			)
+			WHERE ACCTCD NOT IN ('5014914')
+		GROUP BY ACCTCD
+	UNION ALL
+	SELECT
+			      ACCTCD,
+				 0 ,
+				 SUM(AMT)  ,
+				 0 ,
+				 0 ,
+				 0 ,
+				 0 AS M3
+		FROM
+			(
+			SELECT  NVL((SELECT B.ACCTCD
+			               FROM  ACCTRPTSB B,ACCTRPTHD C
+			               WHERE C.DOCNO=AA12_JPNO
+			               AND   C.MAINNO=B.MAINNO
+			               AND   B.SN=AA12_HGNO),SUBSTR(AA12_GJCD,1,1)||'0'||SUBSTR(AA12_GJCD,3,3))
+			       AS ACCTCD,
+			      DECODE(AA12_CDGB,'D',-1,1)* DECODE(SUBSTR(AA12_JPNO,1,1),'A',-1,1)*AA12_AMT AS AMT
+			FROM  ACCTN.TBAA11 A, ACCTN.TBAA12 B,ACCTRPT_ERR C
+			WHERE A.AA11_JPNO=B.AA12_JPNO
+			AND AA11_JPNO NOT LIKE 'I%'
+			--AND AA12_BSCD IN ('CQ01 ','CQ02 ','CQ03 ', 'CQ04 ') --인재 /총무/외주  2008.10.13 대상변경(전사) 생산성활동
+			AND AA11_HGIL LIKE  REPLACE( YYMM: ,'-','')||'%'
+			AND EXISTS  (SELECT CD FROM COCODE
+                 			WHERE  AA12_GJCD LIKE '__'||SUBSTR(CD,3,3)
+                 			AND  CDTYPE='RG')
+			AND B.AA12_GJCD IN ( '51148','59148')
+			AND C.JPNO(+)=AA12_JPNO
+			AND C.SN  (+)=AA12_HGNO
+			)
+		WHERE ACCTCD = '50148'
+		GROUP BY ACCTCD
+	UNION ALL
+	--C    (원가수집 및 조정:LABORCOST)
+			(
+			SELECT  A.ACCTCD,
+					 0 ,
+					 0 ,
+					 SUM(AMT) ,
+					 0 ,
+					 0 ,
+				 	 0 AS M3
+			FROM LABORCOST A
+            WHERE YYYY=TO_CHAR(TO_DATE(REPLACE(  YYMM: ,'-',''),'YYYYMM'),'YYYY')
+            AND  MM=TO_CHAR(TO_DATE(REPLACE(  YYMM: ,'-',''),'YYYYMM'),'MM')			
+			GROUP BY A.ACCTCD
+			)
+	
+	UNION ALL
+	--D    (배부전표:HEADER)
+			(SELECT 
+					CD,
+					0 ,
+					 0 ,
+					 0 ,
+					 AA01_AMT ,
+					 0,
+				 		0 AS M3
+			FROM TBAA01 A,
+			     COCODE B
+			WHERE CDTYPE='RG'
+			AND AA01_JPNO LIKE 'I'||REPLACE( YYMM: ,'-','')||'%'
+			AND   TO_NUMBER(SUBSTR(CDNAME,1,3))=AA01_SEQ
+			UNION 
+			SELECT
+					CD,
+					0 ,
+					 0 ,
+					 0 ,
+					 AA01_AMT ,
+					 0,
+				 		0 AS M3
+			FROM (SELECT * FROM ACCTN.TBAA01 UNION SELECT * FROM TBAA01) A,
+			     COCODE B
+			WHERE CDTYPE='RG'
+			AND AA01_JPNO LIKE 'I'||REPLACE( YYMM: ,'-','')||'%'
+			AND   TO_NUMBER(SUBSTR(CDNAME,1,3))=AA01_SEQ
+			)
+	UNION ALL
+	--E   (배부전표:DETAIL)
+			SELECT
+					DECODE(DIV,1,CD,DECODE(CD,'50061',CD,'T_'||CD)) AS CD,
+					0 ,
+					 0 ,
+					 0 ,
+					 0 ,
+					 SUM(AA02_AMT),
+					 0 AS M3
+			FROM (SELECT DECODE(AA02_BSCD,'CQ01',
+                        		DECODE(AA02_AMT,MAX(DECODE(AA02_BSCD,'CQ01',AA02_AMT)) OVER(PARTITION BY SUBSTR(AA02_GJCD,3,3)),1,SIGN(AA02_AMT))
+                        										,1) AS DIV , --인재개발인 경우만  '-' 전표 집계
+						 AA02_JPNO,
+						 AA02_AMT,
+						 AA02_CDGB
+				  FROM (SELECT * FROM ACCTN.TBAA02 UNION SELECT * FROM TBAA02)
+				  WHERE AA02_JPNO LIKE 'I'||REPLACE( YYMM: ,'-','')||'%'				  
+				  ) A,
+			     COCODE B
+			WHERE CDTYPE='RG'
+			AND   TO_NUMBER(SUBSTR(CDNAME,1,3))=SUBSTR(AA02_JPNO,10,3)
+			AND AA02_CDGB='C'
+			AND AA02_JPNO LIKE 'I'||REPLACE(YYMM: ,'-','')||'%'
+			GROUP BY CD ,DIV
+	
+		UNION ALL
+	--F   (원가전표수집)
+		SELECT ACCTCD,0,0,0,0,0,SUM(ACCTAMT) AS M3
+		FROM SLIP
+        WHERE YYYY=TO_CHAR(TO_DATE(REPLACE(  YYMM: ,'-',''),'YYYYMM'),'YYYY')
+        AND  MM=TO_CHAR(TO_DATE(REPLACE(  YYMM: ,'-',''),'YYYYMM'),'MM')			
+		GROUP BY ACCTCD
+	
+	)
+	GROUP BY ACCTCD
+		]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="GA_025"   value-count="0"   url="매출액조회" >  
+   <sql-content>
+   <![CDATA[
+	SELECT 	PJT_NO,
+			PJTCD,
+			PJTNAME,
+			PJTTYPE,
+			PJTDIV,
+			CODENAME,
+			TM_AMT,
+			TW_AMT,
+			CM_AMT,
+			CW_AMT,
+			NM_AMT,
+			NW_AMT,
+			TM_ALL,
+			TW_ALL,
+			CM_ALL,
+			CW_ALL,
+			NM_ALL,
+			NW_ALL,
+			DECODE(TW_AMT,0,0,ROUND(NW_AMT/TW_AMT*100,2)) AS WP,
+			DECODE(TM_AMT,0,0,ROUND(NM_AMT/TM_AMT*100,2)) AS MP
+	FROM(
+   SELECT PJT_NO,
+		PJTCD,
+		PJTNAME,
+		PJTTYPE,
+		PJTDIV,
+        NVL(TO_CDNAME('PT',PROFITTYPE),'미지정') AS CODENAME,
+		NVL(SUM(TM_AMT),0) AS TM_AMT,
+		SUM(TW_AMT) AS TW_AMT,
+		SUM(CM_AMT) AS CM_AMT,
+		SUM(CW_AMT) AS CW_AMT,
+		SUM(NM_AMT) AS NM_AMT,
+		SUM(NW_AMT) AS NW_AMT,
+        SUM(SUM(TM_AMT)) OVER() AS TM_ALL,
+        SUM(SUM(TW_AMT)) OVER() AS TW_ALL,
+        SUM(SUM(CM_AMT)) OVER() AS CM_ALL,
+        SUM(SUM(CW_AMT)) OVER() AS CW_ALL,
+        SUM(SUM(NM_AMT)) OVER() AS NM_ALL,
+        SUM(SUM(NW_AMT)) OVER() AS NW_ALL,
+        --SUM(MP)
+        ROUND(SUM(SUM(NM_AMT)) OVER()/
+        SUM(SUM(TM_AMT)) OVER()*100,2) AS MP,
+        --SUM(WP)
+        ROUND(SUM(SUM(NW_AMT)) OVER()/
+        SUM(SUM(TW_AMT)) OVER()*100,2) AS WP
+	FROM (
+		SELECT
+				B.PJT_NO,
+				C.PJTCD,
+				C.PJTNAME,
+				MAX(MAX(C.PJTTYPE)) OVER(PARTITION BY C.PJTCD) AS  PJTTYPE,
+				MAX(MAX(C.PJTDIV)) OVER(PARTITION BY C.PJTCD) AS PJTDIV,
+				(SELECT PROFITTYPE
+				FROM (
+					SELECT PJT_NO,PROFITTYPE FROM SALEPJT
+					UNION
+					SELECT PJT_NO,PROFITTYPE FROM DEVPJT
+					UNION
+					SELECT PJT_NO,PROFITTYPE FROM SVCPJT
+					)A
+				WHERE A.PJT_NO=B.PJT_NO) AS PROFITTYPE,
+				0 AS TM_AMT,
+				0 AS TW_AMT,
+				NVL(ROUND(SUM(DECODE(COSTTYPE,'S',DECODE(SUBSTR(ACCTCD,1,1),'4',
+				DECODE(YEAR||MONTH,REPLACE(YYMM:,'-',''),AMT))))/1000,0),0) AS  CM_AMT,
+				NVL(ROUND(SUM(DECODE(COSTTYPE,'S',DECODE(SUBSTR(ACCTCD,1,1),'5',
+				DECODE(YEAR||MONTH,REPLACE(YYMM:,'-',''),AMT))))/1000,0),0) AS  CW_AMT,
+				NVL(ROUND(SUM(DECODE(COSTTYPE,'S',DECODE(SUBSTR(ACCTCD,1,1),'4',AMT)))/1000,0),0)
+				AS  NM_AMT,
+				NVL(ROUND(SUM(DECODE(COSTTYPE,'S',DECODE(SUBSTR(ACCTCD,1,1),'5',AMT)))
+				/1000,0),0) AS  NW_AMT
+			
+		FROM  PJTCOSTDETAIL_DW B, PROJECT C
+		WHERE C.PJT_NO=B.PJT_NO
+		AND   B.YEAR||B.MONTH<=REPLACE(YYMM:,'-','')
+		AND   C.PJTDIV LIKE PJTDIV:||'%'
+		AND   C.PJTTYPE LIKE PJTTYPE:||'%'
+		AND   C.PJTTYPE <> 'B'
+		AND   C.PJTNAME LIKE '%'||PJTNAME:||'%'	    	    
+		AND   C.PJTCD LIKE '%'||PJTCD:||'%'	    	    
+		GROUP BY C.PJTCD,B.PJT_NO,C.PJTNAME
+	UNION ALL
+		SELECT 	B.PJT_NO,
+				C.PJTCD,
+				C.PJTNAME,
+				MAX(MAX(C.PJTTYPE)) OVER(PARTITION BY C.PJTCD) AS  PJTTYPE,
+				MAX(MAX(C.PJTDIV)) OVER(PARTITION BY C.PJTCD) AS PJTDIV,
+				(SELECT PROFITTYPE
+				FROM (
+				SELECT PJT_NO,PROFITTYPE FROM SALEPJT
+				UNION
+				SELECT PJT_NO,PROFITTYPE FROM DEVPJT
+				UNION
+				SELECT PJT_NO,PROFITTYPE FROM SVCPJT
+				)A
+				WHERE A.PJT_NO=B.PJT_NO) AS PROFITTYPE,				
+				NVL(ROUND(SUM(DECODE(COSTTYPE,'T',DECODE(SUBSTR(ACCTCD,1,1),'4',AMT)))
+				/1000,0),0) AS  TM_AMT,
+				NVL(ROUND(SUM(DECODE(COSTTYPE,'T',DECODE(SUBSTR(ACCTCD,1,1),'5',AMT)))
+				/1000,0),0) AS  TW_AMT,
+				0, 0, 0, 0
+				FROM  PJTCOSTDETAIL_DW B, PROJECT C
+				WHERE C.PJT_NO=B.PJT_NO
+				AND   C.PJTDIV LIKE PJTDIV:||'%'
+				AND   C.PJTTYPE LIKE PJTTYPE:||'%'
+				AND   C.PJTTYPE <> 'B'
+				AND   C.PJTNAME LIKE '%'||PJTNAME:||'%'	
+				AND   C.PJTCD LIKE '%'||PJTCD:||'%'	      	    
+				GROUP BY C.PJTCD,B.PJT_NO,C.PJTNAME
+		)
+		GROUP BY PJT_NO,PJTCD,PJTNAME,PJTTYPE,PJTDIV,PROFITTYPE
+		ORDER BY PJTCD DESC		
+		)
+	WHERE  CW_AMT<> 0
+    OR     CM_AMT<> 0
+		]]>
+	</sql-content>
+   </sql-mapping>   
+   
+	<sql-mapping  id="GA_026"   value-count="1" url="매출액산정" >  
+	<sql-content>
+	<![CDATA[
+			begin GATHER_SALES(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping> 
+	    		
+	<sql-mapping  id="GA_027"   value-count="1" url="재무전표 등록(ACCTRPTHD)" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO ACCTRPTHD VALUE(MAINNO,DOCTYPE,DOCNO,BILLTYPE,USEEMPID,USEORGCD,USEORGNAME,MTITLE,
+									STATUS,EVENTDT,BIZACQACCTCD,TOTAMT,CREATEDTM,CREMPID,CRORGCD)
+		SELECT
+				AA11_JPNO AS MAINNO,
+				AA11_JPJG AS DOCTYPE,
+				AA11_JPNO AS DOCNO,
+				'X' AS BILLTYPE,
+				AA11_SSBN AS USEEMPID,
+				TO_ORGCD_ORGNO(AA11_JBSCD) AS USEORGCD,
+				TO_ORGCDNAME(AA11_JBSCD) AS USEORGNAME,
+				AA11_DPJYO AS MTITLE,
+				DECODE(AA11_STAT,'H','DE0','M','DD1') AS STATUS,
+		        TO_CHAR(TO_DATE(AA11_JSIL,'YYYYMMDD'),'YYYYMMDD') AS  EVENTDT,
+		        AA11_CUST_CD AS BIZACQACCTCD,
+				AA11_AMT AS TOTAMT,
+				SYSDATE AS CREATEDTM,
+		        AA11_USER AS CREMPID,
+				'1049' AS CRORGCD
+		FROM ACCTN.TBAA11 
+		WHERE AA11_JPNO= ?	
+	]]>
+	</sql-content>
+	</sql-mapping>     		
+	<sql-mapping  id="GA_028"   value-count="1" url="재무전표 등록(ACCTRPTSB)" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO ACCTRPTSB VALUE(MAINNO,AMOUNT,JOBNO,CDTYPE,ACCTCD,SN,TITLE)
+		SELECT
+				AA12_JPNO	AS MAINNO,
+				AA12_AMT	AS AMOUNT,
+	       		DECODE(TO_PJTORG_NO_PJTNO(TO_ORGCDNO_N(TRIM(AA12_SUCD),TO_CHAR(SYSDATE,'YYYYMM'))),
+                       NULL,TO_ORGCDNO_N(AA12_BSCD,SUBSTR(AA12_JPNO,2,5)),
+                       TO_PJTORG_NO_PJTNO(TO_ORGCDNO_N(TRIM(AA12_SUCD),TO_CHAR(SYSDATE,'YYYYMM'))))
+			 AS JOBNO,
+			AA12_CDGB	AS CDTYPE,
+			AA12_GJCD	AS ACCTCD,
+			AA12_HGNO	AS SN,
+			AA12_JYO	AS TITLE
+		FROM  ACCTN.TBAA12
+		WHERE AA12_JPNO=?
+		AND  SUBSTR(AA12_GJCD,1,1) IN ('4','5')	
+	]]>
+	</sql-content>
+	</sql-mapping>     		
+
+	<sql-mapping  id="GA_029"   value-count="3" url="재무전표 수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE ACCTRPTSB SET
+		JOBNO=?
+		WHERE MAINNO=?
+		AND   SN=?			
+	]]>
+	</sql-content>
+	</sql-mapping>     		
+
+
+	<sql-mapping  id="GA_030"   value-count="0" url="PJT별 원가 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT  DISTINCT 
+				C.PJT_NO AS PJT_NO,
+				SUBSTR(YYMM:,1,4) AS YYYY,
+				C.USRINDEX,
+			    C.ACCTCD,
+			    (SELECT USRACCTNAME
+				FROM USRACCTDEFDETAIL A
+				WHERE USRTYPE='devPjt'
+				AND USRACCTCD=ACCTCD
+				AND USRINDEX=C.USRINDEX) AS ACCTNAME,
+		   		NVL(ROUND(SUM(C.T_AMT) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT,
+		   		NVL(ROUND(SUM(C.T_PN_AMT) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_PN_AMT,
+		   		NVL(ROUND(SUM(C.S_PN_AMT) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_PN_AMT,
+				NVL(ROUND(SUM(C.T_AMT_01) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_01,
+				NVL(ROUND(SUM(C.S_AMT_01) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_01,
+				NVL(ROUND(SUM(C.T_AMT_02) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_02,
+				NVL(ROUND(SUM(C.S_AMT_02) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_02,
+				NVL(ROUND(SUM(C.T_AMT_03) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_03,
+				NVL(ROUND(SUM(C.S_AMT_03) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_03,
+				NVL(ROUND(SUM(C.T_AMT_04) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_04,
+				NVL(ROUND(SUM(C.S_AMT_04) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_04,
+				NVL(ROUND(SUM(C.T_AMT_05) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_05,
+				NVL(ROUND(SUM(C.S_AMT_05) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_05,
+				NVL(ROUND(SUM(C.T_AMT_06) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_06,
+				NVL(ROUND(SUM(C.S_AMT_06) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_06,
+				NVL(ROUND(SUM(C.T_AMT_07) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_07,
+				NVL(ROUND(SUM(C.S_AMT_07) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_07,
+				NVL(ROUND(SUM(C.T_AMT_08) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_08,
+				NVL(ROUND(SUM(C.S_AMT_08) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_08,
+				NVL(ROUND(SUM(C.T_AMT_09) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_09,
+				NVL(ROUND(SUM(C.S_AMT_09) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_09,
+				NVL(ROUND(SUM(C.T_AMT_10) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_10,
+				NVL(ROUND(SUM(C.S_AMT_10) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_10,
+				NVL(ROUND(SUM(C.T_AMT_11) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_11,
+				NVL(ROUND(SUM(C.S_AMT_11) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_11,
+				NVL(ROUND(SUM(C.T_AMT_12) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_AMT_12,
+				NVL(ROUND(SUM(C.S_AMT_12) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_AMT_12,
+				NVL(ROUND(SUM(C.T_CY_AMT) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_CY_AMT,
+				NVL(ROUND(SUM(C.S_CY_AMT) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_CY_AMT,
+		   		NVL(ROUND(SUM(C.T_CN_AMT) OVER(PARTITION BY ACCTCD)/1000,0),0) AS T_CN_AMT,
+		   		NVL(ROUND(SUM(C.S_CN_AMT) OVER(PARTITION BY ACCTCD)/1000,0),0) AS S_CN_AMT,
+	
+				ROUND(100*SUM(C.S_CN_AMT) OVER(PARTITION BY ACCTCD)/
+				DECODE(SUM(C.T_CN_AMT) OVER(PARTITION BY ACCTCD),0,
+				1,SUM(C.T_CN_AMT) OVER(PARTITION BY ACCTCD)),2) AS  DRATE,
+	
+				ROUND(100*SUM(C.S_CN_AMT) OVER(PARTITION BY ACCTCD)/
+				DECODE(SUM(C.T_AMT) OVER(PARTITION BY ACCTCD),0,
+				1,SUM(C.T_AMT) OVER(PARTITION BY ACCTCD)),2) AS  RATE,
+	
+
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT)) OVER()/1000,0),0) AS T_4_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_PN_AMT)) OVER()/1000,0),0) AS T_4_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_PN_AMT)) OVER()/1000,0),0) AS S_4_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_01)) OVER()/1000,0),0) AS T_4_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_01)) OVER()/1000,0),0) AS S_4_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_02)) OVER()/1000,0),0) AS T_4_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_02)) OVER()/1000,0),0) AS S_4_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_03)) OVER()/1000,0),0) AS T_4_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_03)) OVER()/1000,0),0) AS S_4_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_04)) OVER()/1000,0),0) AS T_4_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_04)) OVER()/1000,0),0) AS S_4_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_05)) OVER()/1000,0),0) AS T_4_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_05)) OVER()/1000,0),0) AS S_4_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_06)) OVER()/1000,0),0) AS T_4_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_06)) OVER()/1000,0),0) AS S_4_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_07)) OVER()/1000,0),0) AS T_4_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_07)) OVER()/1000,0),0) AS S_4_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_08)) OVER()/1000,0),0) AS T_4_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_08)) OVER()/1000,0),0) AS S_4_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_09)) OVER()/1000,0),0) AS T_4_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_09)) OVER()/1000,0),0) AS S_4_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_10)) OVER()/1000,0),0) AS T_4_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_10)) OVER()/1000,0),0) AS S_4_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_11)) OVER()/1000,0),0) AS T_4_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_11)) OVER()/1000,0),0) AS S_4_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_12)) OVER()/1000,0),0) AS T_4_AMT_12_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_12)) OVER()/1000,0),0) AS S_4_AMT_12_ALL,
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_CY_AMT)) OVER()/1000,0),0) AS T_4_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_CY_AMT)) OVER()/1000,0),0) AS S_4_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_CN_AMT)) OVER()/1000,0),0) AS T_4_CN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_CN_AMT)) OVER()/1000,0),0) AS S_4_CN_AMT_ALL,
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT)) OVER()/1000,0),0) AS T_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_PN_AMT)) OVER()/1000,0),0) AS T_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_PN_AMT)) OVER()/1000,0),0) AS S_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_01)) OVER()/1000,0),0) AS T_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_01)) OVER()/1000,0),0) AS S_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_02)) OVER()/1000,0),0) AS T_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_02)) OVER()/1000,0),0) AS S_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_03)) OVER()/1000,0),0) AS T_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_03)) OVER()/1000,0),0) AS S_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_04)) OVER()/1000,0),0) AS T_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_04)) OVER()/1000,0),0) AS S_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_05)) OVER()/1000,0),0) AS T_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_05)) OVER()/1000,0),0) AS S_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_06)) OVER()/1000,0),0) AS T_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_06)) OVER()/1000,0),0) AS S_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_07)) OVER()/1000,0),0) AS T_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_07)) OVER()/1000,0),0) AS S_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_08)) OVER()/1000,0),0) AS T_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_08)) OVER()/1000,0),0) AS S_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_09)) OVER()/1000,0),0) AS T_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_09)) OVER()/1000,0),0) AS S_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_10)) OVER()/1000,0),0) AS T_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_10)) OVER()/1000,0),0) AS S_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_11)) OVER()/1000,0),0) AS T_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_11)) OVER()/1000,0),0) AS S_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_AMT_12)) OVER()/1000,0),0) AS T_AMT_12_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_AMT_12)) OVER()/1000,0),0) AS S_AMT_12_ALL,
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_CY_AMT)) OVER()/1000,0),0) AS T_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_CY_AMT)) OVER()/1000,0),0) AS S_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.T_CN_AMT)) OVER()/1000,0),0) AS T_CN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'5',C.S_CN_AMT)) OVER()/1000,0),0) AS S_CN_AMT_ALL,
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT,'93',C.T_AMT)) OVER()/1000,0),0) AS T_9_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_PN_AMT,'93',C.T_PN_AMT)) OVER()/1000,0),0) AS T_9_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_PN_AMT,'93',C.S_PN_AMT)) OVER()/1000,0),0) AS S_9_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_01,'93',C.T_AMT_01)) OVER()/1000,0),0) AS T_9_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_01,'93',C.S_AMT_01)) OVER()/1000,0),0) AS S_9_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_02,'93',C.T_AMT_02)) OVER()/1000,0),0) AS T_9_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_02,'93',C.S_AMT_02)) OVER()/1000,0),0) AS S_9_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_03,'93',C.T_AMT_03)) OVER()/1000,0),0) AS T_9_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_03,'93',C.S_AMT_03)) OVER()/1000,0),0) AS S_9_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_04,'93',C.T_AMT_04)) OVER()/1000,0),0) AS T_9_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_04,'93',C.S_AMT_04)) OVER()/1000,0),0) AS S_9_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_05,'93',C.T_AMT_05)) OVER()/1000,0),0) AS T_9_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_05,'93',C.S_AMT_05)) OVER()/1000,0),0) AS S_9_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_06,'93',C.T_AMT_06)) OVER()/1000,0),0) AS T_9_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_06,'93',C.S_AMT_06)) OVER()/1000,0),0) AS S_9_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_07,'93',C.T_AMT_07)) OVER()/1000,0),0) AS T_9_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_07,'93',C.S_AMT_07)) OVER()/1000,0),0) AS S_9_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_08,'93',C.T_AMT_08)) OVER()/1000,0),0) AS T_9_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_08,'93',C.S_AMT_08)) OVER()/1000,0),0) AS S_9_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_09,'93',C.T_AMT_09)) OVER()/1000,0),0) AS T_9_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_09,'93',C.S_AMT_09)) OVER()/1000,0),0) AS S_9_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_10,'93',C.T_AMT_10)) OVER()/1000,0),0) AS T_9_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_10,'93',C.S_AMT_10)) OVER()/1000,0),0) AS S_9_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_11,'93',C.T_AMT_11)) OVER()/1000,0),0) AS T_9_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_11,'93',C.S_AMT_11)) OVER()/1000,0),0) AS S_9_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_AMT_12,'93',C.T_AMT_12)) OVER()/1000,0),0) AS T_9_AMT_12_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_AMT_12,'93',C.S_AMT_12)) OVER()/1000,0),0) AS S_9_AMT_12_ALL,
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_CY_AMT,'93',C.T_CY_AMT)) OVER()/1000,0),0) AS T_9_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_CY_AMT,'93',C.S_CY_AMT)) OVER()/1000,0),0) AS S_9_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.T_CN_AMT,'93',C.T_CN_AMT)) OVER()/1000,0),0) AS T_9_CN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'92',C.S_CN_AMT,'93',C.S_CN_AMT)) OVER()/1000,0),0) AS S_9_CN_AMT_ALL,
+
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT,'5',-C.T_AMT)) OVER()/1000,0),0) AS T_H_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_PN_AMT,'5',-C.T_PN_AMT)) OVER()/1000,0),0) AS T_H_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_PN_AMT,'5',-C.S_PN_AMT)) OVER()/1000,0),0) AS S_H_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_01,'5',-C.T_AMT_01)) OVER()/1000,0),0) AS T_H_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_01,'5',-C.S_AMT_01)) OVER()/1000,0),0) AS S_H_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_02,'5',-C.T_AMT_02)) OVER()/1000,0),0) AS T_H_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_02,'5',-C.S_AMT_02)) OVER()/1000,0),0) AS S_H_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_03,'5',-C.T_AMT_03)) OVER()/1000,0),0) AS T_H_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_03,'5',-C.S_AMT_03)) OVER()/1000,0),0) AS S_H_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_04,'5',-C.T_AMT_04)) OVER()/1000,0),0) AS T_H_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_04,'5',-C.S_AMT_04)) OVER()/1000,0),0) AS S_H_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_05,'5',-C.T_AMT_05)) OVER()/1000,0),0) AS T_H_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_05,'5',-C.S_AMT_05)) OVER()/1000,0),0) AS S_H_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_06,'5',-C.T_AMT_06)) OVER()/1000,0),0) AS T_H_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_06,'5',-C.S_AMT_06)) OVER()/1000,0),0) AS S_H_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_07,'5',-C.T_AMT_07)) OVER()/1000,0),0) AS T_H_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_07,'5',-C.S_AMT_07)) OVER()/1000,0),0) AS S_H_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_08,'5',-C.T_AMT_08)) OVER()/1000,0),0) AS T_H_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_08,'5',-C.S_AMT_08)) OVER()/1000,0),0) AS S_H_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_09,'5',-C.T_AMT_09)) OVER()/1000,0),0) AS T_H_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_09,'5',-C.S_AMT_09)) OVER()/1000,0),0) AS S_H_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_10,'5',-C.T_AMT_10)) OVER()/1000,0),0) AS T_H_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_10,'5',-C.S_AMT_10)) OVER()/1000,0),0) AS S_H_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_11,'5',-C.T_AMT_11)) OVER()/1000,0),0) AS T_H_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_11,'5',-C.S_AMT_11)) OVER()/1000,0),0) AS S_H_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_AMT_12,'5',-C.T_AMT_12)) OVER()/1000,0),0) AS T_H_AMT_12_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_AMT_12,'5',-C.S_AMT_12)) OVER()/1000,0),0) AS S_H_AMT_12_ALL,
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_CY_AMT,'5',-C.T_CY_AMT)) OVER()/1000,0),0) AS T_H_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_CY_AMT,'5',-C.S_CY_AMT)) OVER()/1000,0),0) AS S_H_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.T_CN_AMT,'5',-C.T_CN_AMT)) OVER()/1000,0),0) AS T_H_CN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,1),'4',C.S_CN_AMT,'5',-C.S_CN_AMT)) OVER()/1000,0),0) AS S_H_CN_AMT_ALL,
+
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT,'50',-C.T_AMT,C.T_AMT,'92',-C.T_AMT,'93',-C.T_AMT)) OVER()/1000,0),0) AS T_Y_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_PN_AMT,'50',-C.T_PN_AMT,'92',-C.T_PN_AMT,'93',-C.T_PN_AMT)) OVER()/1000,0),0) AS T_Y_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_PN_AMT,'50',-C.S_PN_AMT,'92',-C.S_PN_AMT,'93',-C.S_PN_AMT)) OVER()/1000,0),0) AS S_Y_PN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_01,'50',-C.T_AMT_01,'92',-C.T_AMT_01,'93',-C.T_AMT_01)) OVER()/1000,0),0) AS T_Y_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_01,'50',-C.S_AMT_01,'92',-C.S_AMT_01,'93',-C.S_AMT_01)) OVER()/1000,0),0) AS S_Y_AMT_01_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_02,'50',-C.T_AMT_02,'92',-C.T_AMT_02,'93',-C.T_AMT_02)) OVER()/1000,0),0) AS T_Y_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_02,'50',-C.S_AMT_02,'92',-C.S_AMT_02,'93',-C.S_AMT_02)) OVER()/1000,0),0) AS S_Y_AMT_02_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_03,'50',-C.T_AMT_03,'92',-C.T_AMT_03,'93',-C.T_AMT_03)) OVER()/1000,0),0) AS T_Y_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_03,'50',-C.S_AMT_03,'92',-C.S_AMT_03,'93',-C.S_AMT_03)) OVER()/1000,0),0) AS S_Y_AMT_03_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_04,'50',-C.T_AMT_04,'92',-C.T_AMT_04,'93',-C.T_AMT_04)) OVER()/1000,0),0) AS T_Y_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_04,'50',-C.S_AMT_04,'92',-C.S_AMT_04,'93',-C.S_AMT_04)) OVER()/1000,0),0) AS S_Y_AMT_04_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_05,'50',-C.T_AMT_05,'92',-C.T_AMT_05,'93',-C.T_AMT_05)) OVER()/1000,0),0) AS T_Y_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_05,'50',-C.S_AMT_05,'92',-C.S_AMT_05,'93',-C.S_AMT_05)) OVER()/1000,0),0) AS S_Y_AMT_05_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_06,'50',-C.T_AMT_06,'92',-C.T_AMT_06,'93',-C.T_AMT_06)) OVER()/1000,0),0) AS T_Y_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_06,'50',-C.S_AMT_06,'92',-C.S_AMT_06,'93',-C.S_AMT_06)) OVER()/1000,0),0) AS S_Y_AMT_06_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_07,'50',-C.T_AMT_07,'92',-C.T_AMT_07,'93',-C.T_AMT_07)) OVER()/1000,0),0) AS T_Y_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_07,'50',-C.S_AMT_07,'92',-C.S_AMT_07,'93',-C.S_AMT_07)) OVER()/1000,0),0) AS S_Y_AMT_07_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_08,'50',-C.T_AMT_08,'92',-C.T_AMT_08,'93',-C.T_AMT_08)) OVER()/1000,0),0) AS T_Y_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_08,'50',-C.S_AMT_08,'92',-C.S_AMT_08,'93',-C.S_AMT_08)) OVER()/1000,0),0) AS S_Y_AMT_08_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_09,'50',-C.T_AMT_09,'92',-C.T_AMT_09,'93',-C.T_AMT_09)) OVER()/1000,0),0) AS T_Y_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_09,'50',-C.S_AMT_09,'92',-C.S_AMT_09,'93',-C.S_AMT_09)) OVER()/1000,0),0) AS S_Y_AMT_09_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_10,'50',-C.T_AMT_10,'92',-C.T_AMT_10,'93',-C.T_AMT_10)) OVER()/1000,0),0) AS T_Y_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_10,'50',-C.S_AMT_10,'92',-C.S_AMT_10,'93',-C.S_AMT_10)) OVER()/1000,0),0) AS S_Y_AMT_10_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_11,'50',-C.T_AMT_11,'92',-C.T_AMT_11,'93',-C.T_AMT_11)) OVER()/1000,0),0) AS T_Y_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_11,'50',-C.S_AMT_11,'92',-C.S_AMT_11,'93',-C.S_AMT_11)) OVER()/1000,0),0) AS S_Y_AMT_11_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_AMT_12,'50',-C.T_AMT_12,'92',-C.T_AMT_12,'93',-C.T_AMT_12)) OVER()/1000,0),0) AS T_Y_AMT_12_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_AMT_12,'50',-C.S_AMT_12,'92',-C.S_AMT_12,'93',-C.S_AMT_12)) OVER()/1000,0),0) AS S_Y_AMT_12_ALL,
+
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_CY_AMT,'50',-C.T_CY_AMT,'92',-C.T_AMT,'93',-C.T_AMT)) OVER()/1000,0),0) AS T_Y_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_CY_AMT,'50',-C.S_CY_AMT,'92',-C.S_AMT,'93',-C.S_AMT)) OVER()/1000,0),0) AS S_Y_CY_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.T_CN_AMT,'50',-C.T_CN_AMT,'92',-C.T_AMT,'93',-C.T_AMT)) OVER()/1000,0),0) AS T_Y_CN_AMT_ALL,
+				NVL(ROUND(SUM(DECODE(SUBSTR(ACCTCD,1,2),'41',C.S_CN_AMT,'50',-C.S_CN_AMT,'92',-C.S_AMT,'93',-C.S_AMT)) OVER()/1000,0),0) AS S_Y_CN_AMT_ALL,
+
+
+	
+				''
+	
+		FROM (SELECT  PJT_NO,
+					(SELECT USRINDEX FROM USRACCTDEFDETAIL
+					WHERE USRTYPE='devPjt'
+					AND   USRACCTCD=DECODE(ACCTCD,'10001',ACCTCD,SUBSTR(ACCTCD,1,4)||'0')) AS USRINDEX,
+					DECODE(SUBSTR(ACCTCD,1,1),'1',ACCTCD,SUBSTR(ACCTCD,1,4)||'0') AS ACCTCD,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'01',AMT)) AS T_AMT_01,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'01',AMT)) AS S_AMT_01,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'02',AMT)) AS T_AMT_02,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'02',AMT)) AS S_AMT_02,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'03',AMT)) AS T_AMT_03,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'03',AMT)) AS S_AMT_03,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'04',AMT)) AS T_AMT_04,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'04',AMT)) AS S_AMT_04,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'05',AMT)) AS T_AMT_05,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'05',AMT)) AS S_AMT_05,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'06',AMT)) AS T_AMT_06,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'06',AMT)) AS S_AMT_06,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'07',AMT)) AS T_AMT_07,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'07',AMT)) AS S_AMT_07,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'08',AMT)) AS T_AMT_08,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'08',AMT)) AS S_AMT_08,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'09',AMT)) AS T_AMT_09,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'09',AMT)) AS S_AMT_09,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'10',AMT)) AS T_AMT_10,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'10',AMT)) AS S_AMT_10,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'11',AMT)) AS T_AMT_11,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'11',AMT)) AS S_AMT_11,
+					DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'12',AMT)) AS T_AMT_12,
+					DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'12',AMT)) AS S_AMT_12,
+					DECODE(COSTTYPE,'T',AMT) AS T_AMT,
+					DECODE(COSTTYPE,'S',AMT) AS S_AMT,
+					DECODE(COSTTYPE,'T',DECODE(YEAR,SUBSTR(REPLACE(YYMM:,'-',''),1,4),AMT)) AS T_CY_AMT,
+					DECODE(COSTTYPE,'S',DECODE(YEAR,SUBSTR(REPLACE(YYMM:,'-',''),1,4),AMT)) AS S_CY_AMT,
+					CASE WHEN  YEAR<SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+					THEN DECODE(COSTTYPE,'T',AMT) END T_PN_AMT,
+					CASE WHEN  YEAR<SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+					THEN DECODE(COSTTYPE,'S',AMT) END S_PN_AMT,
+					CASE WHEN  YEAR<=SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+					THEN DECODE(COSTTYPE,'T',AMT) END T_CN_AMT,
+					CASE WHEN  YEAR<=SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+					THEN DECODE(COSTTYPE,'S',AMT) END S_CN_AMT
+			FROM PJTCOSTDETAIL A
+			WHERE PJT_NO=PJT_NO:
+		UNION ALL
+			(SELECT PJT_NO:,	USRINDEX,USRACCTCD
+						,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+			FROM  USRACCTDEFDETAIL A
+			WHERE USRTYPE='devPjt'
+			)
+		) C
+	ORDER BY USRINDEX ,ACCTCD DESC
+	]]>
+	</sql-content>
+	</sql-mapping>    
+
+	<sql-mapping  id="GA_031"   value-count="0" url="PJT기간 조회(년도) " >  
+	<sql-content>
+	<![CDATA[
+		SELECT YEAR FROM PJTCOSTDETAIL
+		WHERE PJT_NO=PJT_NO:
+		GROUP BY YEAR
+		ORDER BY 1		
+	]]>
+	</sql-content>
+	</sql-mapping>     			 		
+	<sql-mapping  id="GA_032"   value-count="0" url="PJT별 원가 조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT          A.SN,
+        				A.CODENAME,
+                        A.LEV,
+                        PJT_NO: AS PJT_NO,
+                        SUBSTR(YYMM:,1,4) AS YYYY, 
+                        A.SEQ,
+                        A.HIGHCODE,                        
+                        DECODE(A.HIGHCODE,A.CODENO,'',A.CODENO) AS CODENO,
+                        DECODE(A.HIGHCODE,A.CODENO,'',A.CODENO) AS CODE,
+						DECODE(A.HIGHCODE,'10001',S_AMT_02/100,S_AMT_02) AS S_AMT_02,
+						DECODE(A.HIGHCODE,'10001',T_AMT   /100,T_AMT   ) AS T_AMT   , 
+						DECODE(A.HIGHCODE,'10001',T_PN_AMT/100,T_PN_AMT) AS T_PN_AMT,
+						DECODE(A.HIGHCODE,'10001',S_PN_AMT/100,S_PN_AMT) AS S_PN_AMT,
+						DECODE(A.HIGHCODE,'10001',T_AMT_01/100,T_AMT_01) AS T_AMT_01,
+						DECODE(A.HIGHCODE,'10001',S_AMT_01/100,S_AMT_01) AS S_AMT_01,
+						DECODE(A.HIGHCODE,'10001',T_AMT_02/100,T_AMT_02) AS T_AMT_02,
+						DECODE(A.HIGHCODE,'10001',S_AMT_02/100,S_AMT_02) AS S_AMT_02,
+						DECODE(A.HIGHCODE,'10001',T_AMT_03/100,T_AMT_03) AS T_AMT_03,
+						DECODE(A.HIGHCODE,'10001',S_AMT_03/100,S_AMT_03) AS S_AMT_03,
+						DECODE(A.HIGHCODE,'10001',T_AMT_04/100,T_AMT_04) AS T_AMT_04,
+						DECODE(A.HIGHCODE,'10001',S_AMT_04/100,S_AMT_04) AS S_AMT_04,
+						DECODE(A.HIGHCODE,'10001',T_AMT_05/100,T_AMT_05) AS T_AMT_05,
+						DECODE(A.HIGHCODE,'10001',S_AMT_05/100,S_AMT_05) AS S_AMT_05,
+						DECODE(A.HIGHCODE,'10001',T_AMT_06/100,T_AMT_06) AS T_AMT_06,
+						DECODE(A.HIGHCODE,'10001',S_AMT_06/100,S_AMT_06) AS S_AMT_06,
+						DECODE(A.HIGHCODE,'10001',T_AMT_07/100,T_AMT_07) AS T_AMT_07,
+						DECODE(A.HIGHCODE,'10001',S_AMT_07/100,S_AMT_07) AS S_AMT_07,
+						DECODE(A.HIGHCODE,'10001',T_AMT_08/100,T_AMT_08) AS T_AMT_08,
+						DECODE(A.HIGHCODE,'10001',S_AMT_08/100,S_AMT_08) AS S_AMT_08,
+						DECODE(A.HIGHCODE,'10001',T_AMT_09/100,T_AMT_09) AS T_AMT_09,
+						DECODE(A.HIGHCODE,'10001',S_AMT_09/100,S_AMT_09) AS S_AMT_09,
+						DECODE(A.HIGHCODE,'10001',T_AMT_10/100,T_AMT_10) AS T_AMT_10,
+						DECODE(A.HIGHCODE,'10001',S_AMT_10/100,S_AMT_10) AS S_AMT_10,
+						DECODE(A.HIGHCODE,'10001',T_AMT_11/100,T_AMT_11) AS T_AMT_11,
+						DECODE(A.HIGHCODE,'10001',S_AMT_11/100,S_AMT_11) AS S_AMT_11,
+						DECODE(A.HIGHCODE,'10001',T_AMT_12/100,T_AMT_12) AS T_AMT_12,
+						DECODE(A.HIGHCODE,'10001',S_AMT_12/100,S_AMT_12) AS S_AMT_12,
+						DECODE(A.HIGHCODE,'10001',T_CY_AMT/100,T_CY_AMT) AS T_CY_AMT,
+						DECODE(A.HIGHCODE,'10001',S_CY_AMT/100,S_CY_AMT) AS S_CY_AMT,
+						DECODE(A.HIGHCODE,'10001',T_CN_AMT/100,T_CN_AMT) AS T_CN_AMT,
+						DECODE(A.HIGHCODE,'10001',S_CN_AMT/100,S_CN_AMT) AS S_CN_AMT,
+                       						
+                        DRATE,
+                        RATE
+        FROM
+                 (      SELECT
+                               C.PJT_NO AS PJT_NO,
+                               SUBSTR(YYMM:,1,4) AS YYYY,
+                               MIN(MIN(C.USRINDEX)) OVER(PARTITION BY PJT_NO,ACCTCD) AS SEQ,
+                           		NVL(C.ACCTCD,HIGHACCTCD) AS CODENO,
+                               HIGHACCTCD AS HIGHCODE,
+                               NVL(ROUND(SUM(C.T_AMT) ,0),0) AS T_AMT,
+                               NVL(ROUND(SUM(C.T_PN_AMT) ,0),0) AS T_PN_AMT,
+                               NVL(ROUND(SUM(C.S_PN_AMT) ,0),0) AS S_PN_AMT,
+                               NVL(ROUND(SUM(C.T_AMT_01) ,0),0) AS T_AMT_01,
+                               NVL(ROUND(SUM(C.S_AMT_01) ,0),0) AS S_AMT_01,
+                               NVL(ROUND(SUM(C.T_AMT_02) ,0),0) AS T_AMT_02,
+                               NVL(ROUND(SUM(C.S_AMT_02) ,0),0) AS S_AMT_02,
+                               NVL(ROUND(SUM(C.T_AMT_03) ,0),0) AS T_AMT_03,
+                               NVL(ROUND(SUM(C.S_AMT_03) ,0),0) AS S_AMT_03,
+                               NVL(ROUND(SUM(C.T_AMT_04) ,0),0) AS T_AMT_04,
+                               NVL(ROUND(SUM(C.S_AMT_04) ,0),0) AS S_AMT_04,
+                               NVL(ROUND(SUM(C.T_AMT_05) ,0),0) AS T_AMT_05,
+                               NVL(ROUND(SUM(C.S_AMT_05) ,0),0) AS S_AMT_05,
+                               NVL(ROUND(SUM(C.T_AMT_06) ,0),0) AS T_AMT_06,
+                               NVL(ROUND(SUM(C.S_AMT_06) ,0),0) AS S_AMT_06,
+                               NVL(ROUND(SUM(C.T_AMT_07) ,0),0) AS T_AMT_07,
+                               NVL(ROUND(SUM(C.S_AMT_07) ,0),0) AS S_AMT_07,
+                               NVL(ROUND(SUM(C.T_AMT_08) ,0),0) AS T_AMT_08,
+                               NVL(ROUND(SUM(C.S_AMT_08) ,0),0) AS S_AMT_08,
+                               NVL(ROUND(SUM(C.T_AMT_09) ,0),0) AS T_AMT_09,
+                               NVL(ROUND(SUM(C.S_AMT_09) ,0),0) AS S_AMT_09,
+                               NVL(ROUND(SUM(C.T_AMT_10) ,0),0) AS T_AMT_10,
+                               NVL(ROUND(SUM(C.S_AMT_10) ,0),0) AS S_AMT_10,
+                               NVL(ROUND(SUM(C.T_AMT_11) ,0),0) AS T_AMT_11,
+                               NVL(ROUND(SUM(C.S_AMT_11) ,0),0) AS S_AMT_11,
+                               NVL(ROUND(SUM(C.T_AMT_12) ,0),0) AS T_AMT_12,
+                               NVL(ROUND(SUM(C.S_AMT_12) ,0),0) AS S_AMT_12,
+                               NVL(ROUND(SUM(C.T_CY_AMT) ,0),0) AS T_CY_AMT,
+                               NVL(ROUND(SUM(C.S_CY_AMT) ,0),0) AS S_CY_AMT,
+                               NVL(ROUND(SUM(C.T_CN_AMT) ,0),0) AS T_CN_AMT,
+                               NVL(ROUND(SUM(C.S_CN_AMT) ,0),0) AS S_CN_AMT,
+
+                    ROUND(100*SUM(C.S_CN_AMT) /
+                    DECODE(SUM(C.T_CN_AMT) ,0,
+                    DECODE(SUM(C.S_CN_AMT),0,1,SUM(C.S_CN_AMT)),SUM(C.T_CN_AMT) ),0) AS  DRATE,
+
+                    ROUND(100*SUM(C.S_AMT) /
+                    DECODE(SUM(C.T_AMT) ,0,
+                    DECODE(SUM(C.S_AMT),0,1,SUM(C.S_AMT)),SUM(C.T_AMT)),0) AS  RATE,
+                                        ''
+        FROM (
+              SELECT  PJT_NO: AS PJT_NO,
+                     (SELECT USRINDEX FROM USRACCTDEFDETAIL
+                     WHERE USRTYPE='MISPJT'
+                     AND   USRACCTCD=DECODE(LENGTH(ACCTCD),'3',ACCTCD,
+                     				DECODE(ACCTCD,'10001',ACCTCD,SUBSTR(ACCTCD,1,4)||'0'))) AS USRINDEX,
+					 DECODE(LENGTH(ACCTCD),'3',ACCTCD,
+                     DECODE(SUBSTR(ACCTCD,1,1),'1',ACCTCD,SUBSTR(ACCTCD,1,4)||'0')) AS ACCTCD,
+                     (SELECT USRACCTDEFDETAILDESC
+                     FROM USRACCTDEFDETAIL
+                     WHERE USRTYPE='MISPJT'
+                     AND USRACCTCD=DECODE(LENGTH(ACCTCD),'3',ACCTCD,
+			                       DECODE(SUBSTR(ACCTCD,1,1),'1',ACCTCD,SUBSTR(ACCTCD,1,4)||'0'))) AS HIGHACCTCD,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'01',AMT)) AS T_AMT_01,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'01',AMT)) AS S_AMT_01,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'02',AMT)) AS T_AMT_02,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'02',AMT)) AS S_AMT_02,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'03',AMT)) AS T_AMT_03,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'03',AMT)) AS S_AMT_03,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'04',AMT)) AS T_AMT_04,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'04',AMT)) AS S_AMT_04,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'05',AMT)) AS T_AMT_05,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'05',AMT)) AS S_AMT_05,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'06',AMT)) AS T_AMT_06,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'06',AMT)) AS S_AMT_06,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'07',AMT)) AS T_AMT_07,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'07',AMT)) AS S_AMT_07,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'08',AMT)) AS T_AMT_08,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'08',AMT)) AS S_AMT_08,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'09',AMT)) AS T_AMT_09,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'09',AMT)) AS S_AMT_09,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'10',AMT)) AS T_AMT_10,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'10',AMT)) AS S_AMT_10,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'11',AMT)) AS T_AMT_11,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'11',AMT)) AS S_AMT_11,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'12',AMT)) AS T_AMT_12,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR||MONTH,SUBSTR(REPLACE(YYMM:,'-',''),1,4)||'12',AMT)) AS S_AMT_12,
+                     DECODE(COSTTYPE,'T',AMT) AS T_AMT,
+                     DECODE(COSTTYPE,'S',AMT) AS S_AMT,
+                     DECODE(COSTTYPE,'T',DECODE(YEAR,SUBSTR(REPLACE(YYMM:,'-',''),1,4),AMT)) AS T_CY_AMT,
+                     DECODE(COSTTYPE,'S',DECODE(YEAR,SUBSTR(REPLACE(YYMM:,'-',''),1,4),AMT)) AS S_CY_AMT,
+                     CASE WHEN  YEAR<SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+                     THEN DECODE(COSTTYPE,'T',AMT) END T_PN_AMT,
+                     CASE WHEN  YEAR<SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+                     THEN DECODE(COSTTYPE,'S',AMT) END S_PN_AMT,
+                     CASE WHEN  YEAR<=SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+                     THEN DECODE(COSTTYPE,'T',AMT) END T_CN_AMT,
+                     CASE WHEN  YEAR<=SUBSTR(REPLACE(YYMM:,'-',''),1,4)
+                     THEN DECODE(COSTTYPE,'S',AMT) END S_CN_AMT
+                FROM PJTCOSTDETAIL A
+                WHERE AMT<>0
+                AND PJT_NO IN PJT_NO:
+--			                  (
+--			                  SELECT TO_CHAR(PJT_NO)
+--			                  FROM PROJECT
+--			                  WHERE PJTORG_NO IN      (SELECT ORG_NO
+--			                                                          FROM ORG  E
+--			                                                          START WITH E.ORG_NO=PJT_NO:
+--			                                                          CONNECT BY PRIOR E.ORG_NO =  E.HIGHORGCD)
+--			                  UNION
+--			                  SELECT PJT_NO: FROM DUAL
+--			                  )
+
+        UNION ALL
+
+                SELECT PJT_NO: AS PJT_NO,
+                                USRINDEX,
+                                USRACCTCD AS ACCTCD,
+                                USRACCTDEFDETAILDESC AS HIGHACCTCD
+                                ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+                FROM  USRACCTDEFDETAIL A
+                WHERE USRTYPE='MISPJT'
+
+                        ) C
+                GROUP BY ROLLUP(PJT_NO,HIGHACCTCD,ACCTCD)
+                ORDER BY SEQ
+                )  G,
+                --**************************
+                (SELECT ROWNUM AS SN,
+                                LEVEL AS LEV,
+                                        A.SEQ,
+                                        A.HIGHCODE,
+                                        NVL(A.CODENO,A.HIGHCODE) AS CODENO ,
+                              (SELECT USRACCTNAME
+                                  FROM USRACCTDEFDETAIL B
+                                  WHERE B.USRTYPE='MISPJT'
+                                  AND B.USRACCTCD=A.CODENO
+                                  AND B.USRINDEX=A.SEQ) AS CODENAME
+
+                        FROM
+                                (
+                                SELECT
+                                                MIN(MIN(USRINDEX)) OVER(PARTITION BY USRACCTCD) AS SEQ,
+                                                USRACCTDEFDETAILDESC AS HIGHCODE,
+                                                USRACCTCD AS CODENO
+                                FROM USRACCTDEFDETAIL A
+                                WHERE USRTYPE='MISPJT'
+                                GROUP BY ROLLUP(USRACCTDEFDETAILDESC,USRACCTCD)
+                                ORDER BY SEQ,CODENO DESC
+                                ) A
+                        START WITH HIGHCODE='00000'
+                        CONNECT BY PRIOR CODENO=HIGHCODE
+                        ORDER SIBLINGS BY SEQ
+                        ) A
+                WHERE   A.CODENO=G.CODENO(+)
+                AND     A.SEQ=G.SEQ(+)
+                ORDER BY SN
+	]]>
+	</sql-content>
+	</sql-mapping>     			 		
+	<sql-mapping  id="GA_033"   value-count="0" url="Group별 원가 조회" >  
+	<sql-content>
+	<![CDATA[
+      SELECT 	TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'YYYY') as YYYY,
+				TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM') AS MM,
+      			LEV,SEQ,DECODE(D_AMT,0,ACCTCDCNT-2,ACCTCDCNT) AS ACCTCDCNT,
+      			ORGNAME ,CODENO, HIGHCODE,ACCTCD,ACCTNAME,
+				ROUND(TT_AMT_YY/1000,0) AS TT_AMT_YY,
+				ROUND(TC_AMT/1000,0) AS TC_AMT,
+				ROUND(SC_AMT/1000,0) AS SC_AMT,
+				TO_CHAR(C_RATE*100,'9990.00') AS C_RATE,
+				ROUND(TCN_AMT/1000,0) AS TCN_AMT,
+				ROUND(SCN_AMT/1000,0) AS SCN_AMT,
+				TO_CHAR(N_RATE*100,'9990.00') AS N_RATE,
+				ROUND(STP_AMT_YY/1000,0) AS STP_AMT_YY,
+                TO_CHAR(PN_RATE*100,'9990.00') AS PN_RATE,
+				ROUND(MTT_AMT_YY/1000,0) AS MTT_AMT_YY,
+				ROUND(MTC_AMT/1000,0) AS MTC_AMT,
+				ROUND(MSC_AMT/1000,0) AS MSC_AMT,
+				TO_CHAR(MC_RATE*100,'99990.00') AS MC_RATE,
+				ROUND(MTCN_AMT/1000,0) AS MTCN_AMT,
+				ROUND(MSCN_AMT/1000,0) AS MSCN_AMT,
+				 TO_CHAR(MN_RATE*100,'99990.00') AS MN_RATE,
+				ROUND(MSTP_AMT_YY/1000,0) AS MSTP_AMT_YY,
+				TO_CHAR(MPN_RATE*100,'99990.00') AS MPN_RATE
+
+      FROM(SELECT 	SUM( DECODE(ACCTCD,'41',TC_AMT)) OVER(PARTITION BY F.ORG_NO) AS D_AMT,
+      				F.LEV,SEQ,ACCTCDCNT,
+                     (SELECT DECODE(ORGNAME,'회사','전사합계',ORGNAME) 
+                     FROM ORG H WHERE H.ORG_NO=G.ORG_NO) AS ORGNAME,
+                     F.ORG_NO AS CODENO,
+                     F.HIGHORGCD AS HIGHCODE,
+                     ACCTCD,
+                     DECODE(G.ACCTCD 
+                    		 ,'41','매출액'
+		                     ,'50',DECODE(F.ORG_NO,
+		                     		'1010','일반관리비',
+									'1044','일반관리비',
+									'1047','일반관리비',
+									'1024','공통비',
+									'1001','공통비',
+									'1259','공통비',												         
+									'1051','영업원가','매출원가')
+		                     ,'92',DECODE(F.ORG_NO,'1051','영업이익','매출총이익')
+		                     ,'93','일반관리비') AS ACCTNAME,
+                     TT_AMT_YY,
+                     TC_AMT,
+                     SC_AMT,
+                     DECODE(TC_AMT,0,1,(SC_AMT/TC_AMT)) AS C_RATE,
+                     TCN_AMT,
+                     SCN_AMT,
+                     DECODE(TCN_AMT,0,1,(SCN_AMT/TCN_AMT)) AS N_RATE,
+                     STP_AMT_YY,
+                     DECODE(STP_AMT_YY,0,1,(SCN_AMT/STP_AMT_YY)) AS PN_RATE,
+				  MTT_AMT_YY,
+                     MTC_AMT,
+                     MSC_AMT,
+                      DECODE(MTC_AMT,0,1,(MSC_AMT/MTC_AMT)) AS MC_RATE,
+                     MTCN_AMT,
+                     MSCN_AMT,
+                      DECODE(MTCN_AMT,0,1,(MSCN_AMT/MTCN_AMT)) AS MN_RATE,
+                     MSTP_AMT_YY,
+                     DECODE(MSTP_AMT_YY,0,1,(MSCN_AMT/MSTP_AMT_YY)) AS MPN_RATE
+              FROM
+                  (SELECT LEVEL AS LEV,ORG_NO,HIGHORGCD FROM ORG  E
+                   WHERE LEVEL<4
+                   START WITH E.ORG_NO='1051'
+                   CONNECT BY PRIOR TO_CHAR(E.ORG_NO) =  E.HIGHORGCD) F ,
+                  (SELECT COUNT(D.ORG_NO) OVER(PARTITION BY D.ORG_NO)
+                  		  AS ACCTCDCNT,
+          				  MAX(SEQ) AS SEQ,
+                          D.ORG_NO,
+                          C.ACCTCD,
+                          SUM(TC_AMT) TC_AMT,
+                          SUM(TT_AMT_YY) TT_AMT_YY,
+                          SUM(SC_AMT) SC_AMT,
+                          SUM(STP_AMT_YY) STP_AMT_YY,
+                          SUM(TCN_AMT) TCN_AMT,
+                          SUM(SCN_AMT) SCN_AMT,
+                          SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(TT_AMT_YY)) 
+                          	OVER(PARTITION BY D.ORG_NO) AS MTT_AMT_YY,
+                          SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(TC_AMT)) 
+                          	OVER(PARTITION BY D.ORG_NO) AS MTC_AMT,
+                          SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(SC_AMT)) 
+                          	OVER(PARTITION BY D.ORG_NO) AS MSC_AMT,
+                          SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(STP_AMT_YY)) 
+                          	OVER(PARTITION BY D.ORG_NO) AS MSTP_AMT_YY,
+                          SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(TCN_AMT)) 
+                          	OVER(PARTITION BY D.ORG_NO) AS MTCN_AMT,
+                          SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(SCN_AMT)) 
+                          	OVER(PARTITION BY D.ORG_NO) AS MSCN_AMT
+			FROM
+				(SELECT B.ORG_NO,
+						HIGHORGCD,
+						PJT_NO,
+						ACCTCD,
+						TC_AMT,
+						TT_AMT_YY,
+						SC_AMT,
+						STP_AMT_YY,
+						TCN_AMT,
+						SCN_AMT,
+						LEV4,LEV3,LEV2,LEV1,LEV0
+				FROM
+					(SELECT
+						NVL((SELECT ORG_NO FROM ORG A,PROJECT B
+						WHERE ORG_NO=PJTORG_NO
+						AND B.PJT_NO=C.PJT_NO),C.PJT_NO)
+						AS ORG_NO,
+						NVL((SELECT HIGHORGCD
+						FROM ORG A,PROJECT B
+						WHERE ORG_NO=PJTORG_NO
+						AND B.PJT_NO=C.PJT_NO),
+						(SELECT HIGHORGCD
+						FROM ORG A
+						WHERE A.ORG_NO=C.PJT_NO))
+						AS HIGHORGCD,
+						PJT_NO,
+						SUBSTR(ACCTCD,1,2) AS ACCTCD,
+						SUM(TC_AMT) AS TC_AMT,
+						SUM(TT_AMT_YY) AS TT_AMT_YY,
+						SUM(SC_AMT) AS SC_AMT,
+						SUM(ST_AMT_YY) AS ST_AMT_YY,
+						SUM(STP_AMT_YY) AS STP_AMT_YY,
+						SUM(TCN_AMT) AS TCN_AMT,
+						SUM(SCN_AMT) AS SCN_AMT
+					FROM
+			(SELECT
+				PJT_NO,
+				COSTTYPE,
+				ACCTCD AS ACCTCD,
+                         NVL(DECODE(COSTTYPE,'G',
+                         DECODE(YEAR||MONTH,TO_CHAR(TO_DATE(REPLACE(
+                         YYMM:,'-',''),'YYYYMM'),'YYYYMM'),AMT)),0) 
+                         AS TC_AMT,
+                         NVL(DECODE(COSTTYPE,'G',
+                         CASE  WHEN YEAR||MONTH BETWEEN SUBSTR(REPLACE(
+                         YYMM:,'-',''),1,4)||'01' AND
+                         TO_CHAR(TO_DATE(REPLACE(
+                         YYMM:,'-',''),'YYYYMM'),'YYYYMM') THEN AMT END),0) 
+                         AS TCN_AMT,
+                         NVL(DECODE(COSTTYPE,'G',
+                         DECODE(YEAR,TO_CHAR(TO_DATE(REPLACE(
+                         YYMM:,'-',''),'YYYYMM'),'YYYY'),AMT)),0) 
+                         AS TT_AMT_YY,
+                         NVL(DECODE(COSTTYPE,'S',
+                         DECODE(YEAR||MONTH,TO_CHAR(TO_DATE(REPLACE(
+                         YYMM:,'-',''),'YYYYMM'),'YYYYMM'),AMT)),0) 
+                         AS SC_AMT,
+                         NVL(DECODE(COSTTYPE,'S',
+                         CASE  WHEN YEAR||MONTH BETWEEN SUBSTR(REPLACE(
+                         YYMM:,'-',''),1,4)||'01' AND
+                         TO_CHAR(TO_DATE(REPLACE(
+                         YYMM:,'-',''),'YYYYMM'),'YYYYMM') THEN AMT END),0)  
+                         AS SCN_AMT,
+                         NVL(DECODE(COSTTYPE,'S',
+                         DECODE(YEAR,TO_CHAR(TO_DATE(REPLACE(
+                         YYMM:,'-',''),'YYYYMM'),'YYYY'),AMT)),0) 
+                         AS ST_AMT_YY,
+                        NVL(DECODE(COSTTYPE,'S',
+				   		CASE  WHEN YEAR||MONTH BETWEEN 
+				   		TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(
+				   		YYMM:,'-',''),'YYYYMM'),-12),'YYYY')||'01'  AND
+						TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE(
+						YYMM:,'-',''),'YYYYMM'),-12),'YYYYMM') THEN AMT END),0)								   
+                        AS STP_AMT_YY,
+								''
+						FROM (SELECT A.PJT_NO,COSTTYPE,YEAR,MONTH,B.ACCTCD,DECODE(SUBSTR(A.ACCTCD,1,2),B.ACCTCD,AMT,0) AS AMT
+														FROM PJTCOSTDETAIL_DW A,
+															(SELECT DECODE(ROWNUM,1,'41',2,'50','92') ACCTCD
+															FROM PJTCOSTDETAIL_DW
+															WHERE ROWNUM<4) B)
+						WHERE YEAR BETWEEN 
+							TO_CHAR(ADD_MONTHS(TO_DATE(
+							REPLACE(YYMM:,'-',''),'YYYYMM'),-12),'YYYY')
+							AND TO_CHAR(TO_DATE(REPLACE(
+							YYMM:,'-',''),'YYYYMM'),'YYYY')
+						AND ACCTCD NOT IN ('10001','93000','60000','70000')
+--						AND AMT<>0
+						)  C
+					GROUP BY PJT_NO,ACCTCD
+				) A,
+				ORG_LEV B
+				WHERE 	A.ORG_NO=B.ORG_NO )  C,
+			 	(SELECT ROWNUM AS SEQ,E.ORG_NO
+				FROM ORG  E
+				WHERE LEVEL<4
+				START WITH E.ORG_NO='1051'
+				CONNECT BY PRIOR TO_CHAR(E.ORG_NO) =  E.HIGHORGCD) D
+			WHERE D.ORG_NO IN (C.LEV4,C.LEV3,C.LEV2,C.LEV1,C.LEV0)
+			GROUP BY D.ORG_NO,C.ACCTCD
+			ORDER BY SEQ DESC) G
+			WHERE F.ORG_NO=G.ORG_NO
+			)
+	WHERE D_AMT>0
+	OR (D_AMT=0 AND ACCTCD ='50')			
+	ORDER BY SEQ,ORGNAME,ACCTCD 
+		]]>
+		</sql-content>
+		</sql-mapping>     			 
+	<sql-mapping  id="GA_035"   value-count="0" url="팀별 원가 조회" >  
+	<sql-content>
+	<![CDATA[
+	      SELECT 	TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'YYYY') as YYYY,
+					TO_CHAR(TO_DATE(REPLACE(YYMM:,'-',''),'YYYYMM'),'MM') AS MM,
+			        LEV,SEQ,ACCTCDCNT,ORGNAME ,CODENO, HIGHCODE,ACCTCD,ACCTNAME,
+					NVL((SELECT MIN(PJT_NO) FROM PROJECT 
+					WHERE PJTORG_NO=CODENO),CODENO) AS PJT_NO,
+					ROUND(TT_AMT_YY/1000,0) AS TT_AMT_YY,
+					ROUND(TC_AMT/1000,0) AS TC_AMT,
+					ROUND(SC_AMT/1000,0) AS SC_AMT,
+					TO_CHAR(C_RATE*100,'9990.00') AS C_RATE,
+					ROUND(TCN_AMT/1000,0) AS TCN_AMT,
+					ROUND(SCN_AMT/1000,0) AS SCN_AMT,
+					TO_CHAR(N_RATE*100,'9990.00') AS N_RATE,
+					ROUND(STP_AMT_YY/1000,0) AS STP_AMT_YY,
+					TO_CHAR(PN_RATE*100,'9990.00') AS PN_RATE,
+					ROUND(MTT_AMT_YY/1000,0) AS MTT_AMT_YY,
+					ROUND(MTC_AMT/1000,0) AS MTC_AMT,
+					ROUND(MSC_AMT/1000,0) AS MSC_AMT,
+					TO_CHAR(MC_RATE*100,'99990.00') AS MC_RATE,
+					ROUND(MTCN_AMT/1000,0) AS MTCN_AMT,
+					ROUND(MSCN_AMT/1000,0) AS MSCN_AMT,
+					 TO_CHAR(MN_RATE*100,'99990.00') AS MN_RATE,
+					ROUND(MSTP_AMT_YY/1000,0) AS MSTP_AMT_YY,
+					TO_CHAR(MPN_RATE*100,'99990.00') AS MPN_RATE
+	
+	      FROM(SELECT F.LEV,SEQ,ACCTCDCNT,
+                      (SELECT DECODE(ORGNAME,'회사','전사합계',ORGNAME) FROM ORG H WHERE H.ORG_NO=G.ORG_NO) AS ORGNAME,
+                      F.ORG_NO AS CODENO,
+                      F.HIGHORGCD AS HIGHCODE,
+                      ACCTCD,
+                      DECODE(G.ACCTCD ,'41','매출액'
+                                     ,'50',DECODE(F.ORG_NO,
+                                         '1010','일반관리비',
+                                         '1044','일반관리비',
+                                         '1045','일반관리비',
+                                         '1046','일반관리비',
+                                         '1047','일반관리비',
+                                         '1048','일반관리비',
+                                         '1049','일반관리비',
+                                         '1050','일반관리비',
+                                         '1024','공통비',
+                                         '1001','공통비',
+                                         '1259','공통비',
+                                         '1051','영업원가','매출원가')
+                                     ,'92',DECODE(F.ORG_NO,'1051','영업이익','매출총이익')
+                                     ,'93','일반관리비') AS ACCTNAME,
+                      TT_AMT_YY,
+                      TC_AMT,
+                      SC_AMT,
+ 					  DECODE(SC_AMT,0,0,DECODE(TC_AMT,0,1,SC_AMT))/DECODE(TC_AMT,0,1,TC_AMT)AS C_RATE, --***************
+                      TCN_AMT,
+                      SCN_AMT,
+                      DECODE(SCN_AMT,0,0,DECODE(TCN_AMT,0,1,SCN_AMT))/DECODE(TCN_AMT,0,1,TCN_AMT) AS N_RATE,--***************
+                      STP_AMT_YY,
+                      DECODE(TT_AMT_YY,0,1,(STP_AMT_YY/TT_AMT_YY)) AS PN_RATE,
+					  MTT_AMT_YY,
+                      MTC_AMT,
+                      MSC_AMT,
+                       DECODE(MTC_AMT,0,1,(MSC_AMT/MTC_AMT)) AS MC_RATE,
+                      MTCN_AMT,
+                      MSCN_AMT,
+                       DECODE(MTCN_AMT,0,1,(MSCN_AMT/MTCN_AMT)) AS MN_RATE,
+                      MSTP_AMT_YY,
+                      DECODE(MSTP_AMT_YY,0,1,(MSCN_AMT/MSTP_AMT_YY)) AS MPN_RATE
+	              FROM
+	                      (SELECT LEVEL AS LEV,ORG_NO,HIGHORGCD FROM ORG  E
+	                       WHERE LEVEL<5
+	                       START WITH E.ORG_NO=SETTEAM:
+	                       CONNECT BY PRIOR TO_CHAR(E.ORG_NO) =  E.HIGHORGCD) F ,
+	                      (SELECT COUNT(D.ORG_NO) OVER(PARTITION BY D.ORG_NO)AS ACCTCDCNT,
+	                      MAX(SEQ) AS SEQ,
+                         D.ORG_NO,
+                         C.ACCTCD,
+                         SUM(TC_AMT) TC_AMT,
+                         SUM(TT_AMT_YY) TT_AMT_YY,
+                         SUM(SC_AMT) SC_AMT,
+                         SUM(STP_AMT_YY) STP_AMT_YY,
+                         SUM(TCN_AMT) TCN_AMT,
+                         SUM(SCN_AMT) SCN_AMT,
+                         SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(TT_AMT_YY)) 
+                         OVER(PARTITION BY D.ORG_NO) AS MTT_AMT_YY,
+                         SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(TC_AMT)) 
+                         OVER(PARTITION BY D.ORG_NO) AS MTC_AMT,
+                         SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(SC_AMT)) 
+                         OVER(PARTITION BY D.ORG_NO) AS MSC_AMT,
+                         SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(STP_AMT_YY)) 
+                         OVER(PARTITION BY D.ORG_NO) AS MSTP_AMT_YY,
+                         SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(TCN_AMT)) 
+                         OVER(PARTITION BY D.ORG_NO) AS MTCN_AMT,
+                         SUM( DECODE(C.ACCTCD,'41',1,-1)*SUM(SCN_AMT)) 
+                         OVER(PARTITION BY D.ORG_NO) AS MSCN_AMT
+				FROM
+					(SELECT B.ORG_NO,
+							HIGHORGCD,
+							PJT_NO,
+							ACCTCD,
+							TC_AMT,
+							TT_AMT_YY,
+							SC_AMT,
+							STP_AMT_YY,
+							TCN_AMT,
+							SCN_AMT,
+							LEV4,LEV3,LEV2,LEV1,LEV0
+					FROM
+					(SELECT
+							NVL((SELECT ORG_NO FROM ORG A,PROJECT B
+							WHERE ORG_NO=PJTORG_NO
+							AND B.PJT_NO=C.PJT_NO),C.PJT_NO)
+						AS ORG_NO,
+							NVL((SELECT HIGHORGCD
+							FROM ORG A,PROJECT B
+							WHERE ORG_NO=PJTORG_NO
+							AND B.PJT_NO=C.PJT_NO),
+							(SELECT HIGHORGCD
+							FROM ORG A
+							WHERE A.ORG_NO=C.PJT_NO))
+						AS HIGHORGCD,
+						PJT_NO,
+						SUBSTR(ACCTCD,1,2) AS ACCTCD,
+						SUM(TC_AMT) AS TC_AMT,
+						SUM(TT_AMT_YY) AS TT_AMT_YY,
+						SUM(SC_AMT) AS SC_AMT,
+						SUM(ST_AMT_YY) AS ST_AMT_YY,
+						SUM(STP_AMT_YY) AS STP_AMT_YY,
+						SUM(TCN_AMT) AS TCN_AMT,
+						SUM(SCN_AMT) AS SCN_AMT
+						FROM
+							(SELECT
+								PJT_NO,
+								COSTTYPE,
+								ACCTCD,
+                                  NVL(DECODE(COSTTYPE,'G',
+                                  DECODE(YEAR||MONTH,TO_CHAR(TO_DATE(REPLACE
+                                  (YYMM:,'-',''),'YYYYMM'),'YYYYMM'),AMT)),0) 
+                                  AS TC_AMT,
+                                  NVL(DECODE(COSTTYPE,'G',
+                                 CASE  WHEN YEAR||MONTH BETWEEN SUBSTR(REPLACE
+                                 (YYMM:,'-',''),1,4)||'01' AND
+                                  		 TO_CHAR(TO_DATE(REPLACE
+                                  		 (YYMM:,'-',''),'YYYYMM'),'YYYYMM') THEN AMT END),0)  
+                                  AS TCN_AMT,
+                                  NVL(DECODE(COSTTYPE,'G',
+                                  DECODE(YEAR,TO_CHAR(TO_DATE(REPLACE
+                                  (YYMM:,'-',''),'YYYYMM'),'YYYY'),AMT)),0) 
+                                  AS TT_AMT_YY,
+                                  NVL(DECODE(COSTTYPE,'S',
+                                  DECODE(YEAR||MONTH,TO_CHAR(TO_DATE(REPLACE
+                                  (YYMM:,'-',''),'YYYYMM'),'YYYYMM'),AMT)),0) 
+                                  AS SC_AMT,
+                                  NVL(DECODE(COSTTYPE,'S',
+                                  CASE  WHEN YEAR||MONTH BETWEEN SUBSTR(REPLACE
+                                  (YYMM:,'-',''),1,4)||'01' AND
+                         		   TO_CHAR(TO_DATE(REPLACE
+                         		   (YYMM:,'-',''),'YYYYMM'),'YYYYMM') THEN AMT END),0)  
+                                  AS SCN_AMT,
+                                  NVL(DECODE(COSTTYPE,'S',
+                                  DECODE(YEAR,TO_CHAR(TO_DATE(REPLACE
+                                  (YYMM:,'-',''),'YYYYMM'),'YYYY'),AMT)),0) 
+                                  AS ST_AMT_YY,
+                                  NVL(DECODE(COSTTYPE,'S',
+                                  DECODE(YEAR,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE
+								(YYMM:,'-',''),'YYYYMM'),-12),'YYYY'),AMT)),0) 
+                                  AS STP_AMT_YY,
+								''
+							FROM PJTCOSTDETAIL_DW
+							WHERE YEAR||MONTH BETWEEN 
+							TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE
+								(YYMM:,'-',''),'YYYYMM'),-12),'YYYY')||'01'
+              				AND TO_CHAR(TO_DATE(REPLACE
+              					(YYMM:,'-',''),'YYYYMM'),'YYYYMM')
+							AND ACCTCD<>'10001'
+							AND ACCTCD<>'93000'
+							AND AMT<>0
+							)  C
+						GROUP BY PJT_NO,ACCTCD
+					) A,
+				(SELECT * FROM ORG_LEV) B
+				WHERE 	A.ORG_NO=B.ORG_NO 
+				AND A.ORG_NO IN (SELECT E.ORG_NO FROM ORG  E
+                                 START WITH E.ORG_NO=SETTEAM:
+                                 CONNECT BY PRIOR TO_CHAR(E.ORG_NO) =  E.HIGHORGCD)				
+				)  C,
+
+                (SELECT ROWNUM AS SEQ,E.ORG_NO
+                FROM ORG  E
+                WHERE LEVEL<5
+                START WITH E.ORG_NO=SETTEAM:
+                CONNECT BY PRIOR TO_CHAR(E.ORG_NO) =  E.HIGHORGCD) D
+				WHERE D.ORG_NO IN (C.LEV4,C.LEV3,C.LEV2,C.LEV1,C.LEV0)
+				AND D.ORG_NO IN 
+					(SELECT E.ORG_NO FROM ORG  E
+					WHERE LEVEL<5
+					START WITH E.ORG_NO=SETTEAM:
+					CONNECT BY PRIOR TO_CHAR(E.ORG_NO) =  E.HIGHORGCD)
+				GROUP BY D.ORG_NO,C.ACCTCD
+				ORDER BY ACCTCD DESC) G
+				WHERE F.ORG_NO=G.ORG_NO)
+  		ORDER BY SEQ,ORGNAME,ACCTCD 
+
+		]]>
+		</sql-content>
+		</sql-mapping>     			 
+		<sql-mapping  id="GA_034"   value-count="0" url="분석노트 조회" >  
+		<sql-content>
+		<![CDATA[
+			SELECT MONRPTYM,MONRPTNOTE,MONRPTORGCD
+			FROM MMRPTNOTE
+			WHERE MONRPTYM= REPLACE(YYMM:,'-','')
+		AND MONRPTORGCD= SETTEAM:
+	]]>
+	</sql-content>
+	</sql-mapping>    
+   <sql-mapping  id="GA_037"   value-count="0" url="재무 전표 리스트" >  
+   <sql-content>
+   <![CDATA[
+	SELECT YYMM,
+           DOCNO,
+           GET_MAINNO(DOCNO) MAINNO,
+           SEQ,
+           EMPID,
+           EMPNAME,
+           ACCTCD,
+           ACCTNAME,
+           TITLE,
+           ORG_NO,
+           ORGCD,
+           ORGNAME,
+           TO_CHAR(AMT,'999,999,999,999') AS AMOUNT,
+           TO_CHAR(SUM(AMT) OVER(),'999,999,999,999') AS TOTAMT,
+           '' ERRFLAG,
+           AA11_CUST_CD,
+           AA11_CUST_NM ,
+           AA11_HGIL,
+           AA12_BSCD,
+           AA12_BS_NM,
+          (SELECT DISTINCT TO_CHAR(TO_DATE(AA30_JGIJ,'YYYYMMDD'),'YYYY-MM-DD') FROM ACCTN.TBAA30
+   		   WHERE AA30_JPNO =  DOCNO) AS AA12_HGIL
+           
+	FROM
+	(
+	SELECT SUBSTR(AA12_JPNO,2,6) AS YYMM,
+		AA11_JPNO AS DOCNO,
+		AA12_HGNO AS SEQ,
+			(SELECT ORGCD
+			FROM EMPALL
+			WHERE EMPID=AA11_JSBN )
+		AS USEORGCD,
+			(SELECT ORGNAME
+			FROM EMPALL A, ORG B
+			WHERE EMPID=AA11_JSBN
+			AND   A.ORGCD=B.ORG_NO )
+		AS USEORGNAME ,
+			NVL((SELECT CREMPID FROM ACCTRPTHD
+			WHERE DOCNO=AA12_JPNO
+			),AA11_JSBN)
+		AS EMPID,
+			(SELECT EMPKNAME
+			FROM EMPALL
+			WHERE EMPID=NVL((SELECT CREMPID
+			FROM ACCTRPTHD B
+			WHERE  B.DOCNO=AA12_JPNO),AA11_JSBN))
+		AS  EMPNAME,
+			 NVL((SELECT DECODE(SUBSTR(B.ACCTCD,1,1),'5',
+			 		'50'||SUBSTR(B.ACCTCD,3,3),B.ACCTCD)
+                        FROM  ACCTRPTSB B,ACCTRPTHD C
+                        WHERE C.DOCNO=AA12_JPNO
+                        AND   C.MAINNO=B.MAINNO
+                        AND   B.SN=AA12_HGNO),
+                        DECODE(SUBSTR(AA12_GJCD,1,1),'5',
+                        	'50'||SUBSTR(AA12_GJCD,3,3),AA12_GJCD))
+		AS ACCTCD,
+			(SELECT A.ACCTKNAME
+			FROM ACCTTB A
+			WHERE A.ACCTCD=NVL((SELECT DECODE(SUBSTR(AA12_GJCD,1,1),
+			'5',SUBSTR(AA12_GJCD,1,1)||'0'||SUBSTR(AA12_GJCD,3,3)
+                  ,AA12_GJCD)
+			FROM  ACCTRPTSB B,ACCTRPTHD C
+			WHERE C.DOCNO=AA12_JPNO
+			AND   C.MAINNO=B.MAINNO
+			AND   B.SN=AA12_HGNO),
+			DECODE(SUBSTR(AA12_GJCD,1,1),
+			'5',SUBSTR(AA12_GJCD,1,1)||'0'||SUBSTR(AA12_GJCD,3,3)
+                  ,AA12_GJCD)))
+		AS ACCTNAME,
+		AA12_JYO AS TITLE,
+                     NVL((SELECT B.JOBNO
+                     FROM ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO)
+                     ,TO_ORGCDNO_N(AA12_BSCD,SUBSTR(AA12_JPNO,2,6)))
+             AS ORG_NO,
+                     NVL((SELECT
+                             TO_ORGNOCD_N(B.JOBNO,SUBSTR(AA12_JPNO,2,6))
+                             ||(SELECT PJTCD
+                                     FROM PROJECT D
+                                     WHERE TO_CHAR(D.PJT_NO)=B.JOBNO)
+                                     FROM  ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO),AA12_BSCD)
+             AS ORGCD,
+                     NVL((SELECT
+
+                       TO_ORGNONAME_N(B.JOBNO,SUBSTR(AA12_JPNO,2,6))
+                             ||(SELECT PJTNAME
+                                     FROM PROJECT D
+                                     WHERE TO_CHAR(D.PJT_NO)=B.JOBNO)
+                                     FROM ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO
+                     ),  TO_ORGCDNAME_N(AA12_BSCD,SUBSTR(AA12_JPNO,2,6)))
+
+             AS ORGNAME,
+             	 DECODE(SUBSTR(AA12_JPNO,1,1),'A',-1,1)*DECODE(AA12_CDGB,'D',-1,1)*AA12_AMT AS AMT,
+                     (SELECT
+                             TO_ORGNONAME_N(B.ORGCD,SUBSTR(AA12_JPNO,2,6))
+                             ||(SELECT PJTNAME
+                             FROM PROJECT D
+                             WHERE D.PJT_NO=B.ORGCD)
+                     FROM ACCTRPTSB B,ACCTRPTHD C
+                     WHERE C.DOCNO=AA12_JPNO
+                     AND   C.MAINNO=B.MAINNO
+                     AND   B.SN=AA12_HGNO
+                     )
+             AS JOBNAME,
+        AA11_CUST_CD, 
+        AA11_CUST_NM,
+        AA11_HGIL,
+        AA12_BSCD,
+        AA12_HGIL,
+        TO_ORGCDNAME_N(AA12_BSCD,AA11_HGIL) AS AA12_BS_NM		
+	FROM  ACCTN.TBAA11 A, ACCTN.TBAA12 B--,ACCTRPT_ERR C
+	WHERE A.AA11_JPNO=B.AA12_JPNO
+	AND  AA11_HGIL BETWEEN  REPLACE(FR_YYMM:,'-','') 
+		AND REPLACE(TO_YYMM:,'-','')	
+	AND  AA11_JPNO  LIKE '%'||DOCNO: ||'%' 
+	AND (AA11_JPJG  LIKE '%'||ACCTGB:||'%' OR AA11_JPJG IS NULL)
+	AND (AA12_JYO  LIKE '%'|| TITLE: ||'%' OR AA12_JYO IS NULL)
+	AND AA12_GJCD  LIKE  SUBSTR(ACCTCD:,1,1)||'%'||SUBSTR(ACCTCD:,3,3)
+	AND SUBSTR(AA12_GJCD,1,1) IN ('4','5')
+	) 
+	WHERE (EMPNAME LIKE '%'|| EMPNAME: ||'%' OR EMPNAME: IS NULL)
+	AND   (EMPID   LIKE '%'|| EMPID: ||'%' OR EMPID: IS NULL)
+	AND   (ACCTNAME LIKE '%'||ACCTNAME:||'%' OR  ACCTNAME: IS NULL)
+	AND   (ORG_NO LIKE ORGNO: ||'%' OR  ORGNO: IS NULL)
+	AND   (ORGCD LIKE ORGCD: ||'%' OR   ORGCD: IS NULL)
+	AND   (AA12_BSCD LIKE S_AA12_BSCD: ||'%' OR   S_AA12_BSCD: IS NULL)
+	AND   (AA11_CUST_CD LIKE S_AA11_CUST_CD: ||'%' OR   S_AA11_CUST_CD: IS NULL)
+    AND   (AMT LIKE AMT:||'%'  OR   AMT: IS NULL)	
+	]]>
+	</sql-content>
+   </sql-mapping>      				
+   <sql-mapping  id="GA_038"   value-count="0" url="퇴직충당금 리스트" >  
+   <sql-content>
+   <![CDATA[
+	SELECT
+			SUBSTR(YYMM,1,4)||'-'||SUBSTR(YYMM,5,2) AS YYMM,
+			DEPT,
+			TO_ORGNOCD_N(DEPT,YYMM) AS ORGCD,
+			TO_ORGNONAME_N(DEPT,YYMM) AS ORGNAME,
+			GET_CODENAME_N(POSITION,'EAA') AS POSITION_NM,
+			TJAMT,
+			SJAMT,
+			NOTE,
+			IDX,
+			SUM(TJAMT) OVER() SUM_AMT
+	FROM  BBDBO_TJAMT , ORG
+	WHERE YYMM=REPLACE([yymm],'-','')
+	AND ORG_NO=DEPT
+	ORDER BY IDX
+	]]>
+	</sql-content>
+   </sql-mapping>     
+	<sql-mapping  id="GA_039"   value-count="1" url="원가수집 일괄처리" >  
+	<sql-content>
+	<![CDATA[
+			begin GATH_All(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping>    
+	<sql-mapping  id="GA_041"   value-count="1" url="재무시스템 전표 등록" >  
+	<sql-content>
+	<![CDATA[
+			begin GATH_CR_DSLIP(?); end; 
+	]]>
+	</sql-content>
+	</sql-mapping>    
+	<sql-mapping  id="GA_042"   value-count="1" url="개인별 소속기초자료 수정" >  
+	<sql-content>
+	<![CDATA[
+			UPDATE BBDBO_MASTER SET
+			DEPT =[DEPT]
+			WHERE YYMM=REPLACE([YYMM],'-','')
+			AND SBN=[SBN]
+	]]>
+	</sql-content>
+	</sql-mapping>    
+	<sql-mapping  id="GA_043"   value-count="0" url="계약직  노무비" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	YYMM,
+				SBN,
+				NAME,
+				TO_ORGCDNAME_N(DEPT,REPLACE([S_YYMM],'-','')) AS DEPTNAME,
+				DEPT,
+				GET_CODENAME('EAA',TRIM(POSITION)) AS POSITION,
+
+				SALARY,
+				BONUS,
+				GUKMIN,
+				MEDICAL,
+				YUNGUMBOJO,
+				SHINHUPBOJO,
+				TMPTJ,
+				YUNCHA,
+				KY_SJAMT,
+				
+				SUM(SALARY) OVER()AS  SUM_SALARY,
+				SUM(BONUS) OVER() AS SUM_BONUS ,
+				SUM(GUKMIN) OVER() AS SUM_GUKMIN ,
+				SUM(MEDICAL) OVER() AS SUM_MEDICAL ,
+				SUM(YUNGUMBOJO) OVER() AS SUM_YUNGUMBOJO ,
+				SUM(SHINHUPBOJO) OVER() AS SUM_SHINHUPBOJO ,
+				SUM(TMPTJ) OVER() AS SUM_TMPTJ ,
+				SUM(YUNCHA) OVER() AS SUM_YUNCHA ,
+				SUM(KY_SJAMT) OVER() AS SUM_KY_SJAMT
+				
+		FROM BBDBO_TMPEMP_LABORCOST
+		WHERE YYMM = REPLACE([S_YYMM],'-','')
+		AND SBN LIKE [S_SBN]||'%'
+		AND NAME LIKE [S_NAME]||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>    
+</sql>
+

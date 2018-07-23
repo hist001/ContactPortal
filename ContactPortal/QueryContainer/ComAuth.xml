@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<!-- empid가 null로 넘어 가는 경우까지 대비 -->
+	<sql-mapping  id="AU_001"   value-count="0" url="권한리스트 조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+			A.EMPID,
+			B.EMPKNAME,
+			AUTHTYPE,
+			ISACL,
+			AUTHSTARTDT,
+			AUTHENDDT
+		FROM AUTH A, EMPALL B
+		WHERE A.EMPID = B.EMPID
+		AND AUTHSTARTDT <= replace([AUTHENDDT],'-','')
+			AND AUTHENDDT >= replace([AUTHSTARTDT],'-','')
+			AND UPPER(AUTHTYPE) LIKE UPPER([AUTHTYPE])||'%'
+			AND b.empid IN
+				(
+				SELECT empid FROM empall WHERE empid = [EMPID]
+				UNION ALL
+				SELECT empid FROM empall WHERE empkname LIKE '%' || [EMPKNAME] ||'%'
+				AND NOT EXISTS (SELECT empid FROM empall WHERE empid = [EMPID])
+				)
+			
+		]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="AU_002"   value-count="5"  url="권한리스트 등록" >  
+   	<sql-content>
+  		<![CDATA[		   
+		INSERT 
+			INTO AUTH
+				SELECT [EMPID], [AUTHTYPE], [ISACL], replace([AUTHSTARTDT],'-',''), replace([AUTHENDDT],'-','') 
+					FROM DUAL
+				WHERE 
+					0 =	(
+							SELECT	COUNT(EMPID) FROM AUTH
+							WHERE	EMPID = [EMPID]
+									AND AUTHTYPE = [AUTHTYPE]
+						)
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+   	<sql-mapping  id="AU_003"   value-count="2"  url="권한리스트 삭제" >  
+	   	<sql-content>
+	  		<![CDATA[		   
+	  		DELETE FROM Auth 
+	  		WHERE EMPID = [EMPID] AND UPPER(AUTHTYPE) = UPPER([AUTHTYPE])
+			]]>
+		</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="AU_004"   value-count="2"  url="권한리스트 수정" >  
+	   	<sql-content>
+	  		<![CDATA[		   
+	  		UPDATE	AUTH
+			SET     AUTHSTARTDT = replace([AUTHSTARTDT],'-',''),
+					AUTHENDDT = replace([AUTHENDDT],'-',''), 
+					ISACL = [ISACL]
+			WHERE	EMPID = [EMPID] AND
+					AUTHTYPE = [AUTHTYPE]
+			]]>
+			
+		</sql-content>
+    </sql-mapping>
+	
+    
+    
+</sql>
+

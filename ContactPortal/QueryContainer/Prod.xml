@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="P_001"   value-count="1" url="등록가능한 제품/타스크번호 검색" >  
+	<sql-content>
+	<![CDATA[
+		select /*+INDEX_DESC(PROD XPKPROD)*/ prodno from prod where prodtype=? and rownum=1
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="P_002"   value-count="2" url="제품수행인원 삭제" >  
+	<sql-content>
+	<![CDATA[
+		delete from prodEmp where prodType=? and prodNo=?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="P_003"   value-count="3" url="첨부보고서 조회" >  
+	<sql-content>
+	<![CDATA[
+		select /*+index(A IDX_UPLOADFILES_NO)*/ referno prodno, to_prodname(substr(referno,2),referType) prodname,
+		doctype,
+		case when doctype='A' then
+		'수행계획서'
+		when doctype='B' then
+		'주간보고서'
+		when doctype='C' then
+		'월간보고서'
+		when doctype='D' then
+		'완료보고서'
+		when doctype='Z' then
+		'기타'		
+		end
+		docTypeName,
+		dir,fileoriginname,filesystemname ,
+		to_char(createdtm,'yyyy-mm-dd hh24:mi:ss') createdtm
+		from uploadfiles  A
+		where delflag='N'
+		and referNo
+		in 
+		(
+			select prodtype||prodno from prod
+			where 
+			bizno like '?%'
+			and orgcd in 
+			(select orgcd from org connect by prior orgcd = highorgcd start with orgcd=?)
+		) 
+		and docType like '?%'
+		order by UPLOADFILES_NO desc
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+</sql>
+

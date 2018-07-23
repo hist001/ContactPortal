@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+	<sql-mapping  id="M_001"   value-count="0" url="member 리스트 조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+				ID
+				,PASSWORD
+				,NAME
+				,AGE
+				,GENDER
+				,EMAIL
+		FROM MEMBER
+		WHERE ID LIKE '%'||[S_ID]||'%'
+		AND PASSWORD LIKE '%'||[S_PASSWORD]||'%'
+		AND NAME LIKE '%'||[S_NAME]||'%'
+		AND AGE LIKE '%'||[S_AGE]||'%'
+		AND GENDER LIKE '%'||[S_GENDER]||'%'
+		AND EMAIL LIKE '%'||[S_EMAIL]||'%'		
+		ORDER BY ID	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="M_002"   value-count="0" url="member 개별조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+				 ID
+				,PASSWORD
+				,NAME
+				,AGE
+				,GENDER
+				,EMAIL
+		FROM MEMBER
+		WHERE ID = [S_ID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="M_003"   value-count="0" url="member 수정" >
+	<sql-content>
+	<![CDATA[
+
+		UPDATE MEMBER SET
+		 PASSWORD=[PASSWORD]
+		,NAME=[NAME]
+		,AGE=[AGE]
+		,GENDER=[GENDER]
+		,EMAIL=[EMAIL]
+		WHERE ID =[ID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="M_004"   value-count="0" url="member 삭제" >
+	<sql-content>
+	<![CDATA[
+		DELETE FROM MEMBER
+		WHERE ID =[ID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="M_005"   value-count="0" url="member 등록" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO MEMBER (
+				 ID
+				,PASSWORD
+				,NAME
+				,AGE
+				,GENDER
+				,EMAIL
+				)
+		VALUES(
+				 [ID]
+				,[PASSWORD]
+				,[NAME]
+				,[AGE]
+				,[GENDER]
+				,[EMAIL]
+				)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+

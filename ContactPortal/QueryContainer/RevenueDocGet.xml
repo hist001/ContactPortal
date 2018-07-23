@@ -1,0 +1,489 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="RevenueDocList"   value-count="0"
+   url="지급품의 LIST" >  
+   <sql-content>
+   <![CDATA[
+SELECT  MAINNO, DOCNO, DOCTYPE, PAYTYPE, USEORGCD, TO_ORGNOCD(USEORGCD) USEORGUSERCD, USEORGNAME, MTITLE, EVENTDT, USEEMPID, TO_EMPKNAME(USEEMPID) USEEMPNAME, TO_empgradename(USEEMPID) USEEMPGrade, 
+        PHONNO, BIZACQACCTCD, TO_BIZACQNAME(BIZACQACCTCD) BIZACQNAME, BIZACQREGNO, DOMICILE, STATUS, TO_STATUSNM(STATUS) STATUSNAME,
+        TOTAMT, SUPPLYAMT, TAXAMT, REALAMT, DIFFAMT, PCARDYN, BILLTYPE, DETAILTYPE, DETAIL,
+        ADVANCECLASS, SUPPLYAMTCLASS, RECIVEDT, OUTSOURCETYPE, 
+		CONTENTS1, QUANTITY1, UNITCOST1, SUPPLYAMT1, TAXAMT1,
+        CONTENTS2, QUANTITY2, UNITCOST2, SUPPLYAMT2, TAXAMT2,
+        CONTENTS3, QUANTITY3, UNITCOST3, SUPPLYAMT3, TAXAMT3,
+        CONTENTS4, QUANTITY4, UNITCOST4, SUPPLYAMT4, TAXAMT4,
+        TO_CHAR(CREATEDTM,'YYYY-MM-DD HH24:mi:ss') CREATEDTM, CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME, 
+        TO_empgradename(CREMPID) CREMPGrade, CRORGCD, TO_ORGCDNAME(CRORGCD) CRORGNAME, TO_ORGNOCD(CRORGCD) CRORGUSERCD
+ FROM  MASM_INHAUH.ACCTRPTHD
+ WHERE STATUS in ('DA0','DB0')
+ AND DocType = 'A'
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RevenueHdKey"   value-count="2"
+   url="지급품의 품의 Head 정보 등록" >  
+   <sql-content>
+   <![CDATA[
+select 'A'||?||no as MAINNO from 
+(select Lpad(TO_CHAR(to_number(NVL(SUBSTR(MAX(MAINNO),10,3),'0')) + 1), 3,'0') no 
+from AcctRptHd where substr(MAINNO,1,9) = 'A'||? Order by MAINNO desc )
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="SearchFiles"   value-count="1"
+   url="첨부파일 읽기" >  
+   <sql-content>
+   <![CDATA[
+select * from FILEINFO 
+ where MAINNO=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="FileUpt"   value-count="3"
+   url="첨부파일 읽기" >  
+   <sql-content>
+   <![CDATA[
+where MAINNO=?
+  and ?=?
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="GetRevenueDoc"   value-count="1"
+   url="지급품의 조회" >  
+   <sql-content>
+   <![CDATA[
+	SELECT 	A.MAINNO, 
+			A.DOCNO, 
+			TO_CHAR(A.CREATEDTM,'YYYY-MM-DD HH24:MI:SS') CREATEDTM, 
+			A.CRORGCD,
+			TO_ORGNOCD(A.CRORGCD) CRORGUSERCD, 
+			TO_ORGNONAME(A.CRORGCD) CRORGNAME, 
+			A.CREMPID,
+			TO_EMPGRADENAME(A.CREMPID) CREMPGRADE, 
+			SUBSTR(A.EVENTDT,1,4)||'-'||SUBSTR(A.EVENTDT,5,2)||'-'||SUBSTR(A.EVENTDT,7,2) EVENTDT,  
+			TO_EMPKNAME(A.CREMPID) CREMPNAME, 
+			A.USEORGCD, 
+			TO_ORGNOCD2(A.USEORGCD) USEORGUSERCD, 
+			TO_ORGNONAME2(A.USEORGCD) USEORGNAME, 
+			TO_EMPGRADENAME(USEEMPID) USEEMPGRADE,
+			A.USEEMPID, 
+			TO_EMPKNAME(A.USEEMPID) USEEMPNAME, 
+			A.PHONNO, 
+			A.DOCTYPE, 
+			A.PAYTYPE, 
+			A.MTITLE, 
+			A.STATUS, 
+			TO_STATUSNM(A.STATUS) STATUSNAME, 
+			A.BIZACQACCTCD, 
+			TO_BIZACQACCTNAME(A.BIZACQACCTCD) BIZACQNAME,
+			TO_BIZACQCEONAME(A.BIZACQACCTCD) BIZCEONAME, 
+			A.BIZACQREGNO, 
+			A.DOMICILE, 
+			NVL(A.TOTAMT, 0) TOTAMT,  
+			NVL(A.SUPPLYAMT, 0) SUPPLYAMT, 
+			NVL(A.TAXAMT, 0) TAXAMT, 
+			NVL(A.REALAMT, 0) REALAMT, 
+			NVL(A.DIFFAMT, 0) DIFFAMT, 
+			A.PCARDYN, A.BILLTYPE, A.DETAILTYPE, A.DETAIL, A.ADVANCECLASS, A.SUPPLYAMTCLASS,
+			SUBSTR(A.RECIVEDT,1,4)||'-'||SUBSTR(A.RECIVEDT,5,2)||'-'||SUBSTR(A.RECIVEDT,7,2) RECIVEDT, 
+			A.OUTSOURCETYPE, 
+			A.CONTENTS1, A.QUANTITY1, A.UNITCOST1, A.SUPPLYAMT1, A.TAXAMT1, 
+			A.CONTENTS2, A.QUANTITY2, A.UNITCOST2, A.SUPPLYAMT2, A.TAXAMT2, 
+			A.CONTENTS3, A.QUANTITY3, A.UNITCOST3, A.SUPPLYAMT3, A.TAXAMT3, 
+			A.CONTENTS4, A.QUANTITY4, A.UNITCOST4, A.SUPPLYAMT4, A.TAXAMT4, 
+			B.MAINNO, 
+			B.SN,
+			B.ACCTCD, TO_ACCTNAME(B.ACCTCD) ACCTNAME, 
+			--b.ACCTCD, to_acctname_n(b.acctcd,a.EVENTDT) ACCTNAME,
+			B.ORGCD, 
+			TO_ORGNOCD2(B.ORGCD) ORGUSERCD,
+			TO_ORGNONAME2(B.ORGCD) ORGNAME,
+	   		B.JOBNO, 
+		  		DECODE(TO_ORGNOCD2(SUBSTR(B.JOBNO,1,5)),
+		  		NULL,JOBNO,TO_ORGNOCD2(SUBSTR(B.JOBNO,1,5))) 
+	  		AS JOBUSERNO, --사용자코드 추가
+		  		TO_ORGNONAME2(SUBSTR(B.JOBNO,1,5)) 
+	  		AS JOBNAME, --코드명 가져오기 
+	 		B.CDTYPE, 
+	  		NVL(B.AMOUNT, 0) AMOUNT, 
+	  		B.TITLE, 
+	  		B.CERTIFTYPE, 
+	  		NVL(B.BUDGETAMT, 0) BUDGETAMT, 
+	  		NVL(B.BUDGETRATE, 0) BUDGETRATE, 
+	  		B.CERTIFNO, 
+	  		B.CDAPPLNO, 
+	  		DECODE(C.AA01_STAT,'','X',C.AA01_STAT) ACCTSTATUS,
+	  		nvl(b.OBJ_NO,'') OBJ_NO,nvl(b.IT_NO,'') IT_NO, a.CONF_NO, a.CONFTYPE
+	 FROM 	MASM_INHAUH.ACCTRPTHD A, 
+			MASM_INHAUH.ACCTRPTSB B, 
+			TBAA01@TO_INHAUH C
+	WHERE A.MAINNO = B.MAINNO(+)
+	  AND A.MAINNO = ?
+	  AND A.DOCNO = C.AA01_JPNO(+) 
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RevenueHDocUpt"   value-count="1"
+   url="지급 품의 Head 정보 수정" >  
+   <sql-content>
+   <![CDATA[
+Where mainNo = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RevenueDDocUpt"   value-count="2"
+   url="지급 품의 detail 정보 수정" >  
+   <sql-content>
+   <![CDATA[
+Where mainNo = ? AND SN = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RevenueHDocDel"   value-count="1"
+   url="수입 품의 Head 정보 삭제" >  
+   <sql-content>
+   <![CDATA[
+Delete from ACCTRPTHD
+Where mainNo = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RevenueDDocDel"   value-count="1"
+   url="수입 품의 detail 삭제" >  
+   <sql-content>
+   <![CDATA[
+Delete from ACCTRPTSB
+Where mainNo = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RevenueDocFileDel"   value-count="1"
+   url="수입 품의 첨부파일 정보 수정(삭제의미)" >  
+   <sql-content>
+   <![CDATA[
+update FILEINFO set delFlag='Y' 
+Where mainNo = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RegDocApprInfo"   value-count="3"
+   url="결재등록" >  
+   <sql-content>
+   <![CDATA[
+INSERT INTO  MASM_INHAUH.DOCAPPRINFO
+ VALUES( DOCAPPRINFO_SN.NEXTVAL, ?, ?, sysDate, ?, empty_clob())
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ViewHead"   value-count="32"
+   url="결재 연동Head" >  
+   <sql-content>
+   <![CDATA[
+<head>
+<meta http-equiv="Content-Language" content="ko">
+<meta http-equiv="Content-Type" content="text/html; charset=ks_c_5601-1987">
+<LINK rel="stylesheet" type="text/css" href="../css/skin04_form.css">
+<script language='javascript'>
+function download(dir,fileSystemName,fileOriginName, empId){
+	location.href="?;			
+}
+</script>
+<title>수입품의서</title>
+</head>
+<body text="#000000" bgcolor="#FFFFFF" topmargin=0 leftmargin=0 rightmargin=0 >
+<form  name="bizForm" method="POST" >
+<input type='hidden' name='_SCREEN'>
+<input type='hidden' name='empId' value='?'>
+<input type='hidden' name='status'>
+<input type='hidden' name='mainNo' value='?'>
+<input type='hidden' name='docType' value='?'>
+<input type='hidden' name='payType' value='?'>
+<table align='center' cellpadding='1' cellspacing='1' border='0' class='table1' width='100%' id='table2' height='24'>
+	<tr>
+		<td width='10%' class='td1' align='center' height='22'>기안자</td>
+		<td width='60%' class='td2' align='left' height='22'>&nbsp;? ?  / ?</td>
+		<td width='10%' class='td1' align='center' height='22'>작성일</td>
+		<td width='20%' class='td2' align='left' height='22'>&nbsp;?</td>
+	</tr>
+</table>
+<table><tr><td></td></tr></table>
+<table align="center" cellpadding="1" cellspacing="1" border="0" class="table1" width="100%" id="table3" height="24">
+	<tr>
+		<td width="10%" class="td1" align="center" height="24">부서/PJT명</td>
+		<td width="90%" class="td2" align="left" height="24" colspan="5">&nbsp;? ?</td>
+	</tr>
+	<tr>
+		<td width='10%' class='td1' align='center' height='24'>발생일자</td>
+		<td width='25%' class='td2' align='left' height='24'>&nbsp;<b>?</b></td>
+		<td width='10%' class='td1' align='center' height='24'>사용자</td>
+		<td width='25%' class='td2' align='left' height='24'>&nbsp;? (?)</td>
+		<td width='10%' class='td1' align='left' height='24'>전화번호</td>
+		<td width='20%' class='td2' align='left' height='24'>&nbsp;?</td>
+	</tr>
+	<tr>
+		<td width="10%" class="td1" align="center" height="24">거래처명</td>
+		<td width="60%" class="td2" align="left" height="24" colspan="3">&nbsp;? ? (?) ?</td>
+		<td width="10%" class="td1" align="left" height="24">영수/청구</td>
+		<td width="20%" class="td2" align="left" height="24">&nbsp;?</td>
+	</tr>
+</table>	
+<table><tr><td></td></tr></table>
+<table align="center" cellpadding="1" cellspacing="1" border="0" class="table1" width="100%" id="table4" height="225">
+	<tr>
+		<td width="10%" class="td1" align="center" height="24">수입총액</td>
+		<td width="25%" class="td2" align="right" height="24">? 원&nbsp;</td>
+		<td width="10%" class="td1" align="left" height="24">공급가액</td>
+		<td width="25%" class="td2" align="right" height="24">? 원&nbsp;</td>
+		<td width="10%" class="td1" align="left" height="24">부가세</td>
+		<td width="20%" class="td2" align="right" height="24">? 원&nbsp;</td>
+	</tr>
+	<tr>
+		<td width="10%" class="td1" align="center" height="24">실입금액</td>
+		<td width="25%" class="td2" align="right" height="24"><b>? 원&nbsp;</b></td>
+		<td width="10%" class="td1" align="left" height="24">차인액&nbsp;</td>
+		<td width="25%" class="td2" align="right" height="24"><b>? 원&nbsp;</b></td>
+		<td width="10%" class="td1" align="left" height="24">증빙구분</td>
+		<td width="20%" class="td2" align="left" height="24">?&nbsp;</td>
+	</tr>
+	<tr>
+		<td width="10%" class="td1" align="center" height="24">입금예정일</td>
+		<td width="25%" class="td2" align="left" height="24">&nbsp;?</td>
+		<td width="10%" class="td1" align="left" height="24">외주구분</td>
+		<td width="25%" class="td2" align="left" height="24">&nbsp;?</td>
+		<td width="10%" class="td1" align="left" height="24">가지급정산</td>
+		<td width="20%" class="td2" align="left" height="24">&nbsp;?</td>
+		</tr>
+		<tr>
+		<td width="10%" class="td1" align="center" height="24">제목</td>
+		<td width="60%" class="td2" align="left" height="24" colspan="3">&nbsp;?</td>
+		<td width="10%" class="td1" align="left" height="24">공급가구분</td>
+		<td width="20%" class="td2" align="left" height="24">&nbsp;?</td>
+	</tr>
+	<tr>
+		<td width="10%" class="td1" align="center" height="123">수입내역</td>
+		<td width="90%" class="td2" align="left" height="123" colspan="5" valign="top">?</td>
+			</tr>
+</table>	
+<table></table>
+<table cellpadding=1 cellspacing=1 border=0 class='td7' width=100%  id="table6" align=center height="26" >
+	<tr height=24 valign=middle >
+		<td align="center" bgcolor=#336699 width="15%" height="26">
+			<font color="#FFFFFF"><b>회계처리 내용</b></font></td>
+		<td width="85%" height="22" valign=bottom></td>
+	</tr>
+</table>
+<table align="center" cellpadding="1" cellspacing="1" border="0" class="table1" width="100%" id="table3" height="24">
+	<tr>
+		<td width="14%" class="td1" align="center" height="24">회계계정코드</td>
+		<td width="14%" class="td1" align="center" height="24">회계처리대상부서</td>
+		<td width="14%" class="td1" align="center" height="24">PJT(직접)/사업(간접)</td>
+		<td width="8%" class="td1" align="center" height="24">차대구분</td>
+		<td width="10%" class="td1" align="center" height="24">금액</td>
+		<td width="20%" class="td1" align="center" height="24">개요</td>
+		<td width="20%" class="td1" align="center" height="24">관리항목</td>
+	</tr>
+</table>
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ViewBody"  value-count="13"
+   url="결재 연동 회계정보" >  
+   <sql-content>
+   <![CDATA[
+<input type='hidden' name='mainNo' value='?'>
+<input type='hidden' name='sn' value='?'>
+<table align='center' cellpadding='1' cellspacing='1' border='0' class='table1' width='100%' id='table7' height='24'>
+	<tr>
+		<td width='14%' class='td2' align='left' height='24'>&nbsp;? ?</td>
+		<td width='14%' class='td2' align='left' height='24'>&nbsp;? ?</td>
+		<td width='14%' class='td2' align='left' height='24'>&nbsp;? ?</td>
+		<td width='8%'  class='td2' align='center' height='24'>?</td>
+		<td width='10%' class='td2' align='right' height='24'>? 원&nbsp;</td>
+		<td width='20%' class='td2' align='left' height='24'>&nbsp;?</td>
+		<td width='20%' class='td2' align='left' height='24'>&nbsp;? ?</td>
+	</tr>
+</table>	
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ViewTax"  value-count="22"
+   url="세금계산서보기" >  
+   <sql-content>
+   <![CDATA[
+<table>
+</table>
+<table cellpadding=1 cellspacing=1 border=0 class='td7' width=100%  id="table6" align=center height="26" >
+	<tr height=24 valign=middle >
+		<td align="center" bgcolor=#336699 width="15%" height="26">
+			<font color="#FFFFFF"><b>매출세금계산서</b></font></td>
+		<td width="40%" height="22" valign=bottom align=left></td>
+		<td width="45%" height="22" valign=bottom align=right>(단위 : 원)</td>
+	</tr>
+</table>
+<table align="center" cellpadding="1" cellspacing="1" border="0" class="table1" width="100%" id="table3" height="24">
+	<tr>
+		<td width="42%" class="td1" align="center" height="24">내역</td>
+		<td width="8%" class="td1" align="center" height="24">수량</td>
+		<td width="12%" class="td1" align="center" height="24">단가</td>
+		<td width="20%" class="td1" align="center" height="24"><p style="text-valign:middle">공급가액&nbsp;&nbsp; </td>
+		<td width="18%" class="td1" align="center" height="24">세액</td>
+	</tr>
+	<tr>
+		<td width="42%" class="td2" align="left" height="24">&nbsp;?</td>
+		<td width="8%" class="td2" align="center" height="24">&nbsp;?</td>
+		<td width="12%" class="td2" align="right" height="24">&nbsp;?</td>
+		<td width="20%" class="td2" align="right" height="24">&nbsp;?</td>
+		<td width="18%" class="td2" align="right" height="24">&nbsp;?</td>
+	</tr>
+	<tr>
+		<td width="42%" class="td2" align="left" height="24">&nbsp;?</td>
+		<td width="8%" class="td2" align="center" height="24">&nbsp;?</td>
+		<td width="12%" class="td2" align="right" height="24">&nbsp;?</td>
+		<td width="20%" class="td2" align="right" height="24">&nbsp;?</td>
+		<td width="18%" class="td2" align="right" height="24">&nbsp;?</td>
+	</tr>
+	<tr>
+		<td width="42%" class="td2" align="left" height="24">&nbsp;?</td>
+		<td width="8%" class="td2" align="center" height="24">&nbsp;?</td>
+		<td width="12%" class="td2" align="right" height="24">&nbsp;?</td>
+		<td width="20%" class="td2" align="right" height="24">&nbsp;?</td>
+		<td width="18%" class="td2" align="right" height="24">&nbsp;?</td>
+	</tr>
+	<tr>
+		<td width="42%" class="td2" align="left" height="24">&nbsp;?</td>
+		<td width="8%" class="td2" align="center" height="24">&nbsp;?</td>
+		<td width="12%" class="td2" align="right" height="24">&nbsp;?</td>
+		<td width="20%" class="td2" align="right" height="24">&nbsp;?</td>
+		<td width="18%" class="td2" align="right" height="24">&nbsp;?</td>
+	</tr>
+	<tr>
+		<td width="62%" class="loctitle" align="center" height="24" colspan="3">합 계</td>
+		<td width="20%" class="td2" align="right" height="24">&nbsp;?</td>
+		<td width="18%" class="td2" align="right" height="24">&nbsp;?</td>
+	</tr>
+</table>	
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ViewFiles"  value-count="5"
+   url="결재 연동첨부파일" >  
+   <sql-content>
+   <![CDATA[
+	<tr>
+		<td width='10%' class='td3' align='center' height='24'>첨부자료</td>
+		<td width='90%' class='td2' align='left' height='24' colspan='3'>			
+			<a href="javascript:download(?,?,?,?)">
+			?</a>		
+		</td>
+	</tr>	
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RevenueTaxList"   value-count="0"
+   url="세금계산서 출력을 위한 자료" >  
+   <sql-content>
+   <![CDATA[
+		SELECT  a.MAINNO, 
+				a.DOCNO, 
+				a.USEEMPID, 
+				TO_EMPKNAME(USEEMPID) USEEMPNAME, 
+				a.EVENTDT, a.PHONNO,  
+				TO_BIZACQCEONAME(a.BIZACQACCTCD) bizCeoName, 
+				a.BIZACQACCTCD, 
+				TO_BIZACQACCTNAME(a.BIZACQACCTCD) BIZACQNAME, 
+				a.BIZACQREGNO, b.BIZACQADDR, b.BIZTYPE, b.BIZITEM,
+                REPLACE(a.CONTENTS1,',','/') AS CONTENTS1, a.QUANTITY1, a.UNITCOST1, a.SUPPLYAMT1, a.TAXAMT1,
+                REPLACE(a.CONTENTS2,',','/') AS CONTENTS2, a.QUANTITY2, a.UNITCOST2, a.SUPPLYAMT2, a.TAXAMT2,
+                REPLACE(a.CONTENTS3,',','/') AS CONTENTS3, a.QUANTITY3, a.UNITCOST3, a.SUPPLYAMT3, a.TAXAMT3,
+                REPLACE(a.CONTENTS4,',','/') AS CONTENTS4, a.QUANTITY4, a.UNITCOST4, a.SUPPLYAMT4, a.TAXAMT4
+		 FROM  MASM_INHAUH.ACCTRPTHD a, BIZACQCORP b
+		 WHERE STATUS in ('DB0','DF0','DB1','DC0','DD0','DD1','DD2','DE0','DE1')
+		 AND a.BIZACQACCTCD = b.BIZACQACCTCD
+		 AND DocType = 'A'
+    	 AND (NOT EXISTS (SELECT DOCNO
+	         			 FROM ACCTRPTHD_PRT C
+	         			 WHERE A.DOCNO = C.DOCNO)
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="delDocApplInfo"   value-count="1"
+   url="지급 품의 이미지 정보 삭제" >  
+   <sql-content>
+   <![CDATA[
+delete DOCAPPRINFO 
+Where docNo = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="RE_001"   value-count="0"   url="세금계산서 출력 로그 생성" >  <sql-content>
+   <![CDATA[
+		INSERT INTO ACCTRPTHD_PRT VALUE(DOCNO, SN, EMPID, CREATEDT,PRT_DIV)
+		SELECT  DISTINCT
+				B.DOCNO,
+				NVL(MAX(A.SN) OVER(PARTITION BY A.DOCNO),0) + 1 AS SN,
+				[useEmpId] AS EMPID,
+				SYSDATE AS CREATEDT,
+				DECODE([S_TX_PRT],'N',1,0) AS PRT_DIV
+		FROM ACCTRPTHD_PRT A, ACCTRPTHD B
+		WHERE B.DOCNO =[docNo]
+		AND   B.DOCNO=A.DOCNO(+)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RE_002"   value-count="13"   url="세금계산서 출력 로그 조회" >  <sql-content>
+   <![CDATA[
+            SELECT DISTINCT
+				A.DOCNO,
+					(SELECT DISTINCT J.MAINNO
+					FROM ACCTRPTSB J, ACCTRPTHD K
+					WHERE  K.DOCNO= A.DOCNO
+					AND    J.MAINNO=K.MAINNO
+					) 
+				AS MAINNO,
+				E.EMPID AS REEMPID,
+				E.EMPKNAME AS EMPNAME,
+				E.ORGCD,
+				E.ORGNAME,
+				COUNT(E.DOCNO) OVER(PARTITION BY E.DOCNO,E.EMPID) AS CNT,
+				NVL(SUM(E.PRT_DIV) OVER(PARTITION BY E.DOCNO,E.EMPID),0) AS RB_CNT,
+				TO_CHAR(MAX(E.CREATEDT) OVER(PARTITION BY E.DOCNO,E.EMPID)
+				                     ,'YYYY-MM-DD HH:MI:SS') AS LASTDT,
+				DECODE(E.ORGCD,'CQ02','ADMIN','') AS USERTYPE
+            FROM    (SELECT /*+INDEX(ACCTRPTHD ACCTRPTHD_FK)*/ 
+				            DOCNO,
+				            CREATEDTM 
+				            FROM ACCTRPTHD 
+				     WHERE  DOCNO  LIKE 'A%') A,
+                    ( SELECT B.DOCNO,
+		                    D.ORGCD,
+		                    D.ORGNAME,
+		                    C.EMPKNAME,
+		                    B.EMPID,
+		                    B.CREATEDT,
+		                    PRT_DIV
+                    FROM 	ACCTRPTHD_PRT B,
+		                    EMPALL C,
+		                    ORG D
+                    WHERE B.EMPID LIKE [S_EMPID]||'%'
+		            AND B.EMPID=C.EMPID
+		            AND D.ORG_NO=C.ORGCD
+   	                AND B.CREATEDT BETWEEN TO_DATE(REPLACE([S_FR_PRT_DATE],'-',''),'YYYYMMDD')
+                    AND TO_DATE(REPLACE([S_TO_PRT_DATE],'-',''),'YYYYMMDD')+1) E
+            WHERE A.DOCNO=E.DOCNO(+)
+            AND   A.CREATEDTM BETWEEN TO_DATE(REPLACE([S_FR_DATE],'-',''),'YYYYMMDD')
+                    AND TO_DATE(REPLACE([S_TO_DATE],'-',''),'YYYYMMDD')+1
+            AND A.DOCNO BETWEEN DECODE([S_FR_DOCNO],'','0',[S_FR_DOCNO]) AND DECODE([S_TO_DOCNO],'','ZZZZZZZZZZZZ',[S_TO_DOCNO])
+            AND (E.EMPID LIKE [S_EMPID]||'%'    OR [S_EMPID] IS NULL)            
+            AND (E.EMPKNAME LIKE [S_EMPKNAME]||'%' OR [S_EMPKNAME] IS NULL)
+			AND NOT EXISTS (SELECT * FROM COMCODE   --가상직원 제외처리
+							WHERE HIGHCODE ='CD-20090401-001'
+							AND CODENAME=[S_USERID])
+            ORDER BY DOCNO DESC,EMPNAME
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   
+</sql>

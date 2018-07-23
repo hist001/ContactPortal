@@ -1,0 +1,711 @@
+<?xml version="1.0" encoding="euc-kr"?>
+
+<sql>
+
+   <sql-mapping  id="RDN_001"   value-count="0"   url="RDN 입력" >  
+   <sql-content>
+   <![CDATA[
+INSERT INTO RDN
+			(    
+				PJT_NO,	PGTYPE,	RDN_NO, 
+				RDNHIGH_NO, RDN_CONTENTS,PREDDT, 
+				WRKEMPID, GRPEMPID,	RDN_RCONTENTS, 
+				PRCSNO, PRCS_DETAIL, CFMEMPID,
+				ENDDT,	CREATEDDTM, CREMPID,
+				RDN_STATUS,	REVDT, PLANDT,
+				RDN_DTYPE, RDN_BKUP, MNGORG_NO
+			)   
+VALUES                 
+		(     
+			PJT_NO:,
+			PGTYPE:,
+			RDN_NO:,
+			RDNHIGH_NO:, RDN_CONTENTS:,PREDDT:, 
+			WRKEMPID:, GRPEMPID:,	RDN_RCONTENTS:, 
+			PRCSNO:, PRCS_DETAIL:, CFMEMPID:,
+			ENDDT:,	CREATEDDTM:, CREMPID:,
+			RDN_STATUS:,REVDT:, PLANDT:,
+			RDN_DTYPE:, RDN_BKUP:, MNGORG_NO:
+		)
+	]]>
+	</sql-content>
+   </sql-mapping>
+  
+  <sql-mapping  id="RDN_002"   value-count="3"   url="RDN 현황조회" >  
+   <sql-content>
+   <![CDATA[
+
+		SELECT 	RDN_NO, A.RDNHIGH_NO,PJT_NO,LEVEL,
+				RDN_CONTENTS,
+				(SELECT RDN_CONTENTS FROM RDN WHERE RDN_NO = A.RDNHIGH_NO) RDNHIGHCONTENTS,
+				SUBSTR(PLANDT,1,4)||'-'||SUBSTR(PLANDT,5,2)||'-'||SUBSTR(PLANDT,7,2) PLANDT,
+				PRCSNO,PRCSNO PRCSCD,TO_PRCSNAME(PRCSNO) PRCSNAME, PRCS_DETAIL,
+				SUBSTR(PREDDT,1,4)||'-'||SUBSTR(PREDDT,5,2)||'-'||SUBSTR(PREDDT,7,2) PREDDT,
+				WRKEMPID, TO_EMPKNAME(WRKEMPID) WRKEMPNAME,
+				GRPEMPID, TO_EMPKNAME(GRPEMPID) GRPEMPNAME,RDN_DTYPE,RDN_BKUP,
+				MNGORG_NO,TO_ORGNOCD(MNGORG_NO) MNGORGCD,
+				TO_ORGNONAME(MNGORG_NO) MNGORGNAME,
+				CFMEMPID, TO_EMPKNAME(CFMEMPID) CFMEMPNAME,
+				SUBSTR(REVDT,1,4)||'-'||SUBSTR(REVDT,5,2)||'-'||SUBSTR(REVDT,7,2) REVDT,RDN_STATUS,
+				DECODE(RDN_STATUS,'RI','등록중','RE','등록완료','DI','지정중','DE','지정완료','WI','수행중','WE','수행완료','FI','확인중','FE','확인완료') RDN_STATUSNAME,
+				CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME,
+				TO_CHAR(TO_DATE(CREATEDDTM,'YY-MM-DD'),'YYYY-MM-DD') CREATEDDTM,CREATEDDTM CRDT,
+				RDN_RCONTENTS,
+				(
+					SELECT COUNT(FILE_NO)||' 건'
+		        	FROM COM_FILES D
+		         	WHERE RDN_NO=OBJ_NO
+		         	AND  UI_NO='RDN'
+		         	AND DELFLAG='N'
+	         	 ) RDN_FILE
+		FROM  RDN A
+		WHERE PJT_NO = ?
+		AND PGTYPE = ?
+		AND RDN_NO = ?
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+   
+<sql-mapping  id="RDN_003"  value-count="0"   url="RDN 수정" >  
+   <sql-content>
+   <![CDATA[
+    
+		UPDATE RDN   SET       
+						RDNHIGH_NO = RDNHIGH_NO:, 
+		                RDN_CONTENTS = RDN_CONTENTS: , 
+		                PREDDT = PREDDT:, 
+						WRKEMPID = WRKEMPID:, 
+						GRPEMPID = GRPEMPID:,	
+						RDN_RCONTENTS = RDN_RCONTENTS:, 
+						PRCSNO = PRCSNO:, 
+						PRCS_DETAIL = PRCS_DETAIL:, 
+						CFMEMPID = CFMEMPID:,
+						ENDDT = ENDDT:,
+						RDN_STATUS = RDN_STATUS:,
+						REVDT = REVDT:, 
+						PLANDT = PLANDT:,
+						RDN_DTYPE = RDN_DTYPE:, 
+						RDN_BKUP = RDN_BKUP:, 
+						MNGORG_NO = MNGORG_NO:           	                    
+		WHERE           PJT_NO = PJT_NO:
+		AND             PGTYPE = PGTYPE: 
+		AND				RDN_NO = RDN_NO:
+
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   
+   <sql-mapping  id="RDN_004"   value-count="0"   url="RDN_NO 값 구하기" >  
+   <sql-content>
+   <![CDATA[ 
+		SELECT NVL(MAX(RDN_NO),0)+1 RDN_NO FROM RDN
+	]]>
+	</sql-content>
+   </sql-mapping> 
+   
+   
+   <sql-mapping  id="RDN_005"   value-count="0"   url="RDN DELETE" >  
+   <sql-content>
+   <![CDATA[
+
+DELETE  RDN  
+WHERE   PJT_NO = PJT_NO:
+AND     PGTYPE = PGTYPE:
+AND 	RDN_NO = RDN_NO:
+
+	                                
+	]]>
+	</sql-content>
+   </sql-mapping> 
+   
+   
+   <sql-mapping  id="RDN_006"   value-count="0"   url="RDN SEARCH WITH PAGING" >  
+   <sql-content>
+   <![CDATA[
+
+
+SELECT REQDATE,
+             SUBJ,
+             STSN,
+             STS,
+             PERSONIC,
+             PERSONIC_ORG,
+             REQUESTER,
+             REQUESTER_ORG,
+             FINISHDATE,
+             STARTDATE,
+             EXPDATE,
+             CSRPK,
+             CONTENT,
+             REGDATE,
+             SEQ,
+             RESULT,
+             R,
+             PROCDATE,
+             CSR_FILE
+FROM                (
+	SELECT REQDATE,
+             SUBJ,
+             STSN,
+             STS,
+             PERSONIC,
+             PERSONIC_ORG,
+             REQUESTER,
+             REQUESTER_ORG,
+             FINISHDATE,
+             STARTDATE,
+             EXPDATE,
+             CSRPK,
+             CONTENT,
+             REGDATE,
+             SEQ,
+             RESULT,
+             ROWNUM R,
+             PROCDATE,
+             CSR_FILE
+FROM ( 
+ SELECT
+       TO_CHAR(REQDATE,'YYYY-MM-DD') AS REQDATE,
+       SUBJ,
+       CSR_PKG.GET_CSR_STS(REGDATE||'-'||SEQ) AS STSN,
+       STS,
+       CSR_PKG.GET_EMPN(PERSONIC) AS PERSONIC,
+       PERSONIC AS PERSONIC_ORG,
+       CSR_PKG.GET_EMPN(REQUESTER) AS REQUESTER,
+       REQUESTER AS REQUESTER_ORG,
+       TO_CHAR(FINISHDATE,'YYYY-MM-DD HH24:MI') AS FINISHDATE,
+       TO_CHAR(STARTDATE,'YYYY-MM-DD HH24:MI') AS STARTDATE,
+       EXPDATE,
+	   REGDATE||'-'||SEQ AS CSRPK,
+       CONTENT,
+       REGDATE, 
+       SEQ,
+       RESULT,
+       DECODE(PROCDATE,'','',PROCDATE||'('||PROCDATE/24||')') AS PROCDATE,
+       		(SELECT COUNT(FILE_NO)||' 건'
+        	 FROM COM_FILES D
+         	 WHERE REGDATE||'-'||SEQ=OBJ_NO
+         	 AND  UI_NO='CSR'
+         	 AND DELFLAG='N')
+       AS CSR_FILE
+FROM CSR       
+WHERE NVL(CONTENT,'%') LIKE '%'||S_CONTENT:||'%'
+AND PERSONIC LIKE '%'||S_PERSONIC:||'%'
+AND SUBJ LIKE '%'||S_SUBJ:||'%'
+AND TO_CHAR(REQDATE,'YYYYMMDD') BETWEEN REPLACE(S_REQDATEFR:,'-','')
+                                                                   AND      REPLACE(S_REQDATETO:,'-','')
+AND REQUESTER LIKE S_REQUESTER:
+AND STS LIKE S_STS:
+ORDER BY  STS, REQDATE DESC,  PERSONIC, EXPDATE   )  )   
+WHERE R >=STARTNUM: AND R <=ENDNUM:
+
+	                                
+	]]>
+	</sql-content>
+   </sql-mapping> 
+   
+    <sql-mapping  id="RDN_007"   value-count="0"   url="RDNPK4SHOW" >  
+   <sql-content>
+   <![CDATA[
+
+SELECT TO_CHAR(SYSDATE,'YYYYMMDD')||'-'||CSR_PKG.GET_CSR_SEQ() AS CSRPK4SHOW,
+			 TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI') SYSD4N
+FROM DUAL
+
+	                                
+	]]>
+	</sql-content>
+   </sql-mapping> 
+    
+  <sql-mapping  id="RDN_008"   value-count="0"   url="RDN_TOT" >  
+   <sql-content>
+   <![CDATA[
+
+SELECT COUNT(*) AS CNT_TOT
+FROM CSR
+
+	                                
+	]]>
+	</sql-content>
+   </sql-mapping> 
+   
+ 
+   <sql-mapping  id="CSR_009"   value-count="0"   url="GETTING MAX ROWNUM" >  
+   <sql-content>
+   <![CDATA[
+
+
+SELECT MAX(R) AS CNT_R
+FROM                (
+	SELECT REQDATE,
+             SUBJ,
+             STSN,
+             STS,
+             PERSONIC,
+             PERSONIC_ORG,
+             REQUESTER,
+             REQUESTER_ORG,
+             FINISHDATE,
+             STARTDATE,
+             EXPDATE,
+             CSRPK,
+             CONTENT,
+             REGDATE,
+             SEQ,
+             RESULT,
+             ROWNUM R 
+FROM ( 
+ SELECT
+       TO_CHAR(REQDATE,'YYYY-MM-DD') AS REQDATE,
+       SUBJ,
+       CSR_PKG.GET_CSR_STS(REGDATE||'-'||SEQ) AS STSN,
+       STS,
+       CSR_PKG.GET_EMPN(PERSONIC) AS PERSONIC,
+       PERSONIC AS PERSONIC_ORG,
+       CSR_PKG.GET_EMPN(REQUESTER) AS REQUESTER,
+       REQUESTER AS REQUESTER_ORG,
+       TO_CHAR(FINISHDATE,'YYYY-MM-DD') AS FINISHDATE,
+       TO_CHAR(STARTDATE,'YYYY-MM-DD') AS STARTDATE,
+       EXPDATE,
+	   REGDATE||'-'||SEQ AS CSRPK,
+       CONTENT,
+       REGDATE, 
+       SEQ,
+       RESULT
+FROM CSR       
+WHERE NVL(CONTENT,'%') LIKE '%'||S_CONTENT:||'%'
+AND PERSONIC LIKE '%'||S_PERSONIC:||'%'
+AND SUBJ LIKE '%'||S_SUBJ:||'%'
+AND TO_CHAR(REQDATE,'YYYYMMDD') BETWEEN REPLACE(S_REQDATEFR:,'-','')
+                                                                   AND      REPLACE(S_REQDATETO:,'-','')
+AND REQUESTER LIKE S_REQUESTER:
+AND STS LIKE S_STS: 
+ORDER BY  STS, REQDATE DESC,  PERSONIC, EXPDATE   )  )   
+
+
+	                                
+	]]>
+	</sql-content>
+   </sql-mapping> 
+   
+   
+  <sql-mapping  id="CSR_010"   value-count="0"   url="MY CSR SATUS" >  
+   <sql-content>
+   <![CDATA[
+
+SELECT STS, COUNT(*) AS CNT
+FROM CSR
+WHERE PERSONIC=User:
+GROUP BY STS
+
+	                                
+	]]>
+	</sql-content>
+   </sql-mapping> 
+   
+
+<sql-mapping  id="CSR_011"   value-count="0"   url=" TODAY CSR SATUS" >  
+   <sql-content>
+   <![CDATA[
+ 
+
+SELECT
+
+(SELECT NVL(SUM(DECODE(RTRIM(STS),'A+',1,0)),0)
+FROM CSR
+WHERE TO_CHAR(LASTACCESSDATE,'YYYYMMDD') =TO_CHAR(SYSDATE,'YYYYMMDD')) AS TODAY_EMERGENCY,
+(SELECT NVL(SUM(DECODE(RTRIM(STS),'A0',1,0)),0)
+FROM CSR
+WHERE TO_CHAR(LASTACCESSDATE,'YYYYMMDD') =TO_CHAR(SYSDATE,'YYYYMMDD')  ) AS TODAY_REQUESTED   ,
+(SELECT NVL(SUM(DECODE(RTRIM(STS),'A1',1,0)),0)
+FROM CSR
+WHERE TO_CHAR(LASTACCESSDATE,'YYYYMMDD') =TO_CHAR(SYSDATE,'YYYYMMDD')) AS TODAY_ACCEPTED,
+(SELECT NVL(SUM(DECODE(RTRIM(STS),'A2',1,0)),0)
+FROM CSR
+WHERE TO_CHAR(LASTACCESSDATE,'YYYYMMDD') =TO_CHAR(SYSDATE,'YYYYMMDD')) AS TODAY_WAITED,
+(SELECT NVL(SUM(DECODE(RTRIM(STS),'A3',1,0)),0)
+FROM CSR
+WHERE TO_CHAR(LASTACCESSDATE,'YYYYMMDD') =TO_CHAR(SYSDATE,'YYYYMMDD')  ) AS TODAY_HOLDED ,
+(SELECT NVL(SUM(DECODE(RTRIM(STS),'A4',1,0)),0)
+FROM CSR
+WHERE TO_CHAR(LASTACCESSDATE,'YYYYMMDD') =TO_CHAR(SYSDATE,'YYYYMMDD')) AS TODAY_ONGOING,
+(SELECT NVL(SUM(DECODE(RTRIM(STS),'A5',1,0)),0)
+FROM CSR
+WHERE TO_CHAR(LASTACCESSDATE,'YYYYMMDD') =TO_CHAR(SYSDATE,'YYYYMMDD')) AS TODAY_FINISHED,
+(SELECT NVL(SUM(DECODE(RTRIM(STS),'A6',1,0)),0)
+FROM CSR
+WHERE TO_CHAR(LASTACCESSDATE,'YYYYMMDD') =TO_CHAR(SYSDATE,'YYYYMMDD')  ) AS TODAY_CONFIRMED
+
+FROM DUAL
+
+	                                
+	]]>
+	</sql-content>
+   </sql-mapping> 
+
+    
+<sql-mapping  id="CSR_012"   value-count="0"   url="CSR DETAIL FOR PRINT" >  
+   <sql-content>
+   <![CDATA[
+ 
+
+SELECT		  
+       TO_CHAR(REQDATE,'YYYY-MM-DD') AS REQDATE,
+       SUBJ,
+       CSR_PKG.GET_CSR_STS(REGDATE||'-'||SEQ) AS STSN,
+       STS,
+       CSR_PKG.GET_EMPN(PERSONIC) AS PERSONIC,
+       PERSONIC AS PERSONIC_ORG,
+       CSR_PKG.GET_EMPN(REQUESTER) AS REQUESTER,
+       REQUESTER REQUESTER_ORG,
+       TO_CHAR(FINISHDATE,'YYYY-MM-DD HH24:MI') AS FINISHDATE,
+       TO_CHAR(STARTDATE,'YYYY-MM-DD HH24:MI') AS STARTDATE,
+       EXPDATE,
+	   REGDATE||'-'||SEQ AS CSRPK,
+       CONTENT,
+       REGDATE,
+       SEQ,
+       RESULT,
+       DECODE(PROCDATE,'','',PROCDATE||'('||PROCDATE/24||')') AS PROCDATE
+
+FROM CSR
+WHERE  REGDATE||'-'||SEQ IN ( CSRPK: )
+
+	                                
+	]]>
+	</sql-content>
+   </sql-mapping> 
+ 
+
+
+ 
+ <sql-mapping  id="CSR_013"   value-count="0"   url="DAILY REPORT" >  
+   <sql-content>
+   <![CDATA[
+ 
+
+SELECT
+       TO_CHAR(REQDATE,'YYYY-MM-DD') AS REQDATE,
+       SUBJ,
+       CSR_PKG.GET_CSR_STS(REGDATE||'-'||SEQ) AS STSN,
+       STS,
+       CSR_PKG.GET_EMPN(PERSONIC) AS PERSONIC,
+       PERSONIC AS PERSONIC_ORG,
+       CSR_PKG.GET_EMPN(REQUESTER) AS REQUESTER,
+       REQUESTER REQUESTER_ORG,
+       TO_CHAR(FINISHDATE,'YYYY-MM-DD HH24:MI') AS FINISHDATE,
+       TO_CHAR(STARTDATE,'YYYY-MM-DD HH24:MI') AS STARTDATE,
+       EXPDATE,
+	   REGDATE||'-'||SEQ AS CSRPK,
+       CONTENT,
+       REGDATE,
+       SEQ,
+       RESULT,
+       DECODE(PROCDATE,'','',PROCDATE||'('||PROCDATE/24||')') AS PROCDATE
+
+FROM CSR
+WHERE  PERSONIC =PERSONIC:
+AND STS ='A5'
+AND TO_CHAR(FINISHDATE,'YYYYMMDD') BETWEEN REPLACE(INPUTDATE_FR:,'-','')
+                                                                     AND REPLACE(INPUTDATE_TO:,'-','')
+
+UNION ALL
+
+SELECT
+       TO_CHAR(REQDATE,'YYYY-MM-DD') AS REQDATE,
+       SUBJ,
+       CSR_PKG.GET_CSR_STS(REGDATE||'-'||SEQ) AS STSN,
+       STS,
+       CSR_PKG.GET_EMPN(PERSONIC) AS PERSONIC,
+       PERSONIC AS PERSONIC_ORG,
+       CSR_PKG.GET_EMPN(REQUESTER) AS REQUESTER,
+       REQUESTER REQUESTER_ORG,
+       TO_CHAR(FINISHDATE,'YYYY-MM-DD HH24:MI') AS FINISHDATE,
+       TO_CHAR(STARTDATE,'YYYY-MM-DD HH24:MI') AS STARTDATE,
+       EXPDATE,
+	   REGDATE||'-'||SEQ AS CSRPK,
+       CONTENT,
+       REGDATE,
+       SEQ, 
+       RESULT,
+       DECODE(PROCDATE,'','',PROCDATE||'('||PROCDATE/24||')') AS PROCDATE
+
+FROM CSR
+WHERE  PERSONIC =PERSONIC:
+AND STS ='A4'
+AND TO_CHAR(STARTDATE,'YYYYMMDD') BETWEEN REPLACE(INPUTDATE_FR:,'-','')
+                                                                     AND REPLACE(INPUTDATE_TO:,'-','')
+
+
+ORDER BY FINISHDATE  
+ 
+	]]>
+	</sql-content>
+   </sql-mapping> 
+
+<sql-mapping  id="CSR_014"   value-count="0"   url="ToDoList" >  
+   <sql-content>
+   <![CDATA[
+
+
+
+SELECT
+       TO_CHAR(REQDATE,'YYYY-MM-DD') AS REQDATE,
+       SUBJ,
+       CSR_PKG.GET_CSR_STS(REGDATE||'-'||SEQ) AS STSN,
+       STS,
+       CSR_PKG.GET_EMPN(PERSONIC) AS PERSONIC,
+       PERSONIC AS PERSONIC_ORG,
+       CSR_PKG.GET_EMPN(REQUESTER) AS REQUESTER,
+       REQUESTER REQUESTER_ORG,
+       TO_CHAR(FINISHDATE,'YYYY-MM-DD HH24:MI') AS FINISHDATE,
+       TO_CHAR(STARTDATE,'YYYY-MM-DD HH24:MI') AS STARTDATE,
+       EXPDATE,
+	   REGDATE||'-'||SEQ AS CSRPK,
+       CONTENT,
+       REGDATE,
+       SEQ,
+       RESULT,
+       DECODE(PROCDATE,'','',PROCDATE||'('||PROCDATE/24||')') AS PROCDATE
+
+FROM CSR
+WHERE  PERSONIC =PERSONIC:
+AND STS NOT IN ('A5','A6')
+ORDER BY REQDATE
+
+   
+
+	]]>
+	</sql-content>
+   </sql-mapping> 
+
+<sql-mapping  id="CSR_015"   value-count="0"   url="Monthly Reprot1" >  
+   <sql-content>
+   <![CDATA[ 
+  
+
+
+SELECT REGDATE ,
+	   SUBSTR(SUBJ,INSTR(SUBJ,'[')+1,INSTR(SUBJ,']')-2) AS WORK,
+	   SUBSTR(SUBJ ,INSTR(SUBJ,']')+1) AS SUBJ  ,
+	   TO_CHAR(REQDATE,'YYYY-MM-DD') AS REQDATE,
+	   TO_EMPKNAME(PERSONIC) AS PERSONIC,
+	   TO_EMPKNAME(REQUESTER) AS REQUESTER,
+	   CSR_PKG.GET_CSR_STS(REGDATE||'-'||SEQ) AS STS,
+	   TO_CHAR(STARTDATE,'YYYY-MM-DD') AS STARTDATE,
+	   PROCDATE 
+
+FROM CSR 
+WHERE SUBSTR(REGDATE,1,6) LIKE YYYYMM:
+ORDER BY 2
+
+   
+
+	]]>
+	</sql-content>
+   </sql-mapping> 
+
+<sql-mapping  id="CSR_016"   value-count="0"   url="Monthly Report2" >  
+   <sql-content>
+   <![CDATA[
+
+
+
+SELECT REGDATE ,
+	   SUBJ ,
+	   TO_CHAR(REQDATE,'YYYY-MM-DD') AS REQDATE,
+	   TO_EMPKNAME(PERSONIC) AS PERSONIC,
+	   TO_EMPKNAME(REQUESTER) AS REQUESTER,
+	   CSR_PKG.GET_CSR_STS(REGDATE||'-'||SEQ) AS STS,
+	   TO_CHAR(STARTDATE,'YYYY-MM-DD') AS STARTDATE,
+	   PROCDATE 
+
+FROM CSR
+WHERE REGDATE LIKE YYYYMM:||'%'
+ORDER BY 1
+
+   
+
+	]]>
+	</sql-content>
+   </sql-mapping> 
+   
+   <sql-mapping  id="RDN_017" value-count="2" url="산출물 조회" >  
+   <sql-content>
+   <![CDATA[
+		SELECT 	RDN_NO, RDNHIGH_NO,PJT_NO,LEVEL,
+				RDN_CONTENTS,
+				SUBSTR(PLANDT,1,4)||'-'||SUBSTR(PLANDT,5,2)||'-'||SUBSTR(PLANDT,7,2) PLANDT,
+				PRCSNO,TO_PRCSNAME(PRCSNO) PRCSNAME, PRCS_DETAIL,
+				SUBSTR(PREDDT,1,4)||'-'||SUBSTR(PREDDT,5,2)||'-'||SUBSTR(PREDDT,7,2) PREDDT,
+				WRKEMPID, TO_EMPKNAME(WRKEMPID) WRKEMPNAME,
+				GRPEMPID, TO_EMPKNAME(GRPEMPID) GRPEMPNAME,RDN_DTYPE,RDN_BKUP,
+				MNGORG_NO,TO_ORGNOCD(MNGORG_NO) MNGORGCD,
+				TO_ORGNONAME(MNGORG_NO) MNGORGNAME,
+				CFMEMPID, TO_EMPKNAME(CFMEMPID) CFMEMPNAME,
+				SUBSTR(REVDT,1,4)||'-'||SUBSTR(REVDT,5,2)||'-'||SUBSTR(REVDT,7,2) REVDT,RDN_STATUS,
+				DECODE(RDN_STATUS,'RI','등록중','RE','등록완료','DI','지정중','DE','지정완료','WI','수행중','WE','수행완료','FI','확인중','FE','확인완료') RDN_STATUSNAME,
+				CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME,
+				to_char(TO_DATE(CREATEDDTM,'YY-MM-DD'),'YYYY-MM-DD') CREATEDDTM,
+				RDN_RCONTENTS
+		FROM  RDN
+		WHERE PJT_NO = ?
+		AND PGTYPE = ?
+		START WITH RDNHIGH_NO IS NULL
+		CONNECT BY PRIOR RDN_NO = RDNHIGH_NO
+	]]>
+   </sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="RDN_018" value-count="5" url="산출물 조회_등록자" >  
+   <sql-content>
+   <![CDATA[
+		SELECT 	RDN_NO, RDNHIGH_NO,PJT_NO,LEVEL,
+				RDN_CONTENTS,
+				SUBSTR(PLANDT,1,4)||'-'||SUBSTR(PLANDT,5,2)||'-'||SUBSTR(PLANDT,7,2) PLANDT,
+				PRCSNO,TO_PRCSNAME(PRCSNO) PRCSNAME, PRCS_DETAIL,
+				SUBSTR(PREDDT,1,4)||'-'||SUBSTR(PREDDT,5,2)||'-'||SUBSTR(PREDDT,7,2) PREDDT,
+				WRKEMPID, TO_EMPKNAME(WRKEMPID) WRKEMPNAME,
+				GRPEMPID, TO_EMPKNAME(GRPEMPID) GRPEMPNAME,RDN_DTYPE,RDN_BKUP,
+				MNGORG_NO,TO_ORGNOCD(MNGORG_NO) MNGORGCD,
+				TO_ORGNONAME(MNGORG_NO) MNGORGNAME,
+				CFMEMPID, TO_EMPKNAME(CFMEMPID) CFMEMPNAME,
+				SUBSTR(REVDT,1,4)||'-'||SUBSTR(REVDT,5,2)||'-'||SUBSTR(REVDT,7,2) REVDT,RDN_STATUS,
+				DECODE(RDN_STATUS,'RI','등록중','RE','등록완료','DI','지정중','DE','지정완료','WI','수행중','WE','수행완료','FI','확인중','FE','확인완료') RDN_STATUSNAME,
+				CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME,
+				to_char(TO_DATE(CREATEDDTM,'YY-MM-DD'),'YYYY-MM-DD') CREATEDDTM,
+				RDN_RCONTENTS
+		FROM  RDN
+		WHERE PJT_NO = ?
+		AND PGTYPE = ?
+		AND RDN_STATUS LIKE '%'||?||'%'
+		AND RDN_CONTENTS LIKE '%'||?||'%'
+		AND CREMPID LIKE '%'||?||'%'
+		START WITH RDNHIGH_NO IS NULL
+		CONNECT BY PRIOR RDN_NO = RDNHIGH_NO
+	]]>
+   </sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="RDN_019" value-count="5" url="산출물 조회_그룹장" >  
+   <sql-content>
+   <![CDATA[
+		SELECT 	RDN_NO, RDNHIGH_NO,PJT_NO,LEVEL,
+				RDN_CONTENTS,
+				SUBSTR(PLANDT,1,4)||'-'||SUBSTR(PLANDT,5,2)||'-'||SUBSTR(PLANDT,7,2) PLANDT,
+				PRCSNO,TO_PRCSNAME(PRCSNO) PRCSNAME, PRCS_DETAIL,
+				SUBSTR(PREDDT,1,4)||'-'||SUBSTR(PREDDT,5,2)||'-'||SUBSTR(PREDDT,7,2) PREDDT,
+				WRKEMPID, TO_EMPKNAME(WRKEMPID) WRKEMPNAME,
+				GRPEMPID, TO_EMPKNAME(GRPEMPID) GRPEMPNAME,RDN_DTYPE,RDN_BKUP,
+				MNGORG_NO,TO_ORGNOCD(MNGORG_NO) MNGORGCD,
+				TO_ORGNONAME(MNGORG_NO) MNGORGNAME,
+				CFMEMPID, TO_EMPKNAME(CFMEMPID) CFMEMPNAME,
+				SUBSTR(REVDT,1,4)||'-'||SUBSTR(REVDT,5,2)||'-'||SUBSTR(REVDT,7,2) REVDT,RDN_STATUS,
+				DECODE(RDN_STATUS,'RI','등록중','RE','등록완료','DI','지정중','DE','지정완료','WI','수행중','WE','수행완료','FI','확인중','FE','확인완료') RDN_STATUSNAME,
+				CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME,
+				to_char(TO_DATE(CREATEDDTM,'YY-MM-DD'),'YYYY-MM-DD') CREATEDDTM,
+				RDN_RCONTENTS
+		FROM  RDN
+		WHERE PJT_NO = ?
+		AND PGTYPE = ?
+		AND RDN_STATUS LIKE '%'||?||'%'
+		AND RDN_CONTENTS LIKE '%'||?||'%'
+		AND GRPEMPID LIKE '%'||?||'%'
+		START WITH RDNHIGH_NO IS NULL
+		CONNECT BY PRIOR RDN_NO = RDNHIGH_NO
+	]]>
+   </sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="RDN_020" value-count="5" url="산출물 조회_수행자" >  
+   <sql-content>
+   <![CDATA[
+		SELECT 	RDN_NO, RDNHIGH_NO,PJT_NO,LEVEL,
+				RDN_CONTENTS,
+				SUBSTR(PLANDT,1,4)||'-'||SUBSTR(PLANDT,5,2)||'-'||SUBSTR(PLANDT,7,2) PLANDT,
+				PRCSNO,TO_PRCSNAME(PRCSNO) PRCSNAME, PRCS_DETAIL,
+				SUBSTR(PREDDT,1,4)||'-'||SUBSTR(PREDDT,5,2)||'-'||SUBSTR(PREDDT,7,2) PREDDT,
+				WRKEMPID, TO_EMPKNAME(WRKEMPID) WRKEMPNAME,
+				GRPEMPID, TO_EMPKNAME(GRPEMPID) GRPEMPNAME,RDN_DTYPE,RDN_BKUP,
+				MNGORG_NO,TO_ORGNOCD(MNGORG_NO) MNGORGCD,
+				TO_ORGNONAME(MNGORG_NO) MNGORGNAME,
+				CFMEMPID, TO_EMPKNAME(CFMEMPID) CFMEMPNAME,
+				SUBSTR(REVDT,1,4)||'-'||SUBSTR(REVDT,5,2)||'-'||SUBSTR(REVDT,7,2) REVDT,RDN_STATUS,
+				DECODE(RDN_STATUS,'RI','등록중','RE','등록완료','DI','지정중','DE','지정완료','WI','수행중','WE','수행완료','FI','확인중','FE','확인완료') RDN_STATUSNAME,
+				CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME,
+				to_char(TO_DATE(CREATEDDTM,'YY-MM-DD'),'YYYY-MM-DD') CREATEDDTM,
+				RDN_RCONTENTS
+		FROM  RDN
+		WHERE PJT_NO = ?
+		AND PGTYPE = ?
+		AND RDN_STATUS LIKE '%'||?||'%'
+		AND RDN_CONTENTS LIKE '%'||?||'%'
+		AND  WRKEMPID LIKE '%'||?||'%' 
+		START WITH RDNHIGH_NO IS NULL
+		CONNECT BY PRIOR RDN_NO = RDNHIGH_NO
+	]]>
+   </sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="RDN_021" value-count="5" url="산출물 조회_확인자" >  
+   <sql-content>
+   <![CDATA[
+		SELECT 	RDN_NO, RDNHIGH_NO,PJT_NO,LEVEL,
+				RDN_CONTENTS,
+				SUBSTR(PLANDT,1,4)||'-'||SUBSTR(PLANDT,5,2)||'-'||SUBSTR(PLANDT,7,2) PLANDT,
+				PRCSNO,TO_PRCSNAME(PRCSNO) PRCSNAME, PRCS_DETAIL,
+				SUBSTR(PREDDT,1,4)||'-'||SUBSTR(PREDDT,5,2)||'-'||SUBSTR(PREDDT,7,2) PREDDT,
+				WRKEMPID, TO_EMPKNAME(WRKEMPID) WRKEMPNAME,
+				GRPEMPID, TO_EMPKNAME(GRPEMPID) GRPEMPNAME,RDN_DTYPE,RDN_BKUP,
+				MNGORG_NO,TO_ORGNOCD(MNGORG_NO) MNGORGCD,
+				TO_ORGNONAME(MNGORG_NO) MNGORGNAME,
+				CFMEMPID, TO_EMPKNAME(CFMEMPID) CFMEMPNAME,
+				SUBSTR(REVDT,1,4)||'-'||SUBSTR(REVDT,5,2)||'-'||SUBSTR(REVDT,7,2) REVDT,RDN_STATUS,
+				DECODE(RDN_STATUS,'RI','등록중','RE','등록완료','DI','지정중','DE','지정완료','WI','수행중','WE','수행완료','FI','확인중','FE','확인완료') RDN_STATUSNAME,
+				CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME,
+				to_char(TO_DATE(CREATEDDTM,'YY-MM-DD'),'YYYY-MM-DD') CREATEDDTM,
+				RDN_RCONTENTS
+		FROM  RDN
+		WHERE PJT_NO = ?
+		AND PGTYPE = ?
+		AND RDN_STATUS LIKE '%'||?||'%'
+		AND RDN_CONTENTS LIKE '%'||?||'%'
+		AND CFMEMPID LIKE '%'||?||'%'
+		START WITH RDNHIGH_NO IS NULL
+		CONNECT BY PRIOR RDN_NO = RDNHIGH_NO
+	]]>
+   </sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="RDN_022" value-count="8" url="산출물 조회_전체" >  
+   <sql-content>
+   <![CDATA[
+		SELECT 	RDN_NO, RDNHIGH_NO,PJT_NO,LEVEL,
+				RDN_CONTENTS,
+				SUBSTR(PLANDT,1,4)||'-'||SUBSTR(PLANDT,5,2)||'-'||SUBSTR(PLANDT,7,2) PLANDT,
+				PRCSNO,TO_PRCSNAME(PRCSNO) PRCSNAME, PRCS_DETAIL,
+				SUBSTR(PREDDT,1,4)||'-'||SUBSTR(PREDDT,5,2)||'-'||SUBSTR(PREDDT,7,2) PREDDT,
+				WRKEMPID, TO_EMPKNAME(WRKEMPID) WRKEMPNAME,
+				GRPEMPID, TO_EMPKNAME(GRPEMPID) GRPEMPNAME,RDN_DTYPE,RDN_BKUP,
+				MNGORG_NO,TO_ORGNOCD(MNGORG_NO) MNGORGCD,
+				TO_ORGNONAME(MNGORG_NO) MNGORGNAME,
+				CFMEMPID, TO_EMPKNAME(CFMEMPID) CFMEMPNAME,
+				SUBSTR(REVDT,1,4)||'-'||SUBSTR(REVDT,5,2)||'-'||SUBSTR(REVDT,7,2) REVDT,RDN_STATUS,
+				DECODE(RDN_STATUS,'RI','등록중','RE','등록완료','DI','지정중','DE','지정완료','WI','수행중','WE','수행완료','FI','확인중','FE','확인완료') RDN_STATUSNAME,
+				CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME,
+				to_char(TO_DATE(CREATEDDTM,'YY-MM-DD'),'YYYY-MM-DD') CREATEDDTM,
+				RDN_RCONTENTS
+		FROM  RDN
+		WHERE PJT_NO = ?
+		AND PGTYPE = ?
+		AND RDN_STATUS LIKE '%'||?||'%'
+		AND RDN_CONTENTS LIKE '%'||?||'%'
+		AND (CREMPID LIKE '%'||?||'%' OR GRPEMPID LIKE '%'||?||'%' OR WRKEMPID LIKE '%'||?||'%' OR CFMEMPID LIKE '%'||?||'%')
+		START WITH RDNHIGH_NO IS NULL
+		CONNECT BY PRIOR RDN_NO = RDNHIGH_NO
+	]]>
+   </sql-content>
+   </sql-mapping>
+ </sql>
+

@@ -1,0 +1,629 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="getBudgetCheckInfo" value-count="0" url="예산조회" >  
+   <sql-content>
+   <![CDATA[
+		SELECT  [SN] SN,[BUDGETORG] BUDGETORG, ACCTCD, REPLACE([AMOUNT],',','') AMOUNT, CHKKEY
+		FROM BUDGETCHECK
+		WHERE ACCTCD = [ACCTCD]
+		AND STARTDT <= [EVENTDT] AND ENDDT > [EVENTDT] 
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="getBudgetCheckInfo_Inha" value-count="0" url="예산조회" >  
+   <sql-content>
+   <![CDATA[
+		SELECT  [SN] SN,[BUDGETORG] BUDGETORG, [ACCTCD] ACCTCD, REPLACE([AMOUNT],',','') AMOUNT, 'BC_INHA' CHKKEY
+		FROM DUAL
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="SelectBudget" value-count="0" url="예산조회" >  
+   <sql-content>
+   <![CDATA[
+		select 
+		        a.budgetOrg budgetOrg, --A.ACCTCD,
+		        '50010' ACCTCD,
+			        nvl(execbudget01,0) execbudget01,nvl(usedBudget01,0) usedBudget01,nvl(execbudget01,0)-nvl(usedBudget01,0) remBudget01, 
+			        nvl(execbudget02,0) execbudget02,nvl(usedBudget02,0) usedBudget02,nvl(execbudget02,0)-nvl(usedBudget02,0) remBudget02, 
+			        nvl(execbudget03,0) execbudget03,nvl(usedBudget03,0) usedBudget03,nvl(execbudget03,0)-nvl(usedBudget03,0) remBudget03, 
+			        nvl(execbudget04,0) execbudget04,nvl(usedBudget04,0) usedBudget04,nvl(execbudget04,0)-nvl(usedBudget04,0) remBudget04, 
+			        nvl(execbudget05,0) execbudget05,nvl(usedBudget05,0) usedBudget05,nvl(execbudget05,0)-nvl(usedBudget05,0) remBudget05, 
+			        nvl(execbudget06,0) execbudget06,nvl(usedBudget06,0) usedBudget06,nvl(execbudget06,0)-nvl(usedBudget06,0) remBudget06, 
+			        nvl(execbudget07,0) execbudget07,nvl(usedBudget07,0) usedBudget07,nvl(execbudget07,0)-nvl(usedBudget07,0) remBudget07, 
+			        nvl(execbudget08,0) execbudget08,nvl(usedBudget08,0) usedBudget08,nvl(execbudget08,0)-nvl(usedBudget08,0) remBudget08, 
+			        nvl(execbudget09,0) execbudget09,nvl(usedBudget09,0) usedBudget09,nvl(execbudget09,0)-nvl(usedBudget09,0) remBudget09, 
+			        nvl(execbudget10,0) execbudget10,nvl(usedBudget10,0) usedBudget10,nvl(execbudget10,0)-nvl(usedBudget10,0) remBudget10, 
+			        nvl(execbudget11,0) execbudget11,nvl(usedBudget11,0) usedBudget11,nvl(execbudget11,0)-nvl(usedBudget11,0) remBudget11,
+			        nvl(execbudget12,0) execbudget12,nvl(usedBudget12,0) usedBudget12,nvl(execbudget12,0)-nvl(usedBudget12,0) remBudget12 
+		from
+		(
+			SELECT BUDGETORG ,ACCTCD
+				   ,SUM(NVL(execbudget01,0)) EXECBUDGET01,SUM(NVL(execbudget02,0)) EXECBUDGET02,SUM(NVL(execbudget03,0)) EXECBUDGET03
+				   ,SUM(NVL(execbudget04,0)) EXECBUDGET04,SUM(NVL(execbudget05,0)) EXECBUDGET05,SUM(NVL(execbudget06,0)) EXECBUDGET06
+				   ,SUM(NVL(execbudget07,0)) EXECBUDGET07,SUM(NVL(execbudget08,0)) EXECBUDGET08,SUM(NVL(execbudget09,0)) EXECBUDGET09
+				   ,SUM(NVL(execbudget10,0)) EXECBUDGET10,SUM(NVL(execbudget11,0)) EXECBUDGET11,SUM(NVL(execbudget12,0)) EXECBUDGET12
+			FROM
+			(	   
+				SELECT BUDGETORG,ACCTCD
+					   ,decode(MM,'01',execbudget) execbudget01,decode(MM,'02',execbudget) execbudget02,decode(MM,'03',execbudget) execbudget03
+					   ,decode(MM,'04',execbudget) execbudget04,decode(MM,'05',execbudget) execbudget05,decode(MM,'06',execbudget) execbudget06
+					   ,decode(MM,'07',execbudget) execbudget07,decode(MM,'08',execbudget) execbudget08,decode(MM,'09',execbudget) execbudget09
+					   ,decode(MM,'10',execbudget) execbudget10,decode(MM,'11',execbudget) execbudget11,decode(MM,'12',execbudget) execbudget12
+				FROM BUDGETMAIN
+				WHERE BUDGETORG = [BUDGETORG]
+				AND YYYY=[YYYY]
+			)
+			GROUP BY BUDGETORG, ACCTCD
+		) a,
+		(
+			SELECT BUDGETORG ,ACCTCD
+				   ,SUM(NVL(execbudget01,0)) USEDBUDGET01,SUM(NVL(execbudget02,0)) USEDBUDGET02,SUM(NVL(execbudget03,0)) USEDBUDGET03
+				   ,SUM(NVL(execbudget04,0)) USEDBUDGET04,SUM(NVL(execbudget05,0)) USEDBUDGET05,SUM(NVL(execbudget06,0)) USEDBUDGET06
+				   ,SUM(NVL(execbudget07,0)) USEDBUDGET07,SUM(NVL(execbudget08,0)) USEDBUDGET08,SUM(NVL(execbudget09,0)) USEDBUDGET09
+				   ,SUM(NVL(execbudget10,0)) USEDBUDGET10,SUM(NVL(execbudget11,0)) USEDBUDGET11,SUM(NVL(execbudget12,0)) USEDBUDGET12
+			FROM
+			(	
+				SELECT 	   B.ORGCD BUDGETORG, SUBSTR(B.ACCTCD,1,4)||'0' ACCTCD
+					   	   ,decode(SUBSTR(A.EVENTDT,5,2),'01',B.AMOUNT) execbudget01,decode(SUBSTR(A.EVENTDT,5,2),'02',B.AMOUNT) execbudget02,decode(SUBSTR(A.EVENTDT,5,2),'03',B.AMOUNT) execbudget03
+						   ,decode(SUBSTR(A.EVENTDT,5,2),'04',B.AMOUNT) execbudget04,decode(SUBSTR(A.EVENTDT,5,2),'05',B.AMOUNT) execbudget05,decode(SUBSTR(A.EVENTDT,5,2),'06',B.AMOUNT) execbudget06
+						   ,decode(SUBSTR(A.EVENTDT,5,2),'07',B.AMOUNT) execbudget07,decode(SUBSTR(A.EVENTDT,5,2),'08',B.AMOUNT) execbudget08,decode(SUBSTR(A.EVENTDT,5,2),'09',B.AMOUNT) execbudget09
+						   ,decode(SUBSTR(A.EVENTDT,5,2),'10',B.AMOUNT) execbudget10,decode(SUBSTR(A.EVENTDT,5,2),'11',B.AMOUNT) execbudget11,decode(SUBSTR(A.EVENTDT,5,2),'12',B.AMOUNT) execbudget12
+				FROM ACCTRPTHD A, ACCTRPTSB B
+				WHERE A.MAINNO = B.MAINNO
+				and A.STATUS NOT IN ('DA0','DX0','DW0','DX1','DW1','DZ0')
+				and B.ACCTCD like '5%'
+				AND A.EVENTDT LIKE [YYYY]||'%'
+				AND A.DOCTYPE = 'B'
+				and B.ORGCD = [BUDGETORG]	
+			)
+			GROUP BY BUDGETORG, ACCTCD
+		) b
+		where a.budgetOrg = b.budgetOrg(+)
+		and a.acctcd =b.acctcd(+)
+		order by a.acctcd
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="BC" value-count="0" url="예산사용 가능 여부 BC" >  
+   <sql-content>
+   <![CDATA[
+		SELECT [SN] SN, 'BC' KEY,
+			   NVL(
+			   (		   
+			SELECT CASE WHEN BCF != 'N' THEN
+					   CASE WHEN BUDAMT-EXEAMT-NVL(REPLACE([AMOUNT],',',''),0) < 0 THEN 'N'
+					   		ELSE 'Y'
+					   END 
+				   	   	ELSE 'N'
+					END VALUE
+			FROM
+			(	
+				SELECT NVL(
+					(
+					SELECT SUM(EXECBUDGET) BUDAMT
+					FROM BUDGETMAIN
+					WHERE BUDGETORG = [BUDGETORG]
+					AND ACCTCD = SUBSTR([ACCTCD],1,4)||'0'
+					AND YYYY||MM >=
+									DECODE(
+										   NVL(	
+												(	
+													SELECT CHKVALUE FROM BUDGETCHECK
+													WHERE CHKKEY = 'BC'
+													AND ACCTCD = [ACCTCD]
+												),'M'
+											),
+											'Y',SUBSTR([EVENTDT],1,4)||'01',
+											'Q',DECODE(TO_CHAR(TO_DATE([EVENTDT],'YYYYMMDD'),'Q'),'1',SUBSTR([EVENTDT],1,4)||'01','2',SUBSTR([EVENTDT],1,4)||'04','3',SUBSTR([EVENTDT],1,4)||'07','4',SUBSTR([EVENTDT],1,4)||'10')  ,
+											'M',SUBSTR([EVENTDT],1,6)
+									)
+					AND YYYY||MM <=
+									DECODE(
+										   NVL(	
+												(	
+													SELECT CHKVALUE FROM BUDGETCHECK
+													WHERE CHKKEY = 'BC'
+													AND ACCTCD = [ACCTCD]
+												),'M'
+											),
+											'Y',SUBSTR([EVENTDT],1,4)||'12',
+											'Q',DECODE(TO_CHAR(TO_DATE([EVENTDT],'YYYYMMDD'),'Q'),'1',SUBSTR([EVENTDT],1,4)||'03','2',SUBSTR([EVENTDT],1,4)||'06','3',SUBSTR([EVENTDT],1,4)||'09','4',SUBSTR([EVENTDT],1,4)||'12')  ,
+											'M',SUBSTR([EVENTDT],1,6)
+									)
+					),0) BUDAMT
+				FROM DUAL								
+			) A,
+			(
+				SELECT NVL(
+					(
+				  	SELECT SUM(AMOUNT) EXEAMT
+					FROM ACCTRPTHD A, 
+						 (SELECT MAINNO, SUBSTR(ACCTCD,1,4) ACCTCD, AMOUNT, ORGCD FROM ACCTRPTSB ) B
+					WHERE A.MAINNO = B.MAINNO
+					AND A.STATUS NOT IN ('DA0','DX0','DW0','DX1','DW1','DZ0')
+					AND DOCTYPE = 'B'
+					AND B.ORGCD = [BUDGETORG]
+					AND B.ACCTCD = SUBSTR([ACCTCD],1,4)	
+					AND A.EVENTDT >=
+									DECODE(
+										   NVL(	
+												(	
+													SELECT CHKVALUE FROM BUDGETCHECK
+													WHERE CHKKEY = 'BC'
+													AND ACCTCD = [ACCTCD]
+												),'M'
+											),
+											'Y',SUBSTR([EVENTDT],1,4)||'0101',
+											'Q',DECODE(TO_CHAR(TO_DATE([EVENTDT],'YYYYMMDD'),'Q'),'1',SUBSTR([EVENTDT],1,4)||'0101','2',SUBSTR([EVENTDT],1,4)||'0401','3',SUBSTR([EVENTDT],1,4)||'0701','4',SUBSTR([EVENTDT],1,4)||'1001')  ,
+											'M',SUBSTR([EVENTDT],1,6)||'01'
+									)
+					AND A.EVENTDT  <=
+									DECODE(
+										   NVL(	
+												(	
+													SELECT CHKVALUE FROM BUDGETCHECK
+													WHERE CHKKEY = 'BC'
+													AND ACCTCD = [ACCTCD]
+												),'M'
+											),
+											'Y',SUBSTR([EVENTDT],1,4)||'1231',
+											'Q',DECODE(TO_CHAR(TO_DATE([EVENTDT],'YYYYMMDD'),'Q'),'1',SUBSTR([EVENTDT],1,4)||'0331','2',SUBSTR([EVENTDT],1,4)||'0630','3',SUBSTR([EVENTDT],1,4)||'0930','4',SUBSTR([EVENTDT],1,4)||'1231')  ,
+											'M',TO_CHAR(LAST_DAY(TO_DATE([EVENTDT],'YYYYMMDD')),'YYYYMMDD')
+									)	
+					),0) EXEAMT
+				FROM DUAL										
+			) B,	
+			(
+			  	SELECT NVL
+					   (
+				(
+			  	SELECT CHKVALUE
+				FROM BUDGETCHECK
+				WHERE CHKKEY = 'BA'				  --// 예산체크유무
+				AND ACCTCD = [ACCTCD]
+				AND STARTDT <= [EVENTDT] AND ENDDT > [EVENTDT] 
+				), 'Y')  BCF
+				FROM DUAL				
+			) C
+			  ),'N') VALUE,
+			NVL(
+				(
+				SELECT B.CODENAME
+				FROM COMCODE A, COMCODE B
+				WHERE A.CODE = 'BDCHK'
+				AND A.CODE_NO = B.HIGHCODE
+				AND B.CODE = 'BC'		
+				),'없음'
+			) MSG
+		FROM DUAL	
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="BB" value-count="0" url="위임전결조건" >  
+   <sql-content>
+   <![CDATA[
+
+		SELECT [SN] SN, 'BB' KEY, 
+			   NVL(
+					(	   
+					SELECT
+						   CASE WHEN  [AMOUNT] >= CHKVALUE THEN 'N'
+						   		ELSE 'Y'
+						   END  VALUE
+					FROM BUDGETCHECK 
+					WHERE CHKKEY ='BB'
+					AND ACCTCD = [ACCTCD]
+					AND STARTDT <= [EVENTDT] AND ENDDT > [EVENTDT] 
+					),'Y'
+				) VALUE,
+				NVL(
+					(
+					SELECT B.CODENAME
+					FROM COMCODE A, COMCODE B
+					WHERE A.CODE = 'BDCHK'
+					AND A.CODE_NO = B.HIGHCODE
+					AND B.CODE = 'BB'		
+					),'없음'
+				) MSG
+		FROM DUAL
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="BO" value-count="0" url="위임전결조건" >  
+   <sql-content>
+   <![CDATA[
+
+		SELECT [SN] SN, 'BO' KEY,
+			   NVL(
+					(
+					SELECT CASE WHEN '1025' != CHKVALUE THEN 'N'
+						   		ELSE 'Y'
+						   END VALUE
+					FROM BUDGETCHECK
+					WHERE CHKKEY = 'BO'
+					AND ACCTCD  = [ACCTCD]
+					AND STARTDT <= [EVENTDT] AND ENDDT > [EVENTDT] 
+					),'Y'
+				) VALUE,
+				NVL(
+					(
+					SELECT B.CODENAME
+					FROM COMCODE A, COMCODE B
+					WHERE A.CODE = 'BDCHK'
+					AND A.CODE_NO = B.HIGHCODE
+					AND B.CODE = 'BO'		
+					),'없음'
+				) MSG
+		FROM DUAL
+	]]>
+	</sql-content>
+   </sql-mapping>     
+   <sql-mapping  id="BZ" value-count="0" url="계정에 따른 거래처가 지정되어 있으면 맞는지 확인" >  
+   <sql-content>
+   <![CDATA[
+
+		SELECT [SN] SN, 'BZ' KEY,		--// 계정에 따른 거래처가 지정되어 있으면 맞는지 확인
+			   (
+				SELECT CASE WHEN COUNT(CHKVALUE) != 0 THEN 'N'
+					   		ELSE 'Y'
+					   END
+				FROM BUDGETCHECK
+				WHERE CHKKEY = 'BZ'
+				AND ACCTCD = [ACCTCD]
+				AND CHKVALUE = [BIZACQCD]
+				AND STARTDT <= [EVENTDT] AND ENDDT > [EVENTDT] 
+					) VALUE,
+				NVL(
+					(
+					SELECT B.CODENAME
+					FROM COMCODE A, COMCODE B
+					WHERE A.CODE = 'BDCHK'
+					AND A.CODE_NO = B.HIGHCODE
+					AND B.CODE = 'BZ'		
+					),'없음'
+				) MSG
+		FROM DUAL		
+	]]>
+	</sql-content>
+   </sql-mapping>  
+   <sql-mapping  id="dMod1" value-count="0" url="회계항목을 예산체크를 위해 가공" >  
+   <sql-content>
+   <![CDATA[
+			SELECT [SN] SN, [BUDGETORG] BUDGETORG, [ACCTCD] ACCTCD, [AMOUNT] AMOUNT
+			FROM DUAL		
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="dMod2" value-count="0" url="회계항목을 예산체크를 위해 가공" >  
+   <sql-content>
+   <![CDATA[
+			UNION ALL
+			SELECT [SN] SN, [BUDGETORG] BUDGETORG, [ACCTCD] ACCTCD, [AMOUNT] AMOUNT
+			FROM DUAL		
+	]]>
+	</sql-content>
+   </sql-mapping>       
+   <sql-mapping  id="dMod3" value-count="0" url="회계항목을 예산체크를 위해 가공" >  
+   <sql-content>
+   <![CDATA[
+			SELECT A.SN, A.BUDGETORG, A.ACCTCD, B.AMOUNT
+			FROM 
+			(
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="dMod4" value-count="0" url="회계항목을 예산체크를 위해 가공" >  
+   <sql-content>
+   <![CDATA[
+			) A,
+			(
+				SELECT BUDGETORG, ACCTCD, SUM(AMOUNT) AMOUNT
+				FROM
+				(
+	]]>
+	</sql-content>
+   </sql-mapping> 
+   <sql-mapping  id="dMod5" value-count="0" url="회계항목을 예산체크를 위해 가공" >  
+   <sql-content>
+   <![CDATA[
+				)
+				GROUP BY BUDGETORG, ACCTCD
+			) B
+			WHERE A.BUDGETORG = B.BUDGETORG
+			AND A.ACCTCD = B.ACCTCD
+			ORDER BY SN		
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="BDCHK" value-count="0" url="회계항목을 예산체크를 위해 가공" >  
+   <sql-content>
+   <![CDATA[
+			SELECT [SN] SN, BUDAMT execBudget, EXEAMT+[AMOUNT] usedBudget, BUDAMT-EXEAMT-[AMOUNT] REMAMT,
+					DECODE(BUDAMT,0,0, ROUND( (((EXEAMT+[AMOUNT])/BUDAMT)*100),1)  )BUDGETRATE
+			FROM
+			(	
+				SELECT NVL(
+					(
+					SELECT SUM(EXECBUDGET) BUDAMT
+					FROM BUDGETMAIN
+					WHERE BUDGETORG = [BUDGETORG]
+					AND ACCTCD = SUBSTR([ACCTCD],1,4)||'0'
+					AND YYYY||MM >=
+									DECODE(
+										   NVL(	
+												(	
+													SELECT CHKVALUE FROM BUDGETCHECK
+													WHERE CHKKEY = 'BC'
+													AND ACCTCD = [ACCTCD]
+												),'M'
+											),
+											'Y',SUBSTR([EVENTDT],1,4)||'01',
+											'Q',DECODE(TO_CHAR(TO_DATE([EVENTDT],'YYYYMMDD'),'Q'),'1',SUBSTR([EVENTDT],1,4)||'01','2',SUBSTR([EVENTDT],1,4)||'04','3',SUBSTR([EVENTDT],1,4)||'07','4',SUBSTR([EVENTDT],1,4)||'10')  ,
+											'M',SUBSTR([EVENTDT],1,6)
+									)
+					AND YYYY||MM <=
+									DECODE(
+										   NVL(	
+												(	
+													SELECT CHKVALUE FROM BUDGETCHECK
+													WHERE CHKKEY = 'BC'
+													AND ACCTCD = [ACCTCD]
+												),'M'
+											),
+											'Y',SUBSTR([EVENTDT],1,4)||'12',
+											'Q',DECODE(TO_CHAR(TO_DATE([EVENTDT],'YYYYMMDD'),'Q'),'1',SUBSTR([EVENTDT],1,4)||'03','2',SUBSTR([EVENTDT],1,4)||'06','3',SUBSTR([EVENTDT],1,4)||'09','4',SUBSTR([EVENTDT],1,4)||'12')  ,
+											'M',SUBSTR([EVENTDT],1,6)
+									)
+					),0) BUDAMT
+				FROM DUAL								
+			) A,
+			(
+				SELECT NVL(
+					(
+				  	SELECT SUM(AMOUNT) EXEAMT
+					FROM ACCTRPTHD A, 
+						 (SELECT MAINNO, SUBSTR(ACCTCD,1,4) ACCTCD, AMOUNT, ORGCD FROM ACCTRPTSB ) B
+					WHERE A.MAINNO = B.MAINNO
+					AND A.STATUS NOT IN ('DA0','DX0','DWD0','DX1','DW1','DZ0')
+					AND DOCTYPE = 'B'
+					AND B.ORGCD = [BUDGETORG]
+					AND B.ACCTCD = SUBSTR([ACCTCD],1,4)	
+					AND A.EVENTDT >=
+									DECODE(
+										   NVL(	
+												(	
+													SELECT CHKVALUE FROM BUDGETCHECK
+													WHERE CHKKEY = 'BC'
+													AND ACCTCD = [ACCTCD]
+												),'M'
+											),
+											'Y',SUBSTR([EVENTDT],1,4)||'0101',
+											'Q',DECODE(TO_CHAR(TO_DATE([EVENTDT],'YYYYMMDD'),'Q'),'1',SUBSTR([EVENTDT],1,4)||'0101','2',SUBSTR([EVENTDT],1,4)||'0401','3',SUBSTR([EVENTDT],1,4)||'0701','4',SUBSTR([EVENTDT],1,4)||'1001')  ,
+											'M',SUBSTR([EVENTDT],1,6)||'01'
+									)
+					AND A.EVENTDT  <=
+									DECODE(
+										   NVL(	
+												(	
+													SELECT CHKVALUE FROM BUDGETCHECK
+													WHERE CHKKEY = 'BC'
+													AND ACCTCD = [ACCTCD]
+												),'M'
+											),
+											'Y',SUBSTR([EVENTDT],1,4)||'1231',
+											'Q',DECODE(TO_CHAR(TO_DATE([EVENTDT],'YYYYMMDD'),'Q'),'1',SUBSTR([EVENTDT],1,4)||'0331','2',SUBSTR([EVENTDT],1,4)||'0630','3',SUBSTR([EVENTDT],1,4)||'0930','4',SUBSTR([EVENTDT],1,4)||'1231')  ,
+											'M',TO_CHAR(LAST_DAY(TO_DATE([EVENTDT],'YYYYMMDD')),'YYYYMMDD')
+									)	
+					),0) EXEAMT
+				FROM DUAL										
+			) B
+	]]>
+	</sql-content>
+    </sql-mapping>
+   <sql-mapping  id="BDCHK_INHA" value-count="0" url="회계항목을 예산체크를 위해 가공" >  
+   <sql-content>
+   <![CDATA[
+			SELECT  [SN] SN, NVL(BUDGET,0) execBudget, 
+					NVL(USEBUDGET,0)+REPLACE([AMOUNT],',','')  
+												-
+												NVL((
+												 select NVL(TOTAMT,0)
+												 from acctrpthd a
+												 where A.STATUS NOT IN ('DA0','DX0','DW0','DX1','DW1','DZ0')
+												 AND A.USEORGCD = [BUDGETORG]
+												 AND A.ACCTHCD = [ACCTCD]
+												 and A.mainno = [MAINNO] 
+												 ),0)				
+					usedBudget,
+					NVL(BUDGET,0)-NVL(USEBUDGET,0)-REPLACE([AMOUNT],',','')
+												+
+												NVL((
+												 select NVL(TOTAMT,0)
+												 from acctrpthd a
+												 where A.STATUS NOT IN ('DA0','DX0','DW0','DX1','DW1','DZ0')
+												 AND A.USEORGCD = [BUDGETORG]
+												 AND A.ACCTHCD = [ACCTCD]
+												 and A.mainno = [MAINNO] 
+												 ),0)						
+					REMBUDGET,
+					DECODE(NVL(BUDGET,0),0,0, ROUND(((NVL(USEBUDGET,0)+REPLACE([AMOUNT],',','')
+												-
+												NVL((
+												 select NVL(TOTAMT,0)
+												 from acctrpthd a
+												 where A.STATUS NOT IN ('DA0','DX0','DW0','DX1','DW1','DZ0')
+												 AND A.USEORGCD = [BUDGETORG]
+												 AND A.ACCTHCD = [ACCTCD]
+												 and A.mainno = [MAINNO] 
+												 ),0)						
+					) /NVL(BUDGET,0))*100,2)) BUDGETRATE 		
+			FROM 						
+			(						
+				SELECT SUM(EXECBUDGET) BUDGET
+				FROM BUDGETMAIN
+				WHERE YYYY||MM BETWEEN
+					  		   		  (
+										SELECT CASE WHEN TO_NUMBER(SUBSTR([EVENTDT],5,2)) <=2 THEN  TO_NUMBER(SUBSTR([EVENTDT],1,4))-1
+											   		ELSE TO_NUMBER(SUBSTR([EVENTDT],1,4))
+											   END YYYY
+										FROM DUAL
+									  )||'03'
+								AND SUBSTR([EVENTDT],1,6)
+				AND BUDGETORG = [BUDGETORG]
+				AND ACCTCD = [ACCTCD]
+			) A,
+			(
+				SELECT SUM(TOTAMT) USEBUDGET
+				FROM ACCTRPTHD A
+				WHERE A.DELFLAG ='N'
+				AND SUBSTR(A.EVENTDT,1,6) BETWEEN
+					  		   		  (
+										SELECT CASE WHEN TO_NUMBER(SUBSTR([EVENTDT],5,2)) <=2 THEN  TO_NUMBER(SUBSTR([EVENTDT],1,4))-1
+											   		ELSE TO_NUMBER(SUBSTR([EVENTDT],1,4))
+											   END YYYY
+										FROM DUAL
+									  )||'03'
+								AND SUBSTR([EVENTDT],1,6)
+								AND A.STATUS NOT IN ('DA0','DX0','DW0','DX1','DW1','DZ0')
+								AND A.USEORGCD = [BUDGETORG]
+								AND A.ACCTHCD = [ACCTCD]				
+			) B
+
+	]]>
+	</sql-content>
+    </sql-mapping>    
+   <sql-mapping  id="BC_INHA" value-count="0" url="예산사용 가능 여부 BC_INHA" >  
+   <sql-content>
+   <![CDATA[
+			SELECT '1' SN, 'BC_INHA' KEY, 
+				   CASE WHEN NVL(BUDGET,0) -(NVL(USEBUDGET,0)+NVL([AMOUNT],0) 
+												-
+												NVL((
+												 select NVL(TOTAMT,0)
+												 from acctrpthd a
+												 where A.STATUS NOT IN ('DA0','DX0','DW0','DX1','DW1','DZ0')
+												 AND A.USEORGCD = [BUDGETORG]
+												 AND A.ACCTHCD = [ACCTCD]
+												 and A.mainno = [MAINNO] 
+												 ),0)								
+				   							) >= 0 THEN 'Y'
+				   		ELSE 'N'
+				   END VALUE,
+				   CASE WHEN NVL(BUDGET,0) -(NVL(USEBUDGET,0)+NVL([AMOUNT],0)
+				   								-
+												NVL((
+												 select NVL(TOTAMT,0)
+												 from acctrpthd a
+												 where A.STATUS NOT IN ('DA0','DX0','DW0','DX1','DW1','DZ0')
+												 AND A.USEORGCD = [BUDGETORG]
+												 AND A.ACCTHCD = [ACCTCD]
+												 and A.mainno = [MAINNO] 
+												 ),0)	 
+				   							) >= 0 THEN '없음'
+				   		ELSE '예산부족'
+				   END MSG
+			FROM 						
+			(						
+				SELECT SUM(EXECBUDGET) BUDGET
+				FROM BUDGETMAIN
+				WHERE YYYY||MM BETWEEN
+					  		   		  (
+										SELECT CASE WHEN TO_NUMBER(SUBSTR([EVENTDT],5,2)) <=2 THEN  TO_NUMBER(SUBSTR([EVENTDT],1,4))-1
+											   		ELSE TO_NUMBER(SUBSTR([EVENTDT],1,4))
+											   END YYYY
+										FROM DUAL
+									  )||'03'
+								AND SUBSTR([EVENTDT],1,6)
+				AND BUDGETORG = [BUDGETORG]
+				AND ACCTCD = [ACCTCD]
+			) A,
+			(
+				SELECT SUM(TOTAMT) USEBUDGET
+				FROM ACCTRPTHD A
+				WHERE SUBSTR(A.EVENTDT,1,6) BETWEEN
+					  		   		  (
+										SELECT CASE WHEN TO_NUMBER(SUBSTR([EVENTDT],5,2)) <=2 THEN  TO_NUMBER(SUBSTR([EVENTDT],1,4))-1
+											   		ELSE TO_NUMBER(SUBSTR([EVENTDT],1,4))
+											   END YYYY
+										FROM DUAL
+									  )||'03'
+				AND SUBSTR([EVENTDT],1,6)
+				AND A.STATUS NOT IN ('DA0','DX0','DW0','DX1','DW1','DZ0')
+				AND A.DELFLAG ='N'
+				AND A.USEORGCD = [BUDGETORG]
+				AND A.ACCTHCD = [ACCTCD]		
+			) B
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="BUDGET_ORG" value-count="0" url="예산조직 정보 가져오기" >  
+   <sql-content>
+   <![CDATA[
+		SELECT ORGCD, ORGNAME
+		FROM ORG
+		WHERE ORG_NO = [ORGCD]	
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ORG_BUDGET_ACCT" value-count="0" url="예산조직 정보 가져오기" >  
+   <sql-content>
+   <![CDATA[
+		SELECT YYYY,BUDGETORG, ACCTCD, TO_ACCTNAME(ACCTCD) ACCTNAME,
+			   SUM(NVL(EXECBUDGET01,0)) EXECBUDGET01,
+			   SUM(NVL(EXECBUDGET02,0)) EXECBUDGET02,
+			   SUM(NVL(EXECBUDGET03,0)) EXECBUDGET03,
+			   SUM(NVL(EXECBUDGET04,0)) EXECBUDGET04,
+			   SUM(NVL(EXECBUDGET05,0)) EXECBUDGET05,
+			   SUM(NVL(EXECBUDGET06,0)) EXECBUDGET06,
+			   SUM(NVL(EXECBUDGET07,0)) EXECBUDGET07,
+			   SUM(NVL(EXECBUDGET08,0)) EXECBUDGET08,
+			   SUM(NVL(EXECBUDGET09,0)) EXECBUDGET09,
+			   SUM(NVL(EXECBUDGET10,0)) EXECBUDGET10,
+			   SUM(NVL(EXECBUDGET11,0)) EXECBUDGET11,
+			   SUM(NVL(EXECBUDGET12,0)) EXECBUDGET12,
+			   SUM(NVL(EXECBUDGET01,0))+SUM(NVL(EXECBUDGET02,0))+SUM(NVL(EXECBUDGET03,0))
+			   +SUM(NVL(EXECBUDGET04,0))+SUM(NVL(EXECBUDGET05,0))+SUM(NVL(EXECBUDGET06,0))
+			   +SUM(NVL(EXECBUDGET07,0))+SUM(NVL(EXECBUDGET08,0))+SUM(NVL(EXECBUDGET09,0))
+			   +SUM(NVL(EXECBUDGET10,0))+SUM(NVL(EXECBUDGET11,0))+SUM(NVL(EXECBUDGET12,0)) TOTAMT
+		FROM 
+		(
+			SELECT [YYYY] YYYY,MM,BUDGETORG, ACCTCD,
+				   0 EXECBUDGET01,
+				   0 EXECBUDGET02,
+				   DECODE(MM,'03',EXECBUDGET) EXECBUDGET03,
+				   DECODE(MM,'04',EXECBUDGET) EXECBUDGET04,
+				   DECODE(MM,'05',EXECBUDGET) EXECBUDGET05,
+				   DECODE(MM,'06',EXECBUDGET) EXECBUDGET06,
+				   DECODE(MM,'07',EXECBUDGET) EXECBUDGET07,
+				   DECODE(MM,'08',EXECBUDGET) EXECBUDGET08,
+				   DECODE(MM,'09',EXECBUDGET) EXECBUDGET09,
+				   DECODE(MM,'10',EXECBUDGET) EXECBUDGET10,
+				   DECODE(MM,'11',EXECBUDGET) EXECBUDGET11,
+				   DECODE(MM,'12',EXECBUDGET) EXECBUDGET12	   	   	   	   
+			FROM BUDGETMAIN
+			WHERE BUDGETORG = [ORG_NO]
+			AND YYYY=[YYYY] 
+			UNION ALL
+			SELECT [YYYY] YYYY,MM,BUDGETORG, ACCTCD,
+				   DECODE(MM,'01',EXECBUDGET) EXECBUDGET01,
+				   DECODE(MM,'02',EXECBUDGET) EXECBUDGET02,
+				   0 EXECBUDGET03,
+				   0 EXECBUDGET04,
+				   0 EXECBUDGET05,
+				   0 EXECBUDGET06,
+				   0 EXECBUDGET07,
+				   0 EXECBUDGET08,
+				   0 EXECBUDGET09,
+				   0 EXECBUDGET10,
+				   0 EXECBUDGET11,
+				   0 EXECBUDGET12   	   	   	   
+			FROM BUDGETMAIN
+			WHERE BUDGETORG = [ORG_NO]
+			AND YYYY=TO_CHAR(TO_NUMBER([YYYY])+1)
+		)
+		GROUP BY YYYY,BUDGETORG,ACCTCD	
+	]]>
+	</sql-content>
+   </sql-mapping>     
+</sql>   

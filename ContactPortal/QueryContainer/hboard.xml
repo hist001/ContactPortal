@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+	<sql-mapping  id="M_001"   value-count="0" url="글목록 조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+				NUM,
+				ID,
+				NAME,
+				TITLE,
+				DATES
+		FROM HBOARD
+		WHERE ID LIKE '%'||[S_ID]||'%'
+		AND NAME LIKE '%'||[S_NAME]||'%'
+		AND TABLE_GUBUN = 1 
+		AND CONTENTS_LEVEL = 1
+		ORDER BY NUM	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="M_001_1"   value-count="0" url="글내용 조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+				NUM,
+				ID,
+				NAME,
+				TITLE,
+				CONTENTS,
+				DATES
+		FROM HBOARD
+	    WHERE NUM = [S_NUM]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+		
+	<sql-mapping  id="M_002"   value-count="0" url="member 개별조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+				 ID
+				,PASSWORD
+				,NAME
+				,AGE
+				,GENDER
+				,EMAIL
+		FROM MEMBER
+		WHERE ID = [S_ID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="M_003"   value-count="0" url="member 수정" >
+	<sql-content>
+	<![CDATA[
+
+		UPDATE MEMBER SET
+		 PASSWORD=[PASSWORD]
+		,NAME=[NAME]
+		,AGE=[AGE]
+		,GENDER=[GENDER]
+		,EMAIL=[EMAIL]
+		WHERE ID =[ID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="M_004"   value-count="0" url="member 삭제" >
+	<sql-content>
+	<![CDATA[
+		DELETE FROM MEMBER
+		WHERE ID =[ID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="M_005"   value-count="0" url="member 등록" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO HBOARD (
+				 ID
+				,TITLE
+				,CONTENTS)
+		VALUES(
+				 [ID]
+				,[TITLE]
+				,[CONTENTS]
+				)
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+
+	
+</sql>
+

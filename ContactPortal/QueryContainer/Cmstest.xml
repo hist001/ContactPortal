@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+	<sql-mapping  id="SR_001"   value-count="0" url="member 리스트 조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+				SYSTEMCD
+				,SYSTEMNM
+				,SYSTEM_GB
+				,HIGH_SYSTEMCD
+				,CORPCD
+				,STARTDT
+				,ENDDT
+				,CR_DT
+				,CR_EMPID
+				,MOD_DT
+				,MOD_EMPID
+		FROM SR_SYSTEM
+		WHERE ID LIKE '%'||[S_SYSTEMCD]||'%'
+		AND PASSWORD LIKE '%'||[S_SYSTEMNM]||'%'
+		AND NAME LIKE '%'||[S_SYSTEM_GB]||'%'
+		AND AGE LIKE '%'||[S_HIGH_SYSTEMCD]||'%'
+		AND GENDER LIKE '%'||[S_CORPCD]||'%'
+		AND EMAIL LIKE '%'||[S_STARTDT]||'%'
+		AND EMAIL LIKE '%'||[S_ENDDT]||'%'	
+		AND EMAIL LIKE '%'||[S_CR_DT]||'%'	
+		AND EMAIL LIKE '%'||[S_CR_EMPID]||'%'
+		AND EMAIL LIKE '%'||[MOD_DT]||'%'	
+		AND EMAIL LIKE '%'||[MOD_EMPID]||'%'				
+		ORDER BY S_SYSTEMCD	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>

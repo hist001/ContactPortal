@@ -1,0 +1,487 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+
+	<sql-mapping  id="BD_001"   value-count="1" url="게시판 조회" >
+	<sql-content>
+	<![CDATA[
+		select 	BD_SEQ, 
+			BD_REDOC, 
+			BD_TYPE, 
+			BD_DIV, 
+			TITLE, 
+			DETAIL, 
+			REDOC_SEQ, 
+			CREATEID, 
+			CREATEDT, 
+			MODIFYDT 
+		FROM MANUAL_BOARD
+		WHERE BD_SEQ LIKE [BD_SEQ] || '%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+	<sql-mapping  id="BD_002"   value-count="0" url="게시판 전체 조회" >
+		<sql-content>
+		<![CDATA[
+		SELECT
+				RN
+		 		,SEQ
+		        , BD_TYPE
+		        , TYPE
+		        , TITLE
+		        , REFLAG
+		        , WRITER
+		        , NOTE
+		        , HIGHSEQ
+		        , PW
+		        , VIEW_CNT
+		        , CREATEDT
+		        , MODIFYDT
+		        ,LEVEL
+				, CEIL(PAGES) PAGES
+		FROM
+		(SELECT
+				ROWNUM RN,
+		        CB.SEQ SEQ
+		        ,CB.BD_TYPE BD_TYPE
+		        ,CB.TYPE TYPE
+		        ,DECODE(SUBSTR(CB.TITLE, 1, 4), '[RE]', 'Y', 'N') as REFLAG
+		        ,CB.TITLE as TITLE
+		        ,CB.WRITER WRITER
+		        ,CB.NOTE NOTE
+		        ,CB.HIGHSEQ HIGHSEQ
+		        ,CB.PW PW
+		        ,CB.VIEW_CNT VIEW_CNT
+		        ,TO_CHAR (CREATEDT,'YYYY-MM-DD') CREATEDT
+		        ,TO_CHAR (MODIFYDT,'YYYY-MM-DD') MODIFYDT
+		        ,LEVEL
+		        ,(
+			
+			
+					SELECT COUNT(*)
+					FROM (SELECT * FROM COMBOARD WHERE  BD_TYPE lIKE ''||'%') CB2
+					WHERE
+					(CB2.TITLE LIKE '%'||DECODE('','T', '','*')||'%' OR
+					DECODE('','T',CB2.TITLE,'') = '' OR
+					('' IN ('W','N'))) AND
+					
+					(CB2.WRITER LIKE '%'||DECODE('','W', '','*')||'%' OR
+					DECODE('','W',CB2.WRITER,'') = '' OR
+					('' IN ('T','N'))) AND
+					
+					(CB2.NOTE LIKE '%'||DECODE('','N', '','*')||'%' OR
+					DECODE('','N',CB2.NOTE,'') = '' OR
+					('' IN ('W','T'))) OR
+					
+					((((CB2.TITLE LIKE '%'||''||'%') OR
+					(CB2.WRITER LIKE '%'||''||'%')) OR
+					(CB2.NOTE LIKE '%'||''||'%')) AND
+					('' IS NULL))
+					
+					AND BD_TYPE = [BD_TYPE]
+					
+					CONNECT BY PRIOR TO_CHAR (CB2.SEQ) = CB2.HIGHSEQ
+					START WITH HIGHSEQ='0'
+									        
+		       	)/17 Pages
+			
+			
+			FROM
+				(SELECT * FROM COMBOARD WHERE  BD_TYPE lIKE ''||'%') CB
+		
+			WHERE	
+				CB.BD_TYPE = [BD_TYPE] AND
+				
+				(CB.TITLE LIKE '%'||DECODE([BC_COMPLIST],'T', [S_TITLE],'*')||'%' OR  
+				DECODE([BC_COMPLIST],'T',CB.TITLE,[S_TITLE]) = '' OR 
+				([BC_COMPLIST] IN ('W','N'))) AND
+		        
+		        (CB.WRITER LIKE '%'||DECODE([BC_COMPLIST],'W', [S_TITLE],'*')||'%' OR 
+		        DECODE([BC_COMPLIST],'W',CB.WRITER,[S_TITLE]) = '' OR 
+		        ([BC_COMPLIST] IN ('T','N'))) AND
+		        
+		        (CB.NOTE LIKE '%'||DECODE([BC_COMPLIST],'N', [S_TITLE],'*')||'%' OR  
+		        DECODE([BC_COMPLIST],'N',CB.NOTE,[S_TITLE]) = '' OR 
+		        ([BC_COMPLIST] IN ('W','T'))) OR
+		        
+		        ((((CB.TITLE LIKE '%'||[S_TITLE]||'%') OR 
+		        (CB.WRITER LIKE '%'||[S_TITLE]||'%')) OR 
+		        (CB.NOTE LIKE '%'||[S_TITLE]||'%')) AND 
+		        ([BC_COMPLIST] IS NULL))  
+				
+				CONNECT BY PRIOR TO_CHAR (CB.SEQ) = CB.HIGHSEQ
+				START WITH HIGHSEQ='0'
+				ORDER SIBLINGS BY CB.CREATEDT DESC, CB.SEQ
+		)
+		where 1=1 and ceil(RN/17) = [CPN_SALES] AND BD_TYPE = [BD_TYPE]
+
+				]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="BD_003"   value-count="0" url="게시판 등록" >
+		<sql-content>
+		<![CDATA[
+	INSERT INTO COMBOARD
+	(SEQ, BD_TYPE ,TYPE, WRITER, TITLE, NOTE, PW, CREATEDT,HIGHSEQ)
+	
+	VALUES
+	( [SEQ],[BD_TYPE],[TYPE],[WRITER],[TITLE],[NOTE],[PW], SYSDATE,[HIGHSEQ])
+     
+		]]>
+	</sql-content>
+    </sql-mapping>
+
+   <sql-mapping  id="BD_004"   value-count="0"  url="게시판 삭제" >  
+   	<sql-content>
+  		<![CDATA[
+		DELETE FROM COMBOARD 
+	  		WHERE SEQ = [SEQ]
+		]]>
+	</sql-content>
+    </sql-mapping>
+
+
+	<sql-mapping  id="BD_005"   value-count="0" url="게시판 수정" >  
+		<sql-content>
+			<![CDATA[
+		update COMBOARD
+				set WRITER = [WRITER],
+				TITLE = [TITLE],
+				NOTE = [NOTE],
+				PW = [PW],
+				MODIFYDT = SYSDATE
+			
+				WHERE SEQ = [SEQ]
+			]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="BD_006"   value-count="0" url="게시판 리스트 수정" >  
+		<sql-content>
+			<![CDATA[
+			SELECT
+					SEQ,
+					BD_TYPE,
+					TYPE,
+					TITLE,
+					WRITER,		
+					NOTE,
+					HIGHSEQ,
+					PW,
+					DECODE(NVL(to_empkname([S_WRITER]),[S_WRITER]),WRITER,'Y','N') as EMPFLAG,
+					DECODE(PW,'','N','Y') as PASSFLAG,  
+					TO_CHAR(CREATEDT,'YYYY-MM-DD') as CREATEDT,
+					TO_CHAR(MODIFYDT,'YYYY-MM-DD') as MODIFYDT
+			FROM
+			      	COMBOARD
+			where SEQ = [S_SEQ]
+			]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="BD_007"   value-count="0" url="조회수 " >  
+		<sql-content>
+			<![CDATA[
+		UPDATE COMBOARD
+			SET VIEW_CNT =VIEW_CNT+1
+			WHERE SEQ = [SEQ]
+			]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="BD_008"   value-count="0"  url="게시판 삭제" >  
+   	<sql-content>
+  		<![CDATA[
+		SELECT GET_SEQ('CB') SEQ FROM DUAL
+		]]>
+	</sql-content>
+    </sql-mapping>
+	
+	<sql-mapping  id="BD_009"   value-count="0"  url="비밀번호 검사" >  
+   	<sql-content>
+  		<![CDATA[
+		select decode([S_PW], (select pw from comboard where seq=[S_SEQ]), 'Y', 'N') ModifyFlag 
+		from dual
+		]]>
+	</sql-content>
+    </sql-mapping>
+    <sql-mapping  id="BD_010"   value-count="0"  url="FAQ 조회" >  
+   	<sql-content>
+  		<![CDATA[
+		SELECT 
+			SEQ, 
+			BD_TYPE, 
+			TYPE, 
+			WRITER, 
+			TITLE, 
+			NOTE, 
+			HIGHSEQ, 
+			VIEW_CNT, 
+			PW, 
+			CREATEDT,
+			MODIFYDT
+		FROM COMBOARD
+		WHERE WRITER like [S_WRITER] || '%' 
+		and	to_number(to_char(CREATEDT,'YYYYMMDD'))	> to_number(DECODE(REPLACE(TRIM([S_CREATEDT]),'-',''), '', '00000101', REPLACE(TRIM([S_CREATEDT]),'-','')))
+		and	TYPE like [S_TYPE] || '%'
+		and	SEQ like [S_SEQ] || '%'
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="BD_011"   value-count="0" url="FAQ 저장" >
+		<sql-content>
+		<![CDATA[
+		INSERT INTO COMBOARD
+			(SEQ, BD_TYPE , TYPE, WRITER, TITLE, NOTE, CREATEDT, HIGHSEQ)
+	
+		VALUES
+			( [SEQ],[BD_TYPE],[TYPE],[WRITER],[TITLE],[NOTE], SYSDATE,[HIGHSEQ])
+     	]]>
+	</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="BD_012"   value-count="0"  url="FAQ 삭제" >  
+   	<sql-content>
+  		<![CDATA[
+		DELETE FROM COMBOARD 
+	  		WHERE SEQ = [SEQ]
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="BD_013"   value-count="0" url="FAQ 수정" >  
+	<sql-content>
+		<![CDATA[
+		update COMBOARD
+				set 
+					TITLE = [TITLE],
+					NOTE = [NOTE],
+					MODIFYDT = SYSDATE
+					
+				WHERE 
+					SEQ = [SEQ]
+			]]>
+	</sql-content>
+	</sql-mapping>
+	
+		<sql-mapping  id="BD_014"   value-count="0" url="Faq직접" >
+		<sql-content>
+		<![CDATA[
+			SELECT
+				RN
+		 		, SEQ
+		        , BD_TYPE
+		        , TYPE
+		        , TITLE
+		        , REFLAG
+		        , WRITER
+		        , NOTE
+		        , HIGHSEQ
+		        , PW
+		        , VIEW_CNT
+		        , CREATEDT
+		        , MODIFYDT
+		        , LEVEL
+				, CEIL(PAGES) PAGES
+			FROM
+				(SELECT
+					ROWNUM RN
+			        ,CB.SEQ SEQ
+			        ,CB.BD_TYPE BD_TYPE
+			        ,CB.TYPE TYPE
+			        ,DECODE(SUBSTR(CB.TITLE, 1, 4), '[RE]', 'Y', 'N') as REFLAG
+			        ,CB.TITLE as TITLE
+			        ,CB.WRITER WRITER
+			        ,CB.NOTE NOTE
+			        ,CB.HIGHSEQ HIGHSEQ
+			        ,CB.PW PW
+			        ,CB.VIEW_CNT VIEW_CNT
+			        ,TO_CHAR (CREATEDT,'YYYY-MM-DD') CREATEDT
+			        ,TO_CHAR (MODIFYDT,'YYYY-MM-DD') MODIFYDT
+			        ,LEVEL
+			        ,(
+			
+			
+						SELECT COUNT(*)
+							FROM (SELECT * FROM COMBOARD WHERE  BD_TYPE lIKE ''||'%') CB2
+							WHERE
+							(CB2.TITLE LIKE '%'||DECODE('','T', '','*')||'%' OR
+							DECODE('','T',CB2.TITLE,'') = '' OR
+							('' IN ('W','N'))) AND
+							
+							(CB2.WRITER LIKE '%'||DECODE('','W', '','*')||'%' OR
+							DECODE('','W',CB2.WRITER,'') = '' OR
+							('' IN ('T','N'))) AND
+							
+							(CB2.NOTE LIKE '%'||DECODE('','N', '','*')||'%' OR
+							DECODE('','N',CB2.NOTE,'') = '' OR
+							('' IN ('W','T'))) OR
+							
+							((((CB2.TITLE LIKE '%'||''||'%') OR
+							(CB2.WRITER LIKE '%'||''||'%')) OR
+							(CB2.NOTE LIKE '%'||''||'%')) AND
+							('' IS NULL))
+							
+							AND BD_TYPE = [BD_TYPE]
+							
+							CONNECT BY PRIOR TO_CHAR (CB2.SEQ) = CB2.HIGHSEQ
+							START WITH HIGHSEQ='0'
+				        
+		       	)/20 Pages
+			
+			
+			FROM
+				(SELECT * FROM COMBOARD WHERE  BD_TYPE lIKE ''||'%') CB
+		
+			WHERE	
+				CB.BD_TYPE = [BD_TYPE] AND
+				
+				(CB.TITLE LIKE '%'||DECODE([BC_COMPLIST],'T', [S_TITLE],'*')||'%' OR  
+				DECODE([BC_COMPLIST],'T',CB.TITLE,[S_TITLE]) = '' OR 
+				([BC_COMPLIST] IN ('W','N'))) AND
+		        
+		        (CB.WRITER LIKE '%'||DECODE([BC_COMPLIST],'W', [S_TITLE],'*')||'%' OR 
+		        DECODE([BC_COMPLIST],'W',CB.WRITER,[S_TITLE]) = '' OR 
+		        ([BC_COMPLIST] IN ('T','N'))) AND
+		        
+		        (CB.NOTE LIKE '%'||DECODE([BC_COMPLIST],'N', [S_TITLE],'*')||'%' OR  
+		        DECODE([BC_COMPLIST],'N',CB.NOTE,[S_TITLE]) = '' OR 
+		        ([BC_COMPLIST] IN ('W','T'))) OR
+		        
+		        ((((CB.TITLE LIKE '%'||[S_TITLE]||'%') OR 
+		        (CB.WRITER LIKE '%'||[S_TITLE]||'%')) OR 
+		        (CB.NOTE LIKE '%'||[S_TITLE]||'%')) AND 
+		        ([BC_COMPLIST] IS NULL))  
+				
+				CONNECT BY PRIOR TO_CHAR (CB.SEQ) = CB.HIGHSEQ
+				START WITH HIGHSEQ='0'
+				ORDER SIBLINGS BY CB.CREATEDT DESC, CB.SEQ
+		)
+		where 1=1 and ceil(RN/20) = [CPN_SALES] AND BD_TYPE = [BD_TYPE]
+
+				]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="BD_015"   value-count="0" url="FAQ직접조회보조" >  
+	<sql-content>
+		<![CDATA[
+		select 	SEQ,
+				BD_TYPE,
+				CREATEDT,
+				NOTE,
+				TITLE,
+				MODIFYDT,
+				WRITER
+		from comboard
+		where seq = [S_SEQ]
+			]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+		<sql-mapping  id="BD_016"   value-count="0" url="Faq게시판-클릭가능" >
+		<sql-content>
+		<![CDATA[
+			SELECT
+				RN
+		 		, SEQ
+		        , BD_TYPE
+		        , TYPE
+		        , TITLE
+		        , REFLAG
+		        , WRITER
+		        , NOTE
+		        , HIGHSEQ
+		        , PW
+		        , VIEW_CNT
+		        , CREATEDT
+		        , MODIFYDT
+		        , LEVEL
+				, CEIL(PAGES) PAGES
+			FROM
+				(SELECT
+					ROWNUM RN
+			        ,CB.SEQ SEQ
+			        ,CB.BD_TYPE BD_TYPE
+			        ,CB.TYPE TYPE
+			        ,DECODE(SUBSTR(CB.TITLE, 1, 4), '[RE]', 'Y', 'N') as REFLAG
+			        ,CB.TITLE as TITLE
+			        ,CB.WRITER WRITER
+			        ,CB.NOTE NOTE
+			        ,CB.HIGHSEQ HIGHSEQ
+			        ,CB.PW PW
+			        ,CB.VIEW_CNT VIEW_CNT
+			        ,TO_CHAR (CREATEDT,'YYYY-MM-DD') CREATEDT
+			        ,TO_CHAR (MODIFYDT,'YYYY-MM-DD') MODIFYDT
+			        ,LEVEL
+			        ,(
+			
+			
+						SELECT COUNT(*)
+							FROM (SELECT * FROM COMBOARD WHERE  BD_TYPE lIKE ''||'%') CB2
+							WHERE
+							(CB2.TITLE LIKE '%'||DECODE('','T', '','*')||'%' OR
+							DECODE('','T',CB2.TITLE,'') = '' OR
+							('' IN ('W','N'))) AND
+							
+							(CB2.WRITER LIKE '%'||DECODE('','W', '','*')||'%' OR
+							DECODE('','W',CB2.WRITER,'') = '' OR
+							('' IN ('T','N'))) AND
+							
+							(CB2.NOTE LIKE '%'||DECODE('','N', '','*')||'%' OR
+							DECODE('','N',CB2.NOTE,'') = '' OR
+							('' IN ('W','T'))) OR
+							
+							((((CB2.TITLE LIKE '%'||''||'%') OR
+							(CB2.WRITER LIKE '%'||''||'%')) OR
+							(CB2.NOTE LIKE '%'||''||'%')) AND
+							('' IS NULL))
+							
+							AND BD_TYPE = [BD_TYPE]
+							
+							CONNECT BY PRIOR TO_CHAR (CB2.SEQ) = CB2.HIGHSEQ
+							START WITH HIGHSEQ='0'
+				        
+		       	)/100 Pages
+			
+			
+			FROM
+				(SELECT * FROM COMBOARD WHERE  BD_TYPE lIKE ''||'%') CB
+		
+			WHERE	
+				CB.BD_TYPE = [BD_TYPE] AND
+				
+				(CB.TITLE LIKE '%'||DECODE([BC_COMPLIST],'T', [S_TITLE],'*')||'%' OR  
+				DECODE([BC_COMPLIST],'T',CB.TITLE,[S_TITLE]) = '' OR 
+				([BC_COMPLIST] IN ('W','N'))) AND
+		        
+		        (CB.WRITER LIKE '%'||DECODE([BC_COMPLIST],'W', [S_TITLE],'*')||'%' OR 
+		        DECODE([BC_COMPLIST],'W',CB.WRITER,[S_TITLE]) = '' OR 
+		        ([BC_COMPLIST] IN ('T','N'))) AND
+		        
+		        (CB.NOTE LIKE '%'||DECODE([BC_COMPLIST],'N', [S_TITLE],'*')||'%' OR  
+		        DECODE([BC_COMPLIST],'N',CB.NOTE,[S_TITLE]) = '' OR 
+		        ([BC_COMPLIST] IN ('W','T'))) OR
+		        
+		        ((((CB.TITLE LIKE '%'||[S_TITLE]||'%') OR 
+		        (CB.WRITER LIKE '%'||[S_TITLE]||'%')) OR 
+		        (CB.NOTE LIKE '%'||[S_TITLE]||'%')) AND 
+		        ([BC_COMPLIST] IS NULL))  
+				
+				CONNECT BY PRIOR TO_CHAR (CB.SEQ) = CB.HIGHSEQ
+				START WITH HIGHSEQ='0'
+				ORDER SIBLINGS BY CB.CREATEDT DESC, CB.SEQ
+		)
+		where 1=1 and ceil(RN/100) = [CPN_SALES] AND BD_TYPE = [BD_TYPE]
+
+				]]>
+		</sql-content>
+	</sql-mapping>
+	
+
+
+ </sql>

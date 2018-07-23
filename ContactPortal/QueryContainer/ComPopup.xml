@@ -1,0 +1,5554 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="popupList"   value-count="2" url="팝업셋팅정보 검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	PARAMID, 
+				PARAMTYPE, 
+				PARAM1,
+				PARAM2, 
+				PARAM3 
+		FROM INITPOPUP
+		WHERE 	UPPER(PARAMID) LIKE UPPER(?||'%')
+		AND 	UPPER(PARAM1)  LIKE UPPER('%' || ? || '%')
+		AND PARAMTYPE='I'
+		ORDER BY PARAMID 
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+   <sql-mapping  id="insertPopupSet"   value-count="5"  url="팝업셋팅정보 등록" >  
+   	<sql-content>
+	  	<![CDATA[
+		INSERT INTO INITPOPUP (PARAMID, PARAMTYPE, PARAM1, PARAM2, PARAM3)
+		VALUES (?, ?, ?, ?, ?)
+		]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="deletePopupSet"   value-count="2"  url="팝업셋팅정보 삭제" >  
+   	<sql-content>
+	  	<![CDATA[
+		DELETE FROM  INITPOPUP 
+		WHERE PARAMID=?
+        AND   PARAM1 =?
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="deletePopupSetDetail"   value-count="2"  url="팝업셋팅 상세정보 삭제" >  
+   	<sql-content>
+	  	<![CDATA[
+		DELETE FROM  INITPOPUP 
+		WHERE PARAMID=?
+        AND   PARAM2 =?
+		]]>
+	</sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="savePopupSet"   value-count="4"  url="팝업셋팅정보 수정" >  
+   	<sql-content>
+	  	<![CDATA[
+		UPDATE   INITPOPUP  SET
+		PARAM1= ?,
+		PARAM2= ?,
+		PARAM3= ?
+		WHERE PARAMID=?
+		AND   PARAMTYPE='I'
+		]]>
+	</sql-content>
+   </sql-mapping>
+   	
+   	<sql-mapping  id="bizAcq_acctCd" value-count="0" url="지정된 도서인쇄업체 검색" >  
+	<sql-content>
+	<![CDATA[
+			SELECT 
+					CODENO,
+					CODE,
+					CODENAME,
+					'' HIGHCODE,
+					CODE2,
+					CODENAME2,
+					LEVEL,''
+			FROM
+			(
+				SELECT B.BIZACQACCTCD CODENO, 
+					   B.BIZACQNAME CODE, 
+					   SUBSTR(B.BIZREGNO,1,3)||'-'||SUBSTR(B.BIZREGNO,4,2)||'-'||SUBSTR(B.BIZREGNO,6,5) CODENAME,
+					   B.BIZCEONAME CODE2,
+					   B.BIZACQACCTCD||' '||B.BIZACQNAME CODENAME2
+				FROM COCODE A, BIZACQCORP B
+				WHERE A.CD = B.BIZACQCD
+				AND CDTYPE = 'PRTBIZ'
+				AND CDNAME = '50239'
+			)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="bizAcq_N" value-count="0" url="거래처 검색" >  
+	<sql-content>
+	<![CDATA[
+			SELECT 
+				CODENO,
+				CODE,
+				CODENAME,
+				'' HIGHCODE,
+				CODE2,
+				CODENAME2,
+				LEVEL,''
+			FROM
+			(
+				SELECT	BIZACQACCTCD CODENO,
+						BIZACQNAME CODE,
+						SUBSTR(BIZREGNO,1,3)||'-'||SUBSTR(BIZREGNO,4,2)||'-'||SUBSTR(BIZREGNO,6,5) CODENAME,
+						BIZCEONAME CODE2,
+						BIZACQACCTCD||' '||BIZACQNAME CODENAME2
+				FROM BIZACQCORP
+				WHERE BIZUSEFLAG='C'
+				AND BIZACQACCTCD LIKE '%'||code:||'%'
+				AND BIZACQNAME  LIKE '%'||codeName:||'%'
+			)
+	]]>
+	</sql-content>
+	</sql-mapping>
+   	
+	<sql-mapping  id="orgMemberList"   value-count="1" url="조직별/사원별 팝업셋팅 정보 검색" >  
+	<sql-content>
+	<![CDATA[
+		     SELECT  CODENO,
+                     CODE,
+                     CODENAME,
+                     HIGHCODE,
+                     ORGCD,
+                     ORGNAME,
+                     CASE WHEN DELFLAG > 0
+                     THEN 'Y'
+                     ELSE 'N'
+                     END AS DELFLAG ,
+                     CASE WHEN SELECTFLAG > 0
+                     THEN 'Y'
+                     ELSE 'N'
+                     END AS SELECTFLAG ,
+               		 CASE WHEN REARRANGEFLAG > 0
+                     THEN 'Y'
+                     ELSE 'N'
+                     END AS REARRANGEFLAG ,
+                     LEVEL
+              FROM
+	              (
+			SELECT CODENO,
+					CODE,
+					CODENAME,
+					HIGHCODE,
+					ORGCD,
+					ORGNAME,
+					SUM(DELFLAG) AS DELFLAG,
+					SUM(SELECTFLAG) AS SELECTFLAG,
+					SUM(REARRANGEFLAG) AS REARRANGEFLAG
+			FROM (  SELECT   C.*,
+					DECODE(D.PARAMTYPE,'D','1',0) AS DELFLAG,
+					DECODE(D.PARAMTYPE,'S','1',0)  AS SELECTFLAG,
+					DECODE(D.PARAMTYPE,'R',PARAM3,DECODE(PARAM3,'Y','1',0))  AS REARRANGEFLAG
+               FROM
+               (
+		 SELECT X.EMPID AS CODENO,
+				X.EMPID AS CODE,
+				X.EMPKNAME AS CODENAME,
+				TO_CHAR(Y.ORG_NO) AS HIGHCODE,
+				Y.ORGCD AS ORGCD,
+				Y.ORGNAME AS ORGNAME
+		 FROM EMPALL X, ORG Y
+		 WHERE X.ORGCD = to_char(Y.ORG_NO)
+		 AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN X.WSTARTDT AND WENDDT
+ 		 AND   (Y.ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		 		 OR  org_no='1006')
+		 UNION ALL
+		SELECT TO_CHAR(ORG_NO)    AS CODENO,            --컬럼명에 유의
+		       ORGCD     AS CODE,
+		       ORGNAME   AS CODENAME,
+		       HIGHORGCD AS HIGHCODE,
+		       ORGCD     AS ORGCD,
+		       ORGNAME   AS ORGNAME
+		FROM ORG    A
+   		WHERE   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+  		OR  org_no='1006'
+   		) C
+   		, INITPOPUP D
+        WHERE ORGNAME  LIKE '%'|| '' || '%'
+        AND   CODENAME LIKE '%'|| '' || '%'
+        AND   D.PARAMID(+)= ?
+        AND   C.CODENO=+D.PARAM2(+)
+		)
+		GROUP BY CODE,CODENO,CODENAME,HIGHCODE,ORGCD,ORGNAME        
+        ) E
+		START WITH CODE = '9999'
+		CONNECT BY PRIOR CODENO = HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="job_set"   value-count="3" url="직무  팝업셋팅 세부정보" >  
+	<sql-content>
+	<![CDATA[
+        SELECT CODENO,
+				CODE,
+				CODENAME,
+				HIGHCODE,
+				DECODE(SORT,'1','Y','N') AS SORT,
+				DECODE(DELFLAG,'1','Y','N') AS DELFLAG,
+				DECODE(SELECTFLAG,'1','Y','N') AS SELECTFLAG,
+				DECODE(REARRANGEFLAG,'0','',REARRANGEFLAG) AS REARRANGEFLAG,
+				LEVEL
+        FROM (
+		SELECT CODENO,
+				CODE,
+				CODENAME,
+				HIGHCODE
+				,MAX(SORT) AS SORT,
+				SUM(DELFLAG) AS DELFLAG,
+				SUM(SELECTFLAG) AS SELECTFLAG,
+				MAX(REARRANGEFLAG) AS REARRANGEFLAG
+		FROM (  SELECT  A.*,
+						DECODE(B.PARAMTYPE,'D','1',0) AS DELFLAG,
+						DECODE(B.PARAMTYPE,'S','1',0)  AS SELECTFLAG,
+						DECODE(B.PARAMTYPE,'R',PARAM3,DECODE(PARAM3,'Y','Y',0))  as rearrangeFlag					
+		FROM
+         (
+         SELECT  CODENO, CODE, CODENAME, HIGHCODE,SORT
+         FROM
+           (SELECT   TEMP.*,
+                    MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+                    + NVL((SELECT K.PARAM3
+                       FROM INITPOPUP  K
+                       WHERE PARAMID=?
+                       AND   PARAMTYPE='R'
+                       AND   PARAM3<>'Y'
+                       AND   PARAM1=CODENO),0) AS SORT
+            FROM (
+                  SELECT   	JOBCD 		AS CODENO,
+		               		JOBCD 		AS CODE,
+		               		JOBNAME 	AS CODENAME,
+					   		SUPERJOBCD 	AS HIGHCODE				   
+				   FROM HISTJOB  
+				   WHERE USEFLAG = 'Y'  
+                  )  TEMP
+            ORDER BY SORT)
+         ) A,
+         (select PARAMTYPE,PARAM3,PARAM1 from initpopup
+          where paramid=?
+          and   param2 =?
+         ) B
+         where a.codeno=b.param1(+)
+         )
+         GROUP BY SORT,CODE,CODENO,CODENAME,HIGHCODE 
+         ORDER BY SORT,CODE 
+		 ) D
+         START WITH CODE in ('99999')
+         CONNECT BY PRIOR CODENO = HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	   	
+	<sql-mapping  id="org_set"   value-count="3" url="조직별  팝업셋팅 세부정보 검색" >  
+	<sql-content>
+	<![CDATA[
+        SELECT CODENO,
+				CODE,
+				CODENAME,
+				HIGHCODE,
+				DECODE(SORT,'1','Y','N') AS SORT,
+				DECODE(DELFLAG,'1','Y','N') AS DELFLAG,
+				DECODE(SELECTFLAG,'1','Y','N') AS SELECTFLAG,
+				DECODE(REARRANGEFLAG,'0','',REARRANGEFLAG) AS REARRANGEFLAG,
+				LEVEL
+        FROM (
+		SELECT CODENO,
+				CODE,
+				CODENAME,
+				HIGHCODE
+				,MAX(SORT) AS SORT,
+				SUM(DELFLAG) AS DELFLAG,
+				SUM(SELECTFLAG) AS SELECTFLAG,
+				MAX(REARRANGEFLAG) AS REARRANGEFLAG
+		FROM (  SELECT  A.*,
+						DECODE(B.PARAMTYPE,'D','1',0) AS DELFLAG,
+						DECODE(B.PARAMTYPE,'S','1',0) AS SELECTFLAG,
+						DECODE(B.PARAMTYPE,'R',PARAM3,DECODE(PARAM3,'Y','Y',0))  as rearrangeFlag
+		    	FROM
+		         (
+		         SELECT  CODENO, CODE, CODENAME, HIGHCODE,SORT
+		         FROM
+		           (SELECT   TEMP.*,
+		                    MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+		                    + NVL((SELECT K.PARAM3
+		                       FROM INITPOPUP  K
+		                       WHERE PARAMID=?
+		                       AND   PARAMTYPE='R'
+		                       AND   PARAM3<>'Y'
+		                       AND   PARAM1=CODENO),0) AS SORT
+		            FROM (
+		                  SELECT  TO_CHAR(ORG_NO)    AS CODENO,
+		                                  ORGCD     AS CODE,
+		                                  ORGNAME   AS CODENAME,
+		                                  HIGHORGCD AS HIGHCODE
+		                  FROM ORG
+		                  WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		                  AND ORG_NO IS NOT NULL
+		                  )  TEMP
+		            ORDER BY SORT)
+         ) A,
+         (select PARAMTYPE,PARAM3,PARAM1 from initpopup
+          where paramid=?
+          and   param2 =?
+         ) B
+         where a.codeno=b.param1(+)
+         )
+         GROUP BY SORT,CODE,CODENO,CODENAME,HIGHCODE 
+         ORDER BY SORT,CODE
+		 ) D
+         START WITH CODE = '9999'
+         CONNECT BY PRIOR CODENO = HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	   	
+	<sql-mapping  id="pjt_set"   value-count="3" url="조직별/사원별 pjt 팝업셋팅 세부정보 검색" >  
+	<sql-content>
+	<![CDATA[
+        SELECT CODENO,
+				CODE,
+				CODENAME,
+				HIGHCODE,
+				DECODE(SORT,'1','Y','N') AS SORT,
+				DECODE(DELFLAG,'1','Y','N') AS DELFLAG,
+				DECODE(SELECTFLAG,'1','Y','N') AS SELECTFLAG,
+				DECODE(REARRANGEFLAG,'0','',REARRANGEFLAG) AS REARRANGEFLAG,
+				LEVEL
+        FROM (
+			select  CODENO,
+					CODE,
+					CODENAME,
+					HIGHCODE
+					,MAX(SORT) AS SORT,
+					SUM(DELFLAG) AS DELFLAG,
+					SUM(SELECTFLAG) AS SELECTFLAG,
+					MAX(REARRANGEFLAG) AS REARRANGEFLAG
+			from (  SELECT   A.*,
+						DECODE(B.PARAMTYPE,'D',1,0) as delFlag,
+						DECODE(B.PARAMTYPE,'S',1,0)  as selectFlag,
+						DECODE(B.PARAMTYPE,'R',PARAM3,DECODE(PARAM3,'Y','Y',0))  as rearrangeFlag
+	  
+	    	FROM
+	         (
+	         SELECT  CODENO, CODE, CODENAME, HIGHCODE,SORT
+	         FROM
+	           (SELECT   TEMP.*,
+	                    MIN(rownum) OVER(PARTITION BY HIGHCODE )-1
+	                    + NVL((SELECT MAX(K.PARAM3)
+	                       FROM INITPOPUP  K
+	                       WHERE PARAMID=?
+	                       AND   PARAMTYPE='R'
+	                       AND   PARAM3<>'Y'
+	                       AND   PARAM1=CODENO),0) AS SORT
+	            FROM (
+	                  SELECT  TO_CHAR(ORG_NO)    AS CODENO,
+	                                  ORGCD     AS CODE,
+	                                  ORGNAME   AS CODENAME,
+	                                  HIGHORGCD AS HIGHCODE
+	                  FROM ORG
+	                  WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+	                  AND ORG_NO IS NOT NULL
+	
+	                  UNION ALL
+	
+	                  SELECT TO_CHAR(PJT_NO)    AS CODENO,
+	                         PJTCD     AS CODE,
+	                         PJTNAME   AS CODENAME,
+	                         PJTORG_NO AS HIGHCODE
+	                  FROM PROJECT
+	                  WHERE PJTSTATUS IN ('REG','PGO','REP')
+--	                  AND APPRSTATUS IN ('WEO','WCO','WES')
+	                  AND PJTTYPE<>'Y'
+	                  AND PJTSTATUS IS NOT NULL
+	                  AND APPRSTATUS IS NOT NULL
+	                  )  TEMP
+	            ORDER BY SORT)
+	         ) A,
+	         (select PARAMTYPE,PARAM3,PARAM1 from initpopup
+	          where paramid=?
+	          and   param2 =?
+	         ) B
+	         where a.codeno=b.param1(+)
+	         )
+	         GROUP BY SORT,CODE,CODENO,CODENAME,HIGHCODE 
+	         ORDER BY SORT,CODE DESC
+			 ) D
+         START WITH CODE = '9999'
+         CONNECT BY PRIOR CODENO = HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="prc_set"   value-count="3" url="공정 팝업셋팅 세부정보 검색" >  
+	<sql-content>
+	<![CDATA[
+        SELECT D.*,LEVEL
+        FROM (
+        SELECT  DISTINCT A.*,
+                        max(DECODE(B.PARAMTYPE,'D','Y','')) over(partition by codeno) as delFlag,
+                        max(DECODE(B.PARAMTYPE,'S',DECODE(PARAM3,'Y','N','Y'),'')) over(partition by  codeno) as selectFlag,
+                        max(DECODE(B.PARAMTYPE,'R',param3,'D',PARAM3,'')) over(partition by codeno) as rearrangeFlag
+    	FROM
+         (
+         SELECT  CODENO, CODE, CODENAME, HIGHCODE
+         FROM
+           (SELECT   TEMP.*,
+                    MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+                    + NVL((SELECT K.PARAM3
+                       FROM INITPOPUP  K
+                       WHERE PARAMID=[code]
+                       AND   PARAMTYPE='R'
+                       AND   PARAM3<>'Y'
+                       AND   PARAM1=CODENO),0) AS SORT
+            FROM (
+	              SELECT  TO_CHAR(ORG_NO)    AS CODENO,
+	                      ORGCD     AS CODE,
+	                      ORGNAME   AS CODENAME,
+	                      HIGHORGCD AS HIGHCODE
+                  FROM ORG
+                  WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+                  AND ORG_NO IS NOT NULL
+
+                  UNION ALL
+                  
+						(SELECT
+								PRCSCD AS CODENO,
+								PRCSCD AS CODE,
+								(SELECT PRCSNAME
+								FROM PRCS  A
+								WHERE A.PRCSCD = B.PRCSCD)
+								AS CODENAME,
+								'0' AS HIGHCODE
+						FROM PJTPRCS B
+					UNION
+						SELECT 'ZZZ'    AS CODENO,
+						'0'      AS CODE,
+						'공정'   AS CODENAME,
+						''               AS HIGHCODE
+						FROM DUAL)                  
+                  )  TEMP
+            ORDER BY SORT)
+         ) A,
+         (select PARAMTYPE,PARAM3,PARAM1 from initpopup
+          where paramid=?
+          and   param2 =?
+         ) B
+         where a.codeno=b.param1(+)
+         ) D
+         START WITH CODE = '9999'
+         CONNECT BY PRIOR CODENO = HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="biz_set"   value-count="3" url="사업유형  팝업셋팅 세부정보 검색" >  
+	<sql-content>
+	<![CDATA[
+        SELECT D.*,LEVEL
+        FROM (
+        SELECT  DISTINCT A.*,
+                        max(DECODE(B.PARAMTYPE,'D','Y','')) over(partition by codeno) as delFlag,
+                        max(DECODE(B.PARAMTYPE,'S',DECODE(PARAM3,'Y','N','Y'),'')) over(partition by  codeno) as selectFlag,
+                        max(DECODE(B.PARAMTYPE,'R',param3,'D',PARAM3,'')) over(partition by codeno) as rearrangeFlag
+    	FROM
+         (
+         SELECT  CODENO, CODE, CODENAME, HIGHCODE
+         FROM
+           (SELECT   TEMP.*,
+                    MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+                    + NVL((SELECT K.PARAM3
+                       FROM INITPOPUP  K
+                       WHERE PARAMID=?
+                       AND   PARAMTYPE='R'
+                       AND   PARAM3<>'Y'
+                       AND   PARAM1=CODENO),0) AS SORT
+            FROM (
+				--표준공통 Query Start
+		        SELECT  B.BIZCD     AS CODENO,
+		                        B.BIZCD     AS CODE,
+		                        B.BIZNAME   AS CODENAME,
+		                        B.HIGHBIZCD AS HIGHCODE
+		        FROM
+		                (
+		                SELECT  '9999'          AS BIZCD,
+		                                '사업유형'      AS BIZNAME,
+		                                ''                      AS BIZTYPECD,
+		                                ''                      AS BIZTYPEDETAIL,
+		                                '0000'          AS HIGHBIZCD,
+		                                ''                      AS HIGHBIZNAME,
+		                                'Y'             AS USEFLAG,
+		                                '20030011'                      AS EMPID
+		                FROM DUAL
+		
+		                UNION ALL
+		
+		                SELECT  BIZTYPECD       AS BIZCD,
+		                                BIZTYPENAME AS BIZNAME,
+		                                BIZTYPECD,
+		                                BIZTYPEDETAIL,
+		                                '9999'          AS HIGHBIZCD,
+		                                '사업유형'      AS HIGHBIZNAME,
+		                                'Y'             AS USEFLAG,
+		                                ''                      AS EMPID
+		                FROM BIZTYPE
+		
+		                UNION ALL
+		
+		                SELECT  A.BIZCD,
+		                                A.BIZNAME,
+		                                A.BIZTYPECD,
+		                                '' BIZTYPEDETAIL,
+		                                A.HIGHBIZCD,
+		                                (SELECT BIZNAME
+		                                FROM BIZ
+		                                WHERE BIZCD = A.HIGHBIZCD) HIGHBIZNAME,
+		                                USEFLAG,
+		                                '' EMPID
+		                FROM BIZ A
+		                ) B
+				--표준공통 Query End               
+                  )  TEMP
+            ORDER BY SORT)
+         ) A,
+         (select PARAMTYPE,PARAM3,PARAM1 from initpopup
+          where paramid=?
+          and   param2 =?
+         ) B
+         where a.codeno=b.param1(+)
+         ) D
+         START WITH CODE = '9999'
+         CONNECT BY PRIOR CODENO = HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="ivp_set"   value-count="3" url="사업유형  팝업셋팅 세부정보 검색" >  
+	<sql-content>
+	<![CDATA[
+        SELECT D.*,LEVEL
+        FROM (
+        SELECT  DISTINCT A.*,
+                        max(DECODE(B.PARAMTYPE,'D','Y','')) over(partition by codeno) as delFlag,
+                        max(DECODE(B.PARAMTYPE,'S',DECODE(PARAM3,'Y','N','Y'),'')) over(partition by  codeno) as selectFlag,
+                        max(DECODE(B.PARAMTYPE,'R',param3,'D',PARAM3,'')) over(partition by codeno) as rearrangeFlag
+    	FROM
+         (
+         SELECT  CODENO, CODE, CODENAME, HIGHCODE
+         FROM
+           (SELECT   TEMP.*,
+                    MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+                    + NVL((SELECT K.PARAM3
+                       FROM INITPOPUP  K
+                       WHERE PARAMID=?
+                       AND   PARAMTYPE='R'
+                       AND   PARAM3<>'Y'
+                       AND   PARAM1=CODENO),0) AS SORT
+            FROM (
+				--표준공통 Query Start
+
+				SELECT 	TO_CHAR(ORG_NO)    AS CODENO,
+				              ORGCD     AS CODE,
+				              ORGNAME   AS CODENAME,
+				              HIGHORGCD AS HIGHCODE,
+				              ROWNUM AS RN
+				FROM (SELECT * FROM ORG ORDER BY ORGCD)
+				WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+				AND ORGDIV<>'P'
+				
+				union all
+				SELECT IVCD CODENO,
+						IVCD CODE,
+						IVNAME||'-'||IVNOTE CODENAME,
+							(SELECT TO_CHAR(ORG_NO)
+							FROM ORGHISTORY
+							WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+							and ORGCD=DYPLANCD)
+						AS HIGHORG_NO,
+						rownum as rn
+				FROM IVPLAN
+				WHERE YPLANCD LIKE TO_CHAR(SYSDATE,'YYYY')||'%'
+
+
+				--표준공통 Query End               
+                  )  TEMP
+            ORDER BY SORT)
+         ) A,
+         (select PARAMTYPE,PARAM3,PARAM1 from initpopup
+          where paramid=?
+          and   param2 =?
+         ) B
+         where a.codeno=b.param1(+)
+         ) D
+         START WITH CODE = '9999'
+         CONNECT BY PRIOR CODENO = HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="mnu_set"   value-count="3" url="메뉴셋팅 세부정보 검색" >  
+	<sql-content>
+	<![CDATA[
+        SELECT D.*,LEVEL-1 AS "LEVEL"
+        FROM (
+        SELECT  DISTINCT A.*,
+                        max(DECODE(B.PARAMTYPE,'D','Y','')) over(partition by codeno) as delFlag,
+                        max(DECODE(B.PARAMTYPE,'S',DECODE(PARAM3,'Y','N','Y'),'')) over(partition by  codeno) as selectFlag,
+                        max(DECODE(B.PARAMTYPE,'R',param3,'D',PARAM3,'')) over(partition by codeno) as rearrangeFlag
+    	FROM
+         (
+         SELECT  CODENO, CODE, CODENAME, HIGHCODE,DOCTYPE
+         FROM
+           (SELECT   TEMP.*,
+                    MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+                    + NVL((SELECT K.PARAM3
+                       FROM INITPOPUP  K
+                       WHERE PARAMID=?
+                       AND   PARAMTYPE='R'
+                       AND   PARAM3<>'Y'
+                       AND   PARAM1=CODENO),0) AS SORT
+            FROM (
+				--표준공통 Query Start
+					SELECT DOCNO AS CODENO,P_TITLE AS CODE,L_TITLE AS CODENAME,HIGHDOCNO AS HIGHCODE,DOCTYPE
+					FROM  PRODUCTDOC B
+  				    WHERE  DOCTYPE IN  ('JSPID','PKG','PRG','SYS')
+					
+				--표준공통 Query End               
+                  )  TEMP
+            ORDER BY SORT)
+         ) A,
+         (select PARAMTYPE,PARAM3,PARAM1 from initpopup
+          where paramid=?
+          and   param2 =?
+         ) B
+         where a.codeno=b.param1(+)
+         ) D
+        WHERE  DOCTYPE IN  ('JSPID','PKG')
+        START WITH DOCTYPE = 'PRG'
+		CONNECT BY PRIOR CODENO = HIGHCODE
+		ORDER SIBLINGS BY CODENAME         
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="favorite"   value-count="3" url="즐겨찾기" >  
+	<sql-content>
+	<![CDATA[
+     
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	   	
+	<sql-mapping  id="org"   value-count="3" url="조직정보 검색_팀이하 선택" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+                ORGCD     AS CODE,
+                ORGNAME   AS CODENAME,
+                ORGCD        AS CODE2,
+                ORGNAME       AS CODENAME2,                
+                HIGHORGCD AS HIGHCODE,
+                [empId] EMPID,		
+				LEVEL,
+				CASE WHEN LEVEL > 2 THEN 'Y' ELSE 'N' END AS SELFLAG	     
+		FROM ORG    A
+		WHERE ORGCD LIKE UPPER('%' || [code] || '%')  --조건 :code
+		AND   ORGNAME LIKE UPPER('%'||[codeName] || '%') --조건 :codeName
+		AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		START WITH A.ORGCD = '9999'
+		CONNECT BY PRIOR to_char(A.ORG_NO) = A.HIGHORGCD
+		ORDER SIBLINGS BY A.ORGCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="cocode"   value-count="3" url="공통코드" >  
+	<sql-content>
+	<![CDATA[
+			SELECT CODENO,
+                   REPLACE(CODE,'$','') AS CODE,
+                   CODENAME,
+                   REPLACE(HIGHCODE,'$','')  AS HIGHCODE,
+                   CDDS,
+                   LEVEL,[empId]
+			FROM
+			(
+			SELECT
+				CD		AS CODENO,
+				CD		AS CODE,
+				CDNAME  AS CODENAME,
+				DECODE(CDTYPE,'SUB',HIGHCD,'$'||CDTYPE) AS HIGHCODE, 
+				CDDS    AS CDDS
+			FROM COCODE
+			UNION ALL
+			SELECT
+				CDTYPE	AS CODENO,
+				'$'||CDTYPE	AS CODE,
+				CDTYPENAME AS CODENAME,
+				DECODE(CDTYPE,'00000', '','$00000') AS HIGHCODE,
+				'' AS CDDS
+			FROM COCODETYPE
+			)    A
+            WHERE   UPPER(CODE) LIKE UPPER([code]||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' || [codeName] || '%')			
+			START WITH CODE='$00000'
+			CONNECT BY PRIOR CODE=HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="CONF_PJT"   value-count="0" url="외주품의서 관련 PJT" >  
+	<sql-content>
+	<![CDATA[
+			SELECT CODENO,
+                   CODE,
+                   CODENAME,
+                   HIGHCODE,
+                   CDDS AS CODE2,
+                   LEVEL,''
+			FROM
+			(
+					SELECT  DISTINCT
+							C.PJT_NO AS CODENO,
+							C.PJTCD  AS CODE,
+							C.PJTNAME AS CODENAME,
+							'' AS HIGHCODE,
+							'' CDDS
+					FROM SC_CONCONFER A,
+							CONFER B,
+							PROJECT C,
+					        SC_CONITEM D,
+							SC_CONTRACT E
+					WHERE A.CONF_NO=B.CONF_NO
+					AND	B.PJT_NO=C.PJT_NO
+				    AND B.CONFCD LIKE 'SCON%'
+				    AND A.CONF_NO=D.CONF_NO
+				    AND (D.ISCONT<>'Y' OR D.ISCONT IS NULL)
+				    AND A.RCONF_NO=E.RCONF_NO(+)
+			)    A
+            WHERE   UPPER(CODE) LIKE UPPER(code:||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' || codeName: || '%')
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="CONF_BIZ"   value-count="0" url="외주품의 관련 거래처" >  
+	<sql-content>
+	<![CDATA[
+			SELECT CODENO,
+                   CODE,
+                   CODENAME,
+                   HIGHCODE,
+                   CDDS,
+                   LEVEL,''
+			FROM
+			(
+				SELECT DISTINCT
+						D.BIZACQCD AS CODENO,
+						BIZACQACCTCD  AS CODE,
+						BIZACQNAME AS CODENAME,
+						'' AS HIGHCODE,
+						'' AS CDDS
+				FROM  PROJECT A,
+				      CONFER B,
+				      SC_CONITEM C,
+				      BIZACQCORP D,
+			 		  SC_CONTRACT E,
+			 		  SC_CONCONFER F
+				WHERE A.PJT_NO=paramId:
+				AND   B.CONFCD LIKE 'SCON%'
+				AND   A.PJT_NO=B.PJT_NO
+				AND   B.CONF_NO=C.CONF_NO
+				AND   C.BIZACQCD=D.BIZACQCD
+				AND   F.RCONF_NO=E.RCONF_NO(+)
+				AND   F.CONF_NO=B.CONF_NO
+				AND  (C.ISCONT<>'Y' OR C.ISCONT IS NULL)
+				AND B.STATUS = 'DD1'
+			)    A
+            WHERE   UPPER(CODE) LIKE UPPER(code:||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' || codeName: || '%')
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="CONT_PJT"   value-count="0" url="외주계약관련 PJT" >  
+	<sql-content>
+	<![CDATA[
+			SELECT CODENO,
+                   CODE,
+                   CODENAME,
+                   HIGHCODE,
+                   CDDS AS CODE2,
+                   LEVEL,''
+			FROM
+			(
+				SELECT DISTINCT
+						D.PJT_NO AS CODENO,
+						D.PJTCD AS CODE,
+						D.PJTNAME  AS CODENAME,
+				        '' AS HIGHCODE,
+				        '' AS CDDS
+				FROM 	SC_CONTRACT A,
+						SC_CONTRACTDETAIL B,
+						CONFER C,
+						PROJECT D
+				WHERE A.CONT_NO=B.CONT_NO
+				AND   B.RCONF_NO=C.CONF_NO
+				AND   C.PJT_NO=D.PJT_NO
+			)    A
+            WHERE   UPPER(CODE) LIKE UPPER(code:||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' || codeName: || '%')
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="CONT_BIZ"   value-count="0" url="외주 계약 관련 거래처" >  
+	<sql-content>
+	<![CDATA[
+			SELECT CODENO,
+                   CODE,
+                   CODENAME,
+                   HIGHCODE,
+                   CDDS,
+                   LEVEL,''
+			FROM
+			(
+					SELECT DISTINCT
+							B.BIZACQCD AS CODENO,
+							BIZACQACCTCD  AS CODE,
+							BIZACQNAME AS CODENAME,
+							'' AS HIGHCODE,
+							'' AS CDDS
+					FROM CONFER A,
+						  SC_CONITEM B,
+						  SC_CONTRACTDETAIL C,
+					      BIZACQCORP D
+					WHERE  A.PJT_NO =paramId:
+					AND A.CONFCD  LIKE 'SCON%'
+					AND A.CONF_NO=B.CONF_NO
+					AND B.CONF_NO=C.RCONF_NO
+					AND   B.BIZACQCD=D.BIZACQCD
+			)    A
+            WHERE   UPPER(CODE) LIKE UPPER(code:||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' || codeName: || '%')
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+		<sql-mapping  id="ACD"   value-count="0" url="자산코드" >  
+	<sql-content>
+	<![CDATA[
+
+                SELECT  *
+                FROM
+                (
+                        SELECT   CODE_NO AS CODENO,
+                 CODE,
+                 CODENAME,
+                 HIGHCODE AS HIGHCODE,
+                 CDDS AS CODE2,
+                 LEVEL ,
+                 DECODE(SIGN(LEVEL-4),-1,'N','Y') AS SELFLAG
+        FROM COMCODE
+                        START WITH CODE_NO='100002711' --[empId]
+                        CONNECT BY PRIOR CODE_NO=HIGHCODE
+                )    A
+         WHERE   UPPER(CODE) LIKE UPPER([code]||'%')
+         AND     UPPER(CODENAME)  LIKE UPPER('%' ||[codeName]||'%')
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="corp"   value-count="3" url="법인코드" >  
+	<sql-content>
+	<![CDATA[
+			SELECT A.*,LEVEL,[empId]
+			FROM
+			(
+			   SELECT  CUST_CD,
+	                   CORP_CD AS  CODENO,
+	                   CORP_CD AS CODE,
+	                   CORP_NAME AS CODENAME,
+	                   CORP_NAME_ABBR AS CDDS,
+	  				   DECODE(CORP_CD,'00000', '','00000') AS HIGHCODE,
+	                   CORP_ENAME,
+	                   CORP_ENAME_ABBR,
+	                   BIZ_TYPE
+			   FROM ACCT_CORP
+			)    A
+            WHERE   UPPER(CODE) LIKE UPPER([code]||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' || [codeName] || '%')					
+			ORDER BY CODENO
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="biz_new"   value-count="0" url="사업유형 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			SUBSTR(paramId:,5,1)+1 AS CODE2,
+			A.*,
+		DECODE(SIGN(
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   B.ORG_NO IN (SELECT ORG_NO
+							FROM ORG
+							START WITH TO_CHAR(ORG_NO)=PARAM2
+							CONNECT BY PRIOR TO_CHAR(ORG_NO)=HIGHORGCD)
+		)+
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   PARAM2 = B.EMPID)),1,'N','') AS SELFLAG
+	FROM
+			(SELECT CODENO,
+	                CODE,
+	                CODENAME,
+	                ''        AS CODE2,
+	                ''        AS CODENAME2,
+	                HIGHCODE,
+	                '' EMPID,
+					LEVEL 	
+			FROM (SELECT   TEMP.*,
+				         MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+				         + NVL((SELECT K.PARAM3
+			                    FROM INITPOPUP  K
+			                    WHERE PARAMID=paramId:
+			                    AND   PARAMTYPE='R'
+			                    AND   PARAM3<>'Y'
+			                    AND   PARAM1=CODENO),0) AS SORT
+				   FROM 
+						 (
+							--표준공통 Query Start
+					        SELECT  B.BIZCD     AS CODENO,
+					                        B.BIZCD     AS CODE,
+					                        B.BIZNAME   AS CODENAME,
+					                        B.HIGHBIZCD AS HIGHCODE
+					                        
+					        FROM
+					                (
+					                SELECT  '9999'          AS BIZCD,
+					                                '사업유형'      AS BIZNAME,
+					                                ''                      AS BIZTYPECD,
+					                                ''                      AS BIZTYPEDETAIL,
+					                                '0000'          AS HIGHBIZCD,
+					                                ''                      AS HIGHBIZNAME,
+					                                'Y'             AS USEFLAG,
+					                                '20030011'                      AS EMPID
+					                FROM DUAL
+					
+					                UNION ALL
+					
+					                SELECT  BIZTYPECD       AS BIZCD,
+					                                BIZTYPENAME AS BIZNAME,
+					                                BIZTYPECD,
+					                                BIZTYPEDETAIL,
+					                                '9999'          AS HIGHBIZCD,
+					                                '사업유형'      AS HIGHBIZNAME,
+					                                'Y'             AS USEFLAG,
+					                                ''                      AS EMPID
+					                FROM BIZTYPE
+					
+					                UNION ALL
+					
+					                SELECT  A.BIZCD,
+					                                A.BIZNAME,
+					                                A.BIZTYPECD,
+					                                '' BIZTYPEDETAIL,
+					                                A.HIGHBIZCD,
+					                                (SELECT BIZNAME
+					                                FROM BIZ
+					                                WHERE BIZCD = A.HIGHBIZCD) HIGHBIZNAME,
+					                                USEFLAG,
+					                                '' EMPID
+					                FROM BIZ A
+					                ) B
+							--표준공통 Query End
+
+						 ) TEMP				  
+				   ORDER BY SORT,TEMP.CODE)    A
+			WHERE CODE LIKE UPPER('%' || code: || '%')
+			AND   CODENAME LIKE UPPER('%'|| codeName: || '%')
+			AND   NOT EXISTS (
+                          SELECT F.PARAM1
+                          FROM (
+                                  SELECT  DISTINCT PARAM1, 
+		                                  MAX(DECODE(PARAM3,'Y','Y','N')) 
+		                                  OVER(PARTITION BY PARAM1) AS DFLAG
+                                  FROM INITPOPUP E
+                                  WHERE PARAMID= paramId:
+                                  AND   PARAMTYPE='D'
+                                  AND ( EXISTS (SELECT C.ORG_NO
+		                                          FROM ORG C
+		                                          WHERE (SELECT D.ORGCD
+                                                		FROM EMPALL D
+                                   						WHERE D.EMPID=empId:
+                                                        AND ROWNUM=1 ) = C.ORG_NO
+                                  START WITH C.ORG_NO=to_number(E.PARAM2)
+                                  CONNECT BY PRIOR TO_CHAR(C.ORG_NO)=C.HIGHORGCD)
+
+                                        OR PARAM2=empId:    )
+                                          )  F
+                          WHERE  DFLAG <> 'Y'
+                          AND A.CODENO=F.PARAM1
+                        )
+			START WITH A.CODE = '9999'
+			CONNECT BY PRIOR TO_CHAR(A.CODENO) = A.HIGHCODE
+		) A  ,
+		(SELECT ORGCD  AS ORG_NO,EMPID
+		FROM EMPALL WHERE EMPID=empId:) B
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="mnu_new"   value-count="0" url="메뉴 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			SUBSTR(paramId:,5,1)+1 AS CODE2,
+			A.CODENO,
+	                CODE,
+	                CODENAME,
+	                ''        AS CODE2,
+	                ''        AS CODENAME2,
+	                HIGHCODE,
+	                '' EMPID,
+					LEV             AS    "LEVEL" ,
+		DECODE(SIGN(
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   B.ORG_NO IN (SELECT ORG_NO
+							FROM ORG
+							START WITH TO_CHAR(ORG_NO)=PARAM2
+							CONNECT BY PRIOR TO_CHAR(ORG_NO)=HIGHORGCD)
+		)+
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   PARAM2 = B.EMPID)),1,'N','') AS SELFLAG
+	FROM
+			(SELECT CODENO,
+	                CODE,
+	                CODENAME,
+	                ''        AS CODE2,
+	                ''        AS CODENAME2,
+	                HIGHCODE,
+	                '' EMPID,
+					LEVEL - 3 AS LEV
+					 	
+			FROM (SELECT   TEMP.*,
+				         MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+				         + NVL((SELECT K.PARAM3
+			                    FROM INITPOPUP  K
+			                    WHERE PARAMID=paramId:
+			                    AND   PARAMTYPE='R'
+			                    AND   PARAM3<>'Y'
+			                    AND   PARAM1=CODENO),0) AS SORT
+				   FROM 
+						 (
+							--표준공통 Query Start
+                                SELECT DOCNO AS CODENO,P_TITLE AS CODE,L_TITLE AS CODENAME,HIGHDOCNO AS HIGHCODE,DOCTYPE
+                                FROM  PRODUCTDOC B
+                                WHERE  LEVEL<6
+								START WITH DOCNO IN  ('SYSTEM')
+								CONNECT BY PRIOR DOCNO=HIGHDOCNO
+							--표준공통 Query End
+
+						 ) TEMP				  
+				   ORDER BY SORT,TEMP.CODE)    A
+			WHERE CODE LIKE UPPER('%' || code: || '%')
+			AND   CODENAME LIKE UPPER('%'|| codeName: || '%')
+			AND   NOT EXISTS (
+                          SELECT F.PARAM1
+                          FROM (
+                                  SELECT  DISTINCT PARAM1, 
+		                                  MAX(DECODE(PARAM3,'Y','Y','N')) 
+		                                  OVER(PARTITION BY PARAM1) AS DFLAG
+                                  FROM INITPOPUP E
+                                  WHERE PARAMID= paramId:
+                                  AND   PARAMTYPE='D'
+                                  AND ( EXISTS (SELECT C.ORG_NO
+		                                          FROM ORG C
+		                                          WHERE (SELECT D.ORGCD
+                                                		FROM EMPALL D
+                                   						WHERE D.EMPID=empId:
+                                                        AND ROWNUM=1 ) = C.ORG_NO
+                                  START WITH C.ORG_NO=to_number(E.PARAM2)
+                                  CONNECT BY PRIOR TO_CHAR(C.ORG_NO)=C.HIGHORGCD)
+
+                                        OR PARAM2=empId:    )
+                                          )  F
+                          WHERE  DFLAG <> 'Y'
+                          AND A.CODENO=F.PARAM1
+                        )
+			AND  DOCTYPE IN  ('JSPID','PKG')
+            START WITH A.CODE = 'SYSTEM'
+			CONNECT BY PRIOR TO_CHAR(A.CODENO) = A.HIGHCODE
+			 ORDER SIBLINGS BY CODENAME
+		) A  ,
+		(SELECT ORGCD  AS ORG_NO,EMPID
+		FROM EMPALL WHERE EMPID=empId:) B
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="org_new"   value-count="0" url="조직 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			A.*,
+		DECODE(SIGN(
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   B.ORG_NO IN (SELECT ORG_NO
+							FROM ORG
+							START WITH TO_CHAR(ORG_NO)=PARAM2
+							CONNECT BY PRIOR TO_CHAR(ORG_NO)=HIGHORGCD)
+		)+
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   PARAM2 = B.EMPID)),1,'N','') AS SELFLAG
+	FROM
+			(SELECT CODENO,
+	                CODE,
+	                CODENAME,
+	                ''        AS CODE2,
+	                ''        AS CODENAME2,
+	                HIGHCODE,
+	                '' EMPID,
+					LEVEL	
+			FROM (SELECT   TEMP.*,
+				         MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+				         + NVL((SELECT K.PARAM3
+			                    FROM INITPOPUP  K
+			                    WHERE PARAMID=paramId:
+			                    AND   PARAMTYPE='R'
+			                    AND   PARAM3<>'Y'
+			                    AND   PARAM1=CODENO),0) AS SORT
+				   FROM 
+						 (SELECT  TO_CHAR(ORG_NO)   AS CODENO,
+		                          ORGCD     		AS CODE,
+                                  ORGNAME   		AS CODENAME,
+                                  HIGHORGCD 		AS HIGHCODE,
+                                  IDX
+		                  FROM ORG
+		                  WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		                  AND ORG_NO IS NOT NULL) TEMP				  
+				   ORDER BY SORT,TEMP.CODE)    A
+			WHERE CODE LIKE UPPER('%' || code: || '%')
+			AND   CODENAME LIKE UPPER('%'|| codeName: || '%')
+			AND   NOT EXISTS (
+                          SELECT F.PARAM1
+                          FROM (
+                                  SELECT  DISTINCT PARAM1, 
+		                                  MAX(DECODE(PARAM3,'Y','Y','N')) 
+		                                  OVER(PARTITION BY PARAM1) AS DFLAG
+                                  FROM INITPOPUP E
+                                  WHERE PARAMID= paramId:
+                                  AND   PARAMTYPE='D'
+                                  AND ( EXISTS (SELECT C.ORG_NO
+		                                          FROM ORG C
+		                                          WHERE (SELECT D.ORGCD
+                                                		FROM EMPALL D
+                                   						WHERE D.EMPID=empId:
+                                                        AND ROWNUM=1 ) = C.ORG_NO
+                                  START WITH C.ORG_NO=to_number(E.PARAM2)
+                                  CONNECT BY PRIOR TO_CHAR(C.ORG_NO)=C.HIGHORGCD)
+
+                                        OR PARAM2=empId:    )
+                                          )  F
+                          WHERE  DFLAG <> 'Y'
+                          AND A.CODENO=F.PARAM1
+                        )
+			START WITH A.CODE = '9999'
+			CONNECT BY PRIOR TO_CHAR(A.CODENO) = A.HIGHCODE
+			ORDER SIBLINGS BY IDX
+		) A  ,
+		(SELECT ORGCD  AS ORG_NO,EMPID
+		FROM EMPALL WHERE EMPID=empId:) B
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="fam_new"   value-count="0" url="자산 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			A.*,
+		DECODE(SIGN(
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   B.ORG_NO IN (SELECT ORG_NO
+							FROM ORG
+							START WITH TO_CHAR(ORG_NO)=PARAM2
+							CONNECT BY PRIOR TO_CHAR(ORG_NO)=HIGHORGCD)
+		)+
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   PARAM2 = B.EMPID)),1,'N','') AS SELFLAG
+	FROM
+			(SELECT CODENO,
+	                CODE,
+	                CODENAME,
+	                ''        AS CODE2,
+	                ''        AS CODENAME2,
+	                HIGHCODE,
+	                '' EMPID,
+					LEVEL
+			FROM (SELECT   TEMP.*,
+				         MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+				         + NVL((SELECT K.PARAM3
+			                    FROM INITPOPUP  K
+			                    WHERE PARAMID=paramId:
+			                    AND   PARAMTYPE='R'
+			                    AND   PARAM3<>'Y'
+			                    AND   PARAM1=CODENO),0) AS SORT
+				   FROM
+						 (
+							SELECT FA_CODE AS CODENO,
+									FA_CODE AS CODE,
+									PRODUCT_NM AS CODENAME,
+									SUBSTR(FA_CODE,1,1) HIGHCODE
+							FROM FA_MASTER
+							WHERE STATUS<>'D'
+
+							UNION ALL
+
+							SELECT SUBSTR(CODE,1,1) AS CODENO,
+									CODE,
+									CODENAME,
+									HIGHCODE
+							FROM COMCODE
+							WHERE HIGHCODE='CD_SEQ-20081107-001'
+
+		                  ) TEMP
+				   ORDER BY SORT,TEMP.CODE)    A
+			WHERE CODE LIKE UPPER('%' || code: || '%')
+			AND   CODENAME LIKE UPPER('%'|| codeName: || '%')
+			AND   NOT EXISTS (
+                          SELECT F.PARAM1
+                          FROM (
+                                  SELECT  DISTINCT PARAM1,
+		                                  MAX(DECODE(PARAM3,'Y','Y','N'))
+		                                  OVER(PARTITION BY PARAM1) AS DFLAG
+                                  FROM INITPOPUP E
+                                  WHERE PARAMID= paramId:
+                                  AND   PARAMTYPE='D'
+                                  AND ( EXISTS (SELECT C.ORG_NO
+		                                          FROM ORG C
+		                                          WHERE (SELECT D.ORGCD
+                                                		FROM EMPALL D
+                                   						WHERE D.EMPID=empId:
+                                                        AND ROWNUM=1 ) = C.ORG_NO
+                                  START WITH C.ORG_NO=to_number(E.PARAM2)
+                                  CONNECT BY PRIOR TO_CHAR(C.ORG_NO)=C.HIGHORGCD)
+
+                                        OR PARAM2=empId:    )
+                                          )  F
+                          WHERE  DFLAG <> 'Y'
+                          AND A.CODENO=F.PARAM1
+                        )
+			START WITH A.HIGHCODE = 'CD_SEQ-20081107-001'
+			CONNECT BY PRIOR TO_CHAR(A.CODENO) = A.HIGHCODE
+		) A  ,
+		(SELECT ORGCD  AS ORG_NO,EMPID
+		FROM EMPALL WHERE EMPID=empId:) B
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="org_0"   value-count="3" url="조직정보 검색 _전체선택" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+                ORGCD     AS CODE,
+                ORGNAME   AS CODENAME,
+                ORGCD    AS CODE2,
+                ORGNAME   AS CODENAME2,                
+                HIGHORGCD AS HIGHCODE,
+                [empId] EMPID,		
+				LEVEL,
+				DECODE(ORGCD,'9999','N') AS  SELFLAG
+		FROM ORG    A
+		WHERE ORGCD LIKE UPPER('%' ||  [code] || '%')  --조건 :code
+		AND   ORGNAME LIKE UPPER('%'|| [codeName] || '%') --조건 :codeName
+		AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD')) 
+		START WITH A.ORGCD = '9999'
+		CONNECT BY PRIOR to_char(A.ORG_NO) = A.HIGHORGCD
+		ORDER SIBLINGS BY A.ORGCD
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="job"   value-count="3" url="직무정보 검색" >  
+	<sql-content>
+	<![CDATA[
+		 SELECT DECODE(JOBCD,'99999','99999',JOBCD) AS CODENO
+		       , DECODE(JOBCD,'99999','00000',JOBCD) AS CODE
+			   , JOBNAME AS CODENAME
+			   , SUPERJOBCD AS HIGHCODE
+			   , [empId] EMPID
+	   		   , ACTDS
+			   , USEFLAG
+			   , LEVEL 
+			   , CASE WHEN LEVEL > 2 THEN 'Y' ELSE 'N' END AS SELFLAG
+			   , (SELECT (DECODE(COUNT(JOBCD),0,'',TO_CHAR('['||COUNT(JOBCD)||']')))
+	                          FROM HISTJOB
+	                          WHERE A.JOBCD = SUPERJOBCD)
+               AS LEVELSUBCNT,
+               (SELECT JOBNAME
+               FROM HISTJOB
+               WHERE JOBCD=A.SUPERJOBCD )
+               AS SUPERJOBNAME
+		   FROM HISTJOB A
+		   WHERE JOBCD LIKE '%'|| [code] || '%'  
+		   AND JOBNAME LIKE '%'|| [codeName] || '%'
+		   AND USEFLAG = 'Y'   
+		   	   START WITH JOBCD ='99999'
+		         CONNECT BY PRIOR JOBCD = SUPERJOBCD
+		          ORDER SIBLINGS BY JOBCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="prc_new"   value-count="0" url="PROJECT 공정 검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+		A.*,
+		DECODE(SIGN(
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   B.ORG_NO IN (SELECT ORG_NO
+							FROM ORG
+							START WITH TO_CHAR(ORG_NO)=PARAM2
+							CONNECT BY PRIOR TO_CHAR(ORG_NO)=HIGHORGCD)
+		)+
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   PARAM2 = B.EMPID)),1,'N','') AS SELFLAG
+		 FROM
+			(		
+			SELECT  CODENO,
+	                CODE,
+	                CODENAME,
+	                ''        AS CODE2,
+	                ''        AS CODENAME2,
+	                HIGHCODE,
+	                '' EMPID,
+					LEVEL				
+			FROM
+
+				(SELECT   TEMP.*,
+				         MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+				         + NVL((SELECT K.PARAM3
+			                    FROM INITPOPUP  K
+			                    WHERE PARAMID=paramId:
+			                    AND   PARAMTYPE='R'
+			                    AND   PARAM3<>'Y'
+			                    AND   PARAM1=CODENO),0) AS SORT
+			   FROM (							
+		                SELECT
+		                        B.PRCSCD as codeno,
+		                        B.PRCSCD as code,
+		                        B.PJTPRCSDETAIL as codename,
+		                        to_char(B.PJT_NO) AS HIGHCODE
+		                FROM    PJTPRCS B										
+					)  TEMP
+			   ORDER BY SORT,TEMP.CODE) A
+			WHERE CODE LIKE UPPER('%' || code: || '%')  
+			AND   CODENAME LIKE UPPER('%'|| codeName: || '%') 
+			AND   NOT EXISTS (
+                          SELECT F.PARAM1
+                          FROM (
+                                  SELECT  DISTINCT PARAM1, 
+		                                  MAX(DECODE(PARAM3,'Y','Y','N')) 
+		                                  OVER(PARTITION BY PARAM1) AS DFLAG
+                                  FROM INITPOPUP E
+                                  WHERE PARAMID=paramId:
+                                  AND   PARAMTYPE='D'
+                                  AND ( EXISTS (SELECT C.ORG_NO
+		                                          FROM ORG C
+		                                          WHERE (SELECT D.ORGCD
+                                                		FROM EMPALL D
+                                   						WHERE D.EMPID=empId:
+                                                        AND ROWNUM=1 ) = C.ORG_NO
+                                  START WITH C.ORG_NO=to_number(E.PARAM2)
+                                  CONNECT BY PRIOR TO_CHAR(C.ORG_NO)=C.HIGHORGCD)
+
+                                        OR PARAM2=empId:    )
+                                          )  F
+                          WHERE  DFLAG <> 'Y'
+                          AND A.CODENO=F.PARAM1
+                        )
+--			START WITH CODE = '9999'
+--			CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+			) A  ,
+			(SELECT ORGCD  AS ORG_NO,EMPID
+			FROM EMPALL WHERE EMPID=empId:) B
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="pjt"   value-count="3" url="PROJECT 공정 검색" >  
+	<sql-content>
+	<![CDATA[
+               SELECT CODENO,
+                CODE,
+                CODENAME,
+                HIGHCODE,
+                LEVEL,
+                [empId] EMPID,
+                CASE WHEN LEVEL > 1 THEN 'Y' ELSE 'N' END AS SELFLAG
+                FROM(
+                SELECT '9999' AS CODENO,
+                '' CODE,
+                '' CODENAME,
+                'HIST' HIGHCODE,
+                '' EMPID
+                FROM DUAL
+                UNION ALL
+                SELECT  to_char(A.PJT_NO) as codeno,
+                                A.PJTCD as code,
+                                A.PJTNAME as codename,
+                                '9999' as highcode
+                                ,'' EMPID
+                FROM PROJECT A
+                WHERE  A.PJTSTATUS IN ('REG','PGO','REP')
+                AND A.PJTTYPE<>'Y'
+               -- AND A.APPRSTATUS IN ('WEO', 'WCO')
+                UNION ALL
+                SELECT
+                                B.PRCSCD as codeno,
+                        B.PRCSCD as code,
+                                B.PJTPRCSDETAIL as codename,
+                                to_char(B.PJT_NO) AS HIGHCODE
+                                ,'' EMPID
+                FROM            PJTPRCS B
+                )
+   				WHERE CODE LIKE '%'|| [code] || '%'
+				AND CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODENO = '9999'
+                CONNECT BY PRIOR CODENO = HIGHCODE
+                ORDER SIBLINGS BY CODE
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="biz"   value-count="3" url="사업유형정보 검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT	B.BIZCD AS CODENO,
+				B.BIZCD     AS CODE,
+				B.BIZNAME   AS CODENAME,
+				B.BIZTYPECD AS CODE2,
+				B.HIGHBIZCD AS HIGHCODE,
+				LEVEL,
+				CASE WHEN LEVEL > 2 THEN 'Y' ELSE 'N' END AS SELFLAG
+		FROM
+			(
+			SELECT 	'9999' 		AS BIZCD, 
+					'사업유형' 	AS BIZNAME,
+					'' 			AS BIZTYPECD, 
+					'' 			AS BIZTYPEDETAIL,
+					'0000' 		AS HIGHBIZCD, 
+					'' 			AS HIGHBIZNAME,
+					'Y' 		AS USEFLAG,
+					[empId]  			AS EMPID
+			FROM DUAL
+			
+			UNION ALL
+			
+			SELECT 	BIZTYPECD 	AS BIZCD, 
+					BIZTYPENAME AS BIZNAME,
+					BIZTYPECD, 
+					BIZTYPEDETAIL,
+					'9999' 		AS HIGHBIZCD, 
+					'사업유형' 	AS HIGHBIZNAME,
+					'Y' 		AS USEFLAG, 
+					'' 			AS EMPID
+			FROM BIZTYPE
+	
+			UNION ALL
+	
+			SELECT 	A.BIZCD, 
+					A.BIZNAME, 
+					A.BIZTYPECD,
+					'' BIZTYPEDETAIL, 
+					A.HIGHBIZCD,
+					(SELECT BIZNAME 
+					FROM BIZ 
+					WHERE BIZCD = A.HIGHBIZCD) HIGHBIZNAME,
+					USEFLAG, 
+					'' EMPID
+			FROM BIZ A
+			) B
+		 WHERE UPPER(BIZCD) LIKE '%'|| [code] || '%'
+		 AND UPPER(BIZNAME) LIKE '%'|| [codeName] || '%'
+		 START WITH BIZCD = '9999'
+		 CONNECT BY PRIOR BIZCD = HIGHBIZCD
+		 ORDER SIBLINGS BY BIZCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="emp_" value-count="3" url="사원  검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT EMP_ORG.*,LEVEL
+		 FROM
+		 (
+		 SELECT X.EMPID AS CODENO,
+				X.EMPID AS CODE,
+				X.EMPKNAME AS CODENAME,
+				TO_CHAR(Y.ORG_NO) AS HIGHCODE,
+				Y.ORGCD AS ORGCD,
+				Y.ORGNAME AS ORGNAME,
+				'Y'  AS SELFLAG ,
+				[empId] EMPID
+		 FROM EMPALL X, ORG Y
+		 WHERE X.ORGCD = to_char(Y.ORG_NO)
+		 AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN X.WSTARTDT AND WENDDT
+ 		 AND   (Y.ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		 		 OR  org_no='1006')
+		 UNION ALL
+		SELECT TO_CHAR(ORG_NO)    AS CODENO,            --컬럼명에 유의
+		       ORGCD     AS CODE,
+		       ORGNAME   AS CODENAME,
+		       HIGHORGCD AS HIGHCODE,
+		       ORGCD     AS ORGCD,
+		       ORGNAME   AS ORGNAME,
+			   'N'	     AS SELFLAG ,
+			   '' EMPID
+		FROM ORG    A 
+   		WHERE   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+  		OR  org_no='1006'
+   		) EMP_ORG
+        WHERE ORGNAME  LIKE '%'|| [code] || '%'
+        AND   CODENAME LIKE '%'|| [codeName] || '%'
+		START WITH CODE = '9999'
+		CONNECT BY PRIOR CODENO = HIGHCODE
+		ORDER SIBLINGS BY CODE
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="emp" value-count="0" url="사원  검색(신규) " >  
+	<sql-content>
+	<![CDATA[
+		SELECT   SUM(DECODE(SELFLAG,'Y',1,0)) OVER() AS SEL_CNT ,A.*, LEVEL
+		FROM
+		(
+		SELECT  DISTINCT
+				TO_CHAR(ORG_NO) AS CODENO,
+				TO_CHAR(ORGCD) AS CODE ,
+				ORGNAME CODENAME,
+				HIGHORGCD AS HIGHCODE,
+				ORGCD,
+				ORGNAME,
+				[empId] as empid,
+				'N' AS SELFLAG
+		FROM ORG
+		START WITH ORG_NO IN(SELECT TO_CHAR(ORG_NO)
+							FROM ORG    A
+							WHERE   (ORG_NO IN (SELECT ORG_NO
+												FROM ORGHISTORY
+												WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+							OR  org_no='1006')
+							AND ORGNAME LIKE '%'||[code]||'%'
+							AND ORG_NO IN ( SELECT  ORGCD
+											FROM EMPALL
+											WHERE EMPKNAME LIKE '%'||[codeName]||'%'
+											AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN WSTARTDT AND WENDDT)
+							)
+		CONNECT BY PRIOR HIGHORGCD=ORG_NO
+		
+		 UNION ALL
+		
+		SELECT 	EMPID,
+				EMPID,
+				EMPKNAME,
+				A.ORGCD AS ORG_NO ,
+				(SELECT ORGCD FROM ORG B WHERE B.ORG_NO=A.ORGCD) AS ORGCD,
+				(SELECT ORGNAME FROM ORG B WHERE B.ORG_NO=A.ORGCD) AS ORGNAME,
+				[empId] as empid,
+				'Y'
+		FROM EMPALL A ,ORG B
+		WHERE EMPKNAME LIKE '%'||[codeName]||'%'
+		AND  A.ORGCD=B.ORG_NO
+		AND B.ORGNAME LIKE '%'||[code]||'%'
+		AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN WSTARTDT AND WENDDT
+		)   A
+		START WITH CODE = '9999'
+		CONNECT BY PRIOR CODENO = HIGHCODE
+
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="pjt_new" value-count="0" url="조직 프로젝트  검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+		A.*,
+		DECODE(SIGN(
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   B.ORG_NO IN (SELECT ORG_NO
+							FROM ORG
+							START WITH TO_CHAR(ORG_NO)=PARAM2
+							CONNECT BY PRIOR TO_CHAR(ORG_NO)=HIGHORGCD)
+		)+
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   PARAM2 = B.EMPID)),1,'N',-1,'Y',
+		
+			--<<영업팀 영업외 미선택
+				(SELECT NVL((SELECT 'N'
+							FROM ORG A
+							WHERE USEFLAG='Y'
+							AND ORGNAME LIKE '%영업%'
+							AND ORG_NO=B.ORG_NO
+							AND CODE NOT LIKE 'B%'
+							AND 'pjt_4'=paramId:
+							AND  empId: NOT IN (SELECT CODE
+												FROM COMCODE
+												WHERE HIGHCODE='CD_SEQ-20081009-019')							
+							),'')
+				FROM DUAL)
+			--	영업팀 영업외 미선택 >>
+		) AS SELFLAG
+		 FROM
+			(		
+			SELECT   CODENO, CODE, CODENAME, HIGHCODE,
+					NVL((SELECT ORGCD  FROM PROJECT B, ORG C
+					 WHERE B.PJT_NO=CODENO AND C.ORG_NO=B.PJTORG_NO),CODE) AS CODE2,
+					NVL((SELECT ORGNAME FROM PROJECT B, ORG C
+					 WHERE B.PJT_NO=CODENO AND C.ORG_NO=B.PJTORG_NO),CODENAME) AS CODENAME2,
+					 '' EMPID, 
+					 LEVEL 
+			FROM
+
+				(SELECT   TEMP.*,
+				         MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+				         + NVL((SELECT MAX(K.PARAM3)
+			                    FROM INITPOPUP  K
+			                    WHERE PARAMID=paramId:
+			                    AND   PARAMTYPE='R'
+			                    AND   PARAM3<>'Y'
+			                    AND   PARAM1=CODENO),0) AS SORT
+			   FROM (
+					SELECT 	TO_CHAR(ORG_NO)    AS CODENO,           
+			                ORGCD     AS CODE,
+			                ORGNAME   AS CODENAME,
+			                HIGHORGCD AS HIGHCODE,
+			                ROWNUM AS RN
+					FROM (SELECT * FROM ORG ORDER BY ORGCD)
+					WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+					AND   HIGHORGCD NOT IN ('1022','1027') --'CC05','CE05'제외
+					UNION ALL								
+					SELECT TO_CHAR(PJT_NO)	AS CODENO,
+						   PJTCD	  AS CODE,							
+						   PJTNAME	  AS CODENAME,
+						  (SELECT  TO_CHAR(DECODE(HIGHORGCD,
+									'1022',HIGHORGCD,
+									'1027',HIGHORGCD,
+							ORG_NO)) FROM ORG WHERE ORG_NO=PJTORG_NO) AS HIGHCODE,
+						   0 AS RN
+					FROM PROJECT
+					WHERE PJTSTATUS IN ('REG','PGO','REP')		
+					AND PJTTYPE<>'Y'
+					)  TEMP
+			   ORDER BY SORT,RN,TEMP.CODE DESC) A
+			WHERE CODE LIKE UPPER('%' || code: || '%')  
+			AND   UPPER(CODENAME) LIKE UPPER('%'|| codeName: || '%') 
+			AND   NOT EXISTS (
+                          SELECT F.PARAM1
+                          FROM (
+                                  SELECT  DISTINCT PARAM1, 
+		                                  MAX(DECODE(PARAM3,'Y','Y','N')) 
+		                                  OVER(PARTITION BY PARAM1) AS DFLAG
+                                  FROM INITPOPUP E
+                                  WHERE PARAMID=paramId:
+                                  AND   PARAMTYPE='D'
+                                  AND ( EXISTS (SELECT C.ORG_NO
+		                                          FROM ORG C
+		                                          WHERE (SELECT D.ORGCD
+                                                		FROM EMPALL D
+                                   						WHERE D.EMPID=empId:
+                                                        AND ROWNUM=1 ) = C.ORG_NO
+                                  START WITH C.ORG_NO=to_number(E.PARAM2)
+                                  CONNECT BY PRIOR TO_CHAR(C.ORG_NO)=C.HIGHORGCD)
+
+                                        OR PARAM2=empId:    )
+                                          )  F
+                          WHERE  DFLAG <> 'Y'
+                          AND A.CODENO=F.PARAM1
+                        )
+			START WITH CODE = '9999'
+			CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+			) A  ,
+			(SELECT ORGCD  AS ORG_NO,EMPID
+			FROM EMPALL WHERE EMPID=empId:) B
+			
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	
+	<sql-mapping  id="fjt_new" value-count="0" url="조직 프로젝트  검색(종료포함)" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+		A.*,
+		DECODE(SIGN(
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   B.ORG_NO IN (SELECT ORG_NO
+							FROM ORG
+							START WITH TO_CHAR(ORG_NO)=PARAM2
+							CONNECT BY PRIOR TO_CHAR(ORG_NO)=HIGHORGCD)
+		)+
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   PARAM2 = B.EMPID)),1,'N',-1,'Y',
+		
+			--<<영업팀 영업외 미선택
+				(SELECT NVL((SELECT 'N'
+							FROM ORG A
+							WHERE USEFLAG='Y'
+							AND ORGNAME LIKE '%영업%'
+							AND ORG_NO=B.ORG_NO
+							AND CODE NOT LIKE 'B%'
+							AND 'pjt_4'=paramId:
+							AND  empId: NOT IN (SELECT CODE
+												FROM COMCODE
+												WHERE HIGHCODE='CD_SEQ-20081009-019')							
+							),'')
+				FROM DUAL)
+			--	영업팀 영업외 미선택 >>
+		) AS SELFLAG
+		 FROM
+			(		
+			SELECT   CODENO, CODE, CODENAME, HIGHCODE,
+					NVL((SELECT ORGCD  FROM PROJECT B, ORG C
+					 WHERE B.PJT_NO=CODENO AND C.ORG_NO=B.PJTORG_NO),CODE) AS CODE2,
+					NVL((SELECT ORGNAME FROM PROJECT B, ORG C
+					 WHERE B.PJT_NO=CODENO AND C.ORG_NO=B.PJTORG_NO),CODENAME) AS CODENAME2,
+					 '' EMPID, 
+					 LEVEL 
+			FROM
+
+				(SELECT   TEMP.*,
+				         MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+				         + NVL((SELECT MAX(K.PARAM3)
+			                    FROM INITPOPUP  K
+			                    WHERE PARAMID=paramId:
+			                    AND   PARAMTYPE='R'
+			                    AND   PARAM3<>'Y'
+			                    AND   PARAM1=CODENO),0) AS SORT
+			   FROM (
+					SELECT 	TO_CHAR(ORG_NO)    AS CODENO,           
+			                ORGCD     AS CODE,
+			                ORGNAME   AS CODENAME,
+			                HIGHORGCD AS HIGHCODE,
+			                ROWNUM AS RN
+					FROM (SELECT * FROM ORG ORDER BY ORGCD)
+					WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+					AND   HIGHORGCD NOT IN ('1022','1027') --'CC05','CE05'제외
+					UNION ALL								
+					SELECT TO_CHAR(PJT_NO)	AS CODENO,
+						   PJTCD	AS CODE,							
+						   PJTNAME	AS CODENAME,
+						  (SELECT  TO_CHAR(DECODE(HIGHORGCD,
+									'1022',HIGHORGCD,
+									'1027',HIGHORGCD,
+							ORG_NO)) FROM ORG WHERE ORG_NO=PJTORG_NO) AS HIGHCODE,
+						   0 AS RN
+					FROM PROJECT
+--					WHERE PJTSTATUS IN ('REG','PGO','REP')		
+					WHERE PJTTYPE<>'Y'
+					)  TEMP
+			   ORDER BY SORT,RN,TEMP.CODE DESC) A
+			WHERE CODE LIKE UPPER('%' || code: || '%')  
+			AND   CODENAME LIKE UPPER('%'|| codeName: || '%') 
+			AND   NOT EXISTS (
+                          SELECT F.PARAM1
+                          FROM (
+                                  SELECT  DISTINCT PARAM1, 
+		                                  MAX(DECODE(PARAM3,'Y','Y','N')) 
+		                                  OVER(PARTITION BY PARAM1) AS DFLAG
+                                  FROM INITPOPUP E
+                                  WHERE PARAMID=paramId:
+                                  AND   PARAMTYPE='D'
+                                  AND ( EXISTS (SELECT C.ORG_NO
+		                                          FROM ORG C
+		                                          WHERE (SELECT D.ORGCD
+                                                		FROM EMPALL D
+                                   						WHERE D.EMPID=empId:
+                                                        AND ROWNUM=1 ) = C.ORG_NO
+                                  START WITH C.ORG_NO=to_number(E.PARAM2)
+                                  CONNECT BY PRIOR TO_CHAR(C.ORG_NO)=C.HIGHORGCD)
+
+                                        OR PARAM2=empId:    )
+                                          )  F
+                          WHERE  DFLAG <> 'Y'
+                          AND A.CODENO=F.PARAM1
+                        )
+			START WITH CODE = '9999'
+			CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+			) A  ,
+			(SELECT ORGCD  AS ORG_NO,EMPID
+			FROM EMPALL WHERE EMPID=empId:) B
+			
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="ivp_new" value-count="0" url="투자계획 검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+		A.*,
+		DECODE(SIGN(
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   B.ORG_NO IN (SELECT ORG_NO
+							FROM ORG
+							START WITH TO_CHAR(ORG_NO)=PARAM2
+							CONNECT BY PRIOR TO_CHAR(ORG_NO)=HIGHORGCD)
+		)+
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   PARAM2 = B.EMPID)),1,'N','') AS SELFLAG
+		 FROM
+			(		
+			SELECT   CODENO, CODE, CODENAME, HIGHCODE,
+					NVL((SELECT ORGCD  FROM PROJECT B, ORG C
+					 WHERE B.PJT_NO=CODENO AND C.ORG_NO=B.PJTORG_NO),CODE) AS CODE2,
+					NVL((SELECT ORGNAME FROM PROJECT B, ORG C
+					 WHERE B.PJT_NO=CODENO AND C.ORG_NO=B.PJTORG_NO),CODENAME) AS CODENAME2,
+					 '' EMPID, 
+					 LEVEL 
+			FROM
+
+				(SELECT   TEMP.*,
+				         MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+				         + NVL((SELECT MAX(K.PARAM3)
+			                    FROM INITPOPUP  K
+			                    WHERE PARAMID=paramId:
+			                    AND   PARAMTYPE='R'
+			                    AND   PARAM3<>'Y'
+			                    AND   PARAM1=CODENO),0) AS SORT
+			   FROM (
+					SELECT 	TO_CHAR(ORG_NO)    AS CODENO,
+					              ORGCD     AS CODE,
+					              ORGNAME   AS CODENAME,
+					              HIGHORGCD AS HIGHCODE,
+					              ROWNUM AS RN
+					FROM (SELECT * FROM ORG ORDER BY ORGCD)
+					WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+					AND ORGDIV<>'P'
+					union all
+					SELECT IVCD CODENO,
+							IVCD CODE,
+							IVNAME||'-'||IVNOTE CODENAME,
+								(SELECT TO_CHAR(ORG_NO)
+								FROM ORGHISTORY
+								WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD')
+								and ORGCD=DYPLANCD)
+							AS HIGHORG_NO,
+							rownum as rn
+					FROM IVPLAN
+					WHERE YPLANCD LIKE TO_CHAR(SYSDATE,'YYYY')||'%'
+					)  TEMP
+			   ORDER BY SORT,RN,TEMP.CODE DESC) A
+			WHERE CODE LIKE UPPER('%' || code: || '%')  
+			AND   CODENAME LIKE UPPER('%'|| codeName: || '%') 
+			AND   NOT EXISTS (
+                          SELECT F.PARAM1
+                          FROM (
+                                  SELECT  DISTINCT PARAM1, 
+		                                  MAX(DECODE(PARAM3,'Y','Y','N')) 
+		                                  OVER(PARTITION BY PARAM1) AS DFLAG
+                                  FROM INITPOPUP E
+                                  WHERE PARAMID=paramId:
+                                  AND   PARAMTYPE='D'
+                                  AND ( EXISTS (SELECT C.ORG_NO
+		                                          FROM ORG C
+		                                          WHERE (SELECT D.ORGCD
+                                                		FROM EMPALL D
+                                   						WHERE D.EMPID=empId:
+                                                        AND ROWNUM=1 ) = C.ORG_NO
+                                  START WITH C.ORG_NO=to_number(E.PARAM2)
+                                  CONNECT BY PRIOR TO_CHAR(C.ORG_NO)=C.HIGHORGCD)
+
+                                        OR PARAM2=empId:    )
+                                          )  F
+                          WHERE  DFLAG <> 'Y'
+                          AND A.CODENO=F.PARAM1
+                        )
+			START WITH CODE = '9999'
+			CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+			) A  ,
+			(SELECT ORGCD  AS ORG_NO,EMPID
+			FROM EMPALL WHERE EMPID=empId:) B
+			
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="cust" value-count="3" url="거래처 검색" >  
+	<sql-content>
+	<![CDATA[
+			SELECT A.*,LEVEL,[empId]
+			FROM
+			(
+				SELECT
+						BIZACQCD		AS CODENO,
+						BIZACQACCTCD	AS CODE,
+						BIZACQNAME 		AS CODENAME,
+						'' 				AS HIGHCODE,
+						'ttt' 				AS CDDS,
+						BIZREGNO
+				FROM BIZACQCORP
+			)    A
+            WHERE   UPPER(CODE) LIKE UPPER([code]||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' ||[codeName] || '%')
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="project" value-count="3" url="pjt System Code 검색" >  
+	<sql-content>
+	<![CDATA[
+			SELECT A.*,LEVEL,[empId]
+			FROM
+			(
+					SELECT 	TO_CHAR(ORG_NO)    AS CODENO,
+			                TO_CHAR(ORG_NO)    AS CODE,
+ 							'['||ORGCD||'] '||ORGNAME   AS CODENAME,
+                                        HIGHORGCD AS HIGHCODE,
+                                        ROWNUM AS RN
+                                        FROM (SELECT * FROM ORG ORDER BY ORGCD)
+                                        WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+                                        AND   HIGHORGCD NOT IN ('1022','1027') --'CC05','CE05'제외
+                         UNION ALL
+					 SELECT TO_CHAR(PJT_NO)  AS CODENO,
+					        TO_CHAR(PJT_NO)      AS CODE,
+					'['|| PJTCD||'] '||PJTNAME  AS CODENAME,	
+						  (SELECT  TO_CHAR(DECODE(HIGHORGCD,
+									'1022',HIGHORGCD,
+									'1027',HIGHORGCD,
+							ORG_NO)) FROM ORG WHERE ORG_NO=PJTORG_NO) AS HIGHCODE,
+						   0 AS RN
+					FROM PROJECT
+					WHERE PJTSTATUS IN ('REG','PGO','REP')
+					AND PJTTYPE<>'Y'
+			)    A
+            WHERE   UPPER(CODE) LIKE UPPER([code]||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' || [codeName]|| '%')
+            START WITH CODE = '1051'
+            CONNECT BY PRIOR CODENO = HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="org_pjt" value-count="3" url="조직 프로젝트  검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT  CODENO, CODE, CODENAME, HIGHCODE, [empId] EMPID, LEVEL 
+        , CASE WHEN LEVEL >1 THEN 'Y' ELSE 'N' END SELFLAG
+		FROM
+		(
+				SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+		                ORGCD     AS CODE,
+		                ORGNAME   AS CODENAME,
+		                HIGHORGCD AS HIGHCODE
+				FROM ORG
+				WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+				UNION ALL								
+				SELECT PJT_NO	AS CODENO,
+					   PJTCD	AS CODE,
+					   PJTNAME	AS CODENAME,
+					   PJTORG_NO AS HIGHCODE
+				FROM PROJECT
+				WHERE PJTSTATUS IN ('REG','PGO','REP')		
+				AND APPRSTATUS IN ('WEO','WCO')
+				AND PJTTYPE<>'Y'
+				
+				
+		) ORG_PJT
+		WHERE CODE LIKE UPPER('%' || [code] || '%')  --조건 :code
+		AND   CODENAME LIKE UPPER('%'|| [codeName] || '%') --조건 :codeName	
+		START WITH CODE = '9999'
+		CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+		ORDER SIBLINGS BY CODE
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="org_pjt2" value-count="3" url="조직 프로젝트  검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT  CODENO, CODE, CODENAME, HIGHCODE, EMPID, LEVEL 
+        , CASE WHEN trim(div) IN ('S') THEN 
+		    'Y' 
+		   WHEN trim(CODENO) IN ('1048') THEN  --인재개발그룹추가
+		    'Y'		    
+		  ELSE 
+		    'N' 
+		  END AS SELFLAG
+		FROM
+		(
+				SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+		                ORGCD     AS CODE,
+		                ORGNAME   AS CODENAME,
+		                HIGHORGCD AS HIGHCODE,
+		                '' EMPID,
+						orgdiv div
+				FROM ORG
+				WHERE TO_CHAR(ORG_NO) <> '41'
+   		        AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))				
+				--AND to_char( HIGHORGCD)<>'12'
+				--AND to_char( HIGHORGCD)<>'18'
+				UNION ALL				
+				SELECT PJT_NO	AS CODENO,
+					   PJTCD	AS CODE,
+					   PJTNAME	AS CODENAME,
+					   PJTORG_NO AS HIGHCODE,
+					   [empId] EMPID,
+					   'S' div
+				FROM PROJECT
+				WHERE PJTSTATUS IN ('REG','PGO','REP')		
+				AND APPRSTATUS IN ('WEO','WCO')
+				AND PJTTYPE<>'Y'				
+		) ORG_PJT
+		WHERE CODE LIKE UPPER('%' || [code] || '%')  --조건 :code
+		AND   CODENAME LIKE UPPER('%'|| [codeName] || '%') --조건 :codeName	
+--		AND HIGHCODE NOT IN ('40','41')
+		START WITH CODE = '9999'
+		CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+		ORDER SIBLINGS BY CODE
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	
+	<sql-mapping  id="bizAcq" value-count="3" url="거래처  검색" >  
+	<sql-content>
+	<![CDATA[	
+				SELECT	
+				bizacqcd     AS CODENO,
+				bizacqcd    AS CODE,
+				bizacqname   AS CODENAME,
+				1 AS HIGHCODE,
+				LEVEL,
+				[empId]  EMPID
+		        FROM bizacqcorp 
+		        where bizacqcd like '%'||[code]||'%'
+		        and bizacqname like '%'||[codeName]||'%'
+--		        and bizUseFlag='C'
+	]]>		        
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="biz_1"   value-count="3" url="사업유형정보(성장성) 검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT	B.BIZCD     AS CODENO,
+				B.BIZCD     AS CODE,
+				B.BIZNAME   AS CODENAME,
+				B.HIGHBIZCD AS HIGHCODE,
+				LEVEL,
+				CASE WHEN LEVEL > 2 THEN 'Y' ELSE 'N' END AS SELFLAG	     				
+		FROM
+			(
+			SELECT '9999' BIZCD, '사업유형' BIZNAME,
+			    '' BIZTYPECD, '' BIZTYPEDETAIL,
+			    '0000' HIGHBIZCD, '' HIGHBIZNAME,
+			    'Y' USEFLAG,  [empId]  EMPID
+			FROM DUAL
+			UNION ALL
+			SELECT BIZTYPECD BIZCD, BIZTYPENAME BIZNAME,
+			    BIZTYPECD, BIZTYPEDETAIL,
+			    '9999' HIGHBIZCD, '사업유형' HIGHBIZNAME,
+			    'Y' USEFLAG, '' EMPID
+			FROM BIZTYPE
+			WHERE bizTypeCd = 1
+			UNION ALL
+			SELECT A.BIZCD, A.BIZNAME, A.BIZTYPECD,
+			    '' BIZTYPEDETAIL, A.HIGHBIZCD,
+			    (SELECT BIZNAME FROM BIZ WHERE BIZCD = A.HIGHBIZCD) HIGHBIZNAME,
+			    USEFLAG, '' EMPID
+			FROM BIZ A
+			) B
+			 WHERE UPPER(BIZCD) LIKE '%'|| [codeName] || '%'
+			 AND UPPER(BIZNAME) LIKE '%'|| [codeName] || '%'
+			 START WITH BIZCD = '9999'
+			 CONNECT BY PRIOR BIZCD = HIGHBIZCD
+			 --ORDER SIBLINGS BY BIZCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="biz_2"   value-count="3" url="사업유형정보(산업분류) 검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT	B.BIZCD     AS CODENO,
+				B.BIZCD     AS CODE,
+				B.BIZNAME   AS CODENAME,
+				B.HIGHBIZCD AS HIGHCODE,
+				LEVEL,
+				CASE WHEN LEVEL > 2 THEN 'Y' ELSE 'N' END AS SELFLAG	     								
+		FROM
+			(
+			SELECT '9999' BIZCD, '사업유형' BIZNAME,
+			    '' BIZTYPECD, '' BIZTYPEDETAIL,
+			    '0000' HIGHBIZCD, '' HIGHBIZNAME,
+			    'Y' USEFLAG,  [empId]  EMPID
+			FROM DUAL
+			UNION ALL
+			SELECT BIZTYPECD BIZCD, BIZTYPENAME BIZNAME,
+			    BIZTYPECD, BIZTYPEDETAIL,
+			    '9999' HIGHBIZCD, '사업유형' HIGHBIZNAME,
+			    'Y' USEFLAG, '' EMPID
+			FROM BIZTYPE
+			WHERE bizTypeCd = 2
+			UNION ALL
+			SELECT A.BIZCD, A.BIZNAME, A.BIZTYPECD,
+			    '' BIZTYPEDETAIL, A.HIGHBIZCD,
+			    (SELECT BIZNAME FROM BIZ WHERE BIZCD = A.HIGHBIZCD) HIGHBIZNAME,
+			    USEFLAG, '' EMPID
+			FROM BIZ A
+			) B
+			 WHERE UPPER(BIZCD) LIKE '%'|| [code] || '%'
+			 AND UPPER(BIZNAME) LIKE '%'|| [codeName] || '%'
+			 START WITH BIZCD = '9999'
+			 CONNECT BY PRIOR BIZCD = HIGHBIZCD
+			 ORDER SIBLINGS BY BIZCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="biz_3"   value-count="3" url="사업유형정보(개발솔루션) 검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT	B.BIZCD     AS CODENO,
+				B.BIZCD     AS CODE,
+				B.BIZNAME   AS CODENAME,
+				B.HIGHBIZCD AS HIGHCODE,
+				LEVEL,
+				CASE WHEN LEVEL > 2 THEN 'Y' ELSE 'N' END AS SELFLAG	     								
+		FROM
+			(
+			SELECT '9999' BIZCD, '사업유형' BIZNAME,
+			    '' BIZTYPECD, '' BIZTYPEDETAIL,
+			    '0000' HIGHBIZCD, '' HIGHBIZNAME,
+			    'Y' USEFLAG,  [empId]  EMPID
+			FROM DUAL
+			UNION ALL
+			SELECT BIZTYPECD BIZCD, BIZTYPENAME BIZNAME,
+			    BIZTYPECD, BIZTYPEDETAIL,
+			    '9999' HIGHBIZCD, '사업유형' HIGHBIZNAME,
+			    'Y' USEFLAG, '' EMPID
+			FROM BIZTYPE
+			WHERE bizTypeCd = 3
+			UNION ALL
+			SELECT A.BIZCD, A.BIZNAME, A.BIZTYPECD,
+			    '' BIZTYPEDETAIL, A.HIGHBIZCD,
+			    (SELECT BIZNAME FROM BIZ WHERE BIZCD = A.HIGHBIZCD) HIGHBIZNAME,
+			    USEFLAG, '' EMPID
+			FROM BIZ A
+			) B
+			 WHERE UPPER(BIZCD) LIKE '%'|| [code] || '%'
+			 AND UPPER(BIZNAME) LIKE '%'|| [codeName] || '%'
+			 START WITH BIZCD = '9999'
+			 CONNECT BY PRIOR BIZCD = HIGHBIZCD
+			 ORDER SIBLINGS BY BIZCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="pjt_gis"   value-count="3" url="GIS PJT팀원이 보고 가능한 PJT " >  
+	<sql-content>
+	<![CDATA[
+	
+		SELECT CASE WHEN CODENO = '0000' THEN HIGHCODE ELSE CODENO END CODENO, 
+			   CASE WHEN CODENO = '0000' THEN (SELECT PJTCD FROM PROJECT G WHERE HIGHCODE=G.PJT_NO) ELSE CODENO END CODE,
+			   CASE WHEN CODENO = '0000' THEN (SELECT PJTNAME FROM PROJECT G WHERE HIGHCODE=G.PJT_NO)
+			   ELSE CODENAME END CODENAME,
+			   CODE AS CODE2, 
+			   CODENAME AS CODENAME2,
+			   HIGHCODE,
+			   LEVEL,
+			   CASE WHEN trim(div) IN ('S') THEN 
+				    'Y' 
+				  ELSE 
+				    'N' 
+				  END AS SELFLAG,
+			   [empId] EMPID
+		FROM(
+				SELECT TO_CHAR(ORG_NO) AS CODENO,
+					   ORGCD AS CODE,
+					   ORGNAME AS CODENAME, 
+					   HIGHORGCD AS HIGHCODE,
+					   orgdiv div
+				FROM ORG 
+				WHERE USEFLAG = 'Y'
+				AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		        UNION ALL 
+				SELECT TO_CHAR(PJT_NO) AS CODENO,
+		               PJTCD AS CODE,
+		               PJTNAME AS CODENAME,
+					   PJTORG_NO AS HIGHCODE ,
+					   'J' div 
+		        FROM PROJECT
+		   		WHERE PJTSTATUS IN ('REG','PGO','REP')
+		   		AND APPRSTATUS IN ('WEO','WCO')
+		        AND PJTDIV = 'G'
+				UNION ALL			 
+				SELECT TO_CHAR(A.HIGHPRCSCD) AS CODENO,
+		                   A.PRCSCD AS CODE,
+		                   B.PRCSNAME AS CODENAME,
+		                   TO_CHAR(A.PJT_NO) AS HIGHCODE,
+						   'S'
+		        FROM PJTPRCS A, PRCS B
+		        WHERE A.PRCSCD = B.PRCSCD
+				)A
+		 WHERE A.CODE || TO_PJTNO_TOCODE(A.highcode)LIKE '%'|| [codeName] || '%'
+		 AND A.CODENAME || TO_PJTNAME(A.highcode)LIKE '%'|| [codeName] || '%'
+		 START WITH A.CODENO = '1007'
+		CONNECT BY PRIOR A.CODENO = A.HIGHCODE
+		ORDER SIBLINGS BY A.CODENO
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="pjt_si"   value-count="3" url="SI PJT팀원이 보고 가능한 PJT " >  
+	<sql-content>
+	<![CDATA[
+
+		SELECT CASE WHEN CODENO = '0000' THEN HIGHCODE ELSE CODENO END CODENO, 
+			   CASE WHEN CODENO = '0000' THEN (SELECT PJTCD FROM PROJECT G WHERE HIGHCODE=G.PJT_NO) ELSE CODENO END CODE,
+			   CASE WHEN CODENO = '0000' THEN (SELECT PJTNAME FROM PROJECT G WHERE HIGHCODE=G.PJT_NO)
+			   ELSE CODENAME END CODENAME,
+			   CODE AS CODE2, 
+			   CODENAME AS CODENAME2,
+			   HIGHCODE,
+			   LEVEL,
+			   CASE WHEN trim(div) IN ('S') THEN 
+				    'Y' 
+				  ELSE 
+				    'N' 
+				  END AS SELFLAG,
+			   [empId] EMPID
+		FROM(
+				SELECT TO_CHAR(ORG_NO) AS CODENO,
+					   ORGCD AS CODE,
+					   ORGNAME AS CODENAME, 
+					   HIGHORGCD AS HIGHCODE,
+					   orgdiv div
+				FROM ORG 
+				WHERE USEFLAG = 'Y'
+				AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		        UNION ALL 
+				SELECT TO_CHAR(PJT_NO) AS CODENO,
+		               PJTCD AS CODE,
+		               PJTNAME AS CODENAME,
+					   PJTORG_NO AS HIGHCODE ,
+					   'J' div 
+		        FROM PROJECT
+		   		WHERE PJTSTATUS IN ('REG','PGO','REP')
+		   		AND APPRSTATUS IN ('WEO','WCO')
+		        AND PJTDIV = 'S'
+				UNION ALL			 
+				SELECT TO_CHAR(A.HIGHPRCSCD) AS CODENO,
+		                   A.PRCSCD AS CODE,
+		                   B.PRCSNAME AS CODENAME,
+		                   TO_CHAR(A.PJT_NO) AS HIGHCODE,
+						   'S'
+		        FROM PJTPRCS A, PRCS B
+		        WHERE A.PRCSCD = B.PRCSCD
+				)A
+		 WHERE A.CODE || TO_PJTNO_TOCODE(A.highcode)LIKE '%'|| [code] || '%'
+		 AND A.CODENAME || TO_PJTNAME(A.highcode)LIKE '%'|| [codeName] || '%'
+		 START WITH A.CODE = 'R022'
+		CONNECT BY PRIOR A.CODENO = A.HIGHCODE
+		ORDER SIBLINGS BY A.CODENO
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="pjt_ito"   value-count="3" url="ITO PJT팀원이 보고 가능한 PJT " >  
+	<sql-content>
+	<![CDATA[
+		SELECT CASE WHEN CODENO = '0000' THEN HIGHCODE ELSE CODENO END CODENO, 
+			   CASE WHEN CODENO = '0000' THEN (SELECT PJTCD FROM PROJECT G WHERE HIGHCODE=G.PJT_NO) ELSE CODENO END CODE,
+			   CASE WHEN CODENO = '0000' THEN (SELECT PJTNAME FROM PROJECT G WHERE HIGHCODE=G.PJT_NO)
+			   ELSE CODENAME END CODENAME,
+			   CODE AS CODE2, 
+			   CODENAME AS CODENAME2,
+			   HIGHCODE,
+			   LEVEL,
+			   CASE WHEN trim(div) IN ('S') THEN 
+				    'Y' 
+				  ELSE 
+				    'N' 
+				  END AS SELFLAG,
+			   [empId] EMPID
+		FROM(
+				SELECT TO_CHAR(ORG_NO) AS CODENO,
+					   ORGCD AS CODE,
+					   ORGNAME AS CODENAME, 
+					   HIGHORGCD AS HIGHCODE,
+					   orgdiv div
+				FROM ORG 
+				WHERE USEFLAG = 'Y'
+				AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		        UNION ALL 
+				SELECT TO_CHAR(PJT_NO) AS CODENO,
+		               PJTCD AS CODE,
+		               PJTNAME AS CODENAME,
+					   PJTORG_NO AS HIGHCODE ,
+					   'J' div 
+		        FROM PROJECT
+		   		WHERE PJTSTATUS IN ('REG','PGO','REP')
+		   		AND APPRSTATUS IN ('WEO','WCO')
+		        AND PJTDIV = 'I'
+				UNION ALL			 
+				SELECT TO_CHAR(A.HIGHPRCSCD) AS CODENO,
+		                   A.PRCSCD AS CODE,
+		                   B.PRCSNAME AS CODENAME,
+		                   TO_CHAR(A.PJT_NO) AS HIGHCODE,
+						   'S'
+		        FROM PJTPRCS A, PRCS B
+		        WHERE A.PRCSCD = B.PRCSCD
+				)A
+		 WHERE A.CODE || TO_PJTNO_TOCODE(A.highcode)LIKE '%'|| [codeName] || '%'
+		 AND A.CODENAME || TO_PJTNAME(A.highcode)LIKE '%'|| [code] || '%'
+		 START WITH A.CODENO = '1009'
+		CONNECT BY PRIOR A.CODENO = A.HIGHCODE
+		ORDER SIBLINGS BY A.CODENO
+	]]>
+	</sql-content>	
+	</sql-mapping>
+
+	<sql-mapping  id="pjt_all-1"   value-count="3" url="GIS 영업에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+                SELECT CODENO, 
+					   CODE, 
+					   CODENAME, 
+					   CODE2, 
+					   CODENAME2, 
+					   HIGHCODE, 
+					   LEVEL, 
+					   [empId] EMPID, 
+					   CASE WHEN SUBSTR(CODE,1,2) IN ('BG','BS','PS','PG','RS','RG','SS','SV') THEN 'Y' ELSE 'N' END SELFLAG
+				FROM(
+				SELECT  CASE WHEN SUBSTR(CODENO,1,1) = '0' THEN HIGHCODE ELSE CODENO END CODENO,
+                        CASE WHEN SUBSTR(CODENO,1,1)= '0' THEN (SELECT PJTCD FROM PROJECT G WHERE HIGHCODE=G.PJT_NO) ELSE CODENO END CODE,
+                        CASE WHEN SUBSTR(CODENO,1,1) = '0' THEN (SELECT PJTNAME FROM PROJECT G WHERE HIGHCODE=G.PJT_NO) ELSE CODENAME END CODENAME,
+                        CODE AS CODE2,
+                        CODENAME AS CODENAME2,
+                        HIGHCODE
+                FROM(
+                        SELECT TO_CHAR(ORG_NO) AS CODENO,
+                                   ORGCD AS CODE,
+                                   ORGNAME AS CODENAME,
+                                   HIGHORGCD AS HIGHCODE
+                        FROM ORG
+                        WHERE USEFLAG = 'Y'
+                        AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+                    UNION ALL
+                        SELECT TO_CHAR(PJT_NO) AS CODENO,
+                              PJTCD AS CODE,
+                              PJTNAME AS CODENAME,
+                                   PJTORG_NO AS HIGHCODE
+                    FROM PROJECT
+                        WHERE PJTSTATUS IN ('REG','PGO','REP')
+                        AND APPRSTATUS IN ('WEO','WCO')
+                    AND PJTDIV IN ('I','G','S')
+                        UNION ALL
+                        SELECT TO_CHAR(A.HIGHPRCSCD) AS CODENO,
+                                  A.PRCSCD AS CODE,
+                                  B.PRCSNAME AS CODENAME,
+                                  TO_CHAR(A.PJT_NO) AS HIGHCODE
+                    FROM PJTPRCS A, PRCS B
+                    WHERE A.PRCSCD = B.PRCSCD
+                        )A
+					)	
+                WHERE CODE || TO_PJTNO_TOCODE(DECODE(HIGHCODE,'0000','0000',HIGHCODE))LIKE '%'|| [codeName] || '%'
+                AND CODENAME || TO_PJTNAME(DECODE(HIGHCODE,'0000','0000',HIGHCODE))LIKE '%'|| [codeName] || '%'
+				AND CODE NOT IN ('1010','1006')
+                START WITH CODENO = '1051'
+                CONNECT BY PRIOR CODE = HIGHCODE
+                ORDER SIBLINGS BY CODENO
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="pjt_all"   value-count="3" url="GIS 영업에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+
+                SELECT CODENO,
+                CODE,
+                CODENAME,
+                CODE2,
+                CODENAME2,
+                HIGHCODE,
+                LEVEL,
+                [empId] EMPID,
+                CASE WHEN SUBSTR(CODE,1,2) IN ('BG','BS','PS','PG','RS','RG','SS','SV') THEN'Y' ELSE 'N' END SELFLAG
+                FROM(
+                         SELECT
+                                 CASE WHEN SUBSTR(CODENO,1,1) in 
+								 (
+								 select prcsmodelcd from prcsModel
+								 UNION ALL
+								 SELECT '0' FROM DUAL
+								 )
+								  THEN
+                                 (SELECT TO_CHAR(PJT_NO) FROM PROJECT G WHERE HIGHCODE=G.PJT_NO) ELSE CODENO END CODENO
+                                 ,CASE WHEN SUBSTR(CODENO,1,1) in 
+								 (
+								 select prcsmodelcd from prcsModel
+								 UNION ALL
+								 SELECT '0' FROM DUAL
+								 ) THEN
+                                 (SELECT PJTCD FROM PROJECT G WHERE HIGHCODE=G.PJT_NO)
+                                 ELSE
+                                 CODENO
+                                 END CODE,
+                                 CASE WHEN SUBSTR(CODENO,1,1) in 
+								 (select prcsmodelcd from prcsModel
+								 UNION ALL
+								 SELECT '0' FROM DUAL								 
+								 ) THEN
+                                 (SELECT PJTNAME FROM PROJECT G WHERE HIGHCODE=G.PJT_NO)
+                                 ELSE
+                                 CODENO
+                                 END CODENAME,
+                                 CODE AS CODE2,
+                                 CODENAME AS CODENAME2,
+                                 HIGHCODE
+                        FROM(
+                                 SELECT TO_CHAR(ORG_NO) AS CODENO,
+                                     ORGCD AS CODE,
+                                     ORGNAME AS CODENAME,
+                                     HIGHORGCD AS HIGHCODE
+                                 FROM ORG
+                                 WHERE USEFLAG = 'Y'
+                                 AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMD'))
+                                 UNION ALL
+                                 SELECT TO_CHAR(PJT_NO) AS CODENO,
+                                       PJTCD AS CODE,
+                                       PJTNAME AS CODENAME,
+                                       PJTORG_NO AS HIGHCODE
+                                 FROM PROJECT
+                                 WHERE PJTSTATUS IN ('REG','PGO','REP')
+                                 AND APPRSTATUS IN ('WEO','WCO')
+                                 AND PJTDIV IN ('I','G','S')
+                                 UNION ALL
+                                 SELECT A.PRCSCD  AS CODENO,
+                                    A.PRCSCD AS CODE,
+                                    B.PRCSNAME AS CODENAME,
+                                    TO_CHAR(A.pjt_no) AS HIGHCODE
+                                 FROM PJTPRCS A, PRCS B
+                                 WHERE A.PRCSCD = B.PRCSCD
+                                 )A
+                   )
+                WHERE CODE || TO_PJTNO_TOCODE(DECODE(HIGHCODE,'0000',0000,HIGHCODE)) LIKE '%'|| [code] || '%'
+                AND CODENAME2 || TO_PJTNAME(DECODE(HIGHCODE,'0000','0000',HIGHCODE))LIKE '%'|| [codeName] || '%'
+                AND CODE NOT IN ('1010','1006')
+                START WITH CODENO = '1051'
+                CONNECT BY PRIOR CODE = HIGHCODE
+                ORDER SIBLINGS BY CODENO, CODE, CODE2
+ 
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="job_new"   value-count="0" url="직무 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			A.*,
+		DECODE(SIGN(
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   B.ORG_NO IN (SELECT ORG_NO
+							FROM ORG
+							START WITH TO_CHAR(ORG_NO)=PARAM2
+							CONNECT BY PRIOR TO_CHAR(ORG_NO)=HIGHORGCD)
+		)+
+		(SELECT SIGN(COUNT(PARAMID))* SIGN(NVL(SUM(DECODE(PARAM3,'Y',-1,1)),0))
+		FROM INITPOPUP
+		WHERE PARAMID=paramId:
+		AND   PARAMTYPE='S'
+		AND   PARAM1=CODENO
+		AND   PARAM2 = B.EMPID)),1,'N','') AS SELFLAG
+	FROM
+		(SELECT A.CODE,
+                A.CODENO,
+                A.CODENAME,
+                A.HIGHCODE,
+                LEVEL,
+                '' EMPID
+		FROM (SELECT   TEMP.*,
+				         MIN(rownum) OVER(PARTITION BY HIGHCODE)-1
+				         + NVL((SELECT K.PARAM3
+			                    FROM INITPOPUP  K
+			                    WHERE PARAMID=paramId:
+			                    AND   PARAMTYPE='R'
+			                    AND   PARAM3<>'Y'
+			                    AND   PARAM1=CODENO),0) AS SORT		                    
+				   FROM (
+						 SELECT  TO_CHAR(JOBCD)   AS CODENO,
+			                      JOBCD     		AS CODE,
+			                      JOBNAME   		AS CODENAME,
+			                      SUPERJOBCD 		AS HIGHCODE
+			                 FROM HISTJOB  
+			                 WHERE USEFLAG = 'Y'  
+				   )TEMP
+				  ORDER BY SORT,TEMP.CODE)    A			   	         
+		WHERE A.CODENO LIKE '%'|| code: || '%'
+		AND   A.CODENAME LIKE '%'|| codeName: || '%'
+		AND   NOT EXISTS (
+                          SELECT F.PARAM1
+                          FROM (
+                                  SELECT  DISTINCT PARAM1, 
+		                                  MAX(DECODE(PARAM3,'Y','Y','N')) 
+		                                  OVER(PARTITION BY PARAM1) AS DFLAG
+                                  FROM INITPOPUP E
+                                  WHERE PARAMID=paramId:
+                                  AND   PARAMTYPE='D'
+                                  AND ( EXISTS (SELECT C.ORG_NO
+		                                          FROM ORG C
+		                                          WHERE (SELECT D.ORGCD
+                                                		FROM EMPALL D
+                                   						WHERE D.EMPID=empId:
+                                                        AND ROWNUM=1 ) = C.ORG_NO
+                                  START WITH C.ORG_NO=to_number(E.PARAM2)
+                                  CONNECT BY PRIOR TO_CHAR(C.ORG_NO)=C.HIGHORGCD)
+
+                                        OR PARAM2=empId:    )
+                                          )  F
+                          WHERE  DFLAG <> 'Y'
+                          AND A.CODENO=F.PARAM1
+                        )
+		START WITH CODE ='99999'
+		CONNECT BY PRIOR CODE=HIGHCODE
+		) A  ,
+		(SELECT ORGCD  AS ORG_NO,EMPID
+		FROM EMPALL WHERE EMPID=empId:) B		
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="acct"   value-count="3" url="계정 조회" >  
+	<sql-content>
+	<![CDATA[
+      SELECT A.*,LEVEL,[empId]
+		FROM
+			(SELECT AZ01_GJCD AS CODENO,
+				   AZ01_GJCD AS CODE,
+				   AZ01_GJNM AS CODENAME,
+				   DECODE(SUBSTR(DECODE( AZ01_GMCD,NULL,AZ01_SGJCD,AZ01_GMCD),2,6),
+						   '0000','00000',
+						   DECODE( AZ01_GMCD,NULL,AZ01_SGJCD,AZ01_GMCD))  AS HIGHCODE
+			FROM ACCTN.TBAZ01
+			WHERE  AZ01_GJCD NOT IN ('04000','05000')
+			ORDER BY 1
+			) A
+		WHERE A.CODENO LIKE '%'|| [code] || '%'
+		AND   A.CODENAME LIKE '%'|| [codeName] || '%'			
+		START WITH CODE ='00000'
+		CONNECT BY PRIOR CODE = HIGHCODE
+          
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	
+	<sql-mapping  id="job_A"   value-count="3" url="GIS 영업에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO = 'A'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'||[code] || '%'
+                AND A.CODENAME LIKE '%'||[codeName]|| '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="job_B"   value-count="3" url="GIS 정보에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO = 'B'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'|| [code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+		<sql-mapping  id="job_C"   value-count="3" url="GIS 개발에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO = 'C'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'||[code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+		
+	<sql-mapping  id="job_D"   value-count="3" url="SI 영업에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                        [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO = 'D'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'|| [code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="job_E"   value-count="3" url="SI 개발에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO = 'E'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'|| [code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="job_G"   value-count="3" url="ITO SM에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO = 'G'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'|| [code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+		
+	]]>
+	</sql-content>	
+	</sql-mapping>	
+
+	<sql-mapping  id="job_H"   value-count="3" url="ITO N/W에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO ='H'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'|| [code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+
+	]]>
+	</sql-content>	
+	</sql-mapping>	
+	
+	<sql-mapping  id="job_I"   value-count="3" url="ITO IT에서 사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO = 'I'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'|| [code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+	]]>
+	</sql-content>	
+	</sql-mapping>	
+	
+
+	<sql-mapping  id="job_P"   value-count="3" url="경영기획에서  사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO = 'P'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'|| [code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+	]]>
+	</sql-content>	
+	</sql-mapping>
+
+	<sql-mapping  id="job_Q"   value-count="3" url="경영지원에서  사용가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO = 'Q'
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'|| [code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+		
+
+	]]>
+	</sql-content>	
+	</sql-mapping>
+
+	<sql-mapping  id="job_b"   value-count="3" url="사업지원인력이 보고 가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO IN ('A','B','C','D','E','G','H','I','P','Q')
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'||[code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+
+	]]>
+	</sql-content>	
+	</sql-mapping>	
+	
+	<sql-mapping  id="job_si"   value-count="3" url="si 사업지원인력이 보고 가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO IN ('D','E')
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'||[code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+	]]>
+	</sql-content>	
+	</sql-mapping>	
+			
+	<sql-mapping  id="job_gis"   value-count="3" url="gis 사업지원인력이 보고 가능한 직무" >  
+	<sql-content>
+	<![CDATA[
+		                 SELECT  A.CODE,
+                                 A.CODENO,
+                                 A.CODENAME,
+                                 A.HIGHCODE,
+                                 LEVEL,
+                                 CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+                                 EMPID
+                 FROM
+                 (       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+                  		 UNION
+                         SELECT
+		                         JOBCD AS CODE,
+		                         JOBCD AS CODENO,
+		                         JOBNAME AS CODENAME,
+		                         SUPERJOBCD AS HIGHCODE,
+		                         [empId] EMPID
+                         FROM HISTJOB
+                         WHERE USEFLAG = 'Y'
+                         AND JOBCD IN
+                         -- 상위로검색
+                                 (SELECT JOBCD
+                                                 FROM HISTJOB
+                                                 START WITH JOBCD IN (
+                                                           SELECT JOBCD -- USE JOB
+                                                           FROM DRUSERJOB
+                                                           WHERE DRORG_NO IN ('A','B','C')
+                                                   )
+                                         CONNECT BY PRIOR SUPERJOBCD=JOBCD
+                                         )
+                         ) A
+                WHERE A.CODENO LIKE '%'||[code] || '%'
+                AND A.CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '99999'
+                CONNECT BY PRIOR CODE=HIGHCODE
+		
+
+	]]>
+	</sql-content>	
+	</sql-mapping>	
+			
+
+	<sql-mapping  id="org_gis"   value-count="3" url="GIS에서 사용가능한 조직" >  
+	<sql-content>
+	<![CDATA[
+		SELECT  CODENO, CODE, CODENAME, HIGHCODE, [empId] EMPID, LEVEL 
+        , CASE WHEN LEVEL >2 THEN 'Y' ELSE 'N' END SELFLAG
+		FROM
+		(
+
+				SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+		                ORGCD     AS CODE,
+		                ORGNAME   AS CODENAME,
+		                HIGHORGCD AS HIGHCODE
+				FROM ORG
+				WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+				AND USEFLAG = 'Y'
+				UNION ALL								
+				SELECT PJT_NO	AS CODENO,
+					   PJTCD	AS CODE,
+					   PJTNAME	AS CODENAME,
+					   PJTORG_NO AS HIGHCODE
+				FROM PROJECT
+				WHERE PJTSTATUS IN ('REG','PGO','REP')		
+				AND APPRSTATUS IN ('WEO','WCO')
+				
+		) ORG_PJT
+		WHERE CODE LIKE UPPER('%' || [code] || '%')  --조건 :code
+		AND   CODENAME LIKE UPPER('%'|| [codeName] || '%') --조건 :codeName	
+		AND SUBSTR(CODE,1,2) NOT IN ('BS','BS','PS','PG','RS','RG','SS','SV')
+		START WITH CODE = '9999'
+		CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+		ORDER SIBLINGS BY CODE
+	]]>
+	</sql-content>	
+	</sql-mapping>
+
+	<sql-mapping  id="org_si"   value-count="3" url="SI에서 사용가능한 조직" >  
+	<sql-content>
+	<![CDATA[
+		SELECT  CODENO, CODE, CODENAME, HIGHCODE, [empId] EMPID, LEVEL 
+        , CASE WHEN LEVEL >2 THEN 'Y' ELSE 'N' END SELFLAG
+		FROM
+		(
+
+				SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+		                ORGCD     AS CODE,
+		                ORGNAME   AS CODENAME,
+		                HIGHORGCD AS HIGHCODE
+				FROM ORG
+				WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+				AND USEFLAG = 'Y'
+				UNION ALL								
+				SELECT PJT_NO	AS CODENO,
+					   PJTCD	AS CODE,
+					   PJTNAME	AS CODENAME,
+					   PJTORG_NO AS HIGHCODE
+				FROM PROJECT
+				WHERE PJTSTATUS IN ('REG','PGO','REP')		
+				AND APPRSTATUS IN ('WEO','WCO')
+				
+		) ORG_PJT
+		WHERE CODE LIKE UPPER('%' || [code] || '%')  --조건 :code
+		AND   CODENAME LIKE UPPER('%'|| [codeName] || '%') --조건 :codeName	
+		AND SUBSTR(CODE,1,2) NOT IN ('BS','BS','PS','PG','RS','RG','SS','SV')
+		START WITH CODE = '9999'
+		CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+		ORDER SIBLINGS BY CODE
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	
+	<sql-mapping  id="org_ito"   value-count="3" url="ITO에서 사용가능한 조직" >  
+	<sql-content>
+	<![CDATA[
+		SELECT  CODENO, CODE, CODENAME, HIGHCODE, [empId] EMPID, LEVEL 
+        , CASE WHEN LEVEL >2 THEN 'Y' ELSE 'N' END SELFLAG
+		FROM
+		(
+
+				SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+		                ORGCD     AS CODE,
+		                ORGNAME   AS CODENAME,
+		                HIGHORGCD AS HIGHCODE
+				FROM ORG
+				WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+				AND USEFLAG = 'Y'
+				UNION ALL								
+				SELECT PJT_NO	AS CODENO,
+					   PJTCD	AS CODE,
+					   PJTNAME	AS CODENAME,
+					   PJTORG_NO AS HIGHCODE
+				FROM PROJECT
+				WHERE PJTSTATUS IN ('REG','PGO','REP')		
+				AND APPRSTATUS IN ('WEO','WCO')
+				
+		) ORG_PJT
+		WHERE CODE LIKE UPPER('%' || [code] || '%')  --조건 :code
+		AND   CODENAME LIKE UPPER('%'|| [codeName] || '%') --조건 :codeName	
+		AND SUBSTR(CODE,1,2) NOT IN ('BS','BS','PS','PG','RS','RG','SS','SV')
+		START WITH CODE = '9999'
+		CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+		ORDER SIBLINGS BY CODE
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="org_b"   value-count="3" url="사업지원인력이 보고 가능한 조직" >  
+	<sql-content>
+	<![CDATA[
+             SELECT  ORG_PJT.*, LEVEL
+     		 , 
+     		 CASE WHEN trim(div) in ('S','T','G') THEN
+     		  'Y' 
+     		  ELSE 
+     		  'N' END AS SELFLAG
+             FROM
+             (
+                             SELECT  ORG_NO    AS CODENO,            --컬럼명에 유의
+                             ORGCD     AS CODE,
+                             ORGNAME   AS CODENAME,
+                             HIGHORGCD AS HIGHCODE,
+                             [empId] EMPID,
+                             orgDiv div
+                             FROM ORG
+				WHERE TO_CHAR(ORG_NO) <> '41' --임원실제외
+				AND TO_CHAR(ORG_NO) <> '45'  -- 경영지원부문제외
+				--AND to_char( HIGHORGCD)<>'12' -- GIS PJT 제외
+				--AND to_char( HIGHORGCD)<>'18' -- SI PJT 제외
+				 UNION ALL
+                             SELECT PJT_NO   AS CODENO,
+                                        PJTCD        AS CODE,
+                                        PJTNAME      AS CODENAME,
+                                        PJTORG_NO AS HIGHCODE,
+                                        '' EMPID,
+                                        'S'
+                             FROM PROJECT
+                             WHERE PJTSTATUS IN ('REG','PGO','REP')
+							 AND APPRSTATUS IN ('WEO','WCO')	
+             ) ORG_PJT
+             WHERE CODE LIKE UPPER('%' || [code] || '%')  --조건 :code
+             AND   CODENAME LIKE UPPER('%'|| [codeName] || '%') --조건 :codeName
+             START WITH CODE = '9999'
+             CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+             ORDER SIBLINGS BY CODE
+
+	]]>
+	</sql-content>	
+	</sql-mapping>		
+
+	<sql-mapping  id="org_mgm1"   value-count="3" url="경영지원인력이 사용가능한 조직중 PJT 제외" >  
+	<sql-content>
+	<![CDATA[
+
+			SELECT CODENO, 
+				   CODE, 
+				   CODENAME, 
+				   HIGHCODE ,
+				   LEVEL, 
+				   CASE WHEN LEVEL >3 THEN 'Y' ELSE 'N' END SELFLAG,
+				   [empId] EMPID
+			FROM(
+				SELECT ORG_NO AS CODENO,
+					   ORGCD AS CODE, 
+					   ORGNAME AS CODENAME, 
+					   TO_CHAR(HIGHORGCD) AS HIGHCODE
+				FROM ORG
+				WHERE USEFLAG = 'Y'
+				UNION ALL
+				SELECT PJT_NO AS CODENO, 
+					   PJTCD AS CODE, 
+					   PJTNAME AS CODENAME, 
+					   TO_CHAR(B.ORG_NO) AS HIGHCODE
+				FROM PROJECT A, ORG B
+				WHERE A.PJTORG_NO = B.ORGCD
+				AND A.PJTSTATUS IN ('REG','PGO','REP')
+				AND A.APPRSTATUS IN ('WEO','WCO')	
+				)A
+			WHERE A.CODE <> '1111' -- 임원실 제외
+			AND A.CODE LIKE '%'|| [code] || '%'
+			AND A.CODENAME LIKE '%'|| [codeName] || '%'	
+			START WITH A.CODE = '9999'
+			CONNECT BY PRIOR TO_CHAR(A.CODENO) = A.HIGHCODE
+			ORDER SIBLINGS BY A.CODE  
+
+	]]>
+	</sql-content>	
+	</sql-mapping>	
+
+	<sql-mapping  id="org_mgm"   value-count="3" url="경영지원인력이 사용가능한 조직  PJT 포함" >  
+	<sql-content>
+	<![CDATA[
+
+		SELECT  CODENO, CODE, CODENAME, HIGHCODE, [empId] EMPID, LEVEL 
+        , CASE WHEN LEVEL >2 THEN 'Y' ELSE 'N' END SELFLAG
+		FROM
+		(
+
+				SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+		                ORGCD     AS CODE,
+		                ORGNAME   AS CODENAME,
+		                HIGHORGCD AS HIGHCODE
+				FROM ORG
+				WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+				AND USEFLAG = 'Y'
+				UNION ALL								
+				SELECT PJT_NO	AS CODENO,
+					   PJTCD	AS CODE,
+					   PJTNAME	AS CODENAME,
+					   PJTORG_NO AS HIGHCODE
+				FROM PROJECT
+				WHERE PJTSTATUS IN ('REG','PGO','REP')		
+				AND APPRSTATUS IN ('WEO','WCO')
+				
+		) ORG_PJT
+		WHERE CODE LIKE UPPER('%' || [code] || '%')  --조건 :code
+		AND   CODENAME LIKE UPPER('%'|| [codeName]|| '%') --조건 :codeName	
+		START WITH CODE = '9999'
+		CONNECT BY PRIOR TO_CHAR(CODENO) = HIGHCODE
+		ORDER SIBLINGS BY CODE
+	]]>
+	</sql-content>	
+	</sql-mapping>	
+	
+	<sql-mapping  id="prcs"   value-count="3" url="공정코드 검색" >  
+	<sql-content>
+	<![CDATA[
+			select A.*,
+					LEVEL,
+					CASE WHEN LEVEL > 2 THEN 'Y' ELSE 'N' END AS SELFLAG
+			from
+				(select
+					PRCSCD as codeno,
+					PRCSCD as code,
+					PRCSNAME as codename,
+					PRCSTYPE  as highcode,					
+					  [empId]  EMPID				
+				FROM PRCS
+				) A
+			WHERE UPPER(code) LIKE ''|| [code] || '%'
+			AND UPPER(codename) LIKE '%'||[codeName] || '%'
+			START WITH code = '0'
+			CONNECT BY PRIOR CODENO = HIGHCODE
+			ORDER SIBLINGS BY CODE
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="prcs_1"   value-count="3" url="PJT_공정코드 검색" >  
+	<sql-content>
+	<![CDATA[
+			select A.*,
+					LEVEL,
+					DECODE(A.CODE,'ZZZ','N') AS SELFLAG,
+					'' EMPID
+			from
+				(SELECT 
+						PRCSCD AS CODE,
+					    PRCSCD AS CODENO,
+				        TO_PRCSNAME(PRCSCD) AS CODENAME,
+				        '0' AS HIGHCODE
+				FROM PJTPRCS
+				WHERE PJT_NO LIKE [code]
+				UNION
+				SELECT 'ZZZ' 	AS CODENO,
+				       '0'  	AS CODE,
+				       '공정'  	AS CODENAME,
+				       '' 		AS HIGHCODE
+				FROM DUAL
+				) A
+			WHERE UPPER(codename) LIKE '%'|| '' || '%'  
+     		AND CODE NOT IN ('IB02ZZ')		--PJT_NO : '9318' 조회 제외 처리
+			START WITH code = 'ZZZ'
+			CONNECT BY PRIOR CODENO = HIGHCODE
+			ORDER SIBLINGS BY CODENO 
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="businessPjt"   value-count="3" url="영업프로젝트 검색" >  
+	<sql-content>
+	<![CDATA[	
+               SELECT CODENO,
+                CODE,
+                CODENAME,
+                HIGHCODE,
+                LEVEL,
+                [empId] EMPID,
+                CASE WHEN LEVEL > 1 THEN 'Y' ELSE 'N' END AS SELFLAG
+                FROM(
+                SELECT '9999' AS CODENO,
+                '' CODE,
+                '' CODENAME,
+                'HIST' HIGHCODE,
+                '' EMPID
+                FROM DUAL
+                UNION ALL
+                SELECT  to_char(A.PJT_NO) as codeno,
+                                A.PJTCD as code,
+                                A.PJTNAME as codename,
+                                '9999' as highcode
+                                ,'' EMPID
+                FROM PROJECT A
+                WHERE  A.PJTType ='B'
+                and  A.PJTSTATUS IN ('REG','PGO','REP')				
+               -- AND A.APPRSTATUS IN ('WEO', 'WCO')
+                )
+   				WHERE CODE LIKE '%'|| [code] || '%'
+				AND CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODENO = '9999'
+                CONNECT BY PRIOR CODENO = HIGHCODE
+                ORDER SIBLINGS BY CODE
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="emp_car"   value-count="3" url="사원검색_출장품의" >  
+	<sql-content>
+	<![CDATA[	
+	             SELECT 
+				EMP_ORG.codeno,
+				EMP_ORG.code as code2,
+				EMP_ORG.codename as codename2,
+				EMP_ORG.orgno as  code,
+				EMP_ORG.orgname as  codename,
+				EMP_ORG.highcode,
+				EMP_ORG.selflag,
+				EMP_ORG.empid,																
+				LEVEL
+                
+				 FROM
+                 (
+                 SELECT X.EMPID AS CODENO,
+                                X.EMPID AS CODE,
+                                X.EMPKNAME AS CODENAME,
+                                TO_CHAR(Y.ORG_NO) AS HIGHCODE,
+                                Y.org_no AS ORGNO,
+                                Y.ORGNAME AS ORGNAME,
+                                'Y'  AS SELFLAG ,
+                               [empId] EMPID
+                 FROM EMPALL X, ORG Y
+                 WHERE X.ORGCD = Y.ORG_NO
+                 AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN X.WSTARTDT AND WENDDT
+                 UNION ALL
+                SELECT TO_CHAR(ORG_NO)    AS CODENO,            --컬럼명에 유의
+                       ORGCD     AS CODE,
+                       ORGNAME   AS CODENAME,
+                       HIGHORGCD AS HIGHCODE,
+                       org_no     AS ORGNO,
+                       ORGNAME   AS ORGNAME,
+                           'N'       AS SELFLAG ,
+                           '' EMPID
+                FROM ORG    A ) EMP_ORG
+        WHERE ORGNAME  LIKE '%'|| [code] || '%'
+        AND   CODENAME LIKE '%'|| [codeName] || '%'
+                START WITH CODE = '9999'
+                CONNECT BY PRIOR CODENO = HIGHCODE
+                ORDER SIBLINGS BY CODE			
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="org_pay"   value-count="3" url="조직정보 검색_팀이하 선택" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+                ORGCD     AS CODE,
+                ORGNAME   AS CODENAME,
+                ''        AS CODE2,
+                ''        AS CODENAME2,                
+                HIGHORGCD AS HIGHCODE,
+                [empId] EMPID,		
+				LEVEL,
+				CASE WHEN LEVEL > 2 THEN 'Y' ELSE 'N' END AS SELFLAG	     
+		FROM ORG    A
+		WHERE ORGCD LIKE UPPER('%' || [codeName] || '%')  --조건 :code
+		AND   ORGNAME LIKE UPPER('%'|| [codeName]|| '%') --조건 :codeName
+		AND   USEFLAG <> 'N'
+		AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		START WITH A.ORGCD = '9999'
+		CONNECT BY PRIOR to_char(A.ORG_NO) = A.HIGHORGCD
+		ORDER SIBLINGS BY A.ORGCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="job_radio"   value-count="3" url="합동,영업 간접보고시 " >  
+	<sql-content>
+	<![CDATA[
+		   SELECT  A.CODE,
+		                   A.CODENO,
+		                   A.CODENAME,
+		                   A.HIGHCODE,
+		                   LEVEL,
+		                   CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y' ELSE 'N' END SELFLAG,
+		      [empId] EMPID
+		       --KEY   as code2    
+		   FROM
+		   (
+		       SELECT  '99999' AS CODE ,
+     							 '' CODENO,
+                                 '' CODENAME,
+                                 '' HIGHCODE,
+                                 '' EMPID
+                 		 FROM DUAL
+               UNION
+		       SELECT JOBCD AS CODENO, 
+		       JOBCD AS CODE, JOBNAME AS CODENAME, SUPERJOBCD AS HIGHCODE,
+		       (       
+		       SELECT DISTINCT A.DRORG_NO  
+		       FROM DRUSERJOB A
+		       WHERE A.JOBCD=JOBCD
+		       AND DRORG_NO = 'A'
+		       ) KEY
+		           FROM HISTJOB
+		           WHERE USEFLAG = 'Y'
+		           AND JOBCD IN
+		           -- 상위로검색
+		                   (SELECT JOBCD
+		                                   FROM HISTJOB
+		                                   START WITH JOBCD IN (
+		                                             SELECT JOBCD -- USE JOB
+		                                             FROM DRUSERJOB
+		                                             WHERE DRORG_NO = 'A'
+		                                     )
+		                           CONNECT BY PRIOR SUPERJOBCD=JOBCD
+		                           )
+		           ) A
+		  WHERE A.CODENO LIKE '%'||[codeName] || '%'
+		  AND A.CODENAME LIKE '%'||[codeName] || '%'
+		 START WITH CODE = '99999'
+		  CONNECT BY PRIOR CODE=HIGHCODE
+  
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="COMCODE"   value-count="0" url="COMCODE 공통 " >  
+	<sql-content>
+	<![CDATA[
+			SELECT *
+			FROM
+			(
+				SELECT   CODE_NO AS CODENO,
+                         CODE,
+                         CODENAME,
+                         HIGHCODE AS HIGHCODE,
+                         CDDS AS CODE2,  LEVEL,''
+				FROM COMCODE
+				START WITH CODE_NO=paramId:
+				CONNECT BY PRIOR CODE_NO=HIGHCODE
+			)    A
+            WHERE   UPPER(CODE) LIKE UPPER([code]||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' || [codeName] || '%')
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="comAuth"   value-count="3" url="COMCODE 공통 " >  
+	<sql-content>
+	<![CDATA[
+	SELECT A.*,CODE AS ORGCD, CODENAME AS ORGNAME,LEVEL
+	FROM
+		(SELECT   TEMP.*,
+                        MIN(ROWNUM) OVER(PARTITION BY HIGHCODE)-1
+                        + NVL((SELECT MAX(K.PARAM3)
+                           FROM INITPOPUP  K
+                           WHERE PARAMID='PJT_1'
+                           AND   PARAMTYPE='R'
+                           AND   PARAM3<>'Y'
+                           AND   PARAM1=CODENO),0) AS SORT ,
+
+       'Y'  AS SELFLAG ,
+       [empId] EMPID
+          FROM (
+                       SELECT B.CODE_NO AS CODENO,
+                                       B.CODE ,
+                                       B.CODENAME,
+                                       B.HIGHCODE,
+                                       ROWNUM AS RN
+                       FROM COMCODE A, COMCODE B
+                       WHERE A.CODE ='AUTH_TYPE'
+                       AND A.CODE_NO =B.HIGHCODE
+                       union
+					 SELECT B.CODE_NO AS CODENO,
+                                       B.CODE ,
+                                       B.CODENAME,
+                                       B.HIGHCODE,
+                                       ROWNUM AS RN
+					 from comcode b
+					 WHERE b.CODE ='AUTH_TYPE'
+
+                   )  TEMP
+		)   A
+	WHERE   CODE  LIKE '%'|| [code] || '%'
+	AND   CODENAME LIKE '%'|| [codeName] || '%'
+	START WITH CODE = 'AUTH_TYPE'
+	CONNECT BY PRIOR CODENO = HIGHCODE
+	ORDER SIBLINGS BY CODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="empAll" value-count="3" url="사원  검색(사직자 포함)" >  
+	<sql-content>
+	<![CDATA[
+			SELECT EMPID AS CODENO,	
+					EMPID AS CODE,
+					EMPKNAME AS CODENAME,
+					[empId] AS HIGHCODE,
+					ORGCD,
+					ORGNAME,
+					'Y' AS SELFLAG
+			FROM
+				(SELECT A.EMPID,
+						      A.EMPKNAME,
+						      B.ORGCD,
+						      B.ORGNAME
+						FROM EMPALL A, ORG B ,
+						(SELECT DECODE(EDUTY,'C',MIN(EMPID),'E',MIN(EMPID),MAX(EMPID)) AS EMPID
+						FROM EMPALL
+						GROUP BY EMPKNAME,SYSEMPID,EDUTY) C
+						WHERE A.ORGCD = B.ORG_NO
+						AND A.EMPID=C.EMPID)
+	        WHERE ORGNAME  LIKE '%'|| [code] || '%'
+	        AND   EMPKNAME LIKE '%'||[codeName] || '%'
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="dpw"   value-count="0" url="dpw 공통 " >  
+	<sql-content>
+	<![CDATA[
+			SELECT *
+			FROM
+			(
+				SELECT   [empId] AS CODENO,
+                         MF_CD AS CODE,
+                         MFNAME AS CODENAME,
+                         '' AS HIGHCODE,
+                         '' AS CODE2,  LEVEL,''
+				FROM DPW_MF
+			)    A
+            WHERE UPPER(CODE) LIKE UPPER([code]||'%')
+            AND     UPPER(CODENAME)  LIKE UPPER('%' || [codeName] || '%')
+			
+			
+	]]>            	
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="GB01"   value-count="0" url="급여 직종코드" >  
+	<sql-content>
+	<![CDATA[
+	SELECT  BZ01_CODE AS  CODENO,
+			BZ01_CODE AS CODE,
+			BZ01_CDNM AS CODENAME,
+			'' AS HIGHCODE,
+			'' AS CODE2,
+			LEVEL
+	FROM TBBZ01 A
+	WHERE BZ01_CDGB ='GB01'
+	AND BZ01_CODE IN (
+					'005',
+					'201',
+					'202',
+					'203')
+	]]>            	
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="GB02"   value-count="0" url="급여 직급코드" >  
+	<sql-content>
+	<![CDATA[
+	SELECT  BZ01_CODE AS  CODENO,
+			BZ01_CODE AS CODE,
+			BZ01_CDNM AS CODENAME,
+			'' AS HIGHCODE,
+			'' AS CODE2,
+			LEVEL,A.*
+	FROM  TBBZ01 A
+	WHERE BZ01_CDGB ='GB02'
+	AND BZ01_CODE LIKE '6%'
+	]]>            	
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="GB05"   value-count="0" url="급여 직무코드" >  
+	<sql-content>
+	<![CDATA[
+	SELECT  BZ01_CODE AS  CODENO,
+			BZ01_CODE AS CODE,
+			BZ01_CDNM AS CODENAME,
+			'' AS HIGHCODE,
+			'' AS CODE2,
+			LEVEL,A.*
+	FROM  TBBZ01 A
+	WHERE BZ01_CDGB ='GB05'
+	AND BZ01_CODE LIKE '1%'
+	]]>            	
+	</sql-content>
+	</sql-mapping>	
+	
+
+
+	
+	<sql-mapping  id="DPWSN"   value-count="0" url="제품SN_tree" >  
+	<sql-content>
+	<![CDATA[
+
+SELECT * FROM (
+			SELECT  CODE, HIGHCODE, CODENAME, LEVEL,
+					DECODE(LEVEL,3,'Y','N') AS SELFLAG,
+					CODE2, CODENAME2
+			FROM
+                (
+                SELECT SAIL_CORP AS CODE,
+	                '' AS HIGHCODE,
+	                '' AS CODE2  ,
+	                '' AS CODENAME2 ,
+	                BIZACQNAME  AS CODENAME,
+					0 IDX
+                FROM DPW_BIZCORP A, BIZACQCORP B
+                WHERE A.SAIL_CORP = B.BIZACQCD(+)
+
+                UNION
+
+				SELECT  DISTINCT
+						A.SAIL_CD AS CODE ,
+						B.SUB_CORP AS HIGHCODE,
+						A.SAIL_CD AS CODE2  ,
+						'' AS CODENAME2 ,
+						BIZNAME AS CODENAME,
+						0 IDX
+				FROM DPW_SAIL A,
+					DPW_SAIL_MF B,
+    				(SELECT *
+                	 FROM COMCODE A
+				     START WITH A.HIGHCODE IN (SELECT CODE_NO FROM COMCODE
+												WHERE CODE LIKE 'MF_TYPE')
+				     CONNECT BY PRIOR A.CODE_NO=A.HIGHCODE) C
+				WHERE A.SAIL_CD=B.SAIL_CD
+
+                UNION ALL
+
+                SELECT SE_NO AS CODE,
+                SAIL_CD AS HIGHCODE,
+                SAIL_CD AS CODE2  ,
+                SE_NO AS CODENAME2 ,
+                MFNAME AS CODENAME,
+				IDX
+                FROM DPW_SAIL_MF A,
+                	 DPW_MF B,
+    				(SELECT *
+                	 FROM COMCODE A
+				     START WITH A.HIGHCODE IN (SELECT CODE_NO FROM COMCODE
+												WHERE CODE LIKE 'MF_TYPE')
+				     CONNECT BY PRIOR A.CODE_NO=A.HIGHCODE) C
+                WHERE A.MF_CD = B.MF_CD(+)
+                AND SUB_CORP LIKE paramId:||'%' --거래처
+                 AND B.MF_TYPE =C.CODE (+)
+                )   A
+		START WITH CODE LIKE paramId:||'%' --거래처
+		CONNECT BY PRIOR CODE=HIGHCODE
+		ORDER SIBLINGS BY SUBSTR(CODE,0,19),IDX		
+		 ) A
+			WHERE UPPER(CODE) LIKE UPPER('%'||[code]|| '%')
+	     	  AND UPPER(CODENAME) LIKE UPPER('%'||[codeName]|| '%')
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+		
+
+	
+	<sql-mapping  id="SAIL_LIST"   value-count="0" url="SAIL_LIST 공통 " >  
+	<sql-content>
+	<![CDATA[
+        SELECT CODENO,CODE,CODENAME,HIGHCODE,CODE2,CODENAME2,LEVEL
+        FROM     
+				 (	
+					SELECT A.SAIL_CORP AS CODENO,
+						   B.BIZACQACCTCD AS CODE,
+						   B.BIZACQNAME AS CODENAME,
+						   '9999' AS HIGHCODE,
+						   A.SAIL_CORP AS CODE_NO2,
+						   B.BIZACQACCTCD AS CODE2,
+						   B.BIZACQNAME AS CODENAME2
+					FROM DPW_BIZCORP A,BIZACQCORP B
+					WHERE A.SAIL_CORP = B.BIZACQCD	
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="sims_pjt"   value-count="3" url="sims pjt팝업공통 " >  
+	<sql-content>
+	<![CDATA[
+
+		 SELECT CODENO,
+		        CODE,
+		        CODENAME,
+		        HIGHCODE,
+		        TO_CHAR(DECODE(LENGTH(CODE2),8,TO_DATE(CODE2,'YYYYMMDD')),'YYYY-MM-DD') AS CODE2,
+		        TO_CHAR(DECODE(LENGTH(CODENAME2),8,TO_DATE(CODENAME2,'YYYYMMDD')),'YYYY-MM-DD') AS CODENAME2,
+		        LEVEL,
+		        ''
+		 
+		   FROM
+				    ( SELECT TO_CHAR(ORG_NO)   AS CODENO,
+								     ORGCD     AS CODE,
+									 ORGNAME   AS CODENAME,
+									 HIGHORGCD AS HIGHCODE,
+									 ''        AS CODE2,
+									 ''        AS CODENAME2
+						FROM ORG
+					   WHERE USEFLAG = 'Y'
+						 AND   ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+					 UNION ALL
+					 SELECT TO_CHAR(PJT_NO)    AS CODENO,
+						            PJTCD      AS CODE,
+						            PJTNAME    AS CODENAME,
+									PJTORG_NO  AS HIGHCODE ,
+									PJTSTARTDT AS CODE2,
+									PJTENDDT   AS CODENAME2
+					   FROM PROJECT --[empId]
+				 )         a
+       			 
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+		
+		START WITH CODENO = '1051'
+		CONNECT BY PRIOR CODENO = HIGHCODE
+	
+	]]>
+	</sql-content>
+	</sql-mapping>		
+
+	<sql-mapping  id="sims_pjt2"   value-count="0" url="SIMS PJT LIST " >  
+	<sql-content>
+	<![CDATA[
+        SELECT CODENO,CODE,CODENAME
+        FROM     
+				 (	
+				    SELECT A.CD_PROJ AS CODENO,
+				           A.NO_PROJ AS CODE,
+				           B.PJTNAME AS CODENAME
+					FROM MASM.TBL_PJT_MGT A, MASM.PROJECT B
+					WHERE A.CD_PROJ = B.PJTCD
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="PRODUCTDOC"   value-count="0" url="산출물 조회 " >  
+	<sql-content>
+	<![CDATA[
+        SELECT CODENO,CODE,HIGHCODE,CODENAME,LEV AS LEV,SELFLAG,CODE2,CODENAME2
+        FROM     
+				 (	
+					SELECT  DOCNO AS CODENO,
+							DOCTYPE AS CODE,
+							HIGHDOCNO AS HIGHCODE,
+							L_TITLE AS CODENAME,
+							LEVEL AS LEV,
+							DECODE(DOCTYPE,'JSPID','Y','N') AS SELFLAG,
+							'' AS CODE2,
+							'' AS CODENAME2
+					FROM PRODUCTDOC A					
+					WHERE DOCTYPE IN ('SYS','PRG','PKG','JSPID')
+					
+					START WITH DOCNO = '10000000338'
+					CONNECT BY PRIOR DOCNO =HIGHDOCNO
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="MENU_FL"   value-count="0" url="메뉴폴더 조회 " >  
+	<sql-content>
+	<![CDATA[
+        SELECT *
+        FROM     
+				 (	
+	                SELECT  DOCNO AS CODENO,
+	                                DOCTYPE AS CODE,
+	                                HIGHDOCNO AS HIGHCODE,
+	                                L_TITLE AS CODENAME,
+	                                LEVEL,
+                                    'Y' AS  SELFLAG,
+	                                '' AS CODE2,
+	                                '' AS CODENAME2
+	                FROM PRODUCTDOC A
+	                START WITH DOCNO = 'PROD-20090225-001'
+	                CONNECT BY PRIOR DOCNO =HIGHDOCNO
+	                ORDER SIBLINGS BY IDX
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PACODE_TEMP"   value-count="0" url="급여 기초코드 템플릿 " >  
+	<sql-content>
+	<![CDATA[
+    SELECT *
+    FROM
+            (SELECT         ROWNUM AS SN,
+                                    LEVEL,
+                                    CODE_SEQ AS CODENO,
+                                    HIGHCODE,
+                                    CODE,
+                                    CODE_NM AS CODENAME,
+                                COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT
+
+                    FROM BBDBO.PAY_CODE_TEMP
+                    START WITH HIGHCODE='PAYROLL'
+                    CONNECT BY PRIOR  CODE_SEQ=HIGHCODE
+                    ORDER SIBLINGS BY IDX
+            )
+    WHERE CODE LIKE '%'||[code]|| '%'
+	AND CODENAME LIKE '%'||[codeName]|| '%'            
+    ORDER BY SN
+	]]>            	
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="PACODE_MONTH"   value-count="0" url="월별 급여 기초코드" >  
+	<sql-content>
+	<![CDATA[
+    SELECT *
+    FROM
+            (SELECT         ROWNUM AS SN,
+                                    LEVEL,
+                                    CODE_SEQ AS CODENO,
+                                    HIGHCODE,
+                                    CODE,
+                                    CODE_NM AS CODENAME,
+                                COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT
+
+                    FROM BBDBO.PAY_CODE
+                    START WITH HIGHCODE='PAYROLL'
+                    CONNECT BY PRIOR  CODE_SEQ=HIGHCODE
+                    ORDER SIBLINGS BY IDX
+            )
+    WHERE CODE LIKE '%'||[code]|| '%'
+	AND CODENAME LIKE '%'||[codeName]|| '%'            
+    ORDER BY SN
+	]]>            	
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="PACA_TEMP"   value-count="0" url="급여 계산식 템플릿" >  
+	<sql-content>
+	<![CDATA[
+    SELECT *
+    FROM
+            (SELECT         ROWNUM AS SN,
+                                    LEVEL,
+                                    CODE_SEQ AS CODENO,
+                                    HIGHCODE,
+                                    CA_CODE AS CODE,
+                                    CA_NAME AS CODENAME,
+                                COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT
+
+                    FROM BBDBO.PAY_CA_TEMP
+                    START WITH HIGHCODE='PAY_CA'
+                    CONNECT BY PRIOR  CODE_SEQ=HIGHCODE
+                    ORDER SIBLINGS BY IDX
+            )
+    WHERE CODE LIKE '%'||[code]|| '%'
+	AND CODENAME LIKE '%'||[codeName]|| '%'            
+    ORDER BY SN
+	]]>            	
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="PACA_MONTH"   value-count="0" url="월별 계산식" >  
+	<sql-content>
+	<![CDATA[
+    SELECT *
+    FROM
+            (SELECT         ROWNUM AS SN,
+                                    LEVEL,
+                                    CODE_SEQ AS CODENO,
+                                    HIGHCODE,
+                                    CA_CODE AS CODE,
+                                    CA_NAME AS CODENAME,
+                                COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT
+
+                    FROM BBDBO.PAY_CA
+                    START WITH HIGHCODE='PAY_CA'
+                    CONNECT BY PRIOR  CODE_SEQ=HIGHCODE
+                    ORDER SIBLINGS BY IDX
+            )
+    WHERE CODE LIKE '%'||[code]|| '%'
+	AND CODENAME LIKE '%'||[codeName]|| '%'            
+    ORDER BY SN
+	]]>            	
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="COM_001"   value-count="0" url="사원조회" >  
+	<sql-content>
+	<![CDATA[
+    SELECT  EMPID AS CODE_NO,
+    		EMPID AS CODE_CD,
+    		EMPKNAME as CODE_NAME,
+	   		REPLACE(EMPKNAME||'('||EMPID||')_'||
+	   		(SELECT ORGNAME 
+			FROM ORG B 
+			WHERE B.ORG_NO=A.ORGCD),[p0],'<b>'||[p0]||'</b>') 
+			AS D_CODE_NAME
+    FROM EMPALL  A    
+    WHERE (EMPKNAME LIKE '%'||[p0]||'%' 
+    		OR EMPID = [p0] 
+    		OR ORGCD IN (SELECT ORG_NO 
+			    		FROM ORG 
+			    		WHERE ORGNAME LIKE '%'||[p0]||'%'))    
+    AND   TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN WSTARTDT AND WENDDT  
+    ORDER BY EMPKNAME desc,empid desc
+	]]>            	
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="COM_002"   value-count="0" url="조직조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT  A.ORG_NO AS CODE_NO,
+	       A.ORGCD AS CODE_CD,
+	       A.ORGNAME as CODE_NAME,
+	       REPLACE(''||A.ORGCD||''||' - '||A.ORGNAME,[p0],'<b>'||[p0]||'</b>')   AS D_CODE_NAME
+	FROM ORG  A,ORGHISTORY B
+	WHERE A.ORG_NO=B.ORG_NO
+	AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN STARTDT AND ENDDT
+	AND (A.ORGNAME LIKE '%'||[p0]||'%' OR A.ORGCD LIKE [p0]||'%')
+	ORDER BY A.ORGNAME DESC
+	]]>            	
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="COM_003"   value-count="0" url="거래처조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT  BIZACQCD AS CODE_NO,
+	       BIZACQACCTCD AS CODE_CD,
+	       BIZACQNAME as CODE_NAME,
+	       REPLACE(''||BIZACQACCTCD||''||' - '||BIZACQNAME,[p0],'<b>'||[p0]||'</b>')   AS D_CODE_NAME
+	FROM BIZACQCORP
+	WHERE(BIZACQNAME LIKE '%'||[p0]||'%' OR BIZACQACCTCD LIKE [p0]||'%')
+	AND BIZACQACCTCD<>'$'
+	AND BIZCURRFLAG='Y'
+	ORDER BY BIZACQNAME DESC
+	]]>            	
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="COM_004"   value-count="0" url="PMS 프로젝트 조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+                         SELECT  DISTINCT
+                                        C.PJT_NO AS CODE_NO,
+                                        C.PJTCD  AS CODE_CD,
+                                        C.PJTNAME AS CODE_NAME,
+                                        '' AS HIGHCODE,
+                                        '' CDDS,
+                                         REPLACE(''||C.PJTCD||''||' - '||C.PJTNAME,[p0],'<b>'||[p0]||'</b>')   AS D_CODE_NAME,
+                                        DECODE(
+                                                SUBSTR(DECODE(SUBSTR(PJTCD,1,1),'A',SUBSTR(PJTCD,2,2),SUBSTR(PJTCD,3,2)),1,1)
+                                                        ,'9','19'||DECODE(SUBSTR(PJTCD,1,1),'A',SUBSTR(PJTCD,2,2),SUBSTR(PJTCD,3,2))
+                                                        ,'20'||DECODE(SUBSTR(PJTCD,1,1),'A',SUBSTR(PJTCD,2,2),SUBSTR(PJTCD,3,2))) AS YEAR
+                        FROM PMS_PROJECT C
+                        WHERE REV_NO='1'
+                        AND PJTCD NOT IN (
+					                        SELECT PJTCD FROM PMS_PJT_APP
+					                        WHERE PJTCD = C.PJTCD)
+            )A
+            WHERE CODE_CD LIKE '%'||[p0]||'%'
+            OR CODE_NAME LIKE '%'||[p0]||'%'
+           ORDER BY YEAR DESC,CODE_CD
+	]]>            	
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="DOCTYPE"   value-count="0" url="표준산출물 조회 " >  
+	<sql-content>
+	<![CDATA[
+        SELECT *
+        FROM     
+				(	
+				SELECT
+						CODE_NO AS  CODENO,
+						CODE AS CODE,
+						HIGHCODE AS HIGHCODE,
+						CODENAME AS CODENAME,
+						LEVEL ,
+						DECODE(LEVEL,2,'Y','N') AS SELFLAG,
+						'' AS CODE2,
+						'' AS CODENAME2
+				FROM COMCODE A
+				START WITH CODE_NO = GET_COMCODE([highCode])
+				CONNECT BY PRIOR CODE_NO =HIGHCODE
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="DOCUMENT"   value-count="0" url="산출물 조회 " >  
+	<sql-content>
+	<![CDATA[
+        SELECT *
+        FROM     
+				(	
+              SELECT  LEVEL ,
+                              DOCNO AS CODENO,
+                              DOCNO AS CODE,
+                              HIGHDOCNO AS HIGHCODE,
+                              L_TITLE||
+                              (SELECT (DECODE(COUNT(DOCNO),0,'',TO_CHAR('['||COUNT(DOCNO)||']')))
+                                      FROM PRODUCTDOC A
+                                      WHERE A.HIGHDOCNO = B.DOCNO)
+                                       AS CODENAME,                              'Y' AS SELFLAG
+              FROM    PRODUCTDOC B
+--              WHERE   LEVEL<= '3'
+              START WITH DOCNO LIKE DECODE([HIGHDOCNO],'','SYSTEM',[HIGHDOCNO])
+              CONNECT BY PRIOR DOCNO=HIGHDOCNO
+              ORDER SIBLINGS BY IDX,DOCTYPE,P_TITLE
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="QNO"   value-count="0" url="설문문항 조회 " >  
+	<sql-content>
+	<![CDATA[
+        SELECT *
+        FROM     
+				(	
+		
+				SELECT 	LEVEL,SN,
+						QNO as CODENO,
+						QTYPE as code,
+						QUESTION as CODENAME,
+						HIGHQNO AS HIGHCODE,
+						DECODE(QTYPE,'D','N','Y') AS SELFLAG,
+						IDX
+				FROM (SELECT * FROM
+							(SELECT LEVEL AS LEV,ROWNUM AS SN,A.*
+							FROM QU A
+							START WITH HIGHQNO ='QM'
+							CONNECT BY PRIOR  QNO=HIGHQNO) A,
+							(SELECT A.HIGHCODE,A.CODENAME,B.CODE,A.IDX
+							 FROM COMCODE A,COMCODE B
+							WHERE A.HIGHCODE = GET_COMCODE('SMS_001')
+							AND A.HIGHCODE=B.CODE_NO
+							ORDER BY B.IDX
+						    ) B
+						WHERE A.QTYPE=B.CODE(+)
+						ORDER BY SN,IDX)
+				START WITH HIGHQNO='QM'
+				CONNECT BY PRIOR QNO=HIGHQNO
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="MBSCD"   value-count="0" url="원가부서 수정" >  
+	<sql-content>
+	<![CDATA[
+        SELECT *
+        FROM     
+				(	
+					SELECT CODENO,CODE,CODENAME
+					FROM (
+					SELECT
+							ORG_NO AS CODENO,
+							ORGCD AS CODE,
+							ORGNAME AS CODENAME,
+							'ORG' AS DIV
+					FROM ORG
+					WHERE USEFLAG ='Y'
+					UNION ALL
+					SELECT PJT_NO,
+							PJTCD,
+							PJTNAME,
+							'PJT'
+					FROM PROJECT
+					) ORDER BY DIV,CODE		
+
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>		
+
+	<sql-mapping  id="QMEMBER_"   value-count="0" url="설문대상자 조회 " >  
+	<sql-content>
+	<![CDATA[
+        SELECT *
+        FROM     
+				(	
+				SELECT 	CODE_NO
+						,CODE
+						,CODENAME
+						,HIGHCODE
+						,LEVEL
+						,DECODE(LEVEL,2,'Y','N') AS SELFLAG,
+						'' AS CODE2,
+						'' AS CODENAME2
+				FROM (SELECT  QM_NO AS CODE_NO
+					       ,QM_NO AS CODE
+					       ,QM_NAME AS CODENAME
+					       ,QM_BIZ AS HIGHCODE
+					FROM QMEMBER A
+					UNION ALL
+					SELECT  DISTINCT
+							QM_BIZ AS CODE_NO
+				  		   ,QM_BIZ AS CODE
+				  		   ,QM_BIZ AS CODENAME
+				  		   ,'ROOT' AS HIGHCODE
+				 	FROM QMEMBER
+					) B
+				START WITH HIGHCODE  IN ('ROOT')
+				CONNECT BY PRIOR CODE_NO=HIGHCODE
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="QMEMBER"   value-count="2" url="설문대상자 조회 " >  
+	<sql-content>
+	<![CDATA[
+        SELECT *
+        FROM     
+				(	
+				SELECT 	CODENO
+						,CODE
+						,CODENAME
+						,HIGHCODE
+						,LEVEL
+						,DECODE(LEVEL,3,'Y','N') AS SELFLAG,
+						'' AS CODE2,
+						'' AS CODENAME2
+				FROM (SELECT  QM_NO AS CODENO
+					       ,QM_NO AS CODE
+					       ,QM_NAME AS CODENAME
+					       ,QM_BIZ AS HIGHCODE
+					FROM QMEMBER A
+					UNION ALL
+					SELECT  DISTINCT
+							QM_BIZ AS CODENO
+				  		   ,QM_BIZ AS CODE
+				  		   ,QM_BIZ AS CODENAME
+				  		   ,'ROOT' AS HIGHCODE
+				 	FROM QMEMBER
+                        UNION
+                        SELECT
+                                 'ROOT' AS CODENO
+                                ,'0000' AS CODE
+                                ,'회사' AS CODENAME
+                                ,'-' AS HIGHCODE
+                        FROM DUAL
+                        ) B
+                START WITH CODENO  IN ('ROOT')
+				CONNECT BY PRIOR CODENO=HIGHCODE 
+				--[p0]
+				--[p1]
+                )
+        WHERE CODE LIKE '%'||[code]|| '%'
+		AND CODENAME LIKE '%'||[codeName]|| '%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="QU"   value-count="2" url="설문문항 조회 " >  
+	<sql-content>
+	<![CDATA[
+       SELECT B.*
+       FROM
+       			(
+                 SELECT  A.*,
+               		rownum as SEQ
+            	FROM
+                    (
+                    SELECT  		LEVEL,
+                                    GET_CODENAME('QU',SUBSTR(QTYPE,1,1)) AS CODE,
+                                    QTYPE,
+                                    QUESTION AS CODENAME,
+                                    QNO AS CODENO,
+                                    QUESTION,
+                                    HIGHQNO AS HIGHCODE,
+                                    SEQ AS IDX,
+                                    CRQM_NO,
+                                    MODQM_NO,
+                                    MODIFYDT,
+									DECODE(QTYPE,'D','N',DECODE(HIGHQNO,'QM','N','Y')) AS SELFLAG
+                    FROM QU
+                    START WITH QNO=DECODE('','','QN-20110425-018','')
+                    CONNECT BY PRIOR QNO=HIGHQNO
+                    ORDER SIBLINGS BY SEQ
+                    ) A
+               ) B
+       WHERE CODE LIKE '%'||''|| '%'
+               AND CODENAME LIKE '%'||''|| '%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="FAV_001"   value-count="0" url="즐겨찾기 등록" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO INITPOPUP (PARAMID,
+								PARAMTYPE,
+								PARAM1,
+								PARAM2,
+								PARAM3)
+		VALUES('fav_0',
+				'D',
+				[p0],
+				[p1],
+				''
+				)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="PRODUCTDOC_ALL"   value-count="0" url="산출물 조회(전체)" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	LEVEL ,
+				DOCNO AS CODENO,
+				HIGHDOCNO AS HIGHCODE,
+				HIGHDOCNO,
+				NVL((SELECT MAX(CODENAME)
+					FROM COMCODE
+					WHERE LEVEL>=1
+					AND  (CODE LIKE DOCTYPE
+							OR CODE_NO LIKE DOCTYPE)
+					START WITH  CODE='PDL'
+					CONNECT BY PRIOR CODE_NO=HIGHCODE),'*')
+			    AS CODE,
+				DOCTYPE,
+				P_TITLE,
+				L_TITLE AS CODENAME,
+					(SELECT (DECODE(COUNT(DOCNO),0,0,TO_CHAR(COUNT(DOCNO))))
+					FROM PRODUCTDOC A
+					WHERE A.HIGHDOCNO = B.DOCNO)
+				AS LEVELSUBCNT,
+				URL,
+				IDX
+		FROM    PRODUCTDOC B
+		WHERE   LEVEL<=	2
+		AND     (P_TITLE LIKE '%'||[code]||'%' OR [code] IS NULL)
+		AND     (L_TITLE LIKE '%'||[codeName]||'%' OR [codeName] IS NULL)
+		START WITH DOCNO LIKE DECODE([HIGHDOCNO],'','SYSTEM',[HIGHDOCNO])||'%'
+		CONNECT BY PRIOR DOCNO=HIGHDOCNO
+		ORDER SIBLINGS BY IDX,DOCTYPE,P_TITLE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="FAV_002"   value-count="0" url="즐겨찾기 등록(멀티팝업)" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO INITPOPUP (PARAMID,
+								PARAMTYPE,
+								PARAM1,
+								PARAM2,
+								PARAM3)
+		VALUES( [p0],
+				'D',
+				[p1],
+				[p2],
+				''
+				)
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="FAV_003"   value-count="0" url="즐겨찾기 삭제(멀티팝업)" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM INITPOPUP 
+		WHERE PARAMID =[p0]
+		AND PARAMTYPE='D'
+		AND	PARAM1 =	[p1]
+		AND	PARAM2 =	[p2]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PMSP_001"   value-count="0" url="WBS일정 조회 팝업" >  
+	<sql-content>
+	<![CDATA[
+        SELECT  LEVEL ,
+                        PRCSCD AS CODENO,
+                        PREPRCS AS HIGHCODE,
+                       PREPRCS AS  HIGHDOCNO,
+                       PRCSCD AS CODE,
+                        '' DOCTYPE,
+                        WORKDESC AS CODENAME,
+                     ''   URL,
+                     1   IDX
+        FROM    WBS_DIC B
+--		WHERE   LEVEL<=	2
+		WHERE     (WORKDESC LIKE '%'||[code]||'%' OR [code] IS NULL)
+		AND     (WORKDESC LIKE '%'||[codeName]||'%' OR [codeName] IS NULL)
+ 		START WITH PRCSCD LIKE DECODE('WDIC-20110614-036','','SYSTEM','WDIC-20110614-036')||'%'
+        CONNECT BY PRIOR PRCSCD=PREPRCS
+--		ORDER SIBLINGS BY IDX,DOCTYPE,P_TITLE
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="FA_MASTER"   value-count="0" url="자산코드 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT FA_CODE AS CODENO,
+		       FA_CODE AS CODE,
+		       PRODUCT_NM AS CODENAME,
+		       SUBSTR(FA_CODE,1,1) HIGHCODE
+		FROM FA_MASTER
+		WHERE     (FA_CODE LIKE '%'||[code]||'%' OR [code] IS NULL)
+		AND     (PRODUCT_NM LIKE '%'||[codeName]||'%' OR [codeName] IS NULL)
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="PJTPRODUCTDOC"   value-count="0" url="PMS산출물 조회(전체)" >  
+	<sql-content>
+	<![CDATA[
+		SELECT A.CODENO AS CODENO, ROWNUM AS CODE, A.CODENAME AS CODENAME
+		FROM (
+			SELECT DISTINCT
+				PRODUCT as CODENO
+				,PRODUCT AS CODE
+				,PRODUCT AS CODENAME
+			FROM PJTPRODUCTDOC
+			WHERE PRCSCD = [paramId]
+			--PJTCD =  split([paramId],1)
+			) A
+		WHERE UPPER(code) LIKE ''|| [code] || '%'
+		AND UPPER(codename) LIKE '%'||[codeName] || '%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="MU_TREE"   value-count="0" url="산출" >  
+	<sql-content>
+	<![CDATA[
+	SELECT 			CODENO AS CODENO,
+                   NVL(DOCTYPE,'*') AS CODE,
+                   L_TITLE AS CODENAME,
+                   HIGHDOCNO    AS HIGHCODE,
+				   LEV AS "LEVEL",
+                   'Y' AS SELFLAG ,
+                   '' AS CODE2,
+ 				   '' AS CODENAME2
+	FROM ( SELECT  ROWNUM AS SN, 
+				   LEVEL-1 AS LEV,
+                          DOCNO AS CODENO,
+                          HIGHDOCNO AS HIGHCODE,
+                          DOCNO,
+					COUNT(DOCNO) OVER(PARTITION BY HIGHDOCNO) AS MU_CNT,                   
+                          HIGHDOCNO,
+                                  (SELECT CDNAME
+                                  FROM COCODE
+                                  WHERE CDTYPE='PDL'
+                                  AND  CD=DOCTYPE)
+                      AS DOCTYPE_NAME,
+                          DOCTYPE,
+                          TITLE,
+                          DETAIL,
+                          URL,
+                          P_TITLE,
+                              DECODE(LEVEL,1,GET_CODENAME('CD-20090210-017',DOCTYPE),L_TITLE)
+                          AS L_TITLE,
+                             (SELECT L_TITLE
+                             FROM PRODUCTDOC A
+                             WHERE A.DOCNO=B.HIGHDOCNO)
+                          AS L_TITLE_H,
+                          DECODE(DIV,'%','',DIV) AS DIV,
+                          EMPID,
+		                  (SELECT EMPKNAME FROM EMPALL A
+		                  WHERE A.EMPID=B.EMPID)
+						AS EMPNAME,
+                          (SELECT CDNAME FROM COCODE
+                           WHERE CDTYPE='UF'
+                           AND  CD=USETYPE)
+                       AS USETYPE_NAME,
+                          USETYPE,
+                          CREATEDT,
+                          MODIFYDT,
+    					  NVL((SELECT MAX(DECODE(C.MU_CD,NULL,'N','Y'))
+                        	  	FROM PRODUCT_MANUAL C
+								WHERE B.DOCNO=C.MU_CD
+							    AND C.MU_TYPE='USR'
+								)
+								,DECODE(SUBSTR(DOCTYPE,1,3),'TIT','C','PKG','C','PRG','C','N'))
+					   AS MU_ST,
+					   DOCNO  AS CODE 
+          FROM    PRODUCTDOC B
+       WHERE LEVEL>1
+       START WITH DOCNO  =  DECODE([paramId],'','PROD-20090210-017',[paramId])
+       						--PROD-20090225-001 매뉴
+       						--PROD-20090210-002 문서
+       						--PROD-20090210-017 가이드북
+       CONNECT BY PRIOR DOCNO=HIGHDOCNO
+       ORDER SIBLINGS BY IDX,L_TITLE
+  		) ORDER BY SN
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="ORG_FA"   value-count="0" url="부서자산코드" >  
+	<sql-content>
+	<![CDATA[
+
+                SELECT  *
+                FROM
+                (
+                        SELECT   CODE_NO AS CODENO,
+                 CODE,
+                 CODENAME,
+                 HIGHCODE AS HIGHCODE,
+                 CDDS AS CODE2,
+                 LEVEL ,
+                 DECODE(SUBSTR(CODE,1,1),'D','Y','F','Y',DECODE(LENGTH(CODE),9,'Y','N')) AS SELFLAG
+        FROM COMCODE
+                        START WITH CODE_NO='CD-20101217-001' --[empId]
+                        CONNECT BY PRIOR CODE_NO=HIGHCODE
+                )    A
+         WHERE   UPPER(CODE) LIKE UPPER([code]||'%')
+         AND     UPPER(CODENAME)  LIKE UPPER('%' ||[codeName]||'%')
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="GB"   value-count="0" url="비목코드조회" >  
+	<sql-content>
+	<![CDATA[	
+		SELECT CODE_NO AS CODENO,CODE, CODENAME, HIGHCODE,CDDS AS CODE2, LEVEL,''
+		FROM 						
+		(		
+			SELECT LEVEL LVL,A.* FROM COMCODE A --where code like '5%'
+			START WITH CODE = 'PMS_GB' 	
+			CONNECT BY PRIOR CODE_NO = HIGHCODE
+		) A
+		WHERE LVL=3
+		AND CODE NOT IN ('50270','50300')
+		AND CODE NOT IN (SELECT ACCTCODE FROM PMS_PJTCOSTRESULT
+                                              WHERE PJTCD = SPLIT([paramId],1)
+                                              AND REV_NO = SPLIT([paramId],2)
+						)
+		AND CODE LIKE '%'||code:||'%'
+        AND CODENAME LIKE '%'||codeName:||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PMS_PJT"   value-count="0" url="PMS 프로젝트 조회" >  
+	<sql-content>
+	<![CDATA[
+
+        SELECT * FROM (
+			 SELECT  DISTINCT
+					C.PJT_NO AS CODENO,
+					C.PJTCD  AS CODE,
+					C.PJTNAME AS CODENAME,
+					'' AS HIGHCODE,
+					'' CDDS,
+					DECODE(
+   			  			SUBSTR(DECODE(SUBSTR(PJTCD,1,1),'A',SUBSTR(PJTCD,2,2),SUBSTR(PJTCD,3,2)),1,1)
+			  				,'9','19'||DECODE(SUBSTR(PJTCD,1,1),'A',SUBSTR(PJTCD,2,2),SUBSTR(PJTCD,3,2))
+			      				,'20'||DECODE(SUBSTR(PJTCD,1,1),'A',SUBSTR(PJTCD,2,2),SUBSTR(PJTCD,3,2))) AS YEAR
+			FROM PMS_PROJECT C
+			WHERE REV_NO='1'
+			AND PJTCD NOT IN (
+                   	SELECT PJTCD FROM PMS_PJT_APP
+                   	WHERE PJTCD = C.PJTCD)
+	    )A 
+	    WHERE CODE LIKE '%'||code:||'%'
+		AND CODENAME LIKE '%'||codeName:||'%'
+	   ORDER BY YEAR DESC,CODE
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="PMS_GB"   value-count="0" url="PMS 프로젝트 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT *
+		FROM
+		(
+		        SELECT LEVEL,C.* FROM COMCODE C --where code like '5%'
+		        START WITH CODE = 'PMS_GB'
+		        CONNECT BY PRIOR CODE_NO = HIGHCODE		
+		) C
+		--WHERE LVL=3
+		WHERE CODE NOT IN ('50270','50300')
+		AND UPPER(CODE) LIKE UPPER(code:||'%')
+		AND UPPER(CODENAME)  LIKE UPPER( '%'||codeName:||'%')	
+	]]>
+	</sql-content>
+	</sql-mapping>		
+
+	<sql-mapping  id="CONT_TITLE"   value-count="0" url="외주 계약조회" >  
+	<sql-content>
+	<![CDATA[
+
+        SELECT * FROM (
+			 SELECT 
+					CONT_NO AS CODENO,
+					CONT_NO  AS CODE,
+					CONTNAME AS CODENAME,
+					'' AS HIGHCODE,
+					'' CDDS                        
+            FROM SC_CONTRACT
+            WHERE CONT_NO LIKE '%'||''||'%'
+            AND CONTNAME LIKE '%'||''||'%'
+	    )A 
+	    WHERE CODE LIKE '%'||code:||'%'
+		AND CODENAME LIKE '%'||codeName:||'%'
+	   ORDER BY CODE,CODENAME
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="GROUP_EMP"   value-count="0" url="그룹 사원조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+            SELECT EMP_ID AS CODENO,
+                   C_CODE AS CODE,
+                   GET_CODENAME('C_CODE',C_CODE)||' _ '||EMP_KNAME||'('||EMP_ID||')' AS CODENAME,
+                   '' AS HIGHCODE,
+                   GET_CODENAME('C_CODE',C_CODE) AS CODE2,
+                   EMP_KNAME AS CODENAME2,
+                   '' CDDS
+              FROM HTPA01 
+	    )A 
+	    WHERE CODE LIKE '%'||code:||'%'
+		  AND CODENAME LIKE '%'||codeName:||'%'
+	    ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="C_CODE"   value-count="0" url="회사 공통코드조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'C_CODE'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="DISP_DIV"   value-count="0" url="발령유형 공통코드조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'PA02'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="EMP_DIV"   value-count="0" url="사원구분 공통코드조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'SY01'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="JOB_POSITION"   value-count="0" url="직책 공통코드조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'SY05'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="JOB_GRADE"   value-count="0" url="직급 공통코드조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'SY03'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="JOB_KIND"   value-count="0" url="직종 공통코드조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'SY100'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="JOB_DUTY"   value-count="0" url="직무 공통코드조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'SY101'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="JOB_ASSIGN"   value-count="0" url="보직 공통코드조회" >  
+	<sql-content>
+	<![CDATA[
+        SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'SY102'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="ZIPCODE"   value-count="0" url="우편번호 조회" >  
+	<sql-content>
+	<![CDATA[
+
+        SELECT * FROM (
+            SELECT SEQ AS CODENO,
+                   ZIP_NO AS CODE,
+                   ADDR AS CODENAME,
+                   '' AS HIGHCODE,
+                   '' CDDS
+              FROM HTGT01
+	    )A 
+	    WHERE CODE LIKE '%'||code:||'%'
+		  AND CODENAME LIKE '%'||codeName:||'%'
+	    ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="CATEGORY"   value-count="0" url="주소 구분 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'SY130'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+		<sql-mapping  id="QUAL_CODE"   value-count="0" url="자격 코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'QUAL_CODE'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="CATEGORY2"   value-count="0" url="평가 구분 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'SY110'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+		<sql-mapping  id="LANG"   value-count="0" url="어학 구분 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'LANG'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="LANG_TEST"   value-count="0" url="어학시험 구분 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'LANG_TEST'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="REL"   value-count="0" url="가족관계 구분 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = '00030'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="LUNAR_DIV"   value-count="0" url="생일음양 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'LUNAR_DIV'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="RESD_STS"   value-count="0" url="동거 구분 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'COLOR_BLND'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="SUPPT_STS"   value-count="0" url="부양유무구분 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'COLOR_BLND'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="HNDCP_STS"   value-count="0" url="장애여부 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'COLOR_BLND'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="TAX_RATE"   value-count="0" url="소득공제 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'COLOR_BLND'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="FOREIGNER"   value-count="0" url="외국인 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'COLOR_BLND'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="DEGREE"   value-count="0" url="학력 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'DEGREE'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="GRADUATION_STS"   value-count="0" url="졸업여부 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'GRADUATION_STS'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="PROFESSION"   value-count="0" url="직업 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'PROFESSION'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="LANG"   value-count="0" url="직업 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'LANG'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+<sql-mapping  id="SCHOOL_LEVEL1"   value-count="0" url="학력 공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'SY06'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+<sql-mapping  id="CATEGORY_MAJOR1"   value-count="0" url="전공계열 공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = '03380'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="DEGREE1"   value-count="0" url="학위 공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = '00260'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+<sql-mapping  id="CATEGORY_GRA1"   value-count="0" url="졸업구분 공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'CGRA'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="CATEGORY_DN1"   value-count="0" url="주야 공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'CDN'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+		<sql-mapping  id="CATEGORY_MCSC1"   value-count="0" url="본/분교 공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'CMCSC'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+		<sql-mapping  id="RWD_NAME1"   value-count="0" url="포상명 공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = '00460'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="CATEGORY_INOUT1"   value-count="0" url="내외부 구분 공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = '00630'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="DIS_NAME1"   value-count="0" url="징계명 공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'DNAME'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="LANG_TEST"   value-count="0" url="어학시험 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = 'LANG_TEST'
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="BIZ_FIELD"   value-count="0" url="경력코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = paramId:
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="COMMON"   value-count="0" url="공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+ 		SELECT * FROM (
+               SELECT B.CODE AS CODENO,
+                      B.CODE AS CODE,
+                      B.CODENAME AS CODENAME
+                 FROM COMCODE A,
+                      COMCODE B
+                WHERE A.CODE_NO=B.HIGHCODE
+                  AND A.CODE = paramId:
+                ORDER BY B.IDX,CODE
+        )A 
+        WHERE CODE LIKE '%'||code:||'%'
+          AND CODENAME LIKE '%'||codeName:||'%'
+        ORDER BY CODE,CODENAME
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="SR_SYS_GB"   value-count="1" url="신공통코드 조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT  B.CODE AS CODENO,
+				B.CODE AS CODE,
+				B.CODENAME AS CODENAME
+		FROM COMCODE A,
+		      COMCODE B
+		WHERE A.CODE_NO=B.HIGHCODE
+		AND   A.CODE = 'SR_SYS_GB'		
+		ORDER BY B.IDX,CODE
+			]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+

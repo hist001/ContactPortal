@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping id="SR_001" value-count="0" url="요청조회리스트 ">
+		<sql-content>
+	<![CDATA[
+            SELECT *
+            FROM 
+            (SELECT			DISTINCT 
+                                A.SR_NO,
+                                SR_TITLE,
+                                SR_DT,
+                                TO_EMPKNAME(SR_EMPID)||'('||SR_EMPID||')' AS SR_EMPID,
+                                TO_EMPKNAME((SELECT MAX(B.CONF_EMPID) FROM SR_CONFER B WHERE A.SR_NO=B.SR_NO))||'('||(SELECT MAX(B.CONF_EMPID) FROM SR_CONFER B WHERE A.SR_NO=B.SR_NO)||')'  AS SR_REV_EMPID,
+                                TEL,
+                                SR_ORGCD,
+                                FIN_DT,
+                                P_EFP,
+                                SR_TYPE,
+                                TO_CDNM(SR_TYPE,'SR_GB') AS SR_TYPE_NM,
+                                TO_CDNM(VALUE_TYPE,'VALUE_TYPE') AS VALUE_TYPE,
+                                TO_CDNM(URGENT_TYPE,'URGENT_TYPE') AS URGENT_TYPE,
+                                SR_SYSTEM,
+                                SYSTEMNM,
+                                EFFECT_COMMENT,
+                                SR_REASON,
+                                SR_REASON_DETAIL,
+                                RELEASE_YN,
+                                DEVORG_COMMENT,
+                                REVORG_COMMENT,
+                                FID,
+                                PID,
+                                TO_CDNM((	SELECT MAX(B.DOC_TYPE) 
+				                                FROM SR_CONFER B 
+				                                WHERE A.SR_NO=B.SR_NO),'SR_DOC_GB')||
+				                								TO_CDNM((SELECT '-'||MAX(B.STATUS) 
+				                								FROM SR_CONFER B 
+				                								WHERE A.SR_NO=B.SR_NO),'SR_STATUS') AS SR_STATUS,
+                                A.CR_DT,
+                                A.CR_EMPID,
+                                A.MOD_DT,
+                                A.MOD_EMPID,
+                                B.DOC_TYPE
+		    FROM SR_DOC A, SR_CONFER B,SR_SYSTEM D
+            WHERE 1=1
+            AND A.SR_NO=B.SR_NO(+)
+            AND A.SR_SYSTEM=D.SYSTEMCD
+            AND  SR_DT BETWEEN REPLACE([S_FR_DT],'-','') AND REPLACE([S_TO_DT],'-','')
+            AND UPPER(SR_TITLE) LIKE '%'||UPPER([S_SR_TITLE])||'%'
+            AND (DOC_TYPE LIKE [S_SR_DOC_TYPE]||'%' OR NVL([S_SR_DOC_TYPE],DOC_TYPE) IS NULL)
+            AND (CONF_TYPE LIKE [S_SR_CONF_TYPE]||'%' OR NVL([S_SR_CONF_TYPE],CONF_TYPE) IS NULL)
+            AND SR_EMPID LIKE [S_SR_EMPID]||'%'
+            AND SR_TYPE LIKE [S_SR_TYPE]||'%'
+            AND SR_SYSTEM LIKE [S_SR_SYSTEM]||'%'
+            )
+            WHERE 1=1
+            AND SR_REV_EMPID LIKE '%'||[S_SR_REV_EMPID]||'%'
+            ORDER BY FIN_DT, SR_NO
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="SR_002" value-count="0" url="SR문서 조회 ">
+		<sql-content>
+	<![CDATA[
+	    SELECT 
+				A.SR_NO, 
+				SR_TITLE, 
+				SR_DT, 
+				SR_EMPID,
+				TO_EMPKNAME(SR_EMPID) AS SR_EMPID_NM,
+				C.CONF_EMPID,
+				TO_EMPKNAME(C.CONF_EMPID)||'('||C.CONF_EMPID||')'  AS SR_REV_EMPID_NM, 
+				TEL, 
+				SR_ORGCD, 
+				TO_ORGNM(SR_ORGCD) AS SR_ORGNM,
+				FIN_DT, 
+				P_EFP, 
+				SR_TYPE, 
+				TO_CDNM(SR_TYPE,'SR_GB') AS SR_TYPE_NM,
+				VALUE_TYPE,
+				TO_CDNM(VALUE_TYPE,'VALUE_TYPE') AS VALUE_TYPE_NM,
+				URGENT_TYPE, 
+				TO_CDNM(URGENT_TYPE,'URGENT_TYPE') AS URGENT_TYPE_NM,
+				SR_SYSTEM_CD AS SR_SYSTEM, 
+				SR_SYSTEM_NM, 
+				EFFECT_COMMENT, 
+				SR_REASON, 
+				SR_REASON_DETAIL,
+				RELEASE_YN, 
+				DEVORG_COMMENT, 
+				REVORG_COMMENT, 
+				FID, 
+				PID, 
+				TO_CDNM(B.DOC_TYPE,'SR_DOC_GB')||'-'||
+                TO_CDNM(B.STATUS,'SR_STATUS') AS SR_STATUS,
+				A.CR_DT, 
+				A.CR_EMPID, 
+				A.MOD_DT, 
+				A.MOD_EMPID,
+				 NVL(B.DOC_TYPE,'D010') AS DOC_TYPE	    
+		    FROM SR_DOC A, SR_CONFER B,SR_CONFER C,SR_SYSTEM D
+            WHERE 1=1
+            AND A.SR_NO=B.SR_NO(+)
+            AND A.SR_NO=C.SR_NO(+)
+            AND A.SR_SYSTEM=D.SR_SYSTEM_CD(+)
+            AND A.SR_NO =[S_SR_NO]
+            AND (B.DOC_TYPE LIKE [S_DOC_TYPE]||'%' OR [S_DOC_TYPE] IS NULL)
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_003" value-count="0" url="SR진행 단계조회">
+		<sql-content>
+	<![CDATA[
+			SELECT '/images/CMS/'||CODENAME||(SELECT MAX('_') FROM SR_CONFER WHERE CODE=DOC_TYPE AND SR_NO=[S_SR_NO])||'.png' AS DOC_STATUS
+			FROM COMCODE
+			WHERE HIGHCODE='CD-20160407-001'
+			AND DECODE([S_SR_NO],'','N','Y')='Y'
+			ORDER BY IDX
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_004" value-count="0" url="SR 결재조회">
+		<sql-content>
+	<![CDATA[
+		SELECT a.SR_NO,
+					DOC_TYPE,
+					TO_CDNM(DOC_TYPE,'SR_DOC_GB') AS DOC_TYPE_NM,
+					TO_CDNM(CONF_TYPE,'SR_STATUS')||DECODE(CONF_COMMENT,'','','(의견)') AS CONF_TYPE,
+					CONF_EMPID,
+					TO_EMPKNAME(CONF_EMPID) AS CONF_EMPNM,
+					STATUS,
+					TO_CHAR(CONF_DT,'YYYY-MM-DD HH24:MI') AS CONF_DT,
+					CONF_COMMENT,
+					CONF_SN,
+					TO_CDNM(EGRADE,'EA') AS EGRADE,
+					TO_ORGNM(TO_ORGCD(ORGCD)) AS ORGNM,
+					SR_TITLE
+		FROM SR_CONFER A,EMPALL B,SR_DOC C
+		WHERE A.SR_NO =[S_SR_NO]
+		AND DOC_TYPE LIKE NVL([S_DOC_TYPE],'D010')
+		AND CONF_EMPID=EMPID(+)
+		AND A.SR_NO=C.SR_NO
+        ORDER BY STATUS  DESC ,CONF_SN DESC
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="SR_005" value-count="0" url="SR 등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO SR_DOC (	
+			 	SR_NO, 
+				SR_TITLE, 
+				SR_DT, 
+				SR_EMPID, 
+				TEL, 
+				SR_ORGCD, 
+				FIN_DT, 
+				P_EFP, 
+				SR_TYPE, 
+				VALUE_TYPE, 
+				URGENT_TYPE, 
+				SR_SYSTEM, 
+				EFFECT_COMMENT, 
+				SR_REASON, 
+				SR_REASON_DETAIL, 
+				RELEASE_YN, 
+				DEVORG_COMMENT, 
+				REVORG_COMMENT, 
+				FID, 
+				PID, 
+				CR_DT, 
+				CR_EMPID 
+				)
+		VALUES(
+				GET_SEQ('SR-HX'), 
+				[SR_TITLE], 
+				REPLACE([SR_DT],'-',''), 
+				[SR_EMPID], 
+				[TEL], 
+				[SR_ORGCD], 
+				REPLACE([FIN_DT],'-',''),
+				[P_EFP], 
+				[SR_TYPE], 
+				[VALUE_TYPE], 
+				[URGENT_TYPE], 
+				[SR_SYSTEM], 
+				[EFFECT_COMMENT], 
+				[SR_REASON], 
+				[SR_REASON_DETAIL], 
+				[RELEASE_YN], 
+				[DEVORG_COMMENT], 
+				[REVORG_COMMENT], 
+				[FID], 
+				[PID], 
+				SYSDATE, 
+				[CR_EMPID] 
+				)	
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="SR_006" value-count="0" url="SR 삭제">
+		<sql-content>
+	<![CDATA[
+		DELETE FROM SR_DOC WHERE SR_NO=[SR_NO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_007" value-count="0" url="SR 수정">
+		<sql-content>
+	<![CDATA[
+		UPDATE SR_DOC SET
+				SR_TITLE=[SR_TITLE], 
+				SR_DT=REPLACE([SR_DT],'-',''), 
+				SR_EMPID=[SR_EMPID], 
+				TEL=[TEL], 
+				SR_ORGCD=[SR_ORGCD], 
+				FIN_DT=REPLACE([FIN_DT],'-',''), 
+				P_EFP=[P_EFP], 
+				SR_TYPE=[SR_TYPE], 
+				VALUE_TYPE=[VALUE_TYPE], 
+				URGENT_TYPE=[URGENT_TYPE], 
+				SR_SYSTEM=[SR_SYSTEM], 
+				EFFECT_COMMENT=[EFFECT_COMMENT], 
+				SR_REASON=[SR_REASON], 
+				SR_REASON_DETAIL=[SR_REASON_DETAIL], 
+				RELEASE_YN=[RELEASE_YN], 
+				DEVORG_COMMENT=[DEVORG_COMMENT], 
+				REVORG_COMMENT=[REVORG_COMMENT], 
+				FID=[FID], 
+				PID=[PID],
+				MOD_DT=SYSDATE,
+				MOD_EMPID=[MOD_EMPID]
+		WHERE SR_NO=[SR_NO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_008" value-count="0" url="SR 결재선 등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO SR_CONFER 
+		(SELECT 
+				[SR_NO]
+				,NVL([DOC_TYPE],'D010')
+				,NVL([CONF_TYPE],'S040')
+				,SPLIT([TEMP_CONF_EMPID],ROWNUM,',') as CONF_EMPID
+				,[STATUS] AS STATUS
+				,'' AS CONF_DT
+				,'' AS CONF_COMMENT
+				,ROWNUM AS CONF_SN		
+		FROM DUAL
+		WHERE SPLIT([TEMP_CONF_EMPID],ROWNUM,',')  IS NOT NULL
+		CONNECT BY LEVEL<10)
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_009" value-count="0" url="SR 결재선 등록">
+		<sql-content>
+	<![CDATA[
+		DELETE FROM SR_CONFER 
+		WHERE SR_NO= [SR_NO]
+		AND DOC_TYPE=[DOC_TYPE]
+		AND CONF_EMPID=[CONF_EMPID]
+		AND CONF_SN	LIKE [CONF_SN]||'%'
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_010" value-count="0" url="SR 결재선 수정">
+	<sql-content>
+	<![CDATA[
+		UPDATE SR_CONFER SET 
+				  ,CONF_TYPE=[CONF_TYPE]
+		WHERE SR_NO= [SR_NO]
+		AND DOC_TYPE=[DOC_TYPE]
+		AND CONF_EMPID	LIKE [CONF_EMPID]
+		AND CONF_SN	LIKE [CONF_SN]
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="SR_011" value-count="0" url="SR요청서조정 등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO SR_ADJ (	
+			 	SR_NO, 
+				SR_MOD_DT, 
+				ACCEPT_DT, 
+				SR_TYPE, 
+				VALUE_TYPE, 
+				URGENT_TYPE, 
+				SR_SYSTEM, 
+				MOD_NOTE, 
+				CR_DT, 
+				CR_EMPID
+				)
+		VALUES(
+				[SR_NO], 
+				SYSDATE, 
+				REPLACE([ACCEPT_DT],'-',''), 
+				[SR_TYPE], 
+				[VALUE_TYPE], 
+				[URGENT_TYPE], 
+				[SR_SYSTEM], 
+				[MOD_NOTE], 
+				SYSDATE, 
+				[CR_EMPID] 
+				)	
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="SR_012" value-count="0" url="SR요청서조정 삭제">
+		<sql-content>
+	<![CDATA[
+		DELETE FROM SR_DOC WHERE SR_NO=[SR_NO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="SR_013" value-count="0" url="SR요청서조정 수정">
+		<sql-content>
+	<![CDATA[
+		UPDATE SR_ADJ SET
+				SR_MOD_DT=SYSDATE 
+				,ACCEPT_DT=REPLACE([ACCEPT_DT],'-','') 
+				,SR_TYPE=[SR_TYPE] 
+				,VALUE_TYPE=[VALUE_TYPE]
+				,URGENT_TYPE=[URGENT_TYPE]
+				,SR_SYSTEM=[SR_SYSTEM]
+				,MOD_NOTE=[MOD_NOTE] 
+				,MOD_DT=SYSDATE
+				,MOD_EMPID=[MOD_EMPID]
+		WHERE SR_NO=[SR_NO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_014" value-count="0" url="SR요청서조정 조회(최종등록)">
+		<sql-content>
+	<![CDATA[
+			SELECT
+					SR_NO,
+					SR_MOD_DT,
+					ACCEPT_DT,
+					SR_TYPE,
+					TO_CDNM(SR_TYPE,'SR_GB') AS SR_TYPE_NM,
+					VALUE_TYPE,
+					URGENT_TYPE,
+					SR_SYSTEM,
+                    SR_SYSTEM_NM,
+                    MOD_NOTE,
+                    A.CR_DT,
+                    A.CR_EMPID,
+                    A.MOD_DT,
+                    A.MOD_EMPID
+			FROM SR_ADJ A,SR_SYSTEM D
+			WHERE 1=1
+			AND SR_NO =[S_SR_NO]
+			AND A.SR_SYSTEM=D.SR_SYSTEM_CD(+)
+			AND SR_MOD_DT IN (SELECT MAX(SR_MOD_DT) FROM SR_ADJ  B WHERE B.SR_NO=A.SR_NO)
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_015" value-count="0" url="SR배정자등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO SR_WORKER
+		(SELECT 
+				[SR_NO]
+				,SPLIT([TEMP_WORKER_EMPID],ROWNUM,',') as SR_WORKER
+				,''
+				,SYSDATE
+				,[CR_EMPID]
+				,''
+				,''
+		FROM DUAL
+		WHERE SPLIT([TEMP_WORKER_EMPID],ROWNUM,',')  IS NOT NULL
+		CONNECT BY LEVEL<20)
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_016" value-count="0" url="SR배정자 조회">
+		<sql-content>
+	<![CDATA[
+		SELECT
+			A.SR_NO,
+			SR_WORKER,
+			TO_EMPKNAME(SR_WORKER) AS SR_WORKER_NM,
+			SR_PLAN_YN,
+			A.CR_DT,
+			A.CR_EMPID,
+			A.MOD_DT,
+			A.MOD_EMPID ,
+            RELEASE_YN,
+            DEVORG_COMMENT
+	    FROM SR_WORKER A, SR_DOC B
+	    WHERE 1=1
+		AND A.SR_NO =[S_SR_NO]
+	    AND A.SR_NO=B.SR_NO
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_017" value-count="0" url="SR배정자 수정">
+	<sql-content>
+	<![CDATA[
+		UPDATE SR_WORKER SET			
+			SR_PLAN_YN=DECODE([SR_PLAN_YN],'Y','Y','N'),			
+			MOD_DT=SYSDATE,
+			MOD_EMPID=[MOD_EMPID]		
+		WHERE 1=1
+		AND SR_NO =[SR_NO]
+		AND SR_WORKER =[SR_WORKER]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="SR_018" value-count="0" url="SR배정자 삭제">
+	<sql-content>
+	<![CDATA[
+		DELETE SR_WORKER 			
+		WHERE 1=1
+		AND SR_NO =[SR_NO]
+		AND SR_WORKER =[SR_WORKER]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_019" value-count="0" url="SR배정자 :형상관리, 개발부서의견">
+	<sql-content>
+	<![CDATA[
+		UPDATE  SR_DOC SET 
+		RELEASE_YN=[RELEASE_YN]		
+		,DEVORG_COMMENT=[DEVORG_COMMENT]	
+		,MOD_DT=SYSDATE
+		,MOD_EMPID=[MOD_EMPID]
+		WHERE 1=1
+		AND SR_NO =[SR_NO]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping id="SR_020" value-count="0" url="SR결재선 조회">
+	<sql-content>
+	<![CDATA[
+	
+		SELECT CONF_EMPID AS CODE_NO
+							,CONF_EMPID AS CODE
+							,TO_EMPKNAME(CONF_EMPID) AS CODENAME
+							,CONF_SN
+		FROM SR_CONFER A
+		WHERE SR_NO = [S_SR_NO]
+		AND STATUS=[S_STATUS]
+		ORDER BY CONF_SN
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SR_021"   value-count="0" url="SR결재선 순번수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE SR_CONFER SET	 
+		CONF_SN		= [p0]
+		WHERE SR_NO = [p2]
+		AND STATUS=[p3]
+		AND CONF_EMPID=[p1]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping id="SR_022" value-count="0" url="SR 결재처리">
+	<sql-content>
+	<![CDATA[
+		UPDATE SR_CONFER SET 
+	   CONF_TYPE=[CONF_TYPE]
+	   ,CONF_DT=SYSDATE
+		WHERE SR_NO= [SR_NO]
+		AND DOC_TYPE=[DOC_TYPE]
+		AND CONF_EMPID	LIKE [CONF_EMPID]
+		AND CONF_SN	LIKE [CONF_SN]||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping id="SR_023" value-count="0" url="SR 결재의견조회">
+	<sql-content>
+	<![CDATA[
+		SELECT *
+		FROM SR_CONFER
+		WHERE SR_NO= [SR_NO]
+		AND DOC_TYPE= [DOC_TYPE]
+		AND  CONF_EMPID=[CONF_EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping id="SR_024" value-count="0" url="SR 결재의견등록">
+	<sql-content>
+	<![CDATA[
+		UPDATE SR_CONFER SET
+		CONF_COMMENT=[CONF_COMMENT]
+		WHERE SR_NO= [SR_NO]
+		AND DOC_TYPE= [DOC_TYPE]
+		AND  CONF_EMPID=[CONF_EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping id="S_001" value-count="0" url="시스템 리스트 조회">
+	<sql-content>
+	<![CDATA[
+		SELECT LEVEL AS LEV,
+			A.SYSTEMCD,
+			A.SYSTEMNM,
+			A.STARTDT,
+			A.ENDDT,
+			(SELECT SYSTEMCD
+			   FROM SR_SYSTEM
+			   WHERE SYSTEMCD=A.HIGH_SYSTEMCD)
+			AS HIGH_SYSTEMCD,
+			A.SYSTEM_GB,
+				(SELECT COUNT(*)
+				FROM SR_SYSTEM B
+				WHERE B.HIGH_SYSTEMCD=A.SYSTEMCD)
+			AS SUBCNT,
+			A.NOTE,
+				(SELECT SYSTEMNM
+				FROM SR_SYSTEM B
+				WHERE A.HIGH_SYSTEMCD=B.SYSTEMCD)
+			AS HIGH_SYSTEMNM
+	FROM SR_SYSTEM A
+	WHERE LEVEL<=S_LEVEL:
+	AND SYSTEMNM LIKE '%'||[S_SYSTEMNM]||'%'
+			START WITH (A.SYSTEMCD IN NVL([S_HIGH_SYSTEMCD], S_SYSTEMCD:))
+	CONNECT BY PRIOR A.SYSTEMCD=A.HIGH_SYSTEMCD
+	ORDER SIBLINGS BY A.SYSTEMCD
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="S_002" value-count="0" url="시스템 세부 조회">
+	<sql-content>
+	<![CDATA[
+		SELECT
+				LEVEL AS LEV,
+				A.SYSTEMCD,
+				A.SYSTEM_GB,
+				(SELECT B.CODENAME AS CODE_NAME
+				 FROM COMCODE A,
+				      COMCODE B
+			   	 WHERE A.CODE_NO=B.HIGHCODE
+				 AND   A.CODE = 'SR_SYS_GB'
+				 AND   B.CODE = A.SYSTEM_GB)
+				AS SYSTEM_GBNM,
+				A.SYSTEMNM,
+				A.NOTE,
+				A.STARTDT,
+				A.ENDDT,
+				A.SEQ,
+                 (SELECT SYSTEMNM
+				 FROM SR_SYSTEM B
+				 WHERE A.HIGH_SYSTEMCD=B.SYSTEMCD)
+				AS HIGH_SYSTEMNM,
+                 (SELECT SYSTEMCD
+                 FROM SR_SYSTEM
+                 WHERE SYSTEMCD=A.HIGH_SYSTEMCD)
+                AS HIGH_SYSTEMCD
+		FROM SR_SYSTEM A
+		WHERE LEVEL=1
+		START WITH A.HIGH_SYSTEMCD = S_HIGH_SYSTEMCD:
+		CONNECT BY PRIOR A.SYSTEMCD=A.HIGH_SYSTEMCD
+		ORDER SIBLINGS BY A.SEQ, A.SYSTEMCD
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	
+	
+	
+	<sql-mapping  id="S_003"   value-count="0" url="공통코드 [저장]" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO SR_SYSTEM (
+				SYSTEMCD
+				,SYSTEMNM
+				,SYSTEM_GB
+				,HIGH_SYSTEMCD
+				,NOTE
+				,STARTDT
+				,ENDDT
+				)
+		VALUES(
+				[U_SYSTEMCD]
+				,[SYSTEMNM]
+				,[SYSTEM_GB]
+				,[HIGH_SYSTEMCD]
+				,[NOTE]
+				,[STARTDT]
+				,[ENDDT]
+				)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_004"   value-count="0" url="공통 코드 [삭제]" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM SR_SYSTEM
+		WHERE SYSTEMCD = [SYSTEMCD]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_005"   value-count="0" url="공통 코드 [수정]" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE SR_SYSTEM SET
+			SYSTEMCD = [U_SYSTEMCD]
+			,SYSTEMNM=[SYSTEMNM]
+			,SYSTEM_GB=[SYSTEM_GB]
+			,HIGH_SYSTEMCD=[HIGH_SYSTEMCD]
+			,NOTE=[NOTE]
+			,STARTDT=[STARTDT]
+			,ENDDT=[ENDDT]
+		WHERE SYSTEMCD = [SYSTEMCD]
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	
+	<sql-mapping  id="S_006"   value-count="0" url="SR시스템 순번수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE SR_SYSTEM SET	 
+		SEQ		= [p0]
+		WHERE SYSTEMCD = [p1]
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql>
+
+

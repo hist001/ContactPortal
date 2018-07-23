@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+  <!--FLAG항목::제비용=C,속인성=P,투자=I,상품=G,교육=E-->
+   <sql-mapping  id="B_001"   value-count="4"
+   url="비용-비목으로 검색" >  
+   <sql-content>
+   <![CDATA[
+   select * from (
+	select 
+	rank() over(partition by 1 order by a.yplancd,b.dyplancd,c.acctcd) key,
+	--c.isdefault||a.yplancd||b.dyplancd||c.acctcd key,
+	a.yplancd,b.dyplancd,
+	b.dyPlanName,
+	c.acctcd,to_acctname(c.acctcd) acctName,c.isdefault,
+	amt_01,amt_02,amt_03,amt_04,amt_05,amt_06,
+	amt_07,amt_08,amt_09,amt_10,amt_11,amt_12,	
+	amt_01+amt_02+amt_03+amt_04+amt_05+amt_06+
+        amt_07+amt_08+amt_09+amt_10+amt_11+amt_12	
+	tot, '1' isDelete
+	from yearplan a, detailyearplan b, budgetPlan c
+	where     a.yplancd = b.yplancd
+	AND		  B.yplancd = C.yplancd
+	and       b.dyplancd = c.dyplancd
+	and       c.isDefault='C'
+	and       a.yplancd = ?
+	and       b.dyplanname like '%'||?||'%'                
+	and       c.acctCd like ?||'%' 
+	and       b.orgcd in (
+	select orgcd
+	from org a
+	WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+	AND ORG_NO IS NOT NULL
+	connect by a.highorgcd = prior TO_CHAR(A.ORG_NO)
+	start with A.ORG_NO = ?   	
+	)
+	)
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+</sql>
+

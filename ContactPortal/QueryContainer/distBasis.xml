@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="whereDb"   value-count="1" url="배부표 수정-조건절" >  
+	<sql-content>	
+	<![CDATA[
+		where db_no = ?
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="whereOrg"   value-count="2" url="배부표 수정-조건절" >  
+	<sql-content>	
+	<![CDATA[
+		where db_no = ?
+		and dbOrg_no = ?
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="whereAcct"   value-count="3" url="배부표 수정-조건절" >  
+	<sql-content>	
+	<![CDATA[
+		where db_no = ?
+		and dbOrg_no = ?
+		and acctCd = ?
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="getDbNo"   value-count="0" url="배부초기계정" >  
+	<sql-content>	
+	<![CDATA[
+	select DISTRIBUTIONBASIS_SEQ.nextval as db_no from dual
+	]]>
+	</sql-content>	
+	</sql-mapping>
+
+	<sql-mapping  id="getInitDBOrgAcct"   value-count="1" url="등록을 위하여 Default로 요구되는 Acct정보" >  
+	<sql-content>	
+	<![CDATA[
+	select a.dbOrg_no||b.acctcd pk,
+		   a.dbOrg_no, a.dbOrg_UserCd, a.ORGNAME,
+		   b.acctcd, b.acctkName,
+		   ? as dbTypeCd  -- H:일반mh, S:매출액, SP:매출총이익, MP:한계이익, HS:mh&매출
+	from
+	(
+		SELECT 	ORG_NO 			AS dbOrg_no,
+				ORGCD     		AS dbOrg_UserCd,
+				ORGNAME   		AS ORGNAME,
+				level
+		FROM ORG
+		WHERE orgdiv in ('G','G ','D','T','T ','A')
+		AND highorgcd != '999999'
+		AND orgcd != '1111'
+		START WITH ORGCD = '9999'
+		CONNECT BY PRIOR TO_CHAR(ORG_NO) = HIGHORGCD
+	) a,
+	(
+	select acctcd, acctkname from accttb b
+	where substr(b.acctcd, 5,1) != '0'
+	and substr(b.acctcd, 1,1) = '5'
+	) b
+	order by a.dbOrg_no, b.acctcd
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="getInitDBOrgAcct2"   value-count="0" url="배부초기계정" >  
+	<sql-content>	
+	<![CDATA[
+		select acctcd, acctkname 
+		from accttb b
+		where substr(b.acctcd, 5,1) != '0'
+		and substr(b.acctcd, 1,1) = '5'
+		order by acctcd
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="getInitDBOrg"   value-count="0" url="배부초기조직" >  
+	<sql-content>	
+	<![CDATA[
+		SELECT 	ORG_NO 			AS dbOrg_no,
+				ORGCD     		AS dbOrg_UserCd,
+				ORGNAME   		AS ORGNAME,
+				decode(HIGHORGCD, '0000', 0, HIGHORGCD) 		AS highDbOrg_no,
+				nvl(to_orgnocd(to_char(HIGHORGCD)),'0000') AS HighOrgUserCd,
+				nvl(to_ORGCDNAME(to_orgnocd(highorgcd)),'0000') AS HighOrgName,
+				level
+		FROM ORG
+		WHERE orgdiv in ('G','G ','D','T','T ','A')
+		AND highorgcd != '999999'
+		AND orgcd != '1111'
+		START WITH ORGCD = '9999'
+		CONNECT BY PRIOR TO_CHAR(ORG_NO) = HIGHORGCD
+
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="getInitDBOrg2"   value-count="0" url="배부초기조직2" >  
+	<sql-content>	
+	<![CDATA[
+		SELECT 	ORG_NO AS dbOrg_no,
+				ORGCD     		AS dbOrg_UserCd,
+				ORGNAME   		AS ORGNAME,
+				HIGHORGCD 		AS HIGHORGCD,
+				level
+		FROM ORG
+		WHERE orgdiv in ('G','G ','D','T','T ','A') --orgdiv not in ('P')
+		AND highorgcd != '999999'
+		AND orgcd != '1111'
+		START WITH ORGCD = '9999'
+		CONNECT BY PRIOR TO_CHAR(ORG_NO) = HIGHORGCD
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="getDBOrgAcct"   value-count="2" url="배부조직계정" >  
+	<sql-content>	
+	<![CDATA[
+        select 	a.db_no,
+                a.dbOrg_no, to_orgnocd(a.dbOrg_no) dbOrg_UserCd,
+                to_orgnoname(a.dbOrg_no) orgName,
+                a.acctCd, b.acctkName,
+                a.dbTypeCd
+        from distributionbasis_org_acct a, accttb b, org c
+        where a.acctCd = b.acctCd
+		and a.dbOrg_no  = c.org_no
+		and a.db_no = ?
+		and a.dbOrg_no = ?
+		order by a.acctCd
+
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="getDBOrg"   value-count="1" url="배부조직" >  
+	<sql-content>	
+	<![CDATA[
+		select db_no, dbOrg_no,
+			   case when substr(a.dbOrg_no,5,1) = '0' then dbOrg_UserCd||'0'
+			   		when substr(a.dbOrg_no,5,1) = '1' then dbOrg_UserCd||'1'
+					else dbOrg_UserCd
+			   end dbOrg_UserCd,
+			   case when substr(a.dbOrg_no,5,1) = '0' then orgName||'_대내'
+			   		when substr(a.dbOrg_no,5,1) = '1' then orgName||'_대외'
+					else orgName
+			   end orgName,
+			   costOrgType, srtOrg_no, srtOrg_UserCd,
+			   srtOrg_Name, highDbOrg_no,HighOrgUserCd,HighOrgName,
+			   level
+		from
+		(
+			select a.db_no, 
+				   a.dbOrg_no, to_orgnocd(substr(a.dbOrg_no,1,4)) dbOrg_UserCd,
+                                   to_orgnoname(substr(a.dbOrg_no,1,4)) orgName,
+				   a.costOrgType, a.srtOrg_no,
+				   to_orgnocd(a.srtOrg_no) srtOrg_UserCd,
+				   to_orgnoname(a.srtOrg_no) srtOrg_Name,
+				decode(a.highDbOrg_no, '0000', 0, '', 0, a.highDbOrg_no) AS highDbOrg_no,
+				nvl(to_orgnocd(to_char(a.highDbOrg_no)),'0000') AS HighOrgUserCd,
+				nvl(to_ORGCDNAME(to_orgnocd(a.highDbOrg_no)),'0000') AS HighOrgName
+			from DistributionBasis_Org a
+			where db_no = ?
+		) a
+		START WITH a.dbOrg_UserCd = '9999'
+		CONNECT BY PRIOR TO_CHAR( a.dbOrg_no) = a.highDbOrg_no
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="getDBOrg3"   value-count="1" url="배부조직" >  
+	<sql-content>	
+	<![CDATA[
+		SELECT  TO_CHAR(a.ORG_NO)   AS dbOrg_no,
+				a.ORGCD     		AS dbOrg_UserCd,
+				a.ORGNAME   		AS ORGNAME,
+				a.HIGHORGCD 		AS HIGHORGCD,
+				level
+		FROM ORG a
+		WHERE a.ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+		AND a.ORG_NO IS NOT NULL
+		and a.org_no in (select dborg_no from distributionbasis_org where db_no = ?)
+		START WITH a.ORGCD = '9999'
+		CONNECT BY PRIOR TO_CHAR(a.ORG_NO) = a.HIGHORGCD
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="getDB"   value-count="1" url="배부기준" >  
+	<sql-content>	
+	<![CDATA[
+		select db_no, dbName, dbDesc
+		from DistributionBasis
+		where db_no = ?
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="getDBList"   value-count="1" url="배부기준리스트" >  
+	<sql-content>	
+	<![CDATA[
+		select db_no, dbName, dbDesc, isUse
+		from DistributionBasis ?
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="where"   value-count="2" url="배부표-조건절" >  
+	<sql-content>	
+	<![CDATA[
+		where dist_no = ?
+		and sn= ?
+	]]>
+	</sql-content>	
+	</sql-mapping>
+
+	<sql-mapping  id="searchDBList"   value-count="1" url="배부표-배부종류" >  
+	<sql-content>	
+	<![CDATA[
+		select DBTypeCd, DBTypeName, IsComplex, DBUnit
+		from distributionbasistype ?
+	]]>
+	</sql-content>	
+	</sql-mapping>
+</sql>

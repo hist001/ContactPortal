@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="CA_001"   value-count="9" url="프로젝트 배부후 조회" >  
+	<sql-content>
+	<![CDATA[
+			  SELECT DB_NO,(SELECT DBNAME FROM DISTRIBUTIONBASIS B WHERE B.DB_NO = A.DB_NO) ACCTNAME,
+                   '1' LEV, YEAR, MONTH, '00000' ACCTCD, SUM(D_AMT) D_AMT, SUM(PD_AMT) PD_AMT, SUM(PI_AMT) PI_AMT, SUM(GD_AMT) GD_AMT, SUM(GI_AMT) GI_AMT, SUM(P_SUM) P_SUM, SUM(G_SUM) G_SUM, SUM(SUM) SUM
+              FROM COSTACTUALRESULTS_DBPJT A
+              WHERE PJT_NO = ?
+			  AND   YEAR     = ?
+			  AND   MONTH   = ?
+              GROUP BY DB_NO, YEAR, MONTH
+              UNION ALL
+              SELECT B.DB_NO, B.USRACCTNAME ACCTNAME,
+                  '2' LEV, ?, ?,B.USRACCTCD ACCTCD,
+                      NVL(D_AMT,0) D_AMT, NVL(PD_AMT,0) PD_AMT, NVL(PI_AMT,0) PI_AMT, NVL(GD_AMT,0) GD_AMT, NVL(GI_AMT,0) GI_AMT, NVL(P_SUM,0) P_SUM, NVL(G_SUM,0) G_SUM , NVL(SUM,0) SUM
+              FROM COSTACTUALRESULTS_DBPJT A,
+				  (SELECT USRACCTCD,USRACCTNAME,USRINDEX,DB_NO FROM USRACCTDEFDETAIL, DISTRIBUTIONBASIS WHERE USRACCTCD LIKE 'MA%' AND DB_NO IN
+					  (SELECT DB_NO FROM COSTACTUALRESULTS_DBPJT A
+					   WHERE A.PJT_NO = ?
+					   AND    A.YEAR    = ?
+					   AND    A.MONTH  = ?
+					   GROUP BY YEAR, MONTH, DB_NO)  
+				  ) B
+              WHERE A.PJT_NO (+) = ?
+			  AND   A.DB_NO  (+) = B.DB_NO
+			  AND   A.ACCTCD (+) = B.USRACCTCD
+			  ORDER BY DB_NO, YEAR, MONTH,ACCTCD
+		]]>
+	</sql-content>
+	</sql-mapping>		
+
+	<sql-mapping  id="CA_002"   value-count="1" url="프로젝트 조회" >  
+	<sql-content>
+	<![CDATA[
+	
+			SELECT PJTCD, PJTNAME, PJTSTARTDT, PJTENDDT, CONTSTARTDT, CONTENDDT, ORDERCORPCD,
+			to_bizacqname(ordercorpcd) CORPNAME,
+			PJTORG_NO,TO_ORGNOCD(PJTORG_NO) PJTORGCD,to_orgNoName(pjtOrg_no) pjtOrgName, to_char(PJTUPDATEDTM,'yyyy-mm-dd') pjtUpdateDtm,
+			PMEMPID, to_empkname(pmEmpId) pmEmpName
+			FROM PROJECT A WHERE PJT_NO=?
+		]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="CA_003"   value-count="1" url="프로젝트 조회" >  
+	<sql-content>
+	<![CDATA[
+	
+			SELECT SUM(S_AMT) S_AMT, SUM(D_AMT) D_AMT, SUM(S_AMT-D_AMT) L_AMT, SUM(I_AMT) I_AMT, SUM(S_AMT-D_AMT-I_AMT) SP_AMT FROM 
+			(
+				SELECT
+					CASE WHEN SUBSTR(ACCTCD,1,2) IN ('41')  THEN
+					AMT
+					ELSE
+					0
+					END S_AMT,
+					CASE WHEN SUBSTR(ACCTCD,1,2) IN ('50','90')  THEN
+					AMT
+					ELSE
+					0
+					END D_AMT, 
+					CASE WHEN SUBSTR(ACCTCD,1,2) IN ('92','93')  THEN
+					AMT
+					ELSE
+					0
+					END I_AMT
+				FROM PJTCOSTDETAIL B	 	 
+				WHERE B.PJT_NO=? 
+				AND B.COSTTYPE='T'
+			)		
+			]]>
+	</sql-content>
+	</sql-mapping>	
+		
+	<sql-mapping  id="CA_004"   value-count="2" url="프로젝트 원가 계획 조회" >  
+	<sql-content>	
+	<![CDATA[
+		select 
+		        costtype,year,month,
+		        sum(amt_01) amt_01,
+		        sum(amt_02) amt_02,
+		        sum(amt_03) amt_03,
+		        sum(amt_04) amt_04,
+		        sum(amt_05) amt_05,
+		        sum(amt_06) amt_06,
+		        sum(amt_07) amt_07,
+		        sum(amt_08) amt_08,                        
+		        sum(amt_09) amt_09,
+		        sum(amt_10) amt_10,
+		        sum(amt_11) amt_11,
+		        sum(amt_12) amt_12,                        
+		        sum(amt_13) amt_13,
+		        sum(amt_14) amt_14,
+		        sum(amt_15) amt_15,
+		        sum(amt_16) amt_16,                        
+		        sum(amt_17) amt_17,
+		        sum(amt_18) amt_18,
+		        sum(amt_19) amt_19,
+		        sum(amt_20) amt_20,                        
+		        sum(amt_21) amt_21,
+		        sum(amt_22) amt_22,
+		        sum(amt_23) amt_23,
+		        sum(amt_24) amt_24,                        
+		        sum(amt_25) amt_25,
+		        sum(amt_26) amt_26,
+		        sum(amt_27) amt_27,
+		        sum(amt_28) amt_28,
+				sum(amt_29) amt_29,
+		        sum(amt_30) amt_30,
+		        sum(amt_31) amt_31,
+		        sum(amt_32) amt_32,
+		        sum(amt_33) amt_33,
+		        sum(amt_34) amt_34,
+		        sum(amt_35) amt_35,
+		        sum(amt_36) amt_36,																												                          
+				sum(amt_37) amt_37,																												                          
+				sum(amt_38) amt_38,
+				sum(amt_39) amt_39,
+				sum(amt_40) amt_40																															                          																																			                          				
+		        from                         
+		        (
+		                select 
+		                        pjt_no,costtype,acctcd,year,month,
+		                        case when stdCd='1000' then
+		                        amt 
+		                        end amt_01,										                        
+		                        case when stdCd='4101' then
+		                        amt 
+		                        end amt_02,								
+		                        case when stdCd='4102' then
+		                        amt 
+		                        end amt_03,
+					            0 amt_04,
+		                        case when stdCd='5001' then
+		                        amt 
+		                        end amt_05,
+		                        case when stdCd='5002' then
+		                        amt
+		                        end amt_06,
+		                        case when stdCd='5003' then
+		                        amt
+		                        end amt_07,
+		                        case when stdCd='5004' then
+		                        amt
+		                        end amt_08,
+		                        case when stdCd='5005' then
+		                        amt
+		                        end amt_09,
+		                        case when stdCd='5006' then
+		                        amt
+		                        end amt_10,
+		                        case when stdCd='5007' then
+		                        amt
+		                        end amt_11,
+		                        case when stdCd='5008' then
+		                        amt
+		                        end amt_12,
+		                        case when stdCd='5009' then
+		                        amt
+		                        end amt_13,
+		                        case when stdCd='5010' then
+		                        amt
+		                        end amt_14,
+		                        case when stdCd='5011' then
+		                        amt
+		                        end amt_15,
+		                        case when stdCd='5012' then
+		                        amt
+		                        end amt_16,
+		                        case when stdCd='5013' then
+		                        amt
+		                        end amt_17,
+		                        case when stdCd='5014' then
+		                        amt
+		                        end amt_18,
+		                        case when stdCd='5015' then
+		                        amt
+		                        end amt_19,
+		                        case when stdCd='5016' then
+		                        amt
+		                        end amt_20,
+		                        case when stdCd='5017' then
+		                        amt
+		                        end amt_21,
+		                        case when stdCd='5018' then
+		                        amt
+		                        end amt_22,
+		                        case when stdCd='5019' then
+		                        amt
+		                        end amt_23,
+		                        case when stdCd='5020' then
+		                        amt
+		                        end amt_24,
+		                        case when stdCd='5021' then
+		                        amt
+		                        end amt_25,
+		                        case when stdCd='5022' then
+		                        amt
+		                        end amt_26,
+		                        case when stdCd='5023' then
+		                        amt
+		                        end amt_27,
+		                        case when stdCd='5024' then
+		                        amt
+		                        end amt_28,
+		                        case when stdCd='5025' then
+		                        amt
+		                        end amt_29,
+		                        case when stdCd='5026' then
+		                        amt
+		                        end amt_30,
+		                        case when stdCd='5029' then
+		                        amt
+		                        end amt_31,								
+		                        case when stdCd='5030' then
+		                        amt
+		                        end amt_32,																
+		                        case when stdCd='5099' then
+		                        amt
+		                        end amt_33,
+		                        case when stdCd='9031' then
+		                        amt
+		                        end amt_34,
+		                        0 amt_35,								
+		                        0 amt_36,																
+		                        case when stdCd='9200' then
+		                        amt
+		                        end amt_37,								
+		                        case when stdCd='9300' then
+		                        amt
+		                        end amt_38,
+		                        0 amt_39,								
+		                        0 amt_40																																
+		                from 
+		                (
+		                         select a.pjt_no,a.costtype,acctcd, substr(acctcd,0,4) stdCd,year,month,amt 
+		                         from pjtCostDetail a
+		                         where a.pjt_no in (select subpjt_no from CompositePjtDetail where pjt_no=?)
+		                         and a.costtype=?
+		                ) a
+		        ) a
+		        group by costtype,year,month
+		]]>		
+	</sql-content>	
+	</sql-mapping>
+			
+	<sql-mapping  id="CA_005"   value-count="1" url="프로젝트 배부후 조회" >  
+	<sql-content>
+	<![CDATA[
+			SELECT SUPER_NO, PJT_NO,PJTCD,PJTNAME,PJTSTARTDT, PJTENDDT,PMEMPID,TO_EMPKNAME(PMEMPID) PMNAME, SUM(S_AMT) S_AMT, SUM(D_AMT) D_AMT ,'1' LEV, PJTTYPE FROM 
+			(
+				SELECT A.BIZ_NO SUPER_NO,A.PJT_NO,PJTNAME, PJTCD, PJTSTARTDT, PJTENDDT, PMEMPID, PJTTYPE,
+					CASE WHEN SUBSTR(ACCTCD,1,2) IN ('41')  THEN
+					AMT
+					ELSE
+					0
+					END S_AMT,
+					CASE WHEN SUBSTR(ACCTCD,1,2) IN ('50','90')  THEN
+					AMT
+					ELSE
+					0
+					END D_AMT
+				FROM CompositePjtDetail A, PJTCOSTDETAIL B, PROJECT C	 	 
+				WHERE B.PJT_NO = A.SUBPJT_NO 
+				AND   C.PJT_NO = A.PJT_NO				
+				AND   COSTTYPE='T'				
+			)		
+			GROUP BY SUPER_NO,PJT_NO,PJTCD,PJTNAME,PJTSTARTDT, PJTENDDT, PMEMPID, PJTTYPE
+            UNION ALL  			         
+			SELECT SUPER_NO, PJT_NO,PJTCD,PJTNAME,PJTSTARTDT, PJTENDDT,PMEMPID,TO_EMPKNAME(PMEMPID) PMNAME, SUM(S_AMT) S_AMT, SUM(D_AMT) D_AMT, '2' LEV, PJTTYPE FROM 
+			(
+				SELECT A.BIZ_NO SUPER_NO,B.PJT_NO, PJTNAME, PJTCD, PJTSTARTDT, PJTENDDT, PMEMPID, PJTTYPE,				 
+					CASE WHEN SUBSTR(ACCTCD,1,2) IN ('41')  THEN
+					AMT
+					ELSE
+					0
+					END S_AMT,
+					CASE WHEN SUBSTR(ACCTCD,1,2) IN ('50','90')  THEN
+					AMT
+					ELSE
+					0
+					END D_AMT
+				FROM CompositePjtDetail A, PJTCOSTDETAIL B, PROJECT C	 	 
+				WHERE B.PJT_NO = A.SUBPJT_NO 
+				AND   COSTTYPE='T'				
+				AND   C.PJT_NO = A.SUBPJT_NO --?
+			)		
+			GROUP BY SUPER_NO, PJT_NO,PJTCD,PJTNAME,PJTSTARTDT, PJTENDDT, PMEMPID, PJTTYPE
+		]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="CA_006"   value-count="2" url=" 프로젝트 원가 조회 " >  
+	<sql-content>	
+	<![CDATA[
+		select 
+		        costtype,year,month,
+		        sum(amt_01) amt_01,
+		        sum(amt_02) amt_02,
+		        sum(amt_03) amt_03,
+		        sum(amt_04) amt_04,
+		        sum(amt_05) amt_05,
+		        sum(amt_06) amt_06,
+		        sum(amt_07) amt_07,
+		        sum(amt_08) amt_08,                        
+		        sum(amt_09) amt_09,
+		        sum(amt_10) amt_10,
+		        sum(amt_11) amt_11,
+		        sum(amt_12) amt_12,                        
+		        sum(amt_13) amt_13,
+		        sum(amt_14) amt_14,
+		        sum(amt_15) amt_15,
+		        sum(amt_16) amt_16,                        
+		        sum(amt_17) amt_17,
+		        sum(amt_18) amt_18,
+		        sum(amt_19) amt_19,
+		        sum(amt_20) amt_20,                        
+		        sum(amt_21) amt_21,
+		        sum(amt_22) amt_22,
+		        sum(amt_23) amt_23,
+		        sum(amt_24) amt_24,                        
+		        sum(amt_25) amt_25,
+		        sum(amt_26) amt_26,
+		        sum(amt_27) amt_27,
+		        sum(amt_28) amt_28,
+				sum(amt_29) amt_29,
+		        sum(amt_30) amt_30,
+		        sum(amt_31) amt_31,
+		        sum(amt_32) amt_32,
+		        sum(amt_33) amt_33,
+		        sum(amt_34) amt_34,
+		        sum(amt_35) amt_35,
+		        sum(amt_36) amt_36,																												                          
+				sum(amt_37) amt_37,																												                          
+				sum(amt_38) amt_38,
+				sum(amt_39) amt_39,
+				sum(amt_40) amt_40																															                          																																			                          				
+		        from                         
+		        (
+		                select 
+		                        pjt_no,costtype,acctcd,year,month,
+		                        case when stdCd='1000' then
+		                        amt 
+		                        end amt_01,										                        
+		                        case when stdCd='4101' then
+		                        amt 
+		                        end amt_02,								
+		                        case when stdCd='4102' then
+		                        amt 
+		                        end amt_03,
+					            0 amt_04,
+		                        case when stdCd='5001' then
+		                        amt 
+		                        end amt_05,
+		                        case when stdCd='5002' then
+		                        amt
+		                        end amt_06,
+		                        case when stdCd='5003' then
+		                        amt
+		                        end amt_07,
+		                        case when stdCd='5004' then
+		                        amt
+		                        end amt_08,
+		                        case when stdCd='5005' then
+		                        amt
+		                        end amt_09,
+		                        case when stdCd='5006' then
+		                        amt
+		                        end amt_10,
+		                        case when stdCd='5007' then
+		                        amt
+		                        end amt_11,
+		                        case when stdCd='5008' then
+		                        amt
+		                        end amt_12,
+		                        case when stdCd='5009' then
+		                        amt
+		                        end amt_13,
+		                        case when stdCd='5010' then
+		                        amt
+		                        end amt_14,
+		                        case when stdCd='5011' then
+		                        amt
+		                        end amt_15,
+		                        case when stdCd='5012' then
+		                        amt
+		                        end amt_16,
+		                        case when stdCd='5013' then
+		                        amt
+		                        end amt_17,
+		                        case when stdCd='5014' then
+		                        amt
+		                        end amt_18,
+		                        case when stdCd='5015' then
+		                        amt
+		                        end amt_19,
+		                        case when stdCd='5016' then
+		                        amt
+		                        end amt_20,
+		                        case when stdCd='5017' then
+		                        amt
+		                        end amt_21,
+		                        case when stdCd='5018' then
+		                        amt
+		                        end amt_22,
+		                        case when stdCd='5019' then
+		                        amt
+		                        end amt_23,
+		                        case when stdCd='5020' then
+		                        amt
+		                        end amt_24,
+		                        case when stdCd='5021' then
+		                        amt
+		                        end amt_25,
+		                        case when stdCd='5022' then
+		                        amt
+		                        end amt_26,
+		                        case when stdCd='5023' then
+		                        amt
+		                        end amt_27,
+		                        case when stdCd='5024' then
+		                        amt
+		                        end amt_28,
+		                        case when stdCd='5025' then
+		                        amt
+		                        end amt_29,
+		                        case when stdCd='5026' then
+		                        amt
+		                        end amt_30,
+		                        case when stdCd='5029' then
+		                        amt
+		                        end amt_31,								
+		                        case when stdCd='5030' then
+		                        amt
+		                        end amt_32,																
+		                        case when stdCd='5099' then
+		                        amt
+		                        end amt_33,
+		                        case when stdCd='9031' then
+		                        amt
+		                        end amt_34,
+		                        0 amt_35,								
+		                        0 amt_36,																
+		                        case when stdCd='9200' then
+		                        amt
+		                        end amt_37,								
+		                        case when stdCd='9300' then
+		                        amt
+		                        end amt_38,
+		                        0 amt_39,								
+		                        0 amt_40																																
+		                from 
+		                (
+		                         select a.pjt_no,a.costtype,acctcd, substr(acctcd,0,4) stdCd,year,month,amt 
+		                         from pjtCostDetail a
+		                         where a.pjt_no =?
+		                         and a.costtype=?
+		                ) a
+		        ) a
+		        group by costtype,year,month
+		]]>		
+	</sql-content>	
+	</sql-mapping>
+	
+</sql>
+

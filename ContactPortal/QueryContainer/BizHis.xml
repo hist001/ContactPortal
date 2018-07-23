@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="searchBizCdDetail"   value-count="1"  url="사업유형 상세정보" >  
+   	<sql-content>
+  		<![CDATA[		   
+		select bizcd, biztypecd, bizname, highbizcd, useflag
+		from biz
+		where bizcd = ?
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="searchBizTypeDetail"   value-count="1"  url="사업유형모텔 상세정보" >  
+   	<sql-content>
+  		<![CDATA[		   
+		select biztypecd, biztypename, biztypedetail
+		from biztype
+		where biztypecd = ?
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="searchBizHisList"   value-count="2"  url="사업유형 모텔 트리뷰 리스트" >  
+   	<sql-content>
+  		<![CDATA[		   
+		select level, b.*
+		from
+		(
+		select '9999' bizcd, '사업유형' bizname,
+			   '' biztypecd, '' biztypedetail,
+			   '0000' highbizcd, '' highbizname,
+			   'Y' useflag
+		from dual
+		union all
+		select biztypecd bizcd, biztypename bizname,
+			   biztypecd, biztypedetail,
+			   '9999' highbizcd, '사업유형' highbizname,
+			   'Y' useflag
+		from biztype
+		union all
+		select a.bizcd, a.bizname, a.biztypecd,
+			   '' biztypedetail, a.highbizcd,
+			   (select bizname from biz where bizcd = a.highbizcd) highbizname,
+			   useflag
+		from biz a
+		) b
+		where upper(bizCd) like '%'|| ? ||'%'
+		and upper(bizName) like '%'|| ? ||'%'		
+			START WITH bizCD = '9999' 
+			CONNECT BY PRIOR bizcd = highbizcd
+			ORDER SIBLINGS BY bizCD
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="createBizCdHis"   value-count="5"  url="사업유형모델 입력" >  
+   	<sql-content>
+  		<![CDATA[		   
+		insert into biz (bizcd, biztypecd, bizname, highbizcd, useflag)
+		values(?,?,?,?,?)
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="createBizTypeHis"   value-count="2"  url="사업유형모델 입력" >  
+   	<sql-content>
+  		<![CDATA[		   
+		insert into biztype (biztypecd, biztypename, biztypedetail)
+		values((select to_char(to_number(max(biztypecd))+1) from biztype), ?, ?)
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="updateBizTypeHis"   value-count="4"  url="사업유형모델 수정" >  
+   	<sql-content>
+  		<![CDATA[		   
+		update biztype
+		set biztypecd = ?, biztypename = ?, biztypedetail = ?
+		where biztypecd = ?
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="updateBizCdHis"   value-count="5"  url="사업유형코드 수정" >  
+   	<sql-content>
+  		<![CDATA[		   
+		update biz
+		set bizcd = ?, biztypecd = ?, bizname = ?, highbizcd = ?
+		where bizcd = ?
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="deleteBizTypeHis"   value-count="1"  url="사업유형모델 삭제" >  
+   	<sql-content>
+  		<![CDATA[		   
+		delete from  biztype
+		where biztypecd = ?
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="deleteBizCdHis"   value-count="1"  url="사업유형코드 삭제" >  
+   	<sql-content>
+  		<![CDATA[		   
+		update biz
+		set useflag = 'Y'
+		where bizcd = ?
+		]]>
+	</sql-content>
+   </sql-mapping>
+</sql>

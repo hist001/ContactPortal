@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="EP_001"   value-count="0" url="업무 조회테스트" >
+	<sql-content>
+	<![CDATA[
+	select  A.EMPID,
+			A.EMPKNAME,
+			B.REVISIONNO,
+			B.JOBTITLE,
+			B.JOBDS,
+			TO_ORGNONAME(ORGCD) AS ORGNAME
+	From EMPall a, empjob b
+	where
+	A.EMPID=B.EMPID(+)
+	and a.EMPKNAME LIKE [S_EMPKNAME]||'%'
+	and (b.JOBTITLE LIKE [S_JOBTITLE]||'%'
+	    and b.JOBDS LIKE [S_JOBDS]||'%')
+	
+--	and EMPSPECICATION LIKE [EMPSPECICATION] ||'%'
+--	and EMPLOCATION LIKE [EMPLOCATION]||'%'
+--	and EMPGRADE LIKE [EMPGRADE]||'%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="EP_002"   value-count="0" url="업무 조회테스트" >
+	<sql-content>
+	<![CDATA[
+	select  A.EMPID,
+			A.EMPKNAME,
+			B.REVISIONNO,
+			B.JOBTITLE,
+			B.JOBDS,
+			TO_ORGNONAME(ORGCD) AS ORGNAME
+	From EMPall a, empjob b
+	where
+	A.EMPID=B.EMPID
+	and a.EMPID =[S_EMPID]
+	and B.REVISIONNO =[S_REV]
+	
+--	and EMPSPECICATION LIKE [EMPSPECICATION] ||'%'
+--	and EMPLOCATION LIKE [EMPLOCATION]||'%'
+--	and EMPGRADE LIKE [EMPGRADE]||'%'
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql>
+

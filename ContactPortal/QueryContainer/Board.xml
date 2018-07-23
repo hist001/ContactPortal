@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="BD_001"   value-count="2"
+   url="게시판의 리스트를 가져옴" >  
+   	<sql-content>
+	  	<![CDATA[
+			SELECT * 
+			 FROM 
+			 (	
+			 	SELECT ROWNUM AS RM, CNT, ID, SUBJECT 
+				FROM 
+				( SELECT (SELECT COUNT(*) FROM TEST) AS CNT, 
+			 		   ID, SUBJECT 
+			 	  FROM TEST 
+			 	  ORDER BY ID DESC ) 
+			 )  
+			 WHERE RM >  ?  
+			 AND  rownum <=   ?
+		]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="BD_002"   value-count="0"
+   url="게시판의 리스트수를 가져옴" >  
+   	<sql-content>
+	  	<![CDATA[
+			SELECT *
+			 FROM  TEST 
+		]]>
+	</sql-content>
+   </sql-mapping>
+</sql>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="EMP_ORG_001"   value-count="1" url="부서별계정조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT B.ORG_NO, B.ORGCD, B.ORGNAME, A.USEFLAG
+	FROM EMP_ORG A, ORG B
+	WHERE A.EMPID = [S_EMP_ID]
+	AND A.ORG_NO = B.ORG_NO
+	]]>
+	</sql-content>
+	</sql-mapping> 
+	
+	<sql-mapping  id="EMP_ORG_002"   value-count="1" url="부서별계정삭제" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM EMP_ORG
+		WHERE ORG_NO = [S_ORG_NO]
+		AND EMPID = [S_EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping> 
+    
+    <sql-mapping  id="EMP_ORG_003"   value-count="4" url="부서별 계정 추가" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO EMP_ORG VALUES([p0_0],[p0_1],'Y',SYSDATE,'',[p0_2],'')
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="EMP_ORG_004"   value-count="4" url="부서별 계정 추가" >  
+	<sql-content>
+	<![CDATA[
+			 SELECT 
+				EMP_ORG.codeno,
+				EMP_ORG.code as code2,
+				EMP_ORG.codename as codename2,
+				EMP_ORG.orgno as  code,
+				EMP_ORG.orgname as  codename,
+				EMP_ORG.highcode,
+				EMP_ORG.selflag,
+				EMP_ORG.empid,																
+	            decode([S_SEARCH], 'Y', '1', LEVEL) LEV
+                
+				 FROM
+                 (
+                 SELECT X.EMPID AS CODENO,
+                                X.EMPID AS CODE,
+                                X.EMPKNAME AS CODENAME,
+                                TO_CHAR(Y.ORG_NO) AS HIGHCODE,
+                                Y.org_no AS ORGNO,
+                                Y.ORGNAME AS ORGNAME,
+                                'Y'  AS SELFLAG ,
+                               [S_EMP_ID] EMPID
+                 FROM EMPALL X, ORG Y
+                 WHERE X.ORGCD = Y.ORG_NO
+                 AND TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN X.WSTARTDT AND WENDDT
+                 UNION ALL
+                SELECT TO_CHAR(ORG_NO)    AS CODENO,            --컬럼명에 유의
+                       ORGCD     AS CODE,
+                       ORGNAME   AS CODENAME,
+                       HIGHORGCD AS HIGHCODE,
+                       org_no     AS ORGNO,
+                       ORGNAME   AS ORGNAME,
+                           'N'       AS SELFLAG ,
+                           '' EMPID
+                FROM ORG    A ) EMP_ORG
+                WHERE CODENAME LIKE upper('%'||[S_EMP_NAME]||'%')
+                START WITH CODE = '0000'
+                CONNECT BY PRIOR CODENO = HIGHCODE
+                ORDER SIBLINGS BY CODE	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+	
+
+	
+	
+</sql>
+
+

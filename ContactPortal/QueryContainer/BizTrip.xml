@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="downScript"   value-count="1" url="다운로드 스크립트" >  
+   <sql-content>
+   <![CDATA[
+<script language='javascript'>
+function download(dir,fileSystemName,fileOriginName, empId){
+	location.href="?;			
+}
+</script>
+	]]>
+	</sql-content>
+   </sql-mapping>
+<sql-mapping  id="ViewFiles"  value-count="5" url="결재 연동첨부파일" >  
+   <sql-content>
+   <![CDATA[
+	<tr>
+		<td width='12%' class='td1' align='center' height='24'>첨부자료</td>
+		<td width='88%' class='td2' align='left' height='24' colspan='3'>			
+			<a href="javascript:download(?,?,?,?)">
+			?</a>		
+		</td>
+	</tr>
+	]]>
+	</sql-content>
+   </sql-mapping>
+</sql>

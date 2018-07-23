@@ -1,0 +1,1328 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="EmpList"   value-count="1"
+   url="본인과 하위자List" >  
+   <sql-content>
+   <![CDATA[
+select empid, empKName, EGRADE, 
+to_empgradename(empid) eGradeName, orgcd, to_ORGCDNAME(ORGCD) ORGNAME 
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid 
+start with empid = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="OrgList"   value-count="0"
+   url="해당조직List" >  
+   <sql-content>
+   <![CDATA[
+select orgcd, ORGNAME
+from org 
+where enddt = '99991231'
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="YyList"   value-count="0"
+   url="해당조직List" >  
+   <sql-content>
+   <![CDATA[
+select Distinct substr(REPORTDT,1,4) yyyy from DAILYREPORT
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="GetPersonMh"   value-count="2"
+   url="일일보고 월별 개인  MH 합계" >  
+   <sql-content>
+   <![CDATA[
+select YYYY, a.EMPID, DITYPE, EMPKNAME, ORGCD, ORGNAME, EGRADE, eGradeName,EDUTY, MH00, MH01, MH02, MH03, MH04, MH05, MH06, MH07, MH08, MH09, MH10, MH11, MH12
+from V_PERSONMONTHMHSUM a,
+(select empid, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+and empid = ?
+) b
+where a.empid = b.empid
+and a.yyyy = ?
+order by orgcd, egrade, DECODE(EDUTY,'T',1,'G',2,3), empkname, DITYPE
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="InquiryCostMH"   value-count="2"
+   url="일일보고 월별 MH 합계" >  
+   <sql-content>
+   <![CDATA[
+select YYYY, a.EMPID, DITYPE, EMPKNAME, ORGCD, ORGNAME, EGRADE, eGradeName,EDUTY, MH00, MH01, MH02, MH03, MH04, MH05, MH06, MH07, MH08, MH09, MH10, MH11, MH12
+from V_PERSONMONTHMHSUM a,
+(select empid, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid 
+start with empid = ?
+) b
+where a.empid = b.empid
+and a.yyyy = ?
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="StdLabCost"   value-count="2"
+   url="표준인건비" >  
+   <sql-content>
+   <![CDATA[
+select substr(yyyymm,1,4) yyyy, EGRADE, 
+sum(labCost01) labCost01,
+sum(labCost02) labCost02,
+sum(labCost03) labCost03,
+sum(labCost04) labCost04,
+sum(labCost05) labCost05,
+sum(labCost06) labCost06,
+sum(labCost07) labCost07,
+sum(labCost08) labCost08,
+sum(labCost09) labCost09,
+sum(labCost10) labCost10,
+sum(labCost11) labCost11,
+sum(labCost12) labCost12
+from 
+(select yyyymm , EGRADE,
+         case when substr(a.yyyymm,5,2)='01' then
+         a.amt
+         end labCost01,
+         case when substr(a.yyyymm,5,2)='02' then
+         a.amt
+         end labCost02,
+         case when substr(a.yyyymm,5,2)='03' then
+         a.amt
+         end labCost03,
+         case when substr(a.yyyymm,5,2)='04' then
+         a.amt
+         end labCost04,
+         case when substr(a.yyyymm,5,2)='05' then
+         a.amt
+         end labCost05,
+         case when substr(a.yyyymm,5,2)='06' then
+         a.amt
+         end labCost06,
+         case when substr(a.yyyymm,5,2)='07' then
+         a.amt
+         end labCost07,
+         case when substr(a.yyyymm,5,2)='08' then
+         a.amt
+         end labCost08,
+         case when substr(a.yyyymm,5,2)='09' then
+         a.amt
+         end labCost09,
+         case when substr(a.yyyymm,5,2)='10' then
+         a.amt
+         end labCost10,
+         case when substr(a.yyyymm,5,2)='11' then
+         a.amt
+         end labCost11,
+         case when substr(a.yyyymm,5,2)='12' then
+         a.amt
+         end labCost12
+         from (select a.yyyymm,b.egrade, b.Dilabcost + b.welfcost amt from months a, stdlabcost b
+where yyyymm like ?
+and b.EGRADE = ?
+and yyyymm between substr(startdt,1,6) and substr(enddt,1,6)) a)
+group by substr(yyyymm,1,4) , EGRADE
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="PjtMh"   value-count="2"
+   url="직접업무 List" >  
+   <sql-content>
+   <![CDATA[
+select substr(yyyymm,1,4) yyyy, REEMPID EMPID, EGRADE, JOBNO, get_JOBNAME(JOBNO) JOBNAME,
+nvl(round(sum(mh00),0),0) mh00,
+nvl(round(sum(mh01),0),0) mh01, 
+nvl(round(sum(mh02),0),0) mh02, 
+nvl(round(sum(mh03),0),0) mh03, 
+nvl(round(sum(mh04),0),0) mh04, 
+nvl(round(sum(mh05),0),0) mh05, 
+nvl(round(sum(mh06),0),0) mh06, 
+nvl(round(sum(mh07),0),0) mh07, 
+nvl(round(sum(mh08),0),0) mh08, 
+nvl(round(sum(mh09),0),0) mh09, 
+nvl(round(sum(mh10),0),0) mh10, 
+nvl(round(sum(mh11),0),0) mh11, 
+nvl(round(sum(mh12),0),0) mh12 
+from 
+( 
+	select substr(a.REPORTDT,1,6) yyyymm, a.REEMPID, a.JOBNO, b.EGRADE, 
+     sum(a.hh+(a.mm/60)) mh00,
+	 case when substr(a.REPORTDT,5,2)='01' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh01, 
+	 case when substr(a.REPORTDT,5,2)='02' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh02, 
+	 case when substr(a.REPORTDT,5,2)='03' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh03, 
+	 case when substr(a.REPORTDT,5,2)='04' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh04, 
+	 case when substr(a.REPORTDT,5,2)='05' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh05, 
+	 case when substr(a.REPORTDT,5,2)='06' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh06, 
+	 case when substr(a.REPORTDT,5,2)='07' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh07, 
+	 case when substr(a.REPORTDT,5,2)='08' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh08, 
+	 case when substr(a.REPORTDT,5,2)='09' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh09, 
+	 case when substr(a.REPORTDT,5,2)='10' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh10, 
+	 case when substr(a.REPORTDT,5,2)='11' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh11, 
+	 case when substr(a.REPORTDT,5,2)='12' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh12 
+	 from DAILYREPORTDETAIL a , EMPALL b
+ WHERE  a.REEMPID = ? 
+ AND a.REEMPID = b.empID
+ and  a.REPORTDT like ?
+ AND substr(jobno,1,1) in ('P','T') 
+ AND a.DELFLAG = 'N'
+	group by substr(a.REPORTDT,1,6), a.REEMPID, a.JOBNO ,EGRADE, substr(a.REPORTDT,5,2)
+)
+group by substr(yyyymm,1,4), REEMPID, EGRADE, JOBNO
+order by mh00 desc
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="JobMh"   value-count="2"
+   url="간접업무 List" >  
+   <sql-content>
+   <![CDATA[
+select substr(yyyymm,1,4) yyyy, REEMPID EMPID, EGRADE, JOBNO, get_JOBNAME(JOBNO) JOBNAME,
+nvl(round(sum(mh00),0),0) mh00,
+nvl(round(sum(mh01),0),0) mh01, 
+nvl(round(sum(mh02),0),0) mh02, 
+nvl(round(sum(mh03),0),0) mh03, 
+nvl(round(sum(mh04),0),0) mh04, 
+nvl(round(sum(mh05),0),0) mh05, 
+nvl(round(sum(mh06),0),0) mh06, 
+nvl(round(sum(mh07),0),0) mh07, 
+nvl(round(sum(mh08),0),0) mh08, 
+nvl(round(sum(mh09),0),0) mh09, 
+nvl(round(sum(mh10),0),0) mh10, 
+nvl(round(sum(mh11),0),0) mh11, 
+nvl(round(sum(mh12),0),0) mh12 
+from 
+( 
+	select substr(a.REPORTDT,1,6) yyyymm , a.REEMPID, SubSTR(a.JOBNO,1,3)||'00' JOBNO, b.EGRADE, 
+     sum(a.hh+(a.mm/60)) mh00,
+	 case when substr(a.REPORTDT,5,2)='01' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh01, 
+	 case when substr(a.REPORTDT,5,2)='02' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh02, 
+	 case when substr(a.REPORTDT,5,2)='03' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh03, 
+	 case when substr(a.REPORTDT,5,2)='04' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh04, 
+	 case when substr(a.REPORTDT,5,2)='05' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh05, 
+	 case when substr(a.REPORTDT,5,2)='06' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh06, 
+	 case when substr(a.REPORTDT,5,2)='07' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh07, 
+	 case when substr(a.REPORTDT,5,2)='08' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh08, 
+	 case when substr(a.REPORTDT,5,2)='09' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh09, 
+	 case when substr(a.REPORTDT,5,2)='10' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh10, 
+	 case when substr(a.REPORTDT,5,2)='11' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh11, 
+	 case when substr(a.REPORTDT,5,2)='12' then 
+	 sum(a.hh+(a.mm/60)) 
+	 end mh12 
+	 from DAILYREPORTDETAIL a , EMPALL b
+ WHERE  a.REEMPID = ? 
+ AND a.REEMPID = b.empID
+ and  a.REPORTDT like ?
+ AND substr(jobno,1,1) Not in ('P','T') 
+ AND a.DELFLAG = 'N'
+	group by substr(a.REPORTDT,1,6), a.REEMPID, SubSTR(a.JOBNO,1,3) ,EGRADE, substr(a.REPORTDT,5,2)
+)
+group by substr(yyyymm,1,4), REEMPID, EGRADE, JOBNO
+order by mh00 desc
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I001"   value-count="3"
+   url="일일보고 List 단일제품, 직무일경우" >  
+   <sql-content>
+   <![CDATA[
+select a.*, to_empkname(a.reempid) empkname 
+from dailyreportdetail a, dailyreport b 
+where a.jobno like '?%' 
+AND b.reportdt like ?
+and b.reempid = ?
+and	delflag = 'N' 
+and	 a.reportdt = b.reportdt
+and	 a.reempid = b.reempid 
+and	 b.statusFlag in ('WEO','WCO','WCD')
+order by a.reportdt desc, jobname 
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I002"   value-count="2"
+   url="일일보고 List 직접보고" >  
+   <sql-content>
+   <![CDATA[
+select a.*, to_empkname(a.reempid) empkname 
+from dailyreportdetail a, dailyreport b 
+where SUBSTR(a.jobno,1,1) in ('P','T') 
+AND b.reportdt like ?
+and b.reempid = ?
+and	delflag = 'N' 
+and	 a.reportdt = b.reportdt
+and	 a.reempid = b.reempid 
+and	 b.statusFlag in ('WEO','WCO','WCD')
+order by a.reportdt desc, jobname 
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I003"   value-count="2"
+   url="일일보고 List 간접보고" >  
+   <sql-content>
+   <![CDATA[
+select a.*, to_empkname(a.reempid) empkname 
+from dailyreportdetail a, dailyreport b 
+where SUBSTR(a.jobno,1,1) not in ('P','T') 
+AND b.reportdt like ?
+and b.reempid = ?
+and	delflag = 'N' 
+and	 a.reportdt = b.reportdt
+and	 a.reempid = b.reempid 
+and	 b.statusFlag in ('WEO','WCO','WCD')
+order by a.reportdt desc, jobname 
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I004"   value-count="1" url="일일보고 MH List Group" >  
+   <sql-content>
+   <![CDATA[
+
+
+	SELECT  ORG_NO,
+	        TO_ORGNONAME(ORG_NO) AS ORGNAME,
+	        DECODE(CD,'D','직접','I','간접') AS DITYPE,
+			NVL(DECODE(ACTFLAG,CD,MH01,0),0) AS MH01,
+			NVL(DECODE(ACTFLAG,CD,MH02,0),0) AS MH02,
+			NVL(DECODE(ACTFLAG,CD,MH03,0),0) AS MH03,
+			NVL(DECODE(ACTFLAG,CD,MH04,0),0) AS MH04,
+			NVL(DECODE(ACTFLAG,CD,MH05,0),0) AS MH05,
+			NVL(DECODE(ACTFLAG,CD,MH06,0),0) AS MH06,
+			NVL(DECODE(ACTFLAG,CD,MH07,0),0) AS MH07,
+			NVL(DECODE(ACTFLAG,CD,MH08,0),0) AS MH08,
+			NVL(DECODE(ACTFLAG,CD,MH09,0),0) AS MH09,
+			NVL(DECODE(ACTFLAG,CD,MH10,0),0) AS MH10,
+			NVL(DECODE(ACTFLAG,CD,MH11,0),0) AS MH11,
+			NVL(DECODE(ACTFLAG,CD,MH12,0),0) AS MH12,
+			DECODE(ACTFLAG,CD,YEARTOT,0) AS MH00,CNT
+			CNT
+	FROM (
+	SELECT ORG_NO
+	       ,TO_ORGNONAME(ORG_NO) ORGNAME
+	       ,ACTFLAG,CD
+	        , SUM(MON1) AS MH01
+	        , SUM(MON2) AS MH02
+	        , SUM(MON3) AS MH03
+	        , SUM(MON4) AS MH04
+	        , SUM(MON5) AS MH05
+	        , SUM(MON6) AS MH06
+	        , SUM(MON7) AS MH07
+	        , SUM(MON8) AS MH08
+	        , SUM(MON9) AS MH09
+	        , SUM(MON10) AS MH10
+	        , SUM(MON11) AS MH11
+	        , SUM(MON12) AS MH12
+	        , SUM(YEARTOT) AS YEARTOT
+	        ,COUNT(ORG_NO) OVER(PARTITION BY ORG_NO) AS CNT
+	FROM (
+	SELECT ORG_NO,ACTFLAG, CD,
+	           DECODE(RPTMON,'200601', SUM(MH) ) AS  MON1,
+	           DECODE(RPTMON,'200602', SUM(MH) ) AS  MON2,
+	           DECODE(RPTMON,'200603', SUM(MH) ) AS  MON3,
+	           DECODE(RPTMON,'200604', SUM(MH) ) AS  MON4,
+	           DECODE(RPTMON,'200605', SUM(MH) ) AS  MON5,
+	           DECODE(RPTMON,'200606', SUM(MH) ) AS  MON6,
+	           DECODE(RPTMON,'200607', SUM(MH) ) AS  MON7,
+	           DECODE(RPTMON,'200608', SUM(MH) ) AS  MON8,
+	           DECODE(RPTMON,'200609', SUM(MH) ) AS  MON9,
+	           DECODE(RPTMON,'2006010', SUM(MH) ) AS  MON10,
+	           DECODE(RPTMON,'2006011', SUM(MH) ) AS  MON11,
+	           DECODE(RPTMON,'2006012', SUM(MH) ) AS  MON12,
+	           SUM(MH) AS YEARTOT
+	FROM
+	(
+	        SELECT SUBSTR(A.REPORTDT,1,6) AS RPTMON
+	                        ,(SELECT ORGCD FROM EMPALL WHERE EMPID= A.REEMPID ) AS ORG_NO
+	                        ,ROUND(SUM(HH+MM/60),0) AS MH
+	                        ,ACTFLAG
+	        FROM DAILYREPORTDETAIL A
+	--              , DAILYREPORT B
+	        WHERE  A.REPORTDT BETWEEN [YYYY]||'0101' AND [YYYY]||'1231'
+	--      AND    B.REPORTDT BETWEEN [YYYY]||'0101' AND [YYYY]||'1231'
+	        AND A.ACTFLAG IS NOT NULL
+	--      AND A.REPORTDT =B.REPORTDT
+	--      AND A.REEMPID = B.REEMPID
+	--      AND B.STATUSFLAG IN ('WEO','WCO','JC0','WCD','WCC')
+	        GROUP BY SUBSTR(A.REPORTDT,1,6), A.REEMPID,A.ACTFLAG
+	) A
+	, (SELECT CD
+		FROM COCODE
+		WHERE CDTYPE='DI') B
+	GROUP BY ORG_NO, RPTMON , ACTFLAG,CD
+	)
+	--WHERE ACTFLAG=CD
+	GROUP BY ROLLUP(ORG_NO ), ACTFLAG ,CD
+	)
+	WHERE (ACTFLAG=CD AND CNT=4)
+	OR  CNT=2
+	OR (ACTFLAG=CD AND CNT=0)
+	ORDER BY 1,2
+
+
+--		select a.YYYY, a.DITYPE, a.ORGCD, a.ORGNAME, b.empid,
+--		MH00,MH01,MH02,MH03,MH04,MH05,MH06,MH07,MH08,MH09,MH10,MH11,MH12
+--		from (
+--		select YYYY, DITYPE, ORGCD, ORGNAME,
+--		SUM(MH00) MH00, SUM(MH01) MH01, SUM(MH02) MH02, SUM(MH03) MH03, SUM(MH04) MH04, SUM(MH05) MH05, SUM(MH06) MH06, 
+--		SUM(MH07) MH07, SUM(MH08) MH08, SUM(MH09) MH09, SUM(MH10) MH10, SUM(MH11) MH11, SUM(MH12) MH12
+--		from V_PERSONMONTHMHSUM a,
+--		(select empid, to_empgradename(empid) eGradeName
+--		from empall
+--		where wenddt = '99991231'
+--		and reportyn = 'Y'
+--		connect by aprvempid = prior empid
+--		start with empid = ?
+--		) b
+--		where a.empid = b.empid
+--		and a.yyyy = ?
+--		Group By YYYY, DITYPE, ORGCD, a.ORGNAME
+--		order by orgcd, DITYPE) a,
+--		(
+--		select a.empid, a.orgCd
+--		from empall a, orgtype b
+--		where wenddt = '99991231'
+--		and reportyn = 'Y'
+--		and EDUTY in ('T','P','G')
+--		and a.empid = b.empid
+--		connect by aprvempid = prior a.empid
+--		start with a.empid = ?
+--		) b
+--		where a.orgcd = b.orgcd
+--		order by orgcd, DITYPE
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I005"   value-count="4"
+   url="일일보고 Group MH" >  
+   <sql-content>
+   <![CDATA[
+select a.YYYY, a.DITYPE, a.ORGCD, a.ORGNAME, b.empid, b.empkname, b.eGradeName,
+MH00,MH01,MH02,MH03,MH04,MH05,MH06,MH07,MH08,MH09,MH10,MH11,MH12
+from (
+select YYYY, DITYPE, ORGCD, ORGNAME,
+SUM(MH00) MH00, SUM(MH01) MH01, SUM(MH02) MH02, SUM(MH03) MH03, SUM(MH04) MH04, SUM(MH05) MH05, SUM(MH06) MH06, 
+SUM(MH07) MH07, SUM(MH08) MH08, SUM(MH09) MH09, SUM(MH10) MH10, SUM(MH11) MH11, SUM(MH12) MH12
+from V_PERSONMONTHMHSUM a,
+(select empid, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+and orgcd = ?
+connect by aprvempid = prior empid
+start with empid = ?
+) b
+where a.empid = b.empid
+and a.yyyy = ?
+Group By YYYY, DITYPE, ORGCD, a.ORGNAME
+order by orgcd, DITYPE) a,
+(
+select a.empid, empkname, to_empgradename(a.empid) eGradeName, a.orgCd
+from empall a, orgtype b
+where wenddt = '99991231'
+and reportyn = 'Y'
+and EDUTY in ('T','P','G')
+and a.empid = b.empid
+connect by aprvempid = prior a.empid
+start with a.empid = ?
+) b
+where a.orgcd = b.orgcd
+order by orgcd, DITYPE
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I006"   value-count="4"
+   url="표준인건비" >  
+   <sql-content>
+   <![CDATA[
+select substr(yyyymm,1,4) yyyy, cnt eGrade, 
+sum(labCost01) labCost01,
+sum(labCost02) labCost02,
+sum(labCost03) labCost03,
+sum(labCost04) labCost04,
+sum(labCost05) labCost05,
+sum(labCost06) labCost06,
+sum(labCost07) labCost07,
+sum(labCost08) labCost08,
+sum(labCost09) labCost09,
+sum(labCost10) labCost10,
+sum(labCost11) labCost11,
+sum(labCost12) labCost12
+from 
+(select yyyymm , cnt,
+         case when substr(a.yyyymm,5,2)='01' then
+         a.amt
+         end labCost01,
+         case when substr(a.yyyymm,5,2)='02' then
+         a.amt
+         end labCost02,
+         case when substr(a.yyyymm,5,2)='03' then
+         a.amt
+         end labCost03,
+         case when substr(a.yyyymm,5,2)='04' then
+         a.amt
+         end labCost04,
+         case when substr(a.yyyymm,5,2)='05' then
+         a.amt
+         end labCost05,
+         case when substr(a.yyyymm,5,2)='06' then
+         a.amt
+         end labCost06,
+         case when substr(a.yyyymm,5,2)='07' then
+         a.amt
+         end labCost07,
+         case when substr(a.yyyymm,5,2)='08' then
+         a.amt
+         end labCost08,
+         case when substr(a.yyyymm,5,2)='09' then
+         a.amt
+         end labCost09,
+         case when substr(a.yyyymm,5,2)='10' then
+         a.amt
+         end labCost10,
+         case when substr(a.yyyymm,5,2)='11' then
+         a.amt
+         end labCost11,
+         case when substr(a.yyyymm,5,2)='12' then
+         a.amt
+         end labCost12
+         from (
+		 select a.yyyymm,c.empid, b.egrade, b.Dilabcost + b.welfcost amt, d.cnt from months a, stdlabcost b, (select empid, eGrade, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid
+start with empid = ?
+) c, (select count(*) cnt
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+and orgcd = ?
+connect by aprvempid = prior empid
+start with empid = ?
+) d
+where yyyymm like ?
+and b.eGrade = c.eGrade
+and yyyymm between substr(startdt,1,6) and substr(enddt,1,6)
+) a)
+group by substr(yyyymm,1,4) , cnt
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I007"   value-count="3"
+   url="그룹별 직접 비용" >  
+   <sql-content>
+   <![CDATA[
+select yyyy, JOBNO, get_JOBNAME(JOBNO) JOBNAME,
+nvl(round(sum(mh00),0),0) mh00,
+nvl(round(sum(mh01),0),0) mh01,
+nvl(round(sum(mh02),0),0) mh02,
+nvl(round(sum(mh03),0),0) mh03,
+nvl(round(sum(mh04),0),0) mh04,
+nvl(round(sum(mh05),0),0) mh05,
+nvl(round(sum(mh06),0),0) mh06,
+nvl(round(sum(mh07),0),0) mh07,
+nvl(round(sum(mh08),0),0) mh08,
+nvl(round(sum(mh09),0),0) mh09,
+nvl(round(sum(mh10),0),0) mh10,
+nvl(round(sum(mh11),0),0) mh11,
+nvl(round(sum(mh12),0),0) mh12
+from
+(
+select YYYY, EMPID, JOBNO, JOBNAME, EMPKNAME, ORGCD, 
+ ORGNAME, EGRADE, EDUTY, MH00, MH01, 
+ MH02, MH03, MH04, MH05, MH06, 
+ MH07, MH08, MH09, MH10, MH11, 
+ MH12
+from V_JOBNOMONTHMHSUM a 
+ WHERE  a.EMPID in (select empid
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+and orgcd = ?
+and  a.yyyy = ?
+connect by aprvempid = prior empid
+start with empid = ?)
+)
+where substr(jobno,1,1) in ('P','T')
+group by yyyy, JOBNO
+order by mh00 desc
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I008"   value-count="3"
+   url="그룹별 간접 비용" >  
+   <sql-content>
+   <![CDATA[
+select yyyy, JOBNO, get_JOBNAME(JOBNO) JOBNAME,
+nvl(round(sum(mh00),0),0) mh00,
+nvl(round(sum(mh01),0),0) mh01,
+nvl(round(sum(mh02),0),0) mh02,
+nvl(round(sum(mh03),0),0) mh03,
+nvl(round(sum(mh04),0),0) mh04,
+nvl(round(sum(mh05),0),0) mh05,
+nvl(round(sum(mh06),0),0) mh06,
+nvl(round(sum(mh07),0),0) mh07,
+nvl(round(sum(mh08),0),0) mh08,
+nvl(round(sum(mh09),0),0) mh09,
+nvl(round(sum(mh10),0),0) mh10,
+nvl(round(sum(mh11),0),0) mh11,
+nvl(round(sum(mh12),0),0) mh12
+from
+(
+select YYYY, EMPID,  SubSTR(JOBNO,1,3)||'00' JOBNO, EMPKNAME, ORGCD, 
+ ORGNAME, EGRADE, EDUTY, MH00, MH01, 
+ MH02, MH03, MH04, MH05, MH06, 
+ MH07, MH08, MH09, MH10, MH11, 
+ MH12
+from V_JOBNOMONTHMHSUM a 
+ WHERE  a.EMPID in (select empid
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+and orgcd = ?
+and  a.yyyy = ?
+connect by aprvempid = prior empid
+start with empid = ?)
+)
+where substr(jobno,1,1) not in ('P','T')
+group by yyyy, JOBNO
+order by mh00 desc
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I009"   value-count="3"
+   url="일일보고 List 단일제품, 직무일경우" >  
+   <sql-content>
+   <![CDATA[
+select a.*, to_empkname(a.reempid) empkname
+from dailyreportdetail a, dailyreport b
+where a.jobno like '?%'
+AND b.reportdt like ?
+and b.reempid in (select empid
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid
+start with empid = ?
+)
+and     delflag = 'N'
+and      a.reportdt = b.reportdt
+and      a.reempid = b.reempid
+and      b.statusFlag in ('WEO','WCO','WCD')
+order by a.reportdt desc, jobname	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I010"   value-count="2"
+   url="일일보고 List 직접보고" >  
+   <sql-content>
+   <![CDATA[
+select a.*, to_empkname(a.reempid) empkname 
+from dailyreportdetail a, dailyreport b 
+where SUBSTR(a.jobno,1,1) in ('P','T') 
+AND b.reportdt like ?
+and b.reempid in (select empid
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid
+start with empid = ?
+)
+and	delflag = 'N' 
+and	 a.reportdt = b.reportdt
+and	 a.reempid = b.reempid 
+and	 b.statusFlag in ('WEO','WCO','WCD')
+order by a.reportdt desc, jobname 
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I011"   value-count="2"
+   url="일일보고 List 간접보고" >  
+   <sql-content>
+   <![CDATA[
+select a.*, to_empkname(a.reempid) empkname 
+from dailyreportdetail a, dailyreport b 
+where SUBSTR(a.jobno,1,1) not in ('P','T') 
+AND b.reportdt like ?
+and b.reempid in (select empid
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid
+start with empid = ?
+)
+and	delflag = 'N' 
+and	 a.reportdt = b.reportdt
+and	 a.reempid = b.reempid 
+and	 b.statusFlag in ('WEO','WCO','WCD')
+order by a.reportdt desc, jobname 
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I012"   value-count="6"
+   url="일일보고 Group List team" >  
+   <sql-content>
+   <![CDATA[
+select YYYY, DITYPE, ORGCD, ORGNAME, empid, empkname, eGradeName, 
+SUM(MH00) MH00, SUM(MH01) MH01, SUM(MH02) MH02, SUM(MH03) MH03, SUM(MH04) MH04, SUM(MH05) MH05, SUM(MH06) MH06, 
+SUM(MH07) MH07, SUM(MH08) MH08, SUM(MH09) MH09, SUM(MH10) MH10, SUM(MH11) MH11, SUM(MH12) MH12
+from(
+select a.YYYY, a.DITYPE, a.ORGCD, b.ORGNAME, b.empid, b.empkname, b.eGradeName,
+MH00,MH01,MH02,MH03,MH04,MH05,MH06,MH07,MH08,MH09,MH10,MH11,MH12
+from (
+select YYYY, DITYPE, c.highorgcd orgcd,
+SUM(MH00) MH00, SUM(MH01) MH01, SUM(MH02) MH02, SUM(MH03) MH03, SUM(MH04) MH04, SUM(MH05) MH05, SUM(MH06) MH06, 
+SUM(MH07) MH07, SUM(MH08) MH08, SUM(MH09) MH09, SUM(MH10) MH10, SUM(MH11) MH11, SUM(MH12) MH12
+from V_PERSONMONTHMHSUM a,
+(select empid, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid
+start with empid = ?
+) b, org c
+where a.empid = b.empid
+and a.yyyy = ?
+and a.orgcd = c.orgcd
+Group By YYYY, DITYPE, c.highorgcd
+) a,
+(select empid, empkname, to_empgradename(empid) eGradeName, orgCd, to_orgcdname(orgcd) orgname
+from empall a, orgtype b
+where wenddt = '99991231'
+and reportyn = 'Y'
+and EDUTY in ('T','P','G')
+and a.empid = b.empid
+connect by aprvempid = prior a.empid
+start with a.empid = ?
+) b
+where a.orgcd = b.orgcd
+union
+select a.YYYY, a.DITYPE, a.ORGCD, a.ORGNAME, b.empid, b.empkname, b.eGradeName,
+MH00,MH01,MH02,MH03,MH04,MH05,MH06,MH07,MH08,MH09,MH10,MH11,MH12
+from (
+select YYYY, DITYPE, ORGCD, ORGNAME,
+SUM(MH00) MH00, SUM(MH01) MH01, SUM(MH02) MH02, SUM(MH03) MH03, SUM(MH04) MH04,
+SUM(MH05) MH05, SUM(MH06) MH06,
+SUM(MH07) MH07, SUM(MH08) MH08, SUM(MH09) MH09, SUM(MH10) MH10, SUM(MH11) MH11,
+SUM(MH12) MH12
+from V_PERSONMONTHMHSUM a,
+(select empid, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid
+start with empid = ?
+) b
+where a.empid = b.empid
+and a.yyyy = ?
+Group By YYYY, DITYPE, ORGCD, a.ORGNAME
+order by orgcd, DITYPE
+) a,
+(
+select a.empid, empkname, to_empgradename(a.empid) eGradeName, a.orgCd
+from empall a, orgtype b
+where wenddt = '99991231'
+and reportyn = 'Y'
+and EDUTY in ('T','P','G')
+and a.empid = b.empid
+connect by aprvempid = prior a.empid
+start with a.empid = ?
+) b
+where a.orgcd = b.orgcd
+)
+Group By YYYY, DITYPE, ORGCD, ORGNAME, empid, empkname, eGradeName
+order by orgcd, DITYPE
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I013"   value-count="3"
+   url="일일보고 Group MH" >  
+   <sql-content>
+   <![CDATA[
+select a.YYYY, a.DITYPE, b.ORGCD, b.ORGNAME, b.empid, b.empkname, b.eGradeName,
+MH00,MH01,MH02,MH03,MH04,MH05,MH06,MH07,MH08,MH09,MH10,MH11,MH12
+from (
+select YYYY, DITYPE,
+SUM(MH00) MH00, SUM(MH01) MH01, SUM(MH02) MH02, SUM(MH03) MH03, SUM(MH04) MH04,
+SUM(MH05) MH05, SUM(MH06) MH06,
+SUM(MH07) MH07, SUM(MH08) MH08, SUM(MH09) MH09, SUM(MH10) MH10, SUM(MH11) MH11,
+SUM(MH12) MH12
+from V_PERSONMONTHMHSUM a,
+(select empid, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid
+start with empid = ?
+) b
+where a.empid = b.empid
+and a.yyyy = ?
+Group By YYYY, DITYPE
+) a,
+(
+select empid, empkname, to_empgradename(empid) eGradeName, orgCd, to_orgcdname(orgcd) orgname
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+and empid = ?
+) b
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I014"   value-count="3"
+   url="표준인건비 팀합금액" >  
+   <sql-content>
+   <![CDATA[
+select substr(yyyymm,1,4) yyyy, cnt eGrade,
+sum(labCost01) labCost01,
+sum(labCost02) labCost02,
+sum(labCost03) labCost03,
+sum(labCost04) labCost04,
+sum(labCost05) labCost05,
+sum(labCost06) labCost06,
+sum(labCost07) labCost07,
+sum(labCost08) labCost08,
+sum(labCost09) labCost09,
+sum(labCost10) labCost10,
+sum(labCost11) labCost11,
+sum(labCost12) labCost12
+from
+(
+select yyyymm , cnt, empid,
+         case when substr(a.yyyymm,5,2)='01' then
+         a.amt
+         end labCost01,
+         case when substr(a.yyyymm,5,2)='02' then
+         a.amt
+         end labCost02,
+         case when substr(a.yyyymm,5,2)='03' then
+         a.amt
+         end labCost03,
+         case when substr(a.yyyymm,5,2)='04' then
+         a.amt
+         end labCost04,
+         case when substr(a.yyyymm,5,2)='05' then
+         a.amt
+         end labCost05,
+         case when substr(a.yyyymm,5,2)='06' then
+         a.amt
+         end labCost06,
+         case when substr(a.yyyymm,5,2)='07' then
+         a.amt
+         end labCost07,
+         case when substr(a.yyyymm,5,2)='08' then
+         a.amt
+         end labCost08,
+         case when substr(a.yyyymm,5,2)='09' then
+         a.amt
+         end labCost09,
+         case when substr(a.yyyymm,5,2)='10' then
+         a.amt
+         end labCost10,
+         case when substr(a.yyyymm,5,2)='11' then
+         a.amt
+         end labCost11,
+         case when substr(a.yyyymm,5,2)='12' then
+         a.amt
+         end labCost12
+         from (
+                 select a.yyyymm,c.empid, b.egrade, b.Dilabcost + b.welfcost amt, d.cnt from months a, stdlabcost b,
+  (select empid, empkname, eGrade, to_empgradename(empid) eGradeName
+  	 from empall
+	 where wenddt = '99991231'
+	   and reportyn = 'Y'
+	   connect by aprvempid = prior empid
+	   start with empid = ?
+   ) c, 
+   (select count(*) cnt
+   	  from empall
+	 where wenddt = '99991231'
+	   and reportyn = 'Y'
+	   connect by aprvempid = prior empid
+	   start with empid = ?
+   ) d
+where yyyymm like ?
+and b.eGrade = c.eGrade
+and yyyymm between substr(startdt,1,6) and substr(enddt,1,6)) a
+)
+group by substr(yyyymm,1,4) , cnt
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I015"   value-count="2"
+   url="그룹별  하위포함 직접 비용" >  
+   <sql-content>
+   <![CDATA[
+select yyyy, JOBNO, get_JOBNAME(JOBNO) JOBNAME,
+nvl(round(sum(mh00),0),0) mh00,
+nvl(round(sum(mh01),0),0) mh01,
+nvl(round(sum(mh02),0),0) mh02,
+nvl(round(sum(mh03),0),0) mh03,
+nvl(round(sum(mh04),0),0) mh04,
+nvl(round(sum(mh05),0),0) mh05,
+nvl(round(sum(mh06),0),0) mh06,
+nvl(round(sum(mh07),0),0) mh07,
+nvl(round(sum(mh08),0),0) mh08,
+nvl(round(sum(mh09),0),0) mh09,
+nvl(round(sum(mh10),0),0) mh10,
+nvl(round(sum(mh11),0),0) mh11,
+nvl(round(sum(mh12),0),0) mh12
+from
+(
+select YYYY, EMPID, JOBNO, JOBNAME, EMPKNAME, ORGCD, 
+ ORGNAME, EGRADE, EDUTY, MH00, MH01, 
+ MH02, MH03, MH04, MH05, MH06, 
+ MH07, MH08, MH09, MH10, MH11, 
+ MH12
+from V_JOBNOMONTHMHSUM a 
+ WHERE  a.EMPID in (select empid
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+and  a.yyyy = ?
+connect by aprvempid = prior empid
+start with empid = ?)
+)
+where substr(jobno,1,1) in ('P','T')
+group by yyyy, JOBNO
+order by mh00 desc
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I016"   value-count="2"
+   url="그룹별 하위포함 간접 비용" >  
+   <sql-content>
+   <![CDATA[
+select yyyy, JOBNO, get_JOBNAME(JOBNO) JOBNAME,
+nvl(round(sum(mh00),0),0) mh00,
+nvl(round(sum(mh01),0),0) mh01,
+nvl(round(sum(mh02),0),0) mh02,
+nvl(round(sum(mh03),0),0) mh03,
+nvl(round(sum(mh04),0),0) mh04,
+nvl(round(sum(mh05),0),0) mh05,
+nvl(round(sum(mh06),0),0) mh06,
+nvl(round(sum(mh07),0),0) mh07,
+nvl(round(sum(mh08),0),0) mh08,
+nvl(round(sum(mh09),0),0) mh09,
+nvl(round(sum(mh10),0),0) mh10,
+nvl(round(sum(mh11),0),0) mh11,
+nvl(round(sum(mh12),0),0) mh12
+from
+(
+select YYYY, EMPID,  SubSTR(JOBNO,1,3)||'00' JOBNO, JOBNAME, EMPKNAME, ORGCD, 
+ ORGNAME, EGRADE, EDUTY, MH00, MH01, 
+ MH02, MH03, MH04, MH05, MH06, 
+ MH07, MH08, MH09, MH10, MH11, 
+ MH12
+from V_JOBNOMONTHMHSUM a 
+ WHERE  a.EMPID in (select empid
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+and  a.yyyy = ?
+connect by aprvempid = prior empid
+start with empid = ?)
+)
+where substr(jobno,1,1) not in ('P','T')
+group by yyyy, JOBNO
+order by mh00 desc
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I017"   value-count="3"
+   url="팀합계 MH List" >  
+   <sql-content>
+   <![CDATA[
+select a.YYYY, a.DITYPE, b.ORGCD, b.ORGNAME, b.empid, b.empkname, b.eGradeName,
+b.eGrade,
+MH00,MH01,MH02,MH03,MH04,MH05,MH06,MH07,MH08,MH09,MH10,MH11,MH12
+from (
+select YYYY, DITYPE, b.h2 orgcd,
+SUM(MH00) MH00, SUM(MH01) MH01, SUM(MH02) MH02, SUM(MH03) MH03, SUM(MH04) MH04,
+SUM(MH05) MH05, SUM(MH06) MH06,
+SUM(MH07) MH07, SUM(MH08) MH08, SUM(MH09) MH09, SUM(MH10) MH10, SUM(MH11) MH11,
+SUM(MH12) MH12
+from V_PERSONMONTHMHSUM a, V_ORGHIGH b,
+(select empid, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid
+start with empid = ?
+) c
+where a.empid = c.empid
+and a.yyyy = ?
+and a.orgcd = b.orgcd
+Group By YYYY, DITYPE, b.h2 ) a,
+(select empid, empkname, to_empgradename(empid) eGradeName, orgCd, to_orgcdname(orgcd) orgname, eGrade
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+and EDUTY = 'T'
+connect by aprvempid = prior empid
+start with empid = ?) b
+where a.orgcd = b.orgcd
+order by b.orgcd, DITYPE
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I018"   value-count="2"
+   url="CEO의 전사합계 MH List" >  
+   <sql-content>
+   <![CDATA[
+select YYYY, DITYPE, '0000' orgcd, '전사' orgName, ? empid, '' empName,
+SUM(MH00) MH00, SUM(MH01) MH01, SUM(MH02) MH02, SUM(MH03) MH03, SUM(MH04) MH04,
+SUM(MH05) MH05, SUM(MH06) MH06,
+SUM(MH07) MH07, SUM(MH08) MH08, SUM(MH09) MH09, SUM(MH10) MH10, SUM(MH11) MH11,
+SUM(MH12) MH12
+from V_PERSONMONTHMHSUM a,
+(select empid, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+) b
+where a.empid = b.empid
+and a.yyyy = ?
+Group By YYYY, DITYPE
+order by DITYPE
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I019"   value-count="3"
+   url="표준인건비 전사 합금액" >  
+   <sql-content>
+   <![CDATA[
+select substr(yyyymm,1,4) yyyy, cnt eGrade,
+sum(labCost01) labCost01,
+sum(labCost02) labCost02,
+sum(labCost03) labCost03,
+sum(labCost04) labCost04,
+sum(labCost05) labCost05,
+sum(labCost06) labCost06,
+sum(labCost07) labCost07,
+sum(labCost08) labCost08,
+sum(labCost09) labCost09,
+sum(labCost10) labCost10,
+sum(labCost11) labCost11,
+sum(labCost12) labCost12
+from
+(
+select yyyymm , cnt, empid,
+         case when substr(a.yyyymm,5,2)='01' then
+         a.amt
+         end labCost01,
+         case when substr(a.yyyymm,5,2)='02' then
+         a.amt
+         end labCost02,
+         case when substr(a.yyyymm,5,2)='03' then
+         a.amt
+         end labCost03,
+         case when substr(a.yyyymm,5,2)='04' then
+         a.amt
+         end labCost04,
+         case when substr(a.yyyymm,5,2)='05' then
+         a.amt
+         end labCost05,
+         case when substr(a.yyyymm,5,2)='06' then
+         a.amt
+         end labCost06,
+         case when substr(a.yyyymm,5,2)='07' then
+         a.amt
+         end labCost07,
+         case when substr(a.yyyymm,5,2)='08' then
+         a.amt
+         end labCost08,
+         case when substr(a.yyyymm,5,2)='09' then
+         a.amt
+         end labCost09,
+         case when substr(a.yyyymm,5,2)='10' then
+         a.amt
+         end labCost10,
+         case when substr(a.yyyymm,5,2)='11' then
+         a.amt
+         end labCost11,
+         case when substr(a.yyyymm,5,2)='12' then
+         a.amt
+         end labCost12
+         from (
+                 select a.yyyymm,c.empid, b.egrade, b.Dilabcost + b.welfcost amt, d.cnt from months a, stdlabcost b,
+  (select empid, empkname, eGrade, to_empgradename(empid) eGradeName
+  	 from empall
+	 where wenddt = '99991231'
+	   and reportyn = 'Y'
+	   connect by aprvempid = prior empid
+	   start with empid = ?
+   ) c, 
+   (select count(*) cnt
+   	  from empall
+	 where wenddt = '99991231'
+	   and reportyn = 'Y'
+	   connect by aprvempid = prior empid
+	   start with empid = ?
+   ) d
+where yyyymm like ?
+and b.eGrade = c.eGrade
+and yyyymm between substr(startdt,1,6) and substr(enddt,1,6)) a
+)
+group by substr(yyyymm,1,4) , cnt
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I020"   value-count="3"
+   url="팀합계 MH List" >  
+   <sql-content>
+   <![CDATA[
+select a.YYYY, a.DITYPE, b.ORGCD, b.ORGNAME, b.empid, b.empkname, b.eGradeName,
+b.eGrade,
+MH00,MH01,MH02,MH03,MH04,MH05,MH06,MH07,MH08,MH09,MH10,MH11,MH12
+from (
+select YYYY, DITYPE, b.h3 orgcd,
+SUM(MH00) MH00, SUM(MH01) MH01, SUM(MH02) MH02, SUM(MH03) MH03, SUM(MH04) MH04,
+SUM(MH05) MH05, SUM(MH06) MH06,
+SUM(MH07) MH07, SUM(MH08) MH08, SUM(MH09) MH09, SUM(MH10) MH10, SUM(MH11) MH11,
+SUM(MH12) MH12
+from V_PERSONMONTHMHSUM a, V_ORGHIGH b,
+(select empid, to_empgradename(empid) eGradeName
+from empall
+where wenddt = '99991231'
+and reportyn = 'Y'
+connect by aprvempid = prior empid
+start with empid = ?
+) c
+where a.empid = c.empid
+and a.yyyy = ?
+and a.orgcd = b.orgcd
+Group By YYYY, DITYPE, b.h3 ) a,
+(
+select empid, empkname, to_empgradename(empid) eGradeName, orgCd, to_orgcdname(orgcd) orgname, eGrade
+from empall
+where wenddt = '99991231'
+and EDUTY = 'E'
+and empid <> '20000133'
+connect by aprvempid = prior empid
+start with empid = ?
+) b
+where a.orgcd = b.orgcd
+order by b.orgcd, DITYPE
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ProdList"   value-count="2"
+   url="제품List" >  
+   <sql-content>
+   <![CDATA[
+select a.*, to_empkname(pmEmpId) pmEmpKName, TO_ORGCDNAME(orgcd) orgName from prod a where prodtype||prodno in (
+select distinct jobno from (
+select jobno from dailyreportdetail where jobno like 'P%' and reportdt like ?
+union
+select jobno from dailyreportdetail where prcsno like 'P%' and reportdt like ?))
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I021"   value-count="2"
+   url="제품별 직접보고 MH List" >  
+   <sql-content>
+   <![CDATA[
+select a.YYYY, a.EMPID, JOBNO, JOBNAME, EMPKNAME, ORGCD, ORGNAME, EGRADE, EDUTY, 
+MH00, MH01, MH02, MH03, MH04, MH05, MH06, MH07, MH08, MH09, MH10, MH11, MH12, 
+MH01*LABCOST01 LABCOST01,
+MH02*LABCOST02 LABCOST02,
+MH03*LABCOST03 LABCOST03,
+MH04*LABCOST04 LABCOST04,
+MH05*LABCOST05 LABCOST05,
+MH06*LABCOST06 LABCOST06,
+MH07*LABCOST07 LABCOST07,
+MH08*LABCOST08 LABCOST08,
+MH09*LABCOST09 LABCOST09,
+MH10*LABCOST10 LABCOST10,
+MH11*LABCOST11 LABCOST11,
+MH12*LABCOST12 LABCOST12 
+from V_JOBNOMONTHMHSUM a, V_empmonthstdlob b
+where a.yyyy = b.yyyy and a.empid = b.empid
+and a.yyyy = ? and JOBNO = ?
+Order by MH00 DESC
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I022"   value-count="2"
+   url="제품별 직접보고 인원 합계 MH List" >  
+   <sql-content>
+   <![CDATA[
+SELECT yyyy, jobno, 
+sum(MH00) mh00,sum(MH01) mh01,sum(MH02) mh02,sum(MH03) mh03,sum(MH04) mh04,sum(MH05) mh05,sum(MH06) mh06,
+sum(MH07) mh07,sum(MH08) mh08,sum(MH09) mh09,sum(MH10) mh10,sum(MH11) mh11,sum(MH12) mh12,
+sum(LABCOST01) LABCOST01,
+sum(LABCOST02) LABCOST02,
+sum(LABCOST03) LABCOST03,
+sum(LABCOST04) LABCOST04,
+sum(LABCOST05) LABCOST05,
+sum(LABCOST06) LABCOST06,
+sum(LABCOST07) LABCOST07,
+sum(LABCOST08) LABCOST08,
+sum(LABCOST09) LABCOST09,
+sum(LABCOST10) LABCOST10,
+sum(LABCOST11) LABCOST11,
+sum(LABCOST12) LABCOST12
+from (
+select a.YYYY, a.EMPID, JOBNO, JOBNAME, EMPKNAME, ORGCD, ORGNAME, EGRADE, EDUTY, 
+MH00, MH01, MH02, MH03, MH04, MH05, MH06, MH07, MH08, MH09, MH10, MH11, MH12, 
+MH01*LABCOST01 LABCOST01,
+MH02*LABCOST02 LABCOST02,
+MH03*LABCOST03 LABCOST03,
+MH04*LABCOST04 LABCOST04,
+MH05*LABCOST05 LABCOST05,
+MH06*LABCOST06 LABCOST06,
+MH07*LABCOST07 LABCOST07,
+MH08*LABCOST08 LABCOST08,
+MH09*LABCOST09 LABCOST09,
+MH10*LABCOST10 LABCOST10,
+MH11*LABCOST11 LABCOST11,
+MH12*LABCOST12 LABCOST12 
+from V_JOBNOMONTHMHSUM a, V_empmonthstdlob b
+where a.yyyy = b.yyyy and a.empid = b.empid
+and a.yyyy = ? and JOBNO = ?
+) group by yyyy, jobno
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I023"   value-count="1"
+   url="제품정보" >  
+   <sql-content>
+   <![CDATA[
+select prodType||prodNo jobNo, prodName JobName, to_empkname(pmEmpId) empKName,
+pmEmpId empId, orgcd, TO_ORGCDNAME(orgcd) orgName, 
+substr(plstartDt,1,4)||'-'||substr(plstartDt,5,2)||'-'||substr(plstartDt,7,2) startDt, 
+substr(plenddt,1,4)||'-'||substr(plenddt,5,2)||'-'||substr(plenddt,7,2) endDt, 
+to_empgradename(pmEmpId) eGradeName
+from prod a where prodtype||prodno  = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I024"   value-count="2"
+   url="제품별 직접보고 공정 MH List" >  
+   <sql-content>
+   <![CDATA[
+select YYYY, PRCSNO, PRCSNAME,  
+sum(MH00) mh00,sum(MH01) mh01,sum(MH02) mh02,sum(MH03) mh03,sum(MH04) mh04,sum(MH05) mh05,sum(MH06) mh06,
+sum(MH07) mh07,sum(MH08) mh08,sum(MH09) mh09,sum(MH10) mh10,sum(MH11) mh11,sum(MH12) mh12,
+sum(LABCOST01) LABCOST01,
+sum(LABCOST02) LABCOST02,
+sum(LABCOST03) LABCOST03,
+sum(LABCOST04) LABCOST04,
+sum(LABCOST05) LABCOST05,
+sum(LABCOST06) LABCOST06,
+sum(LABCOST07) LABCOST07,
+sum(LABCOST08) LABCOST08,
+sum(LABCOST09) LABCOST09,
+sum(LABCOST10) LABCOST10,
+sum(LABCOST11) LABCOST11,
+sum(LABCOST12) LABCOST12
+from  V_DRTPRCSMH		 
+where yyyy =? and JOBNO = ?
+group by yyyy, PRCSNO, PRCSNAME
+Order by MH00 DESC
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I025"   value-count="2"
+   url="제품별 직접보고 공정 MH List" >  
+   <sql-content>
+   <![CDATA[
+select YYYY, EMPID, EMPKNAME,  
+sum(MH00) mh00,sum(MH01) mh01,sum(MH02) mh02,sum(MH03) mh03,sum(MH04) mh04,sum(MH05) mh05,sum(MH06) mh06,
+sum(MH07) mh07,sum(MH08) mh08,sum(MH09) mh09,sum(MH10) mh10,sum(MH11) mh11,sum(MH12) mh12,
+sum(LABCOST01) LABCOST01,
+sum(LABCOST02) LABCOST02,
+sum(LABCOST03) LABCOST03,
+sum(LABCOST04) LABCOST04,
+sum(LABCOST05) LABCOST05,
+sum(LABCOST06) LABCOST06,
+sum(LABCOST07) LABCOST07,
+sum(LABCOST08) LABCOST08,
+sum(LABCOST09) LABCOST09,
+sum(LABCOST10) LABCOST10,
+sum(LABCOST11) LABCOST11,
+sum(LABCOST12) LABCOST12
+from  V_INDRTPRCSMH		 
+where yyyy =? and PRCSNO = ?
+group by yyyy, EMPID, EMPKNAME
+Order by MH00 DESC
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I026"   value-count="2"
+   url="제품별 직접보고 공정 MH List" >  
+   <sql-content>
+   <![CDATA[
+select YYYY, JOBNO, JOBNAME,  
+sum(MH00) mh00,sum(MH01) mh01,sum(MH02) mh02,sum(MH03) mh03,sum(MH04) mh04,sum(MH05) mh05,sum(MH06) mh06,
+sum(MH07) mh07,sum(MH08) mh08,sum(MH09) mh09,sum(MH10) mh10,sum(MH11) mh11,sum(MH12) mh12,
+sum(LABCOST01) LABCOST01,
+sum(LABCOST02) LABCOST02,
+sum(LABCOST03) LABCOST03,
+sum(LABCOST04) LABCOST04,
+sum(LABCOST05) LABCOST05,
+sum(LABCOST06) LABCOST06,
+sum(LABCOST07) LABCOST07,
+sum(LABCOST08) LABCOST08,
+sum(LABCOST09) LABCOST09,
+sum(LABCOST10) LABCOST10,
+sum(LABCOST11) LABCOST11,
+sum(LABCOST12) LABCOST12
+from  V_INDRTPRCSMH		 
+where yyyy =? and PRCSNO = ?
+group by yyyy, JOBNO, JOBNAME
+Order by MH00 DESC
+	]]>
+	</sql-content>
+   </sql-mapping>
+</sql>

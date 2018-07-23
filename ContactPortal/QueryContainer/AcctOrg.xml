@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="ACCT_ORG_001"   value-count="1" url="부서별계정조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT A.ACCTCD, A.ACCTKNAME, B.USEFLAG
+		FROM ACCTTB A, ACCT_ORG B, ORG C
+		WHERE B.ORG_NO = [S_ORG_NO]
+		AND B.ACCTCD = A.ACCTCD
+		GROUP BY A.ACCTCD, A.ACCTKNAME, B.USEFLAG
+		ORDER BY A.ACCTCD ASC
+	]]>
+	</sql-content>
+	</sql-mapping> 
+	
+	<sql-mapping  id="ACCT_ORG_002"   value-count="1" url="부서별계정삭제" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM ACCT_ORG
+		WHERE ACCTCD = [S_ACCT_CD]
+		AND ORG_NO = [S_ORG_NO]
+	]]>
+	</sql-content>
+	</sql-mapping> 
+    
+    <sql-mapping  id="ACCT_ORG_003"   value-count="4" url="부서별 계정 추가" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO ACCT_ORG VALUES([p0_0],[p0_1],'Y',SYSDATE,'',[p0_2],'')
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+		<sql-mapping  id="ACCT_ORG_004"   value-count="3" url="조직정보 검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	ORG_NO    AS CODENO,            --컬럼명에 유의
+                ORGCD     AS CODE,
+                REPLACE(ORGNAME,' ',' ')   AS CODENAME,
+                ORGCD        AS CODE2,
+                ORGNAME       AS CODENAME2,                
+                HIGHORGCD AS HIGHCODE,
+                [S_EMP_ID] EMPID,		
+				decode([S_SEARCH], 'Y', '1', LEVEL) LEV,
+				CASE WHEN LEVEL > 2 THEN 'Y' ELSE 'N' END AS SELFLAG	     
+		FROM (SELECT * FROM ORG WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))) ORG
+		WHERE ORGNAME LIKE UPPER('%'||[S_ORG_NAME] || '%') --조건 :codeName
+		START WITH ORGCD = '0000'
+		CONNECT BY PRIOR to_char(ORG_NO) = HIGHORGCD
+		ORDER SIBLINGS BY ORGCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="TEST_001"   value-count="0" url="공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+	        SELECT LEVEL AS LEV,
+                A.ACCTCD,
+                A.ACCTKNAME,
+                A.ACCTENAME,
+                        (SELECT COUNT(*)
+                        FROM ACCTTB B
+                        WHERE B.HIGHACCTCD=A.ACCTCD)
+                AS SUBCNT,
+                A.NOTE,
+                A.HIGHACCTCD,
+                        (SELECT ACCTKNAME
+                        FROM ACCTTB B
+                        WHERE A.HIGHACCTCD=B.ACCTCD)
+                AS HIGHCODENAME,
+                A.ACCTMETHOD,
+                A.ACCTEABBR
+FROM ACCTTB A
+WHERE LEVEL<='2'
+AND ACCTCD LIKE '%'||DECODE([S_ACCTCD],'00000','',[S_ACCTCD])||'%'
+AND ACCTKNAME LIKE '%'||[S_ACCTKNAME]||'%'
+           START WITH (A.ACCTCD IN (SELECT ACCTCD
+                                                FROM ACCTTB
+WHERE ACCTCD LIKE '%'||NVL([S_HIGHCODE],S_ACCTCD:)||'%'
+AND   ACCTKNAME LIKE '%'||NVL([S_HIGHCODE],S_ACCTKNAME:)||'%')
+OR A.ACCTCD=[S_HIGHCODE])
+
+CONNECT BY PRIOR A.ACCTCD=A.HIGHACCTCD
+ORDER SIBLINGS BY A.ACCTCD
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="TEST_002"   value-count="0" url="공통코드 세부조회" >  
+	<sql-content>
+	<![CDATA[
+		        SELECT LEVEL AS LEV,
+                A.ACCTCD,
+                A.ACCTKNAME,
+                A.ACCTENAME,
+                        (SELECT COUNT(*)
+                        FROM ACCTTB B
+                        WHERE B.HIGHACCTCD=A.ACCTCD)
+                AS SUBCNT,
+                A.NOTE,
+                A.HIGHACCTCD,
+                        (SELECT ACCTKNAME
+                        FROM ACCTTB B
+                        WHERE A.HIGHACCTCD=B.ACCTCD)
+                AS HIGHCODENAME,
+                A.ACCTMETHOD,
+                A.ACCTEABBR
+		FROM ACCTTB A
+		WHERE LEVEL=1
+		START WITH A.HIGHACCTCD =S_HIGHCODE:
+		CONNECT BY PRIOR A.ACCTCD=A.HIGHACCTCD
+		ORDER SIBLINGS BY A.ACCTCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+		<sql-mapping  id="TEST_007"   value-count="0" url="공통 코드 [등록]" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO ACCTTB
+		VALUES 
+		(ACCTCD:,ACCTKNAME:,ACCTENAME:,ACCTEABBR:,HIGHACCTCD:,CDFLAG:,CTRLFLAG:,ACCTDS:,
+		 DATASOURCE:,DOCEVID:,ACCTMETHOD:,NOTE:,PROFITSTD:,BIZLST:,BIZACQLST:)
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="TEST_008"   value-count="7" url="공통 코드 [수정]" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE COMCODE SET	 
+			CODE_NO	= [CODE_NO] ,
+			CODE	= [CODE]	,
+			CODENAME=[CODENAME],	
+			HIGHCODE= [HIGHCODE],	
+			CDDS	= [CDDS]	,
+			IDX		= [IDX],
+			MODIFYDT =SYSDATE,
+			EMPID=[EMPID]
+		WHERE CODE_NO = [CODE_NO]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="TEST_009"   value-count="1" url="공통 코드 [삭제]" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM ACCTCD
+		WHERE ACCTCD = [ACCTCD]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+	
+	
+</sql>
+
+

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="ORG_001"   value-count="0"  url="조직등록" >  
+   	<sql-content>
+  		<![CDATA[		   
+		INSERT INTO ORG (ORG_NO, 
+						ORGCD, 
+						ORGNAME, 
+						HIGHORGCD, 
+						ORGDIV, 
+						BUDGETUSEFLAG, 
+						ORGDETAIL, 
+						DRTYPE, 
+						USEFLAG, 
+						LABCOSTTYPE)
+		VALUES(         ORG_SN.NEXTVAL,
+						ORGCD:, 
+						ORGNAME:, 
+						HIGHORGCD:, 
+						ORGDIV:, 
+						BUDGETUSEFLAG:, 
+						ORGDETAIL:, 
+						DRTYPE:, 
+						USEFLAG:, 
+						LABCOSTTYPE:
+		)	
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="ORG_002"   value-count="0"  url="조직조회" >  
+   	<sql-content>
+  		<![CDATA[		   
+		SELECT  ORG_NO, 
+			    ORGCD, 
+				ORGNAME, 
+				HIGHORGNO, 
+				ORGDIV, 
+				BUDGETUSEFLAG, 
+				--ORGDETAIL, 
+				DRTYPE
+				--USEFLAG, 
+				--LABCOSTTYPE
+		 FROM COM_ORG
+    	--WHERE ORGCD LIKE [ORGCD] ||'%'
+    	  --AND ORGNAME LIKE [ORGNAME] ||'%'
+    	
+  
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="ORG_003"   value-count="0"  url="조직등록" >  
+   	<sql-content>
+  		<![CDATA[		   
+		INSERT INTO ORG (ORG_NO, 
+						ORGCD, 
+						ORGNAME, 
+						HIGHORGCD, 
+						ORGDIV, 
+						BUDGETUSEFLAG, 
+						USEFLAG)
+		VALUES(         ORG_SN.NEXTVAL,
+						[ORGCD], 
+						[ORGNAME], 
+						[HIGHORGCD], 
+						[ORGDIV], 
+						[BUDGETUSEFLAG], 
+						[USEFLAG]
+		)		
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="EP_004"   value-count="0" url="조직삭제" >
+	<sql-content>
+	<![CDATA[
+	DELETE ORG
+	WHERE ORGCD =[ORGCD]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="EP_005"   value-count="0" url="조직수정" >
+	<sql-content>
+	<![CDATA[
+	UPDATE ORG
+	SET ORGNAME = [ORGNAME] , 
+		HIGHORGCD = [HIGHORGCD], 
+		ORGDIV = [ORGDIV], 
+		BUDGETUSEFLAG = [BUDGETUSEFLAG], 
+		ORGDETAIL = [ORGDETAIL], 
+		DRTYPE = [DRTYPE], 
+		USEFLAG = [USEFLAG], 
+		LABCOSTTYPE = [LABCOSTTYPE]
+	WHERE ORGCD =[ORGCD]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+    <sql-mapping  id="EP_006"   value-count="0" url="조직코드중복체크" >
+	<sql-content>
+	<![CDATA[
+		SELECT  ORG_NO, 
+			    ORGCD, 
+				ORGNAME, 
+				HIGHORGNO,
+				ORGDIV, 
+				BUDGETUSEFLAG
+		 FROM COM_ORG
+    	WHERE ORGCD LIKE [ORGCD] ||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="ORG_007"   value-count="0"  url="조직조회-전체" >  
+   	<sql-content>
+  		<![CDATA[		   
+SELECT B.ORG_NO ORG_NO, B.ORGCD ORGCD, B.ORGNAME ORGNAME, B.HIGHORGNO HIGHORGNO,
+      	   (SELECT ORGCD FROM COM_ORG WHERE TO_CHAR(ORG_NO)=B.HIGHORGNO) HIGHORGCD,
+	   (SELECT ORGNAME FROM COM_ORG WHERE TO_CHAR(ORG_NO)=B.HIGHORGNO) HIGHORGNAME,
+	   B.ORGABBR ORGABBR, B.ORGQT ORGQT, B.ORGDIV ORGDIV,
+       GET_CODENAME('ORG_LEV',B.ORGDIV) ORGDIVNAME, 
+	   B.BUDGETUSEFLAG BUDGETUSEFLAG, B.DRTYPE DRTYPE, 
+	   LEVEL,
+	   (SELECT (DECODE(COUNT(BB.ORGCD),0,'',TO_CHAR('['||COUNT(BB.ORGCD)||']')))
+          FROM COM_ORG BB
+         WHERE TO_CHAR(b.ORG_NO) = BB.HIGHORGNO
+           AND BB.ORG_NO IN (SELECT ORG_NO FROM COM_ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))) LEVELSUBCNT,
+	   E.EMPKNAME EMPKNAME, STARTDT, ENDDT
+  FROM (SELECT     CO.ORG_NO, CO.ORGCD, CO.ORGNAME, CO.HIGHORGNO, CO.ORGABBR,
+                   CO.ORGQT, CO.ORGDIV, CO.BUDGETUSEFLAG, CO.DRTYPE,
+                   COH.STARTDT, COH.ENDDT
+              FROM COM_ORG CO,
+                   (SELECT A.ORG_NO ORG_NO, A.ORGCD ORGCD, A.ORGNAME ORGNAME,
+                           A.HIGHORGCD HIGHORGCD, A.STARTDT STARTDT,
+                           A.ENDDT ENDDT
+                      FROM COM_ORGHISTORY A
+                     WHERE DECODE(REPLACE(TRIM([STDDT]),'-',''),
+                                  '',
+                                  TO_CHAR (SYSDATE, 'YYYYMMDD'),
+                                  REPLACE(TRIM([STDDT]),'-',''))
+                              BETWEEN A.STARTDT
+                                  AND A.ENDDT
+                       ) COH
+             WHERE CO.ORG_NO = COH.ORG_NO
+        ) B,
+       (SELECT EA.ORGCD ORGCD, EA.EMPKNAME EMPKNAME, EA.EDUTY FROM EMPALL EA) E
+ WHERE B.ORG_NO = E.ORGCD(+)
+ AND   B.ORGDIV=E.EDUTY(+)
+ AND   B.ORGCD LIKE '%' || [STRORGCD] || '%'
+ AND   B.ORGNAME LIKE '%' || [STRORGNAME] || '%'
+ START WITH B.org_no = '1051'
+ CONNECT BY PRIOR TO_CHAR (B.org_no) = B.highorgno
+ ORDER SIBLINGS BY B.orgcd
+		 
+		]]>
+	</sql-content>
+    </sql-mapping>
+ 
+	<sql-mapping  id="ORG_008"   value-count="0"  url="조직이력조회" >  
+   	<sql-content>
+  		<![CDATA[	  
+	 SELECT 
+	 		ROWNUM,
+	 		A.ORG_NO ORG_NO,
+	        A.ORGCD ORGCD,
+			A.ORGNAME ORGNAME,
+	        A.HIGHORGCD HIGHORGCD,
+			AA.ORGNAME HIGHORGNAME,
+	        A.ORGDIV ORGDIV,
+	        A.STARTDT STARTDT,
+	        A.ENDDT ENDDT,
+	        A.ORGDETAIL ORGDETAIL,
+	        A.RORG_NO RORG_NO,
+	        A.IDX IDX
+	   FROM COM_ORGHISTORY A, COM_ORGHISTORY AA
+	   WHERE A.ORG_NO = AA.ORG_NO
+	     AND A.ORG_NO = [ORG_NO]
+	 ORDER BY IDX DESC
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+</sql>

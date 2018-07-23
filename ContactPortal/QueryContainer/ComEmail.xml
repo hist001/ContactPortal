@@ -1,0 +1,890 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="EM_SQLR1"   value-count="0" url="문장변경 SQL1" >  
+	<sql-content>
+	<![CDATA[
+		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+		REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+	]]>
+	</sql-content>
+	</sql-mapping>   		
+	<sql-mapping  id="EM_SQLR2"   value-count="0" url="문장변경 SQL2" >  
+	<sql-content>
+	<![CDATA[
+		,'수입품의서:'    ,a_Doc:	)
+		,'계정:'         ,acctCd:	)
+		,'금액:'         ,amt:	)
+		,'지급품의서:'    ,b_Doc:	)
+		,'예산부서:'      ,budget_Org:)
+		,'몇건:'         ,cnt:)
+		,'수금일자:'      ,DECODE(REPLACE(collect_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(collect_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'계약만료일자:'   ,DECODE(REPLACE(cont_Exp_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(cont_Exp_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'원가부서:'      ,cost_Org:)
+		,'작성자사번:'     ,crempId:)
+		,'작성자:'        ,crempName:)
+		,'거래처:'        ,customer:	)
+		,'문서번호:'      ,docNo:	)
+		,'종료일:'        ,DECODE(REPLACE(end_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(end_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'만료일자:'      ,DECODE(REPLACE(expire_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(expire_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'등록일자:'      ,DECODE(REPLACE(insert_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(insert_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'적요:'         ,jyo:)
+		,'[P_적요]'      ,'<PRE><FONT SIZE=2>'||jyo:||'</FONT></PRE>')
+		,'[P_처리결과]'   ,'<PRE><FONT SIZE=2>'||result:||'</FONT></PRE>')
+		,'프로젝트코드:'  ,pjtCd:	)
+		,'프로젝트명:'    ,pjtName:	)
+		,'접수일자:'      ,DECODE(REPLACE(receive_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(receive_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'부결일자:'      ,DECODE(REPLACE(reject_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(reject_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'시작일:'        ,DECODE(REPLACE(start_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(start_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'시스템일자:'    ,DECODE(REPLACE(sys_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(sys_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'대상일자:'      ,DECODE(REPLACE(target_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(target_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'제목:'          ,title:	     )
+		,'변경일자:'      ,DECODE(REPLACE(update_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(update_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))
+		,'작성일자:'      ,DECODE(REPLACE(write_Date:,'-',''),'null','',TO_CHAR(TO_DATE(REPLACE(write_Date:,'-',''),'YYYYMMDD'),'YYYY-MM-DD')))		
+		,'PM사번:'       ,pmEmpId:)				
+		,'PM:'          ,pmEmpName:)				
+		,'영업담당사번:'  ,salesEmpId:)				
+		,'영업담당자:'    ,salesEmpName:)
+	]]>
+	</sql-content>
+	</sql-mapping>   		
+	
+	<sql-mapping  id="EM_000"   value-count="0" url="이메일 발송로그 저장" >  
+	<sql-content>
+	<![CDATA[
+		insert into MailSendLog(sn,sendEmpId,sendRule,sendDtm,sendDesc)
+		values(	mailsendlog_sn.nextval,
+				substr(toAddr:,1,8),--수신인
+				mailCode:,--발송메일
+				sysdate,--발송시간
+				mailTitle:--발송메일 제목
+				)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="EM_001"   value-count="1" url="기본 등록 이메일발송" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+				A.TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(A.TRANSID) AS FROMNAME,
+				A.TITLE AS MAILTITLE,
+				A.CONTENTS  AS MAILBODY,
+				B.EMPID||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(B.EMPID ) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 MAILMGMEMPID B
+		WHERE A.MAILCODE=?
+		AND   A.MAILCODE=B.MAILCODE
+		AND   SUBSTR(A.TRANSID,1,8)<>B.EMPID    --발송자 본인 제외
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EM_002"   value-count="0" url="DB등록 이메일발송" >  
+	<sql-content>
+	<![CDATA[
+--		SELECT	MAILTITLE,MAILBODY 는  생략해서 쿼리 생성
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,
+				B.EMPID||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(B.EMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 MAILMGMEMPID B
+		WHERE A.MAILCODE=mailCode:
+		AND   A.MAILCODE=B.MAILCODE(+)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EM_003"   value-count="0" url="DB등록 이메일발송(발송자 지정)" >  
+	<sql-content>
+	<![CDATA[
+--		SELECT	MAILTITLE,MAILBODY 는  생략해서 쿼리 생성
+				fromAddr:||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(fromAddr:) AS FROMNAME,
+				B.EMPID||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(B.EMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 MAILMGMEMPID B
+		WHERE A.MAILCODE=mailCode:
+		AND   A.MAILCODE=B.MAILCODE(+)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EM_004"   value-count="0" url="DB등록 이메일발송(수신자 지정)" >  
+	<sql-content>
+	<![CDATA[
+--		SELECT	MAILTITLE,MAILBODY 는  생략해서 쿼리 생성
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,			
+				toAddr:||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(toAddr:) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 MAILMGMEMPID B
+		WHERE A.MAILCODE=mailCode:
+		AND   A.MAILCODE=B.MAILCODE(+)
+	]]>
+	</sql-content>
+	</sql-mapping>   		
+	<sql-mapping  id="EM_005"   value-count="0" url="DB등록 이메일발송(발송자/수신자 지정)" >  
+	<sql-content>
+	<![CDATA[
+--		SELECT	MAILTITLE,MAILBODY 는  생략해서 쿼리 생성	
+				fromAddr:||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(fromAddr:) AS FROMNAME,
+				toAddr:||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(toAddr:) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 MAILMGMEMPID B
+		WHERE A.MAILCODE=mailCode:
+		AND   A.MAILCODE=B.MAILCODE(+)
+	]]>
+	</sql-content>
+	</sql-mapping>   	
+	<sql-mapping  id="EM_006"   value-count="0" url="청구사전안내 변동메일발송" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+				--제목 수정
+				REPLACE(REPLACE(REPLACE(
+				A.TITLE	
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  	,b.pjtname	)
+				AS MAILTITLE,
+				REPLACE(REPLACE(REPLACE(
+				A.CONTENTS	
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILBODY,
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,			
+				B.PMEMPID||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(B.PMEMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 (
+			    select mailCode: AS  mailcode,pjtcd,pjtName,pmEmpId,
+					   contEndDt
+				from project
+				where contEndDt = to_char(sysdate,'YYYYMMDD')
+				and pmEmpId is not null
+				union all
+				select mailCode: AS  mailcode,pjtcd,pjtName,salesempid pmEmpId,
+					   contEndDt
+				from project
+				where  contEndDt = to_char(sysdate,'YYYYMMDD')
+				and salesempid is not null
+			 ) B
+		WHERE A.MAILCODE=B.MAILCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EM_007"   value-count="0" url="청구사전안내 고정메일발송" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+				--제목 수정
+				REPLACE(REPLACE(REPLACE(
+				A.TITLE	
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  	,b.pjtname	)
+				AS MAILTITLE,
+				REPLACE(REPLACE(REPLACE(
+				A.CONTENTS	
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILBODY,
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,			
+				C.EMPID||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(C.EMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 (
+			    select  mailCode: AS  mailcode,pjtcd,pjtName,pmEmpId,
+					   contEndDt,lev0,lev1,lev2,lev3,lev4
+				from project a, org_lev b
+				where contEndDt = to_char(sysdate,'YYYYMMDD')
+				and a.pjtOrg_no = b.org_no
+			 ) B ,	 
+			 (
+				 select mailcode,empid, org_no from
+				 MAILMGMEMPID
+	 		 ) C
+		WHERE A.MAILCODE=B.MAILCODE
+		AND   A.MAILCODE=C.MAILCODE
+		AND   (c.orgcd = b.lev0 
+				or c.orgcd = b.lev1 
+				or c.orgcd = b.lev2 
+				or c.orgcd = b.lev4
+				or c.orgcd = b.lev3
+				or c.orgcd is null )
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EM_008"   value-count="0" url="청구지연안내 변동메일발송" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+				--제목 수정
+				REPLACE(REPLACE(REPLACE(
+				A.TITLE
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILTITLE,
+				--본문 수정
+				REPLACE(REPLACE(REPLACE(
+				A.CONTENTS
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILBODY,
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,				
+				B.PMEMPID||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(B.PMEMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 (
+				select mailCode: AS  mailcode, pjtcd, pjtName, pmEmpId,contenddt
+				from
+				(
+					select a.pjt_no, pjtcd, pjtname, pmEmpId,contAmt,nvl(b.amt,0) amt,contenddt
+					from 
+					(
+					 	 select pjt_no,pjtcd,pjtname,pmEmpid, contAmt,pjtstatus,pjttype,isTask,contenddt from project 
+						 union all
+						 select pjt_no,pjtcd,pjtname,salesempid pmEmpid, contAmt,pjtstatus,pjttype,isTask,contenddt from project
+						 where salesempid is not null
+					) a,
+					(
+					 	select b.jobno pjt_no, sum(amount) amt
+						from acctrpthd a, acctrptsb b, project c
+						where a.mainno = b.mainno
+						and b.jobno = to_char(c.pjt_no)
+						and a.docno like 'A%'
+						and b.acctcd like '4%'
+						and c.pjtstatus != 'END'
+						and c.pjttype in ('P','R')
+						and c.isTask = 'N'
+						group by b.jobno
+					) b
+					where a.pjt_no not in
+					(
+						select to_char(c.pjt_no)
+						from acctrpthd a, acctrptsb b, project c
+						where a.mainno = b.mainno
+						and b.jobno = to_char(c.pjt_no)
+						and a.docno like 'A%'
+						and b.acctcd like '4%'
+						and to_date(c.contenddt,'YYYYMMDD')+7 <= sysdate
+						and to_date(a.eventdt,'YYYYMMDD') >= to_date(c.contenddt,'YYYYMMDD')-7
+					)
+					and a.pjtstatus != 'END'
+					and a.pjttype in ('P','R')
+					and a.isTask = 'N'
+					and to_date(a.contenddt,'YYYYMMDD')+7 <= sysdate
+					and contenddt is not null
+					and a.pjt_no not in ('9024','9118','9336','9382')
+					and to_char(a.pjt_no) = b.pjt_no(+)
+					and a.pjt_no not in ('9059')
+				)
+				where contAmt != amt
+				and mod(round((sysdate-7)-to_date(contenddt,'YYYYMMDD')),7) =0
+				and round((sysdate-7)-to_date(contenddt,'YYYYMMDD')) > 0
+				--order by pjtcd
+			 ) B
+		WHERE A.MAILCODE=B.MAILCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EM_009"   value-count="0" url="청구지연안내 고정메일발송" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+				--제목 수정
+				REPLACE(REPLACE(REPLACE(
+				A.TITLE
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILTITLE,
+				--본문 수정
+				REPLACE(REPLACE(REPLACE(
+				A.CONTENTS
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILBODY,
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,		
+				C.EMPID||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(C.EMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 (
+				select mailCode: AS  mailcode, pjtcd, pjtName, pmEmpId,contenddt, lev0,lev1,lev2,lev3,lev4
+				from
+				(
+					select a.pjt_no, pjtcd, pjtname, pmEmpId,contAmt,nvl(b.amt,0) amt,contenddt,pjtOrg_no
+					from 
+					(
+					 	 select pjt_no,pjtcd,pjtname,pmEmpid,pjtOrg_no,contAmt,pjtstatus,pjttype,isTask,contenddt from project 
+					) a,
+					(
+					 	select b.jobno pjt_no, sum(amount) amt
+						from acctrpthd a, acctrptsb b, project c
+						where a.mainno = b.mainno
+						and b.jobno = to_char(c.pjt_no)
+						and a.docno like 'A%'
+						and b.acctcd like '4%'
+						and c.pjtstatus != 'END'
+						and c.pjttype in ('P','R')
+						and c.isTask = 'N'
+						group by b.jobno
+					) b
+					where a.pjt_no not in
+					(
+						select to_char(c.pjt_no)
+						from acctrpthd a, acctrptsb b, project c
+						where a.mainno = b.mainno
+						and b.jobno = to_char(c.pjt_no)
+						and a.docno like 'A%'
+						and b.acctcd like '4%'
+						and to_date(c.contenddt,'YYYYMMDD')+7 <= sysdate
+						and to_date(a.eventdt,'YYYYMMDD') >= to_date(c.contenddt,'YYYYMMDD')-7
+					)
+					and a.pjtstatus != 'END'
+					and a.pjttype in ('P','R')
+					and a.isTask = 'N'
+					and to_date(a.contenddt,'YYYYMMDD')+7 <= sysdate
+					and contenddt is not null
+					and a.pjt_no not in ('9024','9118','9336','9382')
+					and to_char(a.pjt_no) = b.pjt_no(+)
+					and a.pjt_no not in ('9059')
+				) a,
+				org_lev b
+				where contAmt != amt
+				and mod(round((sysdate-7)-to_date(contenddt,'YYYYMMDD')),7) =0
+				and round((sysdate-7)-to_date(contenddt,'YYYYMMDD')) > 0
+				and a.pjtOrg_no = b.org_no
+				--order by pjtcd
+			 ) B,	 
+			 (
+			 select mailcode,empid from
+			 MAILMGMEMPID
+			 ) C
+		WHERE A.MAILCODE=B.MAILCODE
+		AND   A.MAILCODE=C.MAILCODE(+)
+		AND   (c.org_no = b.lev0 
+				or c.org_no = b.lev1 
+				or c.org_no = b.lev2 
+				or c.org_no = b.lev4
+				or c.org_no = b.lev3
+				or c.org_no is null ) 
+	]]>
+	</sql-content>
+	</sql-mapping>
+			  
+	<sql-mapping  id="EM_010"   value-count="0" url="미보고/미작성 이메일 발송" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+               REPLACE(TITLE
+                ,'대상일자:',TO_CHAR(TO_DATE(C.REPORTDT,'YYYYMMDD'),'YYYY-MM-DD'))
+		         AS MAILTITLE,
+                REPLACE(
+		        CONTENTS
+                ,'대상일자:',TO_CHAR(TO_DATE(C.REPORTDT,'YYYYMMDD'),'YYYY-MM-DD'))
+                AS MAILBODY,
+		      TRANSID||'@hist.co.kr' AS  FROMADDR,
+		--      TO_EMPKNAME(TRANSID) AS FROMNAME,
+		      '관리회계개발그룹' AS FROMNAME,
+  			  C.REEMPID||'@hist.co.kr' AS TOADDR,
+		      TO_EMPKNAME(C.REEMPID) AS TONAME,
+		      A.TRANSTYPE,
+		      A.TRANSOPP,
+		      A.MAILCODE
+		FROM MAILMGM  A,
+			(SELECT REPORTDT,
+					REEMPID,
+					STATUSFLAG,
+					DECODE(STATUSFLAG,'WNN','A0001',
+					DECODE(TO_CHAR(SYSDATE, 'D'),'2','A0002')) AS MAILCODE
+			FROM DAILYREPORT
+			WHERE STATUSFLAG IN ('WNT','WET','WNN')
+			AND REPORTDT <  TO_CHAR(SYSDATE,'YYYYMMDD')
+			) C
+		WHERE A.MAILCODE=C.MAILCODE
+	]]>
+	</sql-content>
+	</sql-mapping>   
+	
+	<sql-mapping  id="EM_011"   value-count="0" url="이메일 로그 기간별 조회 " >  
+	<sql-content>
+	<![CDATA[
+     SELECT *
+             FROM
+                     (SELECT /*+INDEX_DESC(MAILSENDLOG SYS_C004060)*/
+                            SEND_SEQ SN,
+                            MAILCODE AS SENDRULE,
+                            MAILTITLE AS MAILTITLE,
+                            '' SENDEMPID,
+                            TONAME AS   EMPKNAME,
+                            MAILTITLE AS SENDDESC,
+                            TO_CHAR(SENDDATE,'YYYY-MM-DD HH24:MI:SS') AS SENDDT,
+                            TO_CHAR(CREATEDT,'YYYY-MM-DD HH24:MI:SS') AS CREATEDT
+                     FROM MAIL_TEMP
+                     WHERE SENDDATE BETWEEN TO_DATE(REPLACE(frDate:,'-','')||'000000',
+								'YYYYMMDDhh24:mi:ss') 
+			                  AND TO_DATE(REPLACE(toDate:,'-','')||'235959',
+			                  	'YYYYMMDDhh24:mi:ss')
+             AND MAILTITLE LIKE '%'||S_SENDDESC:||'%'
+             ORDER BY CREATEDT DESC
+         )
+     WHERE  (EMPKNAME  LIKE empkname:||'%'  OR  empkname: IS NULL )
+     AND    (SENDRULE  LIKE mailId:||'%'  OR  mailId: IS NULL )
+        
+
+	]]>
+	</sql-content>
+	</sql-mapping>   
+			
+	<sql-mapping  id="EM_012" value-count="0" url="청구지연안내 고정메일발송(팀장에게 발송)" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+				--제목 수정
+				REPLACE(REPLACE(REPLACE(
+				A.TITLE
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILTITLE,
+				--본문 수정
+				REPLACE(REPLACE(REPLACE(
+				A.CONTENTS
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.contEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILBODY,
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,				
+				B.PMEMPID||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(B.PMEMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 (
+select mailCode: AS  mailcode, pjtcd, pjtName, EMPID pmEmpId,contenddt
+from 
+(
+	select pjtcd, pjtName, pmEmpId,contenddt,
+		   	case  (select substr(to_orgnocd(lev2),1,1) from org_lev where org_no = pjtOrg_no) when 'R'
+		   		then (select to_orgnocd(lev2) from org_lev where org_no = pjtOrg_no)
+				else (select to_orgnocd(lev3) from org_lev where org_no = pjtOrg_no)
+	   		end pOg
+	from
+	(
+		select a.pjt_no, pjtcd, pjtname, pmEmpId,contAmt,nvl(b.amt,0) amt,contenddt,pjtOrg_no
+		from 
+		(
+		 	 select pjt_no,pjtcd,pjtname,pmEmpid, contAmt,pjtstatus,pjttype,isTask,contenddt,pjtOrg_no from project 
+		) a,
+		(
+		 	select b.jobno pjt_no, sum(amount) amt
+			from acctrpthd a, acctrptsb b, project c
+			where a.mainno = b.mainno
+			and b.jobno = to_char(c.pjt_no)
+			and a.docno like 'A%'
+			and b.acctcd like '4%'
+			and c.pjtstatus != 'END'
+			and c.pjttype in ('P','R')
+			and c.isTask = 'N'
+			group by b.jobno
+		) b
+		where a.pjt_no not in
+		(
+			select to_char(c.pjt_no)
+			from acctrpthd a, acctrptsb b, project c
+			where a.mainno = b.mainno
+			and b.jobno = to_char(c.pjt_no)
+			and a.docno like 'A%'
+			and b.acctcd like '4%'
+			and to_date(c.contenddt,'YYYYMMDD')+7 <= sysdate
+			and to_date(a.eventdt,'YYYYMMDD') >= to_date(c.contenddt,'YYYYMMDD')-7
+		)
+		and a.pjtstatus != 'END'
+		and a.pjttype in ('P','R')
+		and a.isTask = 'N'
+		and to_date(a.contenddt,'YYYYMMDD')+7 <= sysdate
+		and contenddt is not null
+		and a.pjt_no not in ('9024','9118','9336','9382')
+		and to_char(a.pjt_no) = b.pjt_no(+)
+	)
+	where contAmt != amt
+	and mod(round((sysdate-7)-to_date(contenddt,'YYYYMMDD')),7) =0
+	and round((sysdate-7)-to_date(contenddt,'YYYYMMDD')) > 0
+	--order by pjtcd
+) a,
+(
+	select EMPID,
+		  (select to_orgnocd(lev2) from org_lev where org_no = orgcd) pOg
+	from EMPALL
+	WHERE  EDUTY LIKE 'T'
+	AND    ORGCD IN (SELECT  ORG_NO--,ORGNAME
+					FROM ORG
+					START WITH ORG_NO in (
+						select case when (select trim(orgdiv) from org where org_no = get_highOrgNo(pjtOrg_no)) = 'T'
+							   		then
+										get_highOrgNo(pjtOrg_no)
+									else
+										case when (select trim(orgdiv) from org where org_no = get_highOrgNo(get_highOrgNo(pjtOrg_no))  ) = 'T'
+									   		then
+												get_highOrgNo(get_highOrgNo(pjtOrg_no))
+											else
+												case when (select trim(orgdiv) from org where org_no = get_highOrgNo(get_highOrgNo(get_highOrgNo(pjtOrg_no))) ) = 'T'
+											   		then
+														get_highOrgNo(get_highOrgNo(get_highOrgNo(pjtOrg_no)))
+													else
+														'RR'
+											    end
+									    end
+								end 
+						from project
+						where pjtstatus != 'END'
+							and pjttype in ('P','R')
+							and isTask = 'N'
+	
+					)   --°?·? Æ?
+					CONNECT BY PRIOR TO_CHAR(ORG_NO) =  HIGHORGCD)  
+	AND       TO_DATE( WENDDT,'YYYYMMDD') >= SYSDATE
+	AND     EMPID<>'20020041'
+) b
+where a.pOg = b.pOg
+			 ) B
+		WHERE A.MAILCODE=B.MAILCODE		                  
+	]]>
+	</sql-content>
+	</sql-mapping>  
+	
+	<sql-mapping  id="EM_013"   value-count="0" url="하자보수 종료 고정메일발송" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+				--제목 수정
+				REPLACE(REPLACE(REPLACE(
+				A.TITLE
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.msEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILTITLE,
+				--본문 수정
+				REPLACE(REPLACE(REPLACE(
+				A.CONTENTS
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.msEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILBODY,
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,		
+				C.EMPID||'@hist.co.kr' AS TOADDR,
+				--'20060024'||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(C.EMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 (
+				select 'A0057' AS  mailcode,
+					   pjtdiv,pjttype,pjt_no,pjtcd,pjtname,
+					   pOg,maTerm,
+					   pjtstartdt,pjtenddt,
+					   msStartDt,msEndDt,pjtstatus
+				from
+				(
+					select pjtdiv,pjttype,pjt_no,pjtcd,pjtname,
+							   pOg,maTerm,
+							   pjtstartdt,pjtenddt,
+							   msStartDt,msEndDt,pjtstatus
+					from
+					(
+						select
+							   pjtdiv,pjttype,a.pjt_no,pjtcd,pjtname,
+							   case  (select substr(to_orgnocd(lev2),1,1) from org_lev where org_no = pjtOrg_no) when 'R'
+							   		then (select to_orgnocd(lev2) from org_lev where org_no = pjtOrg_no)
+									else (select to_orgnocd(lev3) from org_lev where org_no = pjtOrg_no)
+						   	   end pOg,
+							   maTerm,
+							   pjtstartdt,pjtenddt,
+							   to_char(add_months(to_date(pjtenddt,'YYYYMMDD'),b.materm-3),'YYYYMMDD') msStartDt,
+							   to_char(add_months(to_date(pjtenddt,'YYYYMMDD'),b.materm),'YYYYMMDD') msEndDt,
+							   to_char(sysdate,'YYYYMMDD') curdate,
+							   pjtstatus
+						from project a, devpjt b
+						where pjttype in ('P','R')
+						and b.pjt_no (+)= a.pjt_no
+						and b.materm is not null
+						and a.pjt_no not in ('9845')
+					)
+					where to_date(msStartDt,'YYYYMMDD') <= sysdate
+					and to_date(msEndDt,'YYYYMMDD') >= sysdate
+					and mod(round(to_date(curdate,'YYYYMMDD')-to_date(msStartDt,'YYYYMMDD')),7) = 0
+					)
+			 ) B,	 
+			 (
+				 select mailcode,empid from
+				 MAILMGMEMPID
+			 ) C
+		WHERE A.MAILCODE=B.MAILCODE
+		AND   A.MAILCODE=C.MAILCODE(+)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="EM_014"   value-count="0" url="하자보수 종료  PM, SalePM 메일발송" >  
+	<sql-content>
+	<![CDATA[
+				SELECT
+				--제목 수정
+				REPLACE(REPLACE(REPLACE(
+				A.TITLE
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.msEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILTITLE,
+				--본문 수정
+				REPLACE(REPLACE(REPLACE(
+				A.CONTENTS
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.msEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILBODY,
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,		
+				b.EMPID||'@hist.co.kr' AS TOADDR,
+				--'20060024'||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(b.EMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 (
+				select 'A0057' AS  mailcode,
+					   a.pOg,pjtdiv,pjttype,a.pjt_no,pjtcd,pjtname,
+					   empid,
+					   pjtstartdt,pjtenddt,msstartdt,msenddt,pjtstatus
+				from 
+				(
+					select pjtdiv,pjttype,pjt_no,pjtcd,pjtname,
+							   pOg,maTerm,
+							   pjtstartdt,pjtenddt,
+							   msStartDt,msEndDt,pjtstatus
+					from
+					(
+						select
+							   pjtdiv,pjttype,a.pjt_no,pjtcd,pjtname,
+							   case  (select substr(to_orgnocd(lev2),1,1) from org_lev where org_no = pjtOrg_no) when 'R'
+							   		then (select to_orgnocd(lev2) from org_lev where org_no = pjtOrg_no)
+									else (select to_orgnocd(lev3) from org_lev where org_no = pjtOrg_no)
+						   	   end pOg,
+							   maTerm,
+							   pjtstartdt,pjtenddt,
+							   to_char(add_months(to_date(pjtenddt,'YYYYMMDD'),b.materm-3),'YYYYMMDD') msStartDt,
+							   to_char(add_months(to_date(pjtenddt,'YYYYMMDD'),b.materm),'YYYYMMDD') msEndDt,
+							   to_char(sysdate,'YYYYMMDD') curdate,
+							   pjtstatus
+						from project a, devpjt b
+						where pjttype in ('P','R')
+						and b.pjt_no (+)= a.pjt_no
+						and b.materm is not null
+						and a.pjt_no not in ('9845')
+					)
+					where to_date(msStartDt,'YYYYMMDD') <= sysdate
+					and to_date(msEndDt,'YYYYMMDD') >= sysdate
+					and mod(round(to_date(curdate,'YYYYMMDD')-to_date(msStartDt,'YYYYMMDD')),7) = 0
+				) a,
+				(
+					select pjt_no,pmempid empid from project
+					union all
+					select pjt_no,nvl(salesempid,pmempid) empid from project
+				) b
+				where a.pjt_no = b.pjt_no
+			 ) B
+		WHERE A.MAILCODE=B.MAILCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="EM_015"   value-count="0" url="하자보수 종료  팀장 메일발송" >  
+	<sql-content>
+	<![CDATA[
+		SELECT
+				--제목 수정
+				REPLACE(REPLACE(REPLACE(
+				A.TITLE
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.msEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILTITLE,
+				--본문 수정
+				REPLACE(REPLACE(REPLACE(
+				A.CONTENTS
+				,'만료일자:'  ,TO_CHAR(TO_DATE(B.msEndDt,'YYYYMMDD'),'YYYY-MM-DD'))
+				,'프로젝트코드:'  ,b.pjtcd	)
+				,'프로젝트명:'  ,b.pjtname	)
+				AS MAILBODY,
+				TRANSID||'@hist.co.kr' AS  FROMADDR,
+				TO_EMPKNAME(TRANSID) AS FROMNAME,		
+				b.EMPID||'@hist.co.kr' AS TOADDR,
+				--'20060024'||'@hist.co.kr' AS TOADDR,
+				TO_EMPKNAME(b.EMPID) AS TONAME,
+				A.TRANSTYPE,
+				A.TRANSOPP,
+		        A.MAILCODE
+		FROM MAILMGM  A,
+			 (
+				select 'A0057' AS  mailcode,
+					   a.pOg,pjtdiv,pjttype,pjt_no,pjtcd,pjtname,
+					   empid,
+					   pjtstartdt,pjtenddt,msstartdt,msenddt,pjtstatus
+				from 
+				(
+					select pjtdiv,pjttype,pjt_no,pjtcd,pjtname,
+							   pOg,maTerm,
+							   pjtstartdt,pjtenddt,
+							   msStartDt,msEndDt,pjtstatus
+					from
+					(
+						select
+							   pjtdiv,pjttype,a.pjt_no,pjtcd,pjtname,
+							   case  (select substr(to_orgnocd(lev2),1,1) from org_lev where org_no = pjtOrg_no) when 'R'
+							   		then (select to_orgnocd(lev2) from org_lev where org_no = pjtOrg_no)
+									else (select to_orgnocd(lev3) from org_lev where org_no = pjtOrg_no)
+						   	   end pOg,
+							   maTerm,
+							   pjtstartdt,pjtenddt,
+							   to_char(add_months(to_date(pjtenddt,'YYYYMMDD'),b.materm-3),'YYYYMMDD') msStartDt,
+							   to_char(add_months(to_date(pjtenddt,'YYYYMMDD'),b.materm),'YYYYMMDD') msEndDt,
+							   to_char(sysdate,'YYYYMMDD') curdate,
+							   pjtstatus
+						from project a, devpjt b
+						where pjttype in ('P','R')
+						and b.pjt_no (+)= a.pjt_no
+						and b.materm is not null
+						and a.pjt_no not in ('9845')
+					)
+					where to_date(msStartDt,'YYYYMMDD') <= sysdate
+					and to_date(msEndDt,'YYYYMMDD') >= sysdate
+					and mod(round(to_date(curdate,'YYYYMMDD')-to_date(msStartDt,'YYYYMMDD')),7) = 0
+				) a,
+				(
+					select a.empid empid,a.empkname,a.eduty,a.jobds, a.orgcd,to_orgnocd(a.orgcd),
+					   (select to_orgnocd(lev2) from org_lev where org_no = a.orgcd) pOg
+					from empall a, org b
+					where a.orgcd= b.org_no
+					and wenddt >= to_char(sysdate,'YYYYMMDD')
+					and a.eduty = 'T'
+					and     EMPID<>'20020041'
+					and a.orgcd in ('1001','1021','1024','1026','1041','1038','1031')
+				) b
+				where a.pOg = b.pOg
+			 ) B
+		WHERE A.MAILCODE=B.MAILCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+
+	<sql-mapping  id="EM_016"   value-count="0" url="MAIL_TEMP발송" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	SEND_SEQ,
+				MAILCODE,
+				FROMADDR,
+				FROMNAME,
+				MAILTITLE,
+				MAILBODY,
+				TOADDR,
+				TONAME,
+				SENDDATE,
+				CREATEDT
+		FROM MAIL_TEMP
+		WHERE SENDDATE IS NULL
+	]]>
+	</sql-content>
+	</sql-mapping> 	
+
+
+	<sql-mapping  id="EM_017"   value-count="0" url="MAIL_TEMP 발송로그 수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE MAIL_TEMP SET
+		SENDDATE=SYSDATE
+		WHERE SEND_SEQ=SEND_SEQ:
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="EM_018"   value-count="0" url="MAIL_TEMP 발송로그 등록" >  
+	<sql-content>
+	<![CDATA[
+	INSERT INTO MAIL_TEMP 
+		(	SEND_SEQ,
+			MAILCODE,
+			FROMADDR,
+			FROMNAME,
+			MAILTITLE,
+			MAILBODY,
+			TOADDR,
+			TONAME,
+			SENDDATE,
+			CREATEDT)    
+	VALUES(
+			MAIL_SN.NEXTVAL,
+			mailCode:,
+			substr(fromAddr:,1,8)||'@hist.co.kr',
+			to_empkname(substr(fromAddr:,1,8)),
+			mailTitle:,
+			mailTitle:,
+			substr(toAddr:,1,8)||'@hist.co.kr',
+			to_empkname(substr(toAddr:,1,8)),
+			SYSDATE,
+			SYSDATE
+		)	
+	]]>
+	</sql-content>
+	</sql-mapping>	
+</sql>
+

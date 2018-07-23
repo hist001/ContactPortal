@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+	
+
+	<sql-mapping  id="SR_005"   value-count="0" url="System 등록" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO sr_system (
+				SYSTEMCD
+				,SYSTEMNM
+				,SYSTEM_GB
+				,HIGH_SYSTEMCD
+				,CORPCD
+				,STARTDT
+				,ENDDT
+				,NOTE
+				,CR_DT
+				,CR_EMPID
+				,MOD_DT
+				,MOD_EMPID
+				)
+		VALUES(
+				[SYSTEMCD]
+				,[SYSTEMNM]
+				,[SYSTEM_GB]
+				,[HIGH_SYSTEMCD]
+				,[CORPCD]
+				,[STARTDT]
+				,[ENDDT]
+				,[NOTE]
+				,[CR_DT]
+				,[CR_EMPID]
+				,[MOD_DT]
+				,[MOD_EMPID]
+				)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="HTPA08_001"   value-count="0" url="어학정보조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT C_CODE, 
+		EMP_ID, 
+		SEQ, 
+		LANG, 
+		GET_CODENAME('LANG', LANG) AS LANG_NM, 
+		LANG_TEST, 
+		GET_CODENAME('LANG_TEST', LANG_TEST) AS LANG_TEST_NM, 
+		ACQ_DT, 
+		GRD, 
+		SCR, 
+		LC, 
+		RC, 
+		NOTE, 
+		REG_ID, 
+		REG_DT, 
+		UPD_ID, 
+		UPD_DT 
+		FROM HTPA08 
+		WHERE C_CODE = [C_CODE] 
+		AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="HTPA08_002"   value-count="0" url="어학정보등록" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO HTPA08 (
+		   C_CODE, EMP_ID, SEQ, 
+		   LANG, LANG_TEST, ACQ_DT, 
+		   GRD, SCR, LC, 
+		   RC, NOTE, REG_ID, 
+		   REG_DT, UPD_ID, UPD_DT) 
+		VALUES ( [C_CODE],
+		 [EMP_ID],
+		 (SELECT NVL(MAX(TO_NUMBER(SEQ)),0)+1 FROM HTPA08 WHERE C_CODE = [C_CODE] AND EMP_ID = [EMP_ID]),
+		 [LANG],
+		 [LANG_TEST],
+		 REPLACE(TRIM([ACQ_DT]),'-',''),
+		 [GRD],
+		 [SCR],
+		 [LC],
+		 [RC],
+		 [NOTE],
+		 [REG_ID],
+		 SYSDATE,
+		 [UPD_ID],
+		 SYSDATE )
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="HTPA08_003"   value-count="0" url="어학정보수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE HTPA08
+		SET    C_CODE    = [C_CODE],
+		       EMP_ID    = [EMP_ID],
+		       SEQ       = [SEQ],
+		       LANG      = [LANG],
+		       LANG_TEST = [LANG_TEST],
+		       ACQ_DT    = NVL(REPLACE(TRIM([ACQ_DT]),'-',''), ''),
+		       GRD       = [GRD],
+		       SCR       = [SCR],
+		       LC        = [LC],
+		       RC        = [RC],
+		       NOTE      = [NOTE],
+		       UPD_ID    = [UPD_ID],
+		       UPD_DT    = SYSDATE
+		WHERE  C_CODE    = [C_CODE]
+		AND    EMP_ID    = [EMP_ID]
+		AND    SEQ       = [SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="HTPA08_004"   value-count="0" url="어학정보삭제" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM HTPA08 
+		WHERE  C_CODE    = [C_CODE]
+		AND    EMP_ID    = [EMP_ID]
+		AND    SEQ       = [SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+</sql>

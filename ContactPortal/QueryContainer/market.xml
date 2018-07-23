@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+	<sql-mapping  id="M_001"   value-count="1" url="장터리스트조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+				SN,
+				M_TITLE,
+				SALE_TYPE,
+				CREATEDT,
+				CREMPID,
+				TO_EMPKNAME(CREMPID) AS CREMPNM,
+				B.EMPKNAME,
+				VIEW_CNT
+		FROM M_LIST A,EMPALL B
+		WHERE M_TITLE  LIKE [S_M_TITLE]||'%'
+		AND SALE_TYPE LIKE [S_SALE_TYPE]||'%'
+		AND CREMPID =EMPID
+		AND EMPKNAME LIKE [S_CREMPID]||'%'
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="M_002"   value-count="1" url="세부내용 정보 출력" >
+	<sql-content>
+	<![CDATA[
+
+				SELECT
+              	  A.SN,
+              	  A.M_TITLE,
+             	  A.SALE_TYPE,
+            	  A.CREATEDT,
+            	  A.CREMPID,
+            	  TO_EMPKNAME(A.CREMPID) AS CREMPNM1,
+            	  TO_ORGNAME(A.CREMPID) AS ORGNAME,
+            	  B.G_SN,
+                  B.ENDDT,
+          	 	  B.NOTE,
+                  B.TEL,
+                  TO_EMPKNAME(C.R_CREMPID) AS CREMPNM2,
+                  C.R_NOTE
+				FROM M_LIST A, M_GOODS B, M_RE C
+				WHERE A.SN = [G_SN]
+				AND A.SN = B.SN
+				AND A.SN = C.SN
+				
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+	<sql-mapping  id="M_003"   value-count="1" url="물품 등록" >
+	<sql-content>
+	<![CDATA[
+
+		SELECT
+				G_SN,
+				TO_EMPKNAME(CREMPID) AS CREMPNM,
+				CREATEDT,
+				CREMPID,
+				TEL,
+				SALE_TYPE,
+				ENDDT,
+				M_TITLE,
+				NOTE
+
+		FROM M_GOODS A,M_LIST B,EMPALL C
+		WHERE M_TITLE  LIKE [S_M_TITLE]||'%'
+		AND SALE_TYPE LIKE [S_SALE_TYPE]||'%'
+		AND CREMPID =EMPID
+		AND EMPKNAME LIKE [S_CREMPID]||'%'
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+

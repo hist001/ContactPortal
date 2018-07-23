@@ -1,0 +1,145 @@
+
+/*@font-face {
+    font-family: 'jejugothic';
+    src: url('../font/JejuGothic.ttf');
+}
+*{font-family: 'jejugothic' !important;}*/
+body{width: 100%; margin: 0 auto; padding: 0;}
+
+/*nav 프레임*/
+.mainside{
+  width: 100%;
+  height: 100%;
+} 
+	.mainside select{
+	 font-weight: lighter;
+	 font-size : 15px;
+	 border: 1.5px solid #d4d4d4; 
+  	 border-radius: 5px;
+	}
+	.mainside .row{
+		margin-bottom : 10px;
+	}
+ 	.mainside .col-md-4{
+ 		height : 30px;
+ 		
+ 	}
+ 	.mainside .col-md-8{
+ 		height : 30px;
+ 		
+ 	}
+ 	.mainside button{
+ 		height : 30px;
+ 	}
+ 	.mainside input{
+ 		height : 30px;
+ 	}    
+      /* 자산조회 VIEW */
+      
+      .maintable{
+      	width: 100%;
+        height: 245px !important;
+        overflow: scroll;
+        padding-top: 1%;
+        
+      }
+      .maintable table{
+        width: 100%;
+        table-layout: fixed;
+        margin: 0 auto;
+        position: relative;
+      }
+      .maintable th{      	
+        height: 20px;
+        background-color: #f2f2f2;
+        text-align: center;
+        font-size: 10pt;
+      }
+      .maintable td{      	
+      	height: 20px;
+        white-space: pre;
+        text-overflow: ellipsis;
+        overflow: hidden;
+          /*글자 수 제한*/
+        text-align: left;
+        font-size: 8pt;
+      }
+  .viewinfo{
+    width: 100%;   
+  }
+    .viewinfo .nav{
+      width: 100%;
+      background-color: #f2f2f2;
+    }
+      .viewinfo .nav a{
+        color: black;
+        font-weight: 550;
+      }
+      .viewinfo .nav a:hover{
+        background-color: #dbdbdb;
+      }
+      .viewinfo .nav a:active{
+        opacity: 0.5;
+      }
+      
+      .detailtable table{
+      width: 100%;
+      table-layout: fixed;
+      margin: 0 auto;
+      position: relative;
+    }
+    .detailtable th{
+      height: 20px;
+      background-color: #f2f2f2;
+      font-size: 10pt;
+    }
+    .detailtable td{
+      white-space: pre;
+      text-overflow: ellipsis;
+      overflow: hidden;
+        /*글자 수 제한*/
+      text-align: left;
+      font-size: 8pt;
+    }
+    .detailview{
+      margin: 0 auto;
+    }
+    
+      .detailview .search1{
+      	height : 25px;
+      }
+      .detailview .search2{
+      	height : 25px;
+      }
+      .detailview button{
+      	font-size : 8pt;
+      	height : 25px;
+      }
+      .detailview table{
+        padding: 0;
+        width: 300px;
+
+      }
+      .detailview .col-md-4{
+        margin-top: 2%;
+      }
+      .detailview th{
+        background-color: #f2f2f2;
+        font-weight: bold;
+      }
+      .detailview td{
+
+      }
+      .detailview input{
+        width: 100%;
+      }
+      	.thumbnail a{
+      		color : White;
+      	}
+        .thumbnail img{
+          margin-top : 10px;
+        }
+        .thumbnail .caption{
+          margin-top : 10px;
+          margin-bottom : -10px;
+        }

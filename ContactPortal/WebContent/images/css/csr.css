@@ -1,0 +1,54 @@
+@CHARSET "EUC-KR";
+ 
+body, table, select,div, form {font-family:±¼¸²,arial;
+                                                    color:#333333;
+                                                    font-size:9pt;
+                                                    line-height: 15pt; 
+                                                    vertical-align : middle; 
+                                                    text-decoration: none;
+													scrollbar-face-color:#ffffff;
+													scrollbar-shadow-color:#578BCF;
+													scrollbar-highlight-color:#578BCF;
+													scrollbar-3dlight-color:#ffffff;
+													scrollbar-darkshadow-color:#ffffff;
+													scrollbar-track-color:#ffffff;
+													scrollbar-arrow-color:#578BCF;                                                                                                        
+                                                    }
+                                                       
+#table1 {width: 100%;}      
+#table1 .td1 {text-align: center;}
+
+.td2{border: none;}  
+.td1 {text-align: center;}   
+.td3 {border-bottom: 1px solid white} 
+.th1 {border-bottom: 1px solid grey;border-top: 1px solid grey}
+.td4 {border-bottom: 1px solid grey}
+.td5 {border-bottom: 1px solid grey;
+			border-top: 1px solid grey;
+			border-left:1px solid grey ;
+			border-right:1px solid grey }
+ 
+#link {cursor:pointer;			
+}      
+   
+#table2{width: 100%} 
+
+#table2 th {width:10% ;  
+					background: #C7E3E4;
+					border-bottom: 1px solid white;
+}
+#table2 td {width:90%;
+					padding-left:1em;
+					border-bottom: 1px solid #C7E3E4;
+					border-right: 1px solid #C7E3E4;
+}
+
+#table2 td.init {width:90%;  
+					      border-bottom: 1px solid #C7E3E4;
+					      border-top: 1px solid #C7E3E4;
+} 
+
+
+	
+	
+	

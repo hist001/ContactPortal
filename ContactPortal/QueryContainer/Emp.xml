@@ -1,0 +1,339 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="EMPDAY_001"   value-count="0" url="기념일조회" >
+	<sql-content>
+	<![CDATA[
+	SELECT A.EMPID, A.ORGCD, C.ORGNAME, A.EMPKNAME, TO_ORGCDNAME(A.ORGCD),B.EMPDAY_NM,B.EMPDAY,B.NOTE
+	FROM EMPALL A, EMPDAY B, ORG C
+	WHERE
+	B.EMPDAY BETWEEN REPLACE([FROM_DT],'-','') AND REPLACE([END_DT] ,'-','')
+	AND A.EMPKNAME LIKE [EMPKNAME]||'%'
+	AND A.EMPID LIKE [EMPID]||'%'
+	AND A.EMPID=B.EMPID
+    AND A.ORGCD=C.ORG_NO
+	]]>
+	</sql-content>
+	</sql-mapping>
+<sql-mapping  id="EMPDAY_002"   value-count="0" url="기념일등록" >
+	<sql-content>
+	<![CDATA[
+	INSERT INTO EMPDAY(EMPID,SN,EMPDAY_NM,EMPDAY)
+	VALUES([EMPID],'1',[EMPDAY_NM],[EMPDAY])
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_TEST"   value-count="0" url="사원리스트 조회테스트" >
+	<sql-content>
+	<![CDATA[
+	SELECT
+           A.EMPID,
+           A.EMPKNAME,
+           B.ORGNAME,
+           A.WSTARTDT
+	FROM EMPALL A, ORG B
+	WHERE A.ORGCD = B.ORG_NO
+	  AND (A.EMPKNAME LIKE '%'||[S_EMPKNAME]||'%'
+	  OR A.EMPID LIKE '%'||[S_EMPID]||'%')
+	  AND A.ORGCD IN (SELECT ORG_NO FROM ORG WHERE ORGNAME LIKE '%'||[S_ORG_NAME]||'%' OR ORG_NO LIKE [S_ORG_NO]||'%')
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_001"   value-count="0" url="사원리스트 조회" >
+	<sql-content>
+	<![CDATA[
+	SELECT
+           A.EMPID,
+           A.EMPKNAME,
+           A.ORGCD,
+           B.ORGNAME,
+           A.ETYPE,
+           (SELECT A.CODENAME FROM COMCODE A,COMCODE B WHERE A.CODE=ETYPE AND B.CODE='ET' AND B.CODE_NO=A.HIGHCODE) 
+           AS ETYPENAME,
+           A.WSTARTDT,
+           DECODE(A.WENDDT,'99991231','재직중',A.WENDDT) AS WENDDT,
+           DECODE(SIGN(TO_DATE(A.WENDDT,'YYYYMMDD')-SYSDATE),-1,'N','Y') AS RTVALUE,
+           A.EDUTY,
+           A.EGRADE,
+           (SELECT A.CODENAME FROM COMCODE A,COMCODE B WHERE A.CODE=EGRADE AND B.CODE='BP_EA' AND B.CODE_NO=A.HIGHCODE) 
+           AS EGRADENAME,
+           A.JOBDS,
+           A.JOBAGENCY,
+           A.MAINJOBCD,
+           A.TECHGRADE,
+           A.APRVEMPID,
+           (SELECT EMPKNAME FROM EMPALL WHERE EMPID=A.APRVEMPID) 
+           AS APRVEMPNAME,
+           A.REPORTYN,
+           (SELECT A.CODENAME FROM COMCODE A,COMCODE B WHERE A.CODE=REPORTYN AND B.CODE='UE' AND B.CODE_NO=A.HIGHCODE) 
+           AS REPORTYNNAME,
+           A.SUBEMPID,
+           (SELECT EMPKNAME FROM EMPALL WHERE EMPID=A.SUBEMPID) 
+           AS SUBEMPNAME, 
+           A.EMPMEMO,
+           A.EGROUP,
+           A.SYSEMPID,
+           A.ID,
+           A.PASSWORD
+	FROM EMPALL A, ORG B
+	WHERE A.ORGCD = B.ORG_NO
+	  AND (A.EMPKNAME LIKE '%'||[S_EMPKNAME]||'%'
+	  OR A.EMPID LIKE '%'||[S_EMPID]||'%')
+	  AND A.WSTARTDT BETWEEN DECODE(REPLACE(TRIM([S_STARTDT]),'-',''), '', '00000101', REPLACE(TRIM([S_STARTDT]),'-','')) 
+					     AND DECODE(REPLACE(TRIM([S_ENDDT]),'-',''), '', '99991231', REPLACE(TRIM([S_ENDDT]),'-',''))
+	  AND DECODE(SIGN(TO_DATE(A.WENDDT,'YYYYMMDD')-SYSDATE),-1,'N','Y') LIKE [RT]||'%'
+	  AND A.ORGCD IN (SELECT ORG_NO FROM ORG WHERE ORGNAME LIKE '%'||[S_ORG_NAME]||'%' OR ORG_NO LIKE [S_ORG_NO]||'%')
+    ORDER BY B.ORGNAME ASC, A.EGRADE ASC, A.EMPKNAME ASC
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_002"   value-count="0" url="사원  조회" >
+	<sql-content>
+	<![CDATA[
+	SELECT A.EMPID AS EMPID,
+		A.EMPKNAME AS EMPKNAME,
+		A.ORGCD,
+		B.ORGCD AS ORGCODE,
+		B.ORGNAME,
+		A.ETYPE,
+        A.WSTARTDT,
+        WENDDT AS WENDDT,
+        DECODE(SIGN(TO_DATE(A.WENDDT,'YYYYMMDD')-SYSDATE),-1,'N','Y') AS RTVALUE,
+        A.EDUTY,
+        A.EGRADE,
+        A.JOBDS,
+        A.JOBAGENCY,
+        A.MAINJOBCD,
+        A.TECHGRADE,
+        A.APRVEMPID,
+        (SELECT EMPKNAME FROM EMPALL WHERE EMPID=A.APRVEMPID) AS APRVEMPNAME,
+        A.REPORTYN,
+        A.SUBEMPID,
+        (SELECT EMPKNAME FROM EMPALL WHERE EMPID=A.SUBEMPID) AS SUBEMPNAME, 
+		A.EMPMEMO,
+		A.EGROUP,
+		A.SYSEMPID,
+		A.ID,
+		A.PASSWORD	
+	FROM EMPALL A, ORG B
+	WHERE A.ORGCD = B.ORG_NO
+	  AND A.EMPID = [EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_003"   value-count="0" url="경력정보 전체 조회" >
+	<sql-content>
+	<![CDATA[
+	SELECT 
+		A.CAREEREMPID AS CAREEREMPID,
+        A.CAREERORGCD AS CAREERORGNO,
+		B.ORGCD AS CAREERORGCD,
+        B.ORGNAME AS CAREERORGNAME,
+		A.CAREERSTARTDT AS CAREERSTARTDT,
+        DECODE(A.CAREERENDDT,'99991231','',A.CAREERENDDT) AS CAREERENDDT,
+		A.CAREERJOBDS AS CAREERJOBDS
+	FROM CAREERHISTORY A, ORG B
+	WHERE A.CAREERORGCD = B.ORG_NO
+	  AND CAREEREMPID = [EMPID]
+	ORDER BY CAREERSTARTDT DESC
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_004"   value-count="0" url="사원 수정" >
+	<sql-content>
+	<![CDATA[
+        UPDATE EMPALL SET	ORGCD	  = [ORGCD],
+							ETYPE	  = [ETYPE]	,
+							WSTARTDT  = REPLACE(TRIM([WSTARTDT]),'-',''),
+							WENDDT	  = DECODE(REPLACE(TRIM([WENDDT]),'-',''),'','99991231',REPLACE(TRIM([WENDDT]),'-','')),
+							EDUTY	  = [EDUTY],
+							EGRADE	  = [EGRADE],
+							JOBDS	  = [JOBDS],
+							JOBAGENCY = [JOBAGENCY],	
+							TECHGRADE = [TECHGRADE],	
+							APRVEMPID = [APRVEMPID],	
+							REPORTYN  = [REPORTYN],
+							SUBEMPID  = [SUBEMPID],
+							EMPMEMO	  = [EMPMEMO]
+        WHERE EMPID=[EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_005"   value-count="0" url="발령 등록" >
+	<sql-content>
+	<![CDATA[
+	INSERT INTO CAREERHISTORY (CAREEREMPID ,CAREERORGCD ,CAREERSTARTDT ,CAREERENDDT ,CAREERJOBDS)
+		 VALUES ([EMPID],
+		 		 [ORGCD],
+		 		 REPLACE(TRIM([REG_CAREERSTARTDT]),'-',''),
+		 		DECODE(REPLACE(TRIM([WENDDT]),'-',''), '', '99991231', 
+		 				REPLACE(TRIM([WENDDT]),'-','')),
+		 		 [EMPMEMO])
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_006"   value-count="0" url="발령 수정" >
+	<sql-content>
+	<![CDATA[
+        UPDATE CAREERHISTORY SET	CAREERORGCD   = [CAREERORGCD],
+									CAREERSTARTDT = REPLACE(TRIM([CAREERSTARTDT]),'-',''),
+									CAREERENDDT   = REPLACE(TRIM([CAREERENDDT]),'-',''),
+									CAREERJOBDS	  = [CAREERJOBDS]
+        WHERE CAREEREMPID=[CAREEREMPID]
+          AND CAREERORGCD=[CAREERORGCD]
+          AND CAREERSTARTDT=REPLACE(TRIM([BEFORE_CAREERSTARTDT]),'-','')
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_007"   value-count="0" url="발령 삭제" >
+	<sql-content>
+	<![CDATA[
+        DELETE FROM CAREERHISTORY 
+        WHERE CAREEREMPID=[CAREEREMPID]
+          AND CAREERORGCD=[CAREERORGCD]
+          AND CAREERSTARTDT=REPLACE(TRIM([CAREERSTARTDT]),'-','')
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_008_TEST"   value-count="0" url="직원 등록테스트" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO EMPALL (EMPID, EMPKNAME, ORGCD, WSTARTDT)
+		VALUES([EMPID],[EMPKNAME],[ORGCD],[WSTARTDT])
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_008"   value-count="0" url="직원 등록" >
+	<sql-content>
+	<![CDATA[
+        INSERT INTO EMPALL (EMPID, EMPKNAME, ORGCD, ETYPE, WSTARTDT, WENDDT, EDUTY, EGRADE, JOBDS, JOBAGENCY, MAINJOBCD, TECHGRADE, APRVEMPID, REPORTYN, SUBEMPID, EMPMEMO, 
+        					SYSEMPID, ID, PASSWORD) 
+			 VALUES ([EMPID],[EMPKNAME],[ORGCD],[ETYPE],
+		 	 DECODE(REPLACE(TRIM([WSTARTDT]),'-',''), '', '19000101', REPLACE(TRIM([WSTARTDT]),'-','')),
+		 	 DECODE(REPLACE(TRIM([WENDDT]),'-',''), '', '99991231', REPLACE(TRIM([WENDDT]),'-','')),
+			 [EDUTY],[EGRADE],[JOBDS],[JOBAGENCY],[JOBDS],[TECHGRADE],[APRVEMPID],[REPORTYN],[SUBEMPID],[EMPMEMO],
+			 		 GET_SYSEMPID,[EMPID],[EMPID])
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="EP_009"   value-count="0" url="사번 중복확인" >
+	<sql-content>
+	<![CDATA[
+        UPDATE CAREERHISTORY SET CAREERJOBDS	  = [CAREERJOBDS]
+        WHERE CAREEREMPID=[CAREEREMPID]
+          AND CAREERORGCD=[CAREERORGCD]
+          AND CAREERSTARTDT=REPLACE(TRIM([CAREERSTARTDT]),'-','')
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="EP_010"   value-count="0" url="직원정보삭제" >
+	<sql-content>
+	<![CDATA[
+        DELETE FROM  EMPALL 
+        WHERE EMPID=[EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="EP_011"   value-count="0" url="직원이력정보삭제" >
+	<sql-content>
+	<![CDATA[
+        DELETE FROM  CAREERHISTORY 
+        WHERE CAREEREMPID=[EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="MAIL_0001"   value-count="0" url="보험료 확인" >  
+	<sql-content>
+	<![CDATA[
+	SELECT 
+				EMPID,
+				TO_EMPKNAME(EMPID) AS EMPKNAME,
+				YYMM, 
+				EMPID, 
+				YM_AMT, 
+				M_AMT, 
+				LM_AMT, 
+				LY_AMT, 
+				SUM_AMT1, 
+				YML_AMT, 
+				M_AMT2, 
+				Y_AMT2, 
+				SUM_AMT2, 
+				IN_AMT, 
+				M_AMT3, 
+				Y_AMT3, 
+				SUM_AMT3, 
+				M_AMT4, 
+				Y_AMT4, 
+				SUM_AMT4				
+		FROM MEDICALRATE_HISTORY
+		WHERE EMPID =[EMPID]
+		AND YYMM = [YYMM]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_012"   value-count="0" url="발령대상자 조회" >
+	<sql-content>
+	<![CDATA[
+	SELECT
+           A.EMPID,
+           A.EMPKNAME,
+           A.ORGCD AS ORG_NO,
+           B.ORGCD,
+           B.ORGNAME,
+           A.WSTARTDT,
+           DECODE(SIGN(TO_DATE(A.WENDDT,'YYYYMMDD')-SYSDATE),-1,WENDDT,'재직중') AS WENDDT,
+           A.EDUTY,
+           A.EGRADE,
+           (SELECT A.CODENAME FROM COMCODE A,COMCODE B WHERE A.CODE=EGRADE AND B.CODE='BP_EA' AND B.CODE_NO=A.HIGHCODE) 
+           AS EGRADENAME
+	  FROM EMPALL A, ORG B
+	  WHERE A.ORGCD = B.ORG_NO
+	  AND (A.EMPKNAME LIKE [S_EMPKNAME]||'%' OR A.EMPID LIKE [S_EMPID]||'%')
+	  AND DECODE(SIGN(TO_DATE(A.WENDDT,'YYYYMMDD')-SYSDATE),-1,'N','Y') LIKE [RT]||'%'
+	  AND A.ORGCD IN (SELECT ORG_NO FROM ORG WHERE ORGNAME LIKE [S_ORG_NAME]||'%' OR ORG_NO LIKE [S_ORG_NO]||'%')
+	  AND A.EGRADE LIKE [S_EGRADE]||'%'
+      ORDER BY B.ORGNAME ASC, A.EGRADE ASC, A.EMPKNAME ASC
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="EP_0100"   value-count="0" url="직원 기념일 등록" >
+	<sql-content>
+	<![CDATA[
+        INSERT INTO EMPALL (EMPID, EMPKNAME, WSTARTDT) 
+			 VALUES ([EMPID],[EMPKNAME], DECODE(REPLACE(TRIM([WSTARTDT]),'-',''), '', '19000101', REPLACE(TRIM([WSTARTDT]),'-','')))
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_0101"   value-count="0" url="직원 기념일  수정" >
+	<sql-content>
+	<![CDATA[
+       UPDATE EMPALL SET	WSTARTDT  = REPLACE(TRIM([WSTARTDT]),'-','')
+       WHERE EMPID=[EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_0102"   value-count="0" url="직원 기념일  삭제" >
+	<sql-content>
+	<![CDATA[
+       UPDATE EMPALL SET	WSTARTDT  = REPLACE(TRIM([WSTARTDT]),'-','')
+       WHERE EMPID=[EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="EP_0103"   value-count="0" url="직원 기념일  조회" >
+	<sql-content>
+	<![CDATA[
+       SELECT A.EMPID, A.EMPKNAME, B.EMPDAY_NM, B.EMPDAY, B.NOTE FROM EMPALL A, EMPDAY B
+	   WHERE AND B.EMPDAY BETWEEN [FROM_DT] AND [END_DT] AND EMPKNAME LIKE [EMPKNAME]||'%'
+	   AND TO_ORGNONAME(A.ORGCD) LIKE [ORGCD]||'%
+	   AND A.EMPID = B.EMPID
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql>
+	

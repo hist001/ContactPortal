@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+	<sql-mapping  id="M_001"   value-count="0" url="member 조회" >
+	<sql-content>
+	<![CDATA[
+	
+		SELECT
+				EMPID
+				,AUTHTYPE
+				,ISACL
+				,AUTHSTARTDT
+				,AUTHENDDT				
+		FROM AUTH
+		WHERE EMPID LIKE '%'||[_EMPID]||'%'
+		AND AUTHTYPE LIKE '%'||[_AUTHTYPE]||'%'
+		AND ISACL LIKE '%'||[_ISACL]||'%'
+		AND AUTHSTARTDT LIKE '%'||[_AUTHSTARTDT]||'%'
+		AND AUTHENDDT LIKE '%'||[_AUTHENDDT]||'%'				
+		ORDER BY EMPID	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="M_002"   value-count="0" url="member 개별조회" >
+	<sql-content>
+	<![CDATA[
+	
+		SELECT
+				EMPID
+				,AUTHTYPE
+				,ISACL
+				,AUTHSTARTDT
+				,AUTHENDDT				
+		FROM AUTH
+		WHERE EMPID = [_EMPID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="M_003"   value-count="0" url="member 수정" >
+	<sql-content>
+	<![CDATA[
+
+		UPDATE AUTH SET
+		 AUTHTYPE=[AUTHTYPE]
+		,ISACL=[ISACL]
+		,AUTHSTARTDT=[AUTHSTARTDT]
+		,AUTHENDDT=[AUTHENDDT]
+		WHERE EMPID =[EMPID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="M_004"   value-count="0" url="member 삭제" >
+	<sql-content>
+	<![CDATA[
+		DELETE FROM auth
+		WHERE EMPID =[EMPID]
+		AND AUTHTYPE =[AUTHTYPE]
+		ANd ISACL =[ISACL]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+
+
+	<sql-mapping  id="M_005"   value-count="0" url="emp 등록" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO AUTH (
+				EMPID
+				,AUTHTYPE
+				,ISACL
+				,AUTHSTARTDT
+				,AUTHENDDT
+				)
+		VALUES(
+				[EMPID]
+				,[AUTHTYPE]
+				,[ISACL]
+				,[AUTHSTARTDT]
+				,[AUTHENDDT]
+				)
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	
+</sql>
+

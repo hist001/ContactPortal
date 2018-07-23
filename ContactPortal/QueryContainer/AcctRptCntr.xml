@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="getExpireInfo"   value-count="0" url="마감일 정보 검색" >  
+   <sql-content>
+   <![CDATA[
+	  select cdName expiredate, cdds notification
+	  from cocode 
+	  where cdtype = 'EP'
+	  and cd = 'ED'
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="uptExpireInfo"   value-count="2"  url="마감일 정보 수정" >  
+   <sql-content>
+   <![CDATA[		   
+	Update cocode
+	Set cdName = ?, cdds = ?
+	where cdtype = 'EP'
+	and cd = 'ED'
+	]]>
+	</sql-content>
+    </sql-mapping>
+    <sql-mapping  id="deleteDocOfGoing"   value-count="1"  url="저장중 문서 삭제" >  
+    <sql-content>
+    <![CDATA[		   
+	delete from acctrpthd
+	where status in ('DA0','DB0')
+	and mainno = ?
+	]]>
+	</sql-content>
+    </sql-mapping>
+    <sql-mapping  id="deleteDocOfGoing_Detail"   value-count="1"  url="저장중 문서 삭제" >  
+    <sql-content>
+    <![CDATA[		   
+	delete from acctrptsb
+	where mainno = ?
+	]]>
+	</sql-content>
+    </sql-mapping>
+</sql>

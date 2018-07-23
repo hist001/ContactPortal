@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="HTPA05_001"   value-count="0" url="가족정보조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT C_CODE,
+		EMP_ID, 
+		SEQ, 
+		FA_NAME, 
+		REL, 
+		GET_CODENAME('00030', REL) AS REL_NM,
+		SOCIAL_NUM, 
+		BIRTH_DT, 
+		LUNAR_DIV, 
+		GET_CODENAME('COLOR_BLND', LUNAR_DIV) AS LUNAR_DIV_NM, 
+		RESD_STS, 
+		GET_CODENAME('COLOR_BLND', RESD_STS) AS RESD_STS_NM, 
+		SUPPT_STS, 
+		GET_CODENAME('COLOR_BLND', SUPPT_STS) AS SUPPT_STS_NM, 
+		HNDCP_STS, 
+		GET_CODENAME('COLOR_BLND', HNDCP_STS) AS HNDCP_STS_NM, 
+		TAX_RATE,
+		GET_CODENAME('COLOR_BLND', TAX_RATE) AS TAX_RATE_NM, 
+		FOREIGNER, 
+		GET_CODENAME('COLOR_BLND', FOREIGNER) AS FOREIGNER_NM, 
+		DEGREE, 
+		GET_CODENAME('DEGREE', DEGREE) AS DEGREE_NM, 
+		GRADUATION_STS, 
+		GET_CODENAME('GRADUATION_STS', GRADUATION_STS) AS GRADUATION_STS_NM, 
+		PROFESSION, 
+		GET_CODENAME('PROFESSION', PROFESSION) AS PROFESSION_NM, 
+		NOTE, REG_ID, REG_DT, UPD_ID, UPD_DT
+		FROM HTPA05 
+		WHERE C_CODE = [C_CODE] 
+		AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="HTPA05_002"   value-count="0" url="가족정보추가" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO HTPA05 (
+		   C_CODE, EMP_ID, SEQ, 
+		   FA_NAME, REL, SOCIAL_NUM, 
+		   BIRTH_DT, LUNAR_DIV, RESD_STS, 
+		   SUPPT_STS, HNDCP_STS, TAX_RATE, 
+		   FOREIGNER, DEGREE, GRADUATION_STS, 
+		   PROFESSION, NOTE, REG_ID, 
+		   REG_DT, UPD_ID, UPD_DT) 
+		VALUES ( [C_CODE],
+		 [EMP_ID],
+		 (SELECT NVL(MAX(TO_NUMBER(SEQ)),0)+1 FROM HTPA05 WHERE C_CODE = [C_CODE] AND EMP_ID = [EMP_ID]),
+		 [FA_NAME],
+		 [REL],
+		 [SOCIAL_NUM],
+		 REPLACE(TRIM([BIRTH_DT]),'-',''),
+		 [LUNAR_DIV],
+		 [RESD_STS],
+		 [SUPPT_STS],
+		 [HNDCP_STS],
+		 [TAX_RATE],
+		 [FOREIGNER],
+		 [DEGREE],
+		 [GRADUATION_STS],
+		 [PROFESSION],
+		 [NOTE],
+		 [REG_ID],
+		 SYSDATE,
+		 [UPD_ID],
+		 SYSDATE )
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="HTPA05_003"   value-count="0" url="가족정보수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE HTPA05
+		SET    C_CODE         = [C_CODE],
+		       EMP_ID         = [EMP_ID],
+		       SEQ            = [SEQ],
+		       FA_NAME        = [FA_NAME],
+		       REL            = [REL],
+		       SOCIAL_NUM     = [SOCIAL_NUM],
+		       BIRTH_DT       = NVL(REPLACE(TRIM([BIRTH_DT]),'-',''), ''),
+		       LUNAR_DIV      = [LUNAR_DIV],
+		       RESD_STS       = [RESD_STS],
+		       SUPPT_STS      = [SUPPT_STS],
+		       HNDCP_STS      = [HNDCP_STS],
+		       TAX_RATE       = [TAX_RATE],
+		       FOREIGNER      = [FOREIGNER],
+		       DEGREE         = [DEGREE],
+		       GRADUATION_STS = [GRADUATION_STS],
+		       PROFESSION     = [PROFESSION],
+		       NOTE           = [NOTE],
+		       UPD_ID         = [UPD_ID],
+		       UPD_DT         = SYSDATE
+		WHERE  C_CODE         = [C_CODE]
+		AND    EMP_ID         = [EMP_ID]
+		AND    SEQ            = [SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="HTPA05_004"   value-count="0" url="가족정보삭제" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM HTPA05
+		WHERE  C_CODE         = [C_CODE]
+		AND    EMP_ID         = [EMP_ID]
+		AND    SEQ            = [SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+</sql>

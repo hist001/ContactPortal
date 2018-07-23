@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="codeList$"   value-count="3" url="공통코드 리스트 검색" >  
+	<sql-content>
+	<![CDATA[
+		SELECT  REPLACE(HIGHCODE,'$','') AS CDTYPE,
+                HIGHCODENAME AS CDTYPENAME,
+                REPLACE(CODE,'$','') AS CD,
+				CODE AS CD,
+				CODENAME AS CDNAME,
+				CDDS,
+				LEVEL
+		 FROM
+		(
+						SELECT  CD AS CODE,
+                                       CDNAME AS CODENAME,
+                                       DECODE(CDTYPE,'SUB',HIGHCD,'$'||CDTYPE) AS HIGHCODE,
+                                               (SELECT CDTYPENAME
+                                               FROM COCODETYPE A
+                                               WHERE A.CDTYPE=B.CDTYPE)
+                                       AS HIGHCODENAME,
+                                               CDNAME||(SELECT CDTYPENAME
+                                               FROM COCODETYPE A
+                                               WHERE A.CDTYPE=B.CDTYPE)
+                                       AS SEARCHHIGHCODENAME,
+                                       CDDS
+                       FROM COCODE B
+
+               UNION  ALL
+
+                       SELECT  '$'||CDTYPE AS CODE,
+                                       CDTYPENAME AS CODENAME,
+                                       DECODE( CDTYPE,'00000','','$00000') AS HIGHCODE,
+                                               (SELECT CDTYPENAME
+                                               FROM COCODETYPE A
+                                               WHERE DECODE(B.CDTYPE,'00000','','00000')=A.CDTYPE)
+                                       AS HIGHCODENAME,
+                                               CDTYPENAME||(SELECT CDTYPENAME
+                                               FROM COCODETYPE A
+                                               WHERE DECODE(B.CDTYPE,'00000','','00000')=A.CDTYPE)
+                                       AS SEARCHHIGHCODENAME,
+                                       '' AS CDDS
+                       FROM COCODETYPE B					
+		)
+        START WITH REPLACE(CODE,'$','') 
+        		IN  (
+					SELECT CD FROM COCODE 
+					WHERE CDNAME LIKE  UPPER( '%'||CDTYPENAME:||'%')
+					AND    CD LIKE  UPPER( '%'||CDTYPE:||'%')  
+					UNION
+					SELECT CDTYPE FROM COCODETYPE 
+					WHERE CDTYPENAME LIKE  UPPER( '%'||CDTYPENAME:||'%') 
+					AND    CDTYPE LIKE  UPPER( '%'||CDTYPE:||'%')  
+					)
+		CONNECT BY PRIOR CODE=HIGHCODE
+		ORDER SIBLINGS BY CODE,HIGHCODE
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="codeList"   value-count="3" url="공통코드 리스트 검색" >  
+	<sql-content>
+	<![CDATA[
+	SELECT  REPLACE(G.HIGHCODE,'$','')  CDTYPE,
+			(SELECT CDTYPENAME
+			FROM COCODETYPE A
+			WHERE A.CDTYPE=REPLACE(G.HIGHCODE,'$','')) AS CDTYPENAME,
+	 		REPLACE(CODE,'$','') AS CD,
+			CDNAME,
+			CDDS,
+			LEVEL
+	FROM
+		(                SELECT  	DISTINCT
+									HIGHCODE,
+	                                CODE,
+	                                CODENAME AS CDNAME,
+	                                CDDS
+	                 FROM
+	                (
+	                                                SELECT  CD AS CODE,
+	                                       CDNAME AS CODENAME,
+	                                       DECODE(CDTYPE,'SUB',HIGHCD,'$'||CDTYPE) AS HIGHCODE,
+	                                               (SELECT CDTYPENAME
+	                                               FROM COCODETYPE A
+	                                               WHERE A.CDTYPE=B.CDTYPE)
+	                                       AS HIGHCODENAME,
+	                                               CDNAME||(SELECT CDTYPENAME
+	                                               FROM COCODETYPE A
+	                                               WHERE A.CDTYPE=B.CDTYPE)
+	                                       AS SEARCHHIGHCODENAME,
+	                                       CDDS
+	                       FROM COCODE B
+	
+	               UNION  ALL
+	
+	                       SELECT  '$'||CDTYPE AS CODE,
+	                                       CDTYPENAME AS CODENAME,
+	                                       DECODE( CDTYPE,'00000','99999','$00000') AS HIGHCODE,
+	                                               (SELECT CDTYPENAME
+	                                               FROM COCODETYPE A
+	                                               WHERE DECODE(B.CDTYPE,'00000','','00000')=A.CDTYPE)
+	                                       AS HIGHCODENAME,
+	                                               CDTYPENAME||(SELECT CDTYPENAME
+	                                               FROM COCODETYPE A
+	                                               WHERE DECODE(B.CDTYPE,'00000','','00000')=A.CDTYPE)
+	                                       AS SEARCHHIGHCODENAME,
+	                                       '' AS CDDS
+	                       FROM COCODETYPE B
+	                )
+	
+	                START WITH REPLACE(CODE,'$','')
+	                	  IN  (
+								SELECT CD FROM COCODE 
+								WHERE CDNAME LIKE  UPPER( '%'||CDTYPENAME:||'%')
+								AND    CD LIKE  UPPER( '%'||CDTYPE:||'%')  
+								UNION
+								SELECT CDTYPE FROM COCODETYPE 
+								WHERE CDTYPENAME LIKE  UPPER( '%'||CDTYPENAME:||'%') 
+								AND    CDTYPE LIKE  UPPER( '%'||CDTYPE:||'%')  
+	                           )
+                CONNECT BY PRIOR CODE=HIGHCODE
+)   G
+START WITH REPLACE(CODE,'$','') = NVL(CDTYPE:,'00000')
+CONNECT BY PRIOR CODE=HIGHCODE
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+    <sql-mapping  id="insertPopupSet"   value-count="5"  url="팝업셋팅정보 등록" >  
+   	<sql-content>
+	  	<![CDATA[
+		INSERT INTO INITPOPUP (PARAMID, PARAMTYPE, PARAM1, PARAM2, PARAM3)
+		VALUES (?, ?, ?, ?, ?)
+		]]>
+	</sql-content>
+    </sql-mapping>
+
+    <sql-mapping  id="deletePopupSet"   value-count="2"  url="팝업셋팅정보 삭제" >  
+   	<sql-content>
+	  	<![CDATA[
+		DELETE FROM  INITPOPUP 
+		WHERE PARAMID=?
+        AND   PARAM1 =?
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="deletePopupSetDetail"   value-count="2"  url="팝업셋팅 상세정보 삭제" >  
+   	<sql-content>
+	  	<![CDATA[
+		DELETE FROM  INITPOPUP 
+		WHERE PARAMID=?
+        AND   PARAM2 =?
+		]]>
+	</sql-content>
+    </sql-mapping>
+   
+    <sql-mapping  id="savePopupSet"   value-count="4"  url="팝업셋팅정보 수정" >  
+   	<sql-content>
+	  	<![CDATA[
+		UPDATE   INITPOPUP  SET
+		PARAM1= ?,
+		PARAM2= ?,
+		PARAM3= ?
+		WHERE PARAMID=?
+		AND   PARAMTYPE='I'
+		]]>
+	</sql-content>
+    </sql-mapping>
+   	
+    <sql-mapping  id="createCodeType"   value-count="0"  url="공통코드타입 등록" >  
+   	<sql-content>
+	  	<![CDATA[
+		INSERT INTO COCODETYPE (CDTYPE, CDTYPENAME) 
+		VALUES(CDTYPE:, CDTYPENAME:) 
+		]]>
+	</sql-content>
+    </sql-mapping>
+   	
+    <sql-mapping  id="createCode"   value-count="0"  url="공통코드 등록" >  
+   	<sql-content>
+	  	<![CDATA[
+		INSERT INTO COM_ORG (ORGCD,, CDNAME, CDDS, HIGHCD) 
+		VALUES(CDTYPE:, CD:, CDNAME:, CDDS:, HIGHCODE:) 
+		]]>
+	</sql-content>
+    </sql-mapping>
+
+    <sql-mapping  id="deleteCodeType"   value-count="0"  url="공통코드타입 삭제" >  
+   	<sql-content>
+	  	<![CDATA[
+		DELETE FROM  COCODETYPE 		
+		WHERE CDTYPE= CDTYPE:
+		]]>
+	</sql-content>
+    </sql-mapping>
+
+    <sql-mapping  id="deleteCode"   value-count="0"  url="공통코드 삭제" >  
+   	<sql-content>
+	  	<![CDATA[
+		DELETE FROM  COCODE 
+		WHERE REPLACE(HIGHCD,'$','')= HIGHCD:
+		AND   CD= CD:
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="saveCode"   value-count="4"  url="공통코드 수정" >  
+   	<sql-content>
+	  	<![CDATA[
+			UPDATE  COCODE SET
+			CDNAME = ?,
+			CDDS     = ?
+			WHERE CDTYPE = ?
+			AND   CD= ?
+		]]>
+	</sql-content>
+    </sql-mapping>
+    
+    <sql-mapping  id="saveCodeType"   value-count="2"  url="공통코드타입 수정" >  
+   	<sql-content>
+	  	<![CDATA[
+		UPDATE  COCODETYPE SET
+		CDTYPENAME = ?
+		WHERE CDTYPE= ?
+		]]>
+	</sql-content>
+    </sql-mapping>
+
+
+	
+	<sql-mapping  id="O_001"   value-count="3" url="공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+	
+SELECT LEVEL AS LEV,
+                        A.ORGCD,
+                        A.ORGNM ,
+                        A.HIGH_ORGCD,
+                                (SELECT COUNT(*)
+                                FROM COM_ORG B
+                                WHERE B.HIGH_ORGCD=A.ORGCD
+                                AND B.STARTDT<= REPLACE([S_DT],'-',''))
+
+                        AS SUBCNT,
+                        A.STARTDT,
+                        A.ENDDT,
+                        A.NOTE,
+                        A.HIGH_ORGCD AS HIGHORG_NO,
+                                NVL((SELECT ORGNM
+                                FROM COM_ORG B
+                                WHERE A.HIGH_ORGCD=B.ORGCD),'***')
+                        AS HIGHORGNM,
+                        A.SEQ
+        FROM COM_ORG A
+                                WHERE LEVEL<=S_LEVEL:
+                                AND ORGNM LIKE '%'||[S_ORGNM]||'%'
+                                AND A.STARTDT <= REPLACE([S_DT],'-','')
+                            	
+                  START WITH (A.ORGCD IN NVL([S_HIGH_ORGCD],[LS_ORGCD]))
+                   CONNECT BY PRIOR A.ORGCD=A.HIGH_ORGCD
+                   ORDER SIBLINGS BY A.ORGCD
+
+
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="O_002"   value-count="0" url="공통코드 세부조회" >  
+	<sql-content>
+	<![CDATA[
+	
+		SELECT
+				LEVEL AS LEV,
+				A.ORGCD,
+				A.ORGNM,
+				(SELECT ORGNM
+				FROM COM_ORG B
+				WHERE A.HIGH_ORGCD=B.ORGCD)
+			    AS HIGHORGNM,
+			    A.STARTDT,
+			    A.ENDDT,
+			    A.HIGH_ORGCD,
+			    A.SEQ,
+			    A.NOTE
+			    
+			 
+		FROM COM_ORG A
+		WHERE LEVEL=1
+		   AND A.STARTDT <= REPLACE([S_DT],'-','')
+		START WITH A.HIGH_ORGCD =S_HIGH_ORGCD:
+		CONNECT BY PRIOR A.ORGCD=A.HIGH_ORGCD
+		ORDER SIBLINGS BY A.SEQ
+	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+	<sql-mapping  id="O_003"   value-count="4" url="공통 코드 [등록]" >  
+	<sql-content>
+	<![CDATA[
+	INSERT INTO COM_ORG (HIGH_ORGCD, ORGNM, ORGCD,STARTDT,ENDDT,NOTE,SEQ) 
+		VALUES([HIGH_ORGCD], [ORGNM], [ORGCD], NVL([STARTDT], TO_CHAR(SYSDATE,'yyyymmdd')), NVL([ENDDT], TO_CHAR(SYSDATE,'yyyymmdd')+1),[S_NOTE],'')
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="O_004"   value-count="5" url="공통 코드 [수정]" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE COM_ORG SET
+			SEQ=[SEQ],
+			HIGH_ORGCD=[HIGH_ORGCD],
+			ORGNM=[ORGNM],
+			ORGCD=[ORGCD],		
+			STARTDT	= NVL([STARTDT],SYSDATE),
+			ENDDT=NVL([ENDDT],SYSDATE),
+			NOTE =[S_NOTE]
+		WHERE ORGCD = [S_MOD_ORGCD]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="O_005"   value-count="1" url="공통 코드 [삭제]" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM COM_ORG
+		WHERE ORGCD =[ORGCD]
+						 
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="O_006"   value-count="0" url="부서 정렬" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE COM_ORG SET	 
+		SEQ		= [p0]
+		WHERE ORGCD = [p1]
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+			
+</sql>
+

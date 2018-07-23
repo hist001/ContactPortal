@@ -1,0 +1,216 @@
+<!--
+/* trskin : 뷰에서 컬럼제목 표시하는 부분 */
+/* ielay : 버튼 리스트 표시하는 부분 */
+/* viewContent : 문서리스트 밑 라인 */
+/* view에서 문서 마우스 오버, 마우스아웃 색깔 */
+/* comment : 의견 갯수 나타내기 */
+/* base : 버튼부분 */
+ 
+body, table, select,div, form {font-family:굴림,arial; color:#333333;font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none;}
+ 
+/*------------고정자산 div ----------------------------------- */
+fieldset {border: 1px solid #639E9A; padding: 1em;}
+fieldset.adjust{width: 700px; border: 1px solid #578BCF}
+
+/*  input {border:1px solid #639E9A} */
+
+#page{ position:relative; width:950px; }
+#left{ position:relative; width:450px;  float:left; }	
+#middle { position:relative; width:50px; float:left; text-align:center } 
+#middle div {height:100px} 
+#right { position:relative; width:450px; float:left }
+#right fieldset {height:450px}		 	 
+/*--------------------------------------------------------------- */
+
+.loctitle {background:#C7E3E4;}
+.trskin {font:bold 굴림,arial; font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none; background:#C7E3E4;border-style:solid; border-color:#639E9A #DDDDDD #639E9A #DDDDDD; border-width:1 0 1 0}
+.trskin_pms {font:bold 굴림,arial; font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none; background:#C7E3E4;border-style:solid; border-color:#639E9A #639E9A #639E9A #639E9A; border-width:1 1 1 1}
+
+.bottomtrskin {font-family:굴림,arial; font-size:9pt; line-height: 15pt; vertical-align : middle; text-decoration: none; background:#639E9A;border-style:solid; border-color:#82A061 #82A061 #82A061 #82A061; border-width:0 0 0 0}
+.contentsbox {border-style:solid; border-color:#578BCF #578BCF #578BCF #578BCF; border-width:1 1 1 1;}
+.viewContent  {text-align:center;border-style:solid; border-color:#639E9A #639E9A #DDDDD #639E9A;border-width:0 0 1 0}
+.viewContentB  {border-style:solid; border-color:#639E9A #639E9A #DDDDD #639E9A;border-width:0 0 1 0}
+.viewContentL {text-align:left;cursor:hand;border-style:solid; border-color:#639E9A #DDDDD #639E9A #639E9A;border-width:0 0 1 0}
+.viewContentL_BL {text-align:left;cursor:hand;border-style:solid; border-color:#C7E3E4 #C7E3E4 #C7E3E4 #C7E3E4 ;border-width:0 0 1 1}
+.viewContentL_RB {text-align:left;cursor:hand;border-style:solid; border-color:#639E9A #639E9A #639E9A #639E9A;border-width:0 1 1 0}
+.viewContentC {text-align:center;cursor:hand;border-style:solid; border-color:#639E9A #DDDDD #639E9A #639E9A;border-width:0 0 1 0}
+.viewContentC_RB {text-align:center;cursor:hand;border-style:solid; border-color:#639E9A #639E9A #639E9A #639E9A ;border-width:0 1 1 0}
+.viewContentC_BL {text-align:center;cursor:hand;border-style:solid; border-color:#639E9A #639E9A #639E9A #639E9A ;border-width:0 1 1 1}
+.viewContentC2 {text-align:center;border-style:solid; border-color:#639E9A #DDDDD #639E9A #639E9A;border-width:0 0 1 0}
+.viewContentC2_1 {text-align:left;border-style:solid; border-color:#639E9A #DDDDD #639E9A #639E9A;border-width:0 0 1 0}
+.viewContentC2_2 {text-align:right;border-style:solid; border-color:#639E9A #DDDDD #639E9A #639E9A;border-width:0 0 1 0}
+.viewContentR {text-align:right;cursor:hand;border-style:solid; border-color:#639E9A #DDDDD #639E9A #639E9A;border-width:0 0 1 0}
+.viewContentH {text-align:center;cursor:hand;border-style:solid; border-color:#639E9A #DDDDD #639E9A #639E9A;border-width:0 0 1 0}
+.viewContentV {text-align:left;cursor:hand;border-style:solid; border-color:#639E9A #DDDDD #639E9A #639E9A;border-width:0 0 0 0}
+/* List 헤더부분  */ 
+.viewContentSH {text-align:center;cursor:hand;border-style:solid; border-color:#639E9A #639E9A #639E9A #639E9A;border-width:0 0 1 0;text-decoration:underline}
+
+.viewOnH {text-align:center;cursor:hand;text-decoration:underline;color:red;border-style:solid;border-color:#639E9A #DDDDDD #639E9A #DDDDDD; border-width:0 0 1 0;}
+
+.no_border {border:none}
+
+/* List 부분  */
+.viewContentSC {text-align:center;cursor:hand;text-decoration:underline;border-style:solid; border-color:#639E9A #DDDDD #639E9A #DDDDDD;border-width:0 0 1 0;color:#008080}
+.viewContentSR {text-align:right;cursor:hand;text-decoration:underline;border-style:solid; border-color:#639E9A #DDDDD #639E9A #DDDDDD;border-width:0 0 1 0;color:#008080}
+.viewContentSL {text-align:left;cursor:hand;text-decoration:underline;border-style:solid; border-color:#639E9A #DDDDD #639E9A #DDDDDD;border-width:0 0 1 0;color:#008080}
+.viewContentSL_RB {text-align:left;cursor:hand;text-decoration:underline;border-style:solid; border-color:#639E9A #639E9A #639E9A #639E9A;border-width:0 1 1 0;color:#008080}
+
+
+.viewOnC {text-align:center;cursor:hand;text-decoration:underline;border-style:solid;border-color:#639E9A #DDDDDD #DDDDDD #DDDDDD; border-width:0 0 1 0;color:#c71585}
+.viewOnR {text-align:right;cursor:hand;text-decoration:underline;border-style:solid;border-color:#639E9A #DDDDDD #DDDDDD #DDDDDD; border-width:0 0 1 0;color:#c71585}
+.viewOnL {text-align:left;cursor:hand;text-decoration:underline;border-style:solid;border-color:#639E9A #DDDDDD #DDDDDD #DDDDDD; border-width:0 0 1 0;color:#c71585}
+.viewOnL_RB {text-align:left;cursor:hand;text-decoration:underline;border-style:solid;border-color:#639E9A #639E9A #639E9A #639E9A; border-width:0 1 1 0;color:#c71585}
+
+.viewSelect {cursor:hand;border-style:solid; border-color:#FEF8FD #FEF8FD #FEF8FD #FEF8FD; border-width:0 0 0 0}
+
+.docSelect {cursor:hand;border-style:solid; border-color:#639E9A #639E9A #639E9A #639E9A; border-width:0 0 1 0;text-align:center;}
+
+.tron {background:#FCF5E5;}
+.trout {background:white;}
+.comment {font-size:8pt; font-family: helvetica; color: blue}
+.unReadRow {background:white;color:blue;}
+.unReadtron {background:#FCF5E5;color:blue;}
+
+.base {border-style:solid; border-width:1; border-color:#C2CAD1 #818181 #818181 #C2CAD1; line-height:13pt; color:black; background:#D8DADA; text-align:center; padding:0 5 0 5}
+.onbase   {background:		;border-style:solid; border-width:1; border-color:#D0E2EF; line-height:13pt; color:black; text-align:center; padding:0 5 0 5}
+.onbaseD01 {background:f1f5fe;border-style:solid; border-width:1; border-color:#D0E2EF; line-height:13pt; color:black; text-align:center; padding:0 5 0 5}
+.onbaseD0 {background:#C7E3E4;border-style:solid; border-width:1; border-color:#D0E2EF; line-height:13pt; color:black; text-align:center; padding:0 5 0 5}
+.onbaseD1 {background:F0F0FF;border-style:solid; border-width:1; border-color:#D0E2EF; line-height:13pt; color:black; text-align:center; padding:0 5 0 5}
+.onbaseD2 {background:d0d0d0;border-style:solid; border-width:1; border-color:#D0E2EF; line-height:13pt; color:black; text-align:center; padding:0 5 0 5}
+.onbaseD3 {background:C6D6EC;border-style:solid; border-width:1; border-color:#D0E2EF; line-height:13pt; color:black; text-align:center; padding:0 5 0 5}
+.on {border-style:solid; border-width:1; border-color:#99B4D7 #C6D6EC #C6D6EC #578BCF; line-height:13pt; color:black; background:#C6D6EC; text-align:center; padding:0 5 0 5;zIndex:1}
+.onSel {border-style:solid; border-width:1; border-color:#70A6A8 #70A6A8 #70A6A8 #70A6A8; line-height:13pt; color:black; background:; text-align:center; padding:0 5 0 5;zIndex:1}
+.down {border-style:solid; border-width:1; border-color:#99B4D7 #C6D6EC #C6D6EC #578BCF; line-height:13pt; color:black; background:#C6D6EC; text-align:center; padding:0 5 0 5}
+
+/* Gradient 버튼색상을 원하시면 이 스타일시트를 이용하세요.
+.base {filter='progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr=#D0E2EF, EndColorStr=#FFFFFF)';border-style:solid; border-width:1; border-color:#E3EEF5 #6D8A9D #6D8A9D #E3EEF5; line-height:13pt; color:#005082;text-align:center; padding:0 5 0 5}
+.onbase {filter='progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr=#D0E2EF, EndColorStr=#FFFFFF)';border-style:solid; border-width:1; border-color:#E3EEF5 #6D8A9D #6D8A9D #E3EEF5;color:#2A8A2A;text-align:center; padding:0 5 0 5;line-height:13px;}
+.on {filter='progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr=#D3E3BC, EndColorStr=#FFFFFF)';border-style:solid; border-width:1; border-color:#E6F3D4 #809069 #809069 #E6F3D4; color:#2A8A2A;text-align:center; padding:0 5 0 5;line-height:13pt; }
+.down {filter='progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr=#D3E3BC, EndColorStr=#FFFFFF)';border-style:solid; border-width:1; border-color:#809069 #E6F3D4 #E6F3D4 #809069; line-height:13pt;color:#087008;text-align:center; padding:0 5 0 5}*/
+
+/*근태관리용*/
+.table5 {background:#C4D6AF;border-style:solid; border-color:#598527 #598527 #598527 #598527; border-width:2 0 1 0}
+.td1 {background:#E2EED5 ;text-align:center;}
+.td2 {background:#FFFFFF;}
+
+/*행사.세미나 관련*/
+.trskinSeminar {font:bold 굴림,arial; font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none; background:#C4D6AF;border-style:solid; border-color:#598527 #598527 #598527 #598527; border-width:2 1 2 1; bordercolordark:#FFFFFF; bordercolorlight:#EDD077}
+.tdsche2 {background:#E2EED5; font-family:굴림; font-size:9pt;}
+.tdsche3 {background:#FFFFFF; font-family:굴림; font-size:9pt;vertical-align:top;}
+.tableSeminar {table-layout:fixed;background:#578BCF;}
+
+/*자원예약 관련 */
+.tronsche2 {background:#FFF9E8;}
+.troutsche2 {background:#E2EED5;}
+
+/*MyPage셋팅시 이용*/
+.table1 {background:#578BCF;}
+.td1 {background:#E9F5F2;text-align:center;}
+.td1b {background:#E9F5F2;text-align:right;}
+.td2 {background:#FFFFFF;}
+.td3 {background:#FFFFFF;text-align:left;vertical-align :top;font-family:굴림체}
+.td5 {background:#DAEDF2;text-align:left;}
+.inputcheck {font-family:굴림; font-size:9pt; border-width:0;}
+
+#ielay{position:absolute; top:22px; font: .8em '굴림';}
+
+BODY
+{line-height:15pt;scrollbar-face-color:#ffffff;scrollbar-shadow-color:#578BCF;scrollbar-highlight-color:#578BCF;scrollbar-3dlight-color:#ffffff;scrollbar-darkshadow-color:#ffffff;scrollbar-track-color:#ffffff;scrollbar-arrow-color:#578BCF;}
+
+a:link {font-family:굴림,arial; color:black ; font-size:9pt; text-decoration: none} 
+a:visited {font-family:굴림,arial; color:#000080; font-size:9pt; text-decoration: none} 
+a:hover {font-family:굴림,arial;font-size: 9pt; color:red; text-decoration:none}
+a:active {font-family:굴림,arial; color: red; font-size:9pt; text-decoration: none} 
+
+
+/*일정관리용*/
+.buttona {font-family:굴림; font-size:9pt; height:20px; border-width:1; border-style:ridge; border-color:#d0d0d0; background-color:#dfdfdf;}
+input {font-family:굴림; font-size:9pt; border-width:1; border-color:gray; border-style:solid;}
+
+.inputa {font-family:굴림; font-size:9pt; background-color:white; border-width:1; border-color:gray; border-style:solid;}
+.tronsche {background:#DBE9FC;}
+.troutsche {background:#F5F5FE;} /*FFF9E8*/
+.tdsche1 {background:#F5F5FE; font-family:굴림; font-size:9pt;}
+.tdsche1_1 {background:#FFFFFF;}
+.tdsche1_2 {background: #DBE9FC;} /*오늘날짜 박스 색깔  #FFF5C2*/
+
+/*일정추가 버튼에 있는 테이블*/
+.tdsche7 {background:#F5F5FE;border-color:#FFFFFF;font-family:굴림; font-size:9pt;}
+
+.tdtop {vertical-align:top;}
+.tablecalendar {background:#15396C; vertical-align:top;}
+.trcalendar {background:#DFECFE;}
+.movecalendar {background:#DFECFE;}
+.trcal {background:#F3F3F3;}
+
+/*일정관리탭에서 맨 마지막에 색깔 넣기*/
+.bottomcal {background:#F3F3F3;}
+
+.ymselect {font-family:verdana;border:1x solid black; background-color:#DFECFE; font-size:8pt;  text-decoration: none}
+
+/*어드민 근태관리(월간보기)*/
+.tableM1 {background:#C4D6AF;}
+.tdM1 {background:#E2EED5 ;text-align:center;}
+.tdM2 {background:#FFFFFF;}
+.tdM3 {background:#BCDAE8;}
+
+/*일반 근태현황(월간/연간)*/
+.t_trskin {font: 굴림,arial; font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none; background:E2EED5;border-style:solid; border-color:#598527 #598527 #598527 #598527; border-width:0 0 1 0}
+
+/*비상연락망*/
+
+.orgtable {table-layout: fixed;background:#578BCF;}
+.orgline {line-height:15pt;background:#F5F5FE;}
+
+.orgTB {table-layout: fixed;background:#578BCF;}
+.orgTR {line-height:15pt;background:white;}
+.orgHTR {line-height:15pt;background:#F5F5FE;}
+
+/*kms 평가내역조회*/
+#tooltip {position:absolute; top:0; left:0; border:solid 1 black; background:#EAEBEB; color:black; font-size:9pt; width:350; padding:3 3; overflow:hidden; z-index:20; display:none}
+
+/*버튼 Style*/
+.bt_f {	height: 20px;	width: 3px;	background: url(../images/Etc/bt_f.gif) no-repeat;	color: #333333;	font: 9pt 굴림, 굴림체;}
+.bt_e {	height: 20px;	width: 4px;	background: url(../images/Etc/bt_e.gif) no-repeat;	color: #333333;	font: 9pt 굴림, 굴림체;}
+.button {border-style:solid; border-width:0;  line-height:13pt; color:black; background:url(../images/Etc/bt_bg.gif) repeat-x; text-align:center; padding:0 0 0 0}
+.buttonOn {border-style:solid; border-width:0; line-height:13pt; color:#7DBD00; background:url(../images/Etc/bt_bg.gif) repeat-x; text-align:center; padding:0 0 0 0}
+.button1 {border-style:solid; border-width:0;  line-height:13pt; color:black; background:url(../images/Etc/bt_bg1.gif) repeat-x; text-align:center; padding:0 0 0 0}
+.buttonOn1 {border-style:solid; border-width:0; line-height:13pt; color:#7DBD00; background:url(../images/Etc/bt_bg1.gif) repeat-x; text-align:center; padding:0 0 0 0}
+.buttonSearch {border-style:solid; border-width:0;  line-height:13pt; color:black; background:url(../images/search.gif) repeat-x; text-align:center; padding:0 0 0 0}
+.buttonOnSearch {border-style:solid; border-width:0; line-height:13pt; color:#7DBD00; background:url(../images/searchOn.gif) repeat-x; text-align:center; padding:0 0 0 0}
+
+/*Tab Style*/
+.tabBt_f {	height: 20px;	width: 3px;	background: url(../images/Etc/bt_f.gif) no-repeat;	color: #333333;	font: 9pt 굴림, 굴림체;}
+.tabBt_e {	height: 20px;	width: 4px;	background: url(../images/Etc/bt_e.gif) no-repeat;	color: #333333;	font: 9pt 굴림, 굴림체;}
+.tabBt {border-style:solid ;cursor:hand ; border-width:0;  line-height:13pt; color:black; background:url(../images/tabImage/tab_bg.gif) no-repeat; text-align:center; padding:0 0 0 0}
+.tabBtOn {border-style:solid ;cursor:hand; border-width:0; line-height:13pt; color:white; background:url(../images/tabImage/tab_bg-.gif) no-repeat; text-align:center; padding:0 0 0 0}
+.tabBts {border-style:solid ;cursor:hand ; border-width:0;  line-height:13pt; color:black; background:url(../images/tabImage/tab_bg_s.gif) no-repeat; text-align:center; padding:0 0 0 0}
+.tabBtsOn {border-style:solid ;cursor:hand; border-width:0; line-height:13pt; color:white; background:url(../images/tabImage/tab_bg_s-.gif) no-repeat; text-align:center; padding:0 0 0 0}
+
+input.bt {
+	height: 19px;
+	border: 1px solid #638D8F;
+	color: #FFFFFF;	
+	cursor:hand;
+	font: bold 11px Tahoma, Verdana;
+	background: #EBEBEB url(../images/Etc/bt_bg_v.gif);
+}
+-->
+.2BoldUnderL { font:bold;text-decoration:underline;font-size:12pt;};
+.2BlueFont {color:blue; font:bold};
+.2BoldTitle { font:bold;font-size:12pt;};
+.2Bold {font:bold};
+.td1 {background:#E9F5F2;text-align:center;}
+.inputa_1 {font-family:굴림; font-size:9pt; color:blue;background-color:white; border-width:1; border-color:gray; border-style:solid;}
+
+/*Menual Style*/
+.mu_header {font-size: 14px; font-family: "돋움", Arial; color: #43898B; font-weight: bold; }
+.mu_title {; font-family: "돋움", Arial; font-size: 16px ;font-weight: bold;}
+.mu_subtitle {; font-family: "돋움", Arial; font-size: 13px;color: #333333;font-weight:bold;}
+.mu_div_t0 {font-size: 14px; font-family: "돋움", Arial; background-color:#c7e3e4}
+.mu_div_t1 {font-size: 12px;; font-family: "돋움", Arial;  color: #666666; font-weight: bold; }
+.mu_div_b1 {font-size: 12px;; font-family: "돋움", Arial;  color: #666666; }
+.mu_div_t0_over {font-size: 14px; font-family: "돋움", Arial; background-color:#c7e3e4;cursor:hand;text-decoration:underline;color:blue}
+
+/*정렬 드래그 선택*/
+.trDrag{background-color:yellow;}

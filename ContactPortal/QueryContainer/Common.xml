@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+
+	<sql-mapping  id="S_001"   value-count="0" url="자료저장소 메타 정보" >
+	<sql-content>
+	<![CDATA[
+
+		select T.TABLE_NAME,T.COLUMN_NAME,
+			   DECODE(PK,1,1,0) ISPK,
+				 --java.sql.Types 기준
+				CASE WHEN T.DATA_TYPE='VARCHAR2' THEN
+					 12
+					 WHEN T.DATA_TYPE='NUMBER' THEN
+					 4
+					 WHEN T.DATA_TYPE='DATE' THEN
+					 91
+					 WHEN T.DATA_TYPE='CLOB' THEN
+					 2005
+					 WHEN T.DATA_TYPE='CHAR' THEN
+					 1
+					 WHEN T.DATA_TYPE='LONG' THEN
+					 -4
+					 ELSE 1111
+				END
+			   DATA_TYPE,T.DATA_LENGTH
+		from sys.user_tab_COLUMNS T,
+		( SELECT A.TABLE_NAME,A.COLUMN_NAME,1 PK
+			FROM ( select TABLE_NAME,
+						  COLUMN_NAME,
+						  	(SELECT CONSTRAINT_TYPE
+        							FROM user_constraints
+       							 WHERE TABLE_NAME  = sys.user_cons_columns.TABLE_NAME
+         						 AND CONSTRAINT_NAME = sys.user_cons_columns.CONSTRAINT_NAME)
+		  						 CON_TYPE
+						  from sys.user_cons_columns) A
+				   WHERE A.CON_TYPE = 'P') C
+		WHERE  T.TABLE_NAME = C.TABLE_NAME(+)
+		  AND T.COLUMN_NAME = C.COLUMN_NAME(+)
+		ORDER BY T.TABLE_NAME,T.COLUMN_NAME
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_002"   value-count="2" url="동적인 검색" >
+	<sql-content>
+	<![CDATA[
+		select ? from ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_003"   value-count="3" url="동적인 검색" >
+	<sql-content>
+	<![CDATA[
+		select ? from ? ? 
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+
+	<sql-mapping  id="CONFER_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		select NVL(MAX(CONF_NO),(to_char(sysdate,'yyyymmdd')||'000'))
+		from CONFER  where  CONF_NO LIKE to_char(sysdate,'yyyymmdd')||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+	<sql-mapping  id="CONFER_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		select NVL(MAX(CONF_NO),(to_char(sysdate,'yyyymmdd')||'000'))
+		from CONFER  where  CONF_NO LIKE to_char(sysdate,'yyyymmdd')||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="RDN_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		select NVL(MAX(RDN_NO),0) from RDN
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+	<sql-mapping  id="SCCONFER_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+	select NVL(MAX(WORKID),('00'))
+	from SC_REQITEM where  WORKID LIKE to_char(sysdate,'yyyymmdd')||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+
+	<sql-mapping  id="SCCONCONFER_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+	select NVL(MAX(WORKID),('00'))
+	from SC_CONITEM where  WORKID LIKE to_char(sysdate,'yyyymmdd')||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="SC_CONITEM_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+	select NVL(MAX(WORKID),('00'))
+	from SC_CONITEM where SEQ LIKE to_char(sysdate,'yyyymmdd')||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="SCCORPSEL_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+	select NVL(MAX(SEQ),('00'))
+	from SC_CORPSEL where  SEQ LIKE to_char(sysdate,'yyyymmdd')||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="test"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+			SELECT  CDTYPE AS CODENO,
+					CD AS CODE,
+					CDNAME AS CODENAME,
+					CDDS
+			FROM COCODE B
+			WHERE CDTYPE='CT'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_424"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		select NVL(MAX(ITEMCD),'100000')
+		from SC_SELVALUEITEM  where  ROWNUM = 1 ORDER BY ITEMCD DESC
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_524"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		select NVL(MAX(ITEMCD),'100000')
+		from SC_EXEVALUEITEM  where  ROWNUM = 1 ORDER BY ITEMCD DESC
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="CONFERTMP_SCON_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT SUBSTR(REPLACE(GET_DOCNO_SEQ('SCON'),'-',''),5,16) AS CONF_NO FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="CONFERTMP_SREQ_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT SUBSTR(REPLACE(GET_DOCNO_SEQ('SREQ'),'-',''),5,16) AS CONF_NO FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="CONFERTMP_SINS_SEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT SUBSTR(REPLACE(GET_DOCNO_SEQ('SINS'),'-',''),5,16) AS CONF_NO FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="GET_SEQ_SREV"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT GET_SEQ('SREV') AS CONF_NO FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="GET_SEQ_SCOV"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT GET_SEQ('SCOV') AS CONF_NO FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="YEARPLAN_SET"   value-count="0" url="사업계획 기준년도" >
+	<sql-content>
+	<![CDATA[
+		SELECT CDDS FROM COMCODE WHERE CODE='BP_YEAR'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="ORG_001"   value-count="0" url="조직조회" >
+	<sql-content>
+	<![CDATA[
+	SELECT *
+	FROM
+	(SELECT  A.ORG_NO,
+	        A.ORGCD,
+	        A.ORGNAME,
+	        A.HIGHORGCD  AS HIGHORGNO,
+	        A.ORGDIV,
+	        A.BUDGETUSEFLAG,
+	        A.ORGDETAIL,
+	        A.DRTYPE,
+	        A.USEFLAG,
+	        LEVEL,
+	        (SELECT (DECODE(COUNT(C.ORGCD),0,'',TO_CHAR('['||COUNT(C.ORGCD)||']')))
+	        FROM ORG C,ORGHISTORY D
+	        WHERE A.ORG_NO = C.HIGHORGCD
+	        AND   C.ORG_NO = D.ORG_NO
+	    	AND  D.ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+	         AS LEVELSUBCNT,
+	        (SELECT TO_CHAR(TO_DATE(MAX(STARTDT),'YYYYMMDD'),'YYYY-MM-DD')
+	        FROM ORGHISTORY
+	        WHERE ORG_NO=A.ORG_NO)
+	        AS STARTDT,
+	        (SELECT TO_CHAR(TO_DATE(MAX(DECODE(ENDDT,'사용중','99991231',ENDDT)),'YYYYMMDD'),'YYYY-MM-DD')
+	        FROM ORGHISTORY
+	        WHERE ORG_NO=A.ORG_NO
+	        and STARTDT = (SELECT MAX(STARTDT)
+	                                        FROM ORGHISTORY
+	                                        WHERE ORG_NO=A.ORG_NO )
+			)
+	         AS ENDDT,
+            (SELECT DECODE(SIGN(MAX(DECODE(ENDDT,'사용중','99991231',ENDDT))-TO_CHAR(SYSDATE,'YYYYMMDD')),0,'N',-1,'N','Y')
+            FROM ORGHISTORY
+            WHERE ORG_NO=A.ORG_NO
+            and STARTDT = (SELECT MAX(STARTDT)
+                                            FROM ORGHISTORY
+                                            WHERE ORG_NO=A.ORG_NO )
+                    )
+             AS S_USEFLAG,	         
+	   		 B.ORGNAME AS HIGHORGNAME,
+	   		 B.ORGCD AS HIGHORGCD
+	FROM ORG A, ORG B
+	WHERE A.ORGCD LIKE S_ORGCD:||'%'
+	AND   A.ORGNAME LIKE '%'||S_ORGNAME:||'%'
+	AND  A.HIGHORGCD=B.ORG_NO(+)
+	START WITH A.ORGCD = '9999'
+	CONNECT BY PRIOR A.ORG_NO = A.HIGHORGCD
+	ORDER SIBLINGS BY A.IDX,ORGCD
+	    )
+    WHERE S_USEFLAG LIKE S_USEFLAG:||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="ORG_002"   value-count="0" url="조직등록" >
+	<sql-content>
+	<![CDATA[
+	INSERT INTO ORG VALUES(
+							ORG_NO, 
+							ORGCD, 
+							ORGNAME, 
+							HIGHORGCD, 
+							ORGDIV, 
+							BUDGETUSEFLAG, 
+							ORGDETAIL, 
+							DRTYPE, 
+							USEFLAG, 
+							LABCOSTTYPE) 
+		(ORG_NO:, 
+		ORGCD:, 
+		ORGNAME:, 
+		HIGHORGCD:, 
+		ORGDIV:, 
+		BUDGETUSEFLAG:, 
+		ORGDETAIL:, 
+		DRTYPE:, 
+		USEFLAG:, 
+		LABCOSTTYPE:) 
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="ORG_003"   value-count="0" url="조직수정" >
+	<sql-content>
+	<![CDATA[
+		UPDATE ORG SET
+		ORG_NO       =ORG_NO:      
+		ORGCD        =ORGCD:        
+		ORGNAME      =ORGNAME:      
+		HIGHORGCD    =HIGHORGCD:    
+		ORGDIV       =ORGDIV:       
+		BUDGETUSEFLAG=BUDGETUSEFLAG:
+		ORGDETAIL    =ORGDETAIL:    
+		DRTYPE       =DRTYPE:       
+		USEFLAG      =USEFLAG:      
+		LABCOSTTYPE   =LABCOSTTYPE:
+		WHERE ORG_NO = ORG_NO:
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="ORG_004"   value-count="0" url="조직삭제" >
+	<sql-content>
+	<![CDATA[
+		DELETE FROM ORG
+		WHERE ORG_NO = ORG_NO:
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+
+	<sql-mapping  id="FA_A"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_A'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_B"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_B'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_C"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_C'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_D"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_D'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_E"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_E'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_F"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_F'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_G"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_G'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_H"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_H'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_I"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_I'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_J"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_J'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_K"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT REPLACE(GET_FA_CODE('FA_K'),'-','') AS FA_CODE FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="FASEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+	select TO_CHAR(SYSDATE,'YYYYMMDDHHMMSS')OBJ_NO from DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="FASUBSEQ"   value-count="0" url="seq" >
+	<sql-content>
+	<![CDATA[
+		SELECT DECODE(MAX(SEQ),'','1',MAX(SEQ)+1)SEQ FROM FA_SUB
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="TEMP_01"   value-count="0" url="일일보고" >
+	<sql-content>
+	<![CDATA[
+         select b.*,TO_EMPKNAME(B.REEMPID) AS EMPKNAME,
+         A.JOBTITLE,B.STATUSFLAG as tt,
+         get_codename('ST',B.STATUSFLAG) STATUSFLAG,
+                        jobno,
+                                TO_PJTNO_TOCODE(jobno)
+                                --||TO_ORGNOCD_N(JOBNO,A.REPORTDT)
+                                  as jobname
+         from dailyreportdetail a,
+                                dailyreport        b
+         where a.reportdt=b.reportdt
+         and   a.reempid=b.reempid
+         AND B.reempid  LIKE S_EMPID:||'%'
+		 AND a.reportdt BETWEEN REPLACE(S_STARTDT:,'-','') AND REPLACE(S_ENDDT:,'-','')
+  		 AND   jobno LIKE   S_PJT_NO:||'%'
+		 
+         union all
+         select b.*,TO_EMPKNAME(B.REEMPID) AS EMPKNAME,
+         A.JOBTITLE,B.STATUSFLAG as tt,
+         get_codename('ST',B.STATUSFLAG) STATUSFLAG,
+                jobno,
+                                TO_PJTNO_TOCODE(jobno)
+                                --||TO_ORGNOCD_N(JOBNO,A.REPORTDT)
+                                as jobname
+         from dailyreportdetail a,
+                         dailyreport b
+         where a.reportdt=b.reportdt
+         and   a.reempid=b.reempid
+         AND B.reempid  LIKE S_EMPID:||'%'  
+		 AND a.reportdt BETWEEN REPLACE(S_STARTDT:,'-','') AND REPLACE(S_ENDDT:,'-','')
+  		 AND   jobno LIKE   S_PJT_NO:||'%'
+         order by 1
+
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="FA_SUVSEQ"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT GET_SEQ('F-SUV','YYYY','00') SUV_SEQ FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="COM_001"   value-count="0" url="직원정보 조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+		        EMPID,
+		        EMPKNAME,
+		        (SELECT CDNAME FROM COCODE WHERE CD=ETYPE AND CDTYPE='ET') AS ETYPE,
+		        WSTARTDT,
+		        WENDDT,
+		        EDUTY,
+		        EGRADE,
+		        JOBDS,
+		        JOBAGENCY,
+		        MAINJOBCD,
+		        TECHGRADE,
+		        APRVEMPID,
+		        REPORTYN,
+		        SUBEMPID,
+		        EMPMEMO,
+		        EGROUP,
+		        TO_ORGNOCD_N(A.ORGCD,TO_CHAR(SYSDATE,'YYYYMM'))  AS ORGCD,
+		        TO_ORGNONAME_N(A.ORGCD,TO_CHAR(SYSDATE,'YYYYMM')) ORGNAME,
+		        TO_GRADENAME(A.EGRADE) EGRADENAME,
+		        (SELECT EMPKNAME FROM EMPALL WHERE EMPID=A.APRVEMPID) APRVEMPNAME
+		FROM EMPALL A
+		WHERE EMPKNAME LIKE '%%'
+		AND ORGCD LIKE '%'
+		AND ('Y' = (SELECT 'Y' APRVYN
+		 			FROM EMPALL WHERE APRVEMPID = EMPID:  --승인자
+		 			AND ROWNUM = 1)
+		OR EXISTS (SELECT AUTHTYPE
+					FROM AUTH
+					WHERE EMPID =EMPID:			--ADMIN
+					AND AUTHTYPE ='admin')
+		)
+		 AND WENDDT <> '99991231' ORDER BY A.ORGCD ASC, A.EMPID ASC
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="COM_002"   value-count="0" url="아이디조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT ID
+		FROM EMPALL
+		WHERE EMPID= [S_EMPID]
+		AND   PASSWORD =[S_PW]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="COM_003"   value-count="0" url="아이디/패스워드 저장" >
+	<sql-content>
+	<![CDATA[
+		UPDATE EMPALL SET 
+		ID=[ID],
+		PASSWORD=[PASSWORD]
+		WHERE EMPID= [empId]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="COM_004"   value-count="0" url="로그인" >
+	<sql-content>
+	<![CDATA[
+	select c.drType, a.EMPID,a.EMPKNAME, a.ORGCD empOrgNo, 
+		c.ORGCD empOrgCd, to_orgnoname(a.orgcd)empOrgName,
+		ETYPE,to_cdname('ET',etype) eTypeName, 
+		WSTARTDT,WENDDT,
+		EDUTY,to_cdname('ED',eDuty) eDutyName, 
+		EGRADE,to_cdname('EA',eGrade) eGradeName,
+		JOBDS, JOBAGENCY,to_empkname(JOBAGENCY) JOBAGENCYName, 
+		MAINJOBCD,TECHGRADE,APRVEMPID,
+		APRVEMPID highEmpId, to_empkname(APRVEMPID) highEmpKName,
+		 REPORTYN, SUBEMPID,SUBEMPID apEmpId, 
+		to_empkname(subEmpId) apEmpKName, 
+		GET_EMPDUTY(subEmpId) apEDuty, 
+		to_cdname('ED',GET_EMPDUTY(subEmpId)) adEDutyName,EMPMEMO,
+		(SELECT G.ORG_NO FROM ORG G WHERE G.ORGDIV='D'
+		START WITH  G.ORG_NO=a.ORGCD
+		CONNECT BY PRIOR G.HIGHORGCD=G.ORG_NO)  AS ORG_NO_DIV_D,aclrole role 
+	from  empAll a,  acl b,org c 
+	where a.empid = b.empid(+) and a.orgcd = c.org_no
+	and a.empid=(select empid 
+				from empall 
+				where empid=[empid]
+				or (id=[empid] and password=[_PW]))
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="DPW_SAIL"   value-count="0" url="sequence" >
+	<sql-content>
+	<![CDATA[
+		 SELECT GET_SEQ('DPW_SA','YYYYMMDD') SAIL_CD FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql>
+

@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="euc-kr"?>
+
+<sql>
+
+	<sql-mapping id="MU_001" value-count="0" url="매뉴얼 조회">
+	<sql-content>
+		<![CDATA[
+		SELECT 	MU_SEQ, 
+				MU_CD, 
+				TITLE, 
+				DETAIL, 
+				DIV, 
+				HIGHMU_SEQ, 
+				IDX, 
+				CREMPID, 
+				CREATEDT, 
+				MODIFYDT, 
+				VER 
+		FROM PRODUCT_MANUAL
+		WHERE MU_CD=S_DOCNO:
+		ORDER BY DIV
+		]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="MU_002" value-count="0" url="매뉴얼  단위조회">
+	<sql-content>
+		<![CDATA[
+		
+		SELECT 	A.MU_SEQ,
+				NVL(A.MU_CD,DOCNO) AS MU_CD,  
+				 REPLACE(A.TITLE,[S_SEARCH],'<SPAN N style="color:red;font:bold;text-decoration:underline;background:">'||[S_SEARCH]||'</SPAN>') AS TITLE, 				
+				 REPLACE(A.DETAIL,[S_SEARCH],'<SPAN N style="color:red;font:bold;text-decoration:underline;background:">'||[S_SEARCH]||'</SPAN>') AS DETAIL, 
+				A.DIV, 
+				A.HIGHMU_SEQ, 
+				A.IDX AS SOR_IDX, 
+				A.CREMPID, 
+				TO_CHAR(A.CREATEDT,'YYYY-MM-DD HH24:MI:SS') AS CREATEDT, 
+				TO_CHAR(A.MODIFYDT,'YYYY-MM-DD HH24:MI:SS') AS MODIFYDT, 
+				A.VER, 
+			 	B.UI_NO,
+				B.OBJ_NO,
+				B.FILE_NO,
+			    GET_COMHIGHCODE('FILE_TYPE',UPPER(
+							    SUBSTR(FILEORIGINNAME,LENGTH(
+							    FILEORIGINNAME)-2,3))) 
+			    	AS FILETYPE,
+				B.DIR,
+				B.FILEORIGINNAME,
+				B.FILESYSTEMNAME,
+				B.DELFLAG,
+				B.CREMPID,
+				B.CREATEDTM,
+				C.L_TITLE,
+			        (SELECT COUNT(MU_CD) 
+			        FROM PRODUCT_MANUAL D 
+			        WHERE D.MU_CD= A.MU_CD) 
+		        AS IDX_CNT,
+		        D.IDX
+		FROM PRODUCT_MANUAL  A
+	  		,COM_FILES B
+	  		,PRODUCTDOC C
+                        ,(SELECT MU_SEQ, RANK() OVER( PARTITION BY MU_CD,DIV  ORDER  BY idx,mu_seq) AS IDX
+              FROM PRODUCT_MANUAL D
+              WHERE d.MU_CD LIKE MU_CD||'%') D
+		WHERE DOCNO LIKE NVL([S_MU_CD],'$')||'%'
+		AND (A.MU_SEQ LIKE [S_MU_SEQ]||'%' OR [S_MU_SEQ] IS NULL)
+ 		AND MU_CD(+)=DOCNO
+ 		AND A.MU_SEQ=D.MU_SEQ(+)
+        AND (REPLACE(UPPER(C.URL),'/','') LIKE REPLACE(UPPER('%'||[S_PATH]),'/','') OR [S_PATH] IS NULL)
+		AND B.OBJ_NO(+)=A.MU_SEQ
+		AND B.UI_NO(+)='MU'
+		AND B.DELFLAG(+)='N'
+ 	    AND A.MU_TYPE(+)=[S_MU_TYPE]
+		ORDER BY TO_NUMBER(A.IDX),A.DIV,MU_SEQ,FILEORIGINNAME
+
+		]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="MU_003" value-count="0" url="매뉴얼   등록">
+	<sql-content>
+		<![CDATA[
+		INSERT INTO  PRODUCT_MANUAL (
+				MU_SEQ, MU_CD, TITLE, DETAIL, DIV, HIGHMU_SEQ, IDX, CREMPID, CREATEDT, MODIFYDT, VER,MU_TYPE
+				)
+		VALUES (GET_SEQ('MU'), 
+				[MU_CD], 
+				[TITLE], 
+				[DETAIL], 
+				[DIV], 
+				[MU_CD], 
+				(SELECT MAX(IDX)+1 FROM PRODUCT_MANUAL WHERE MU_CD =[MU_CD]), 
+				[CREMPID], 
+                SYSDATE,
+                '',
+                '1.0',
+                [MU_TYPE])		
+		]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="MU_004" value-count="0" url="매뉴얼   등록">
+	<sql-content>
+		<![CDATA[
+		UPDATE PRODUCT_MANUAL SET
+		TITLE  		= [TITLE],
+		DETAIL 		= [DETAIL],
+		DIV	   		= [DIV]	  , 		
+		IDX	   		= [IDX]	 ,
+		MODIFYDT 	= SYSDATE,
+		VER 		= VER+0.1
+		WHERE MU_SEQ= [MU_SEQ]
+		AND   MU_CD = [MU_CD] 
+		]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping id="MU_005" value-count="0" url="매뉴얼 삭제">
+	<sql-content>
+		<![CDATA[
+		DELETE FROM PRODUCT_MANUAL 
+		WHERE MU_SEQ= [MU_SEQ]
+		AND   MU_CD = [MU_CD] 
+		]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping id="MU_006" value-count="0" url="매뉴얼 상세조회">
+	<sql-content>
+		<![CDATA[
+		SELECT 	A.MU_SEQ,
+				NVL(A.MU_CD,C.DOCNO) AS MU_CD,  
+				A.TITLE, 
+				A.DETAIL, 
+				A.DIV,
+				A.IDX, 
+				A.HIGHMU_SEQ, 
+				A.CREMPID, 
+				TO_CHAR(A.CREATEDT,'YYYY-MM-DD HH24:MI:SS') AS CREATEDT, 
+				TO_CHAR(A.MODIFYDT,'YYYY-MM-DD HH24:MI:SS') AS MODIFYDT, 
+				A.VER, 
+			 	B.UI_NO,
+				B.OBJ_NO,
+				B.FILE_NO,
+			    GET_COMHIGHCODE('FILE_TYPE',UPPER(
+							    SUBSTR(FILEORIGINNAME,LENGTH(
+							    FILEORIGINNAME)-2,3))) 
+			    	AS FILETYPE,
+				B.DIR,
+				B.FILEORIGINNAME,
+				B.FILESYSTEMNAME,
+				B.DELFLAG,
+				B.CREMPID,
+				B.CREATEDTM,
+				C.L_TITLE,
+			        (SELECT COUNT(MU_CD) 
+			        FROM PRODUCT_MANUAL D 
+			        WHERE D.MU_CD= A.MU_CD) 
+		        AS IDX_CNT	        
+		FROM PRODUCT_MANUAL  A
+	  		,COM_FILES B
+	  		,PRODUCTDOC C
+		WHERE DOCNO LIKE [S_MU_CD]||'%'
+		AND (MU_SEQ LIKE [S_MU_SEQ]||'%' OR [S_MU_SEQ] IS NULL)
+ 		AND MU_CD(+)=DOCNO
+		AND B.OBJ_NO(+)=A.MU_SEQ
+		AND B.UI_NO(+)='MU'
+		AND B.DELFLAG(+)='N'
+
+		]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping id="MU_007" value-count="0" url="문서 매뉴얼 리스트">
+	<sql-content>
+		<![CDATA[
+	     SELECT  LEVEL-1 AS LEV,
+                       DOCNO AS CODENO,
+                       HIGHDOCNO AS HIGHCODE,
+                       DOCNO,
+                       (SELECT COUNT(*)
+                       FROM PRODUCT_MANUAL C,
+                                     PRODUCTDOC A
+                       WHERE B.DOCNO=A.HIGHDOCNO
+                       AND   A.DOCNO=C.MU_CD
+                                     ) AS MU_CNT,
+                       HIGHDOCNO,
+                               (SELECT CDNAME
+                               FROM COCODE
+                               WHERE CDTYPE='PDL'
+                               AND  CD=DOCTYPE)
+                   AS DOCTYPE_NAME,
+                       DOCTYPE,
+                       TITLE,
+                       DETAIL,
+                       URL,
+                       P_TITLE,
+                       L_TITLE,
+                               (SELECT L_TITLE
+                               FROM PRODUCTDOC A
+                               WHERE A.DOCNO=B.HIGHDOCNO)
+                       AS L_TITLE_H,
+                       DECODE(DIV,'%','',DIV) AS DIV,
+                       EMPID,
+                               (SELECT EMPKNAME FROM EMPALL A
+                               WHERE A.EMPID=B.EMPID)
+                                             AS EMPNAME,
+                       (SELECT CDNAME FROM COCODE
+                        WHERE CDTYPE='UF'
+                        AND  CD=USETYPE)
+                    AS USETYPE_NAME,
+                       USETYPE,
+                       CREATEDT,
+                       MODIFYDT,
+                                       NVL((SELECT MAX(DECODE(C.MU_CD,NULL,'N','Y'))
+                       FROM PRODUCT_MANUAL C
+                       WHERE B.DOCNO=C.MU_CD),'N')
+                   AS MU_ST
+       FROM    PRODUCTDOC B
+--       WHERE DOCTYPE IN (SELECT CODE FROM COMCODE
+--							START WITH CODE_NO='CD-20090210-022'
+--							CONNECT BY PRIOR CODE_NO=HIGHCODE)
+       WHERE LEVEL>1
+       START WITH DOCNO IN  ('PROD-20090210-002')
+       CONNECT BY PRIOR DOCNO=HIGHDOCNO
+       ORDER SIBLINGS BY L_TITLE
+
+
+		]]>
+	</sql-content>
+	</sql-mapping>	
+	
+</sql>
+

@@ -1,0 +1,2041 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping id="costRptAll"  value-count="1"		url="CostRptAll_전사종합">
+		<sql-content>
+			<![CDATA[
+		SELECT CASE WHEN EMPORGNO = 'GIS부문' AND COSTTYPE = '직접' THEN '01'
+		   		WHEN EMPORGNO = 'GIS부문' AND COSTTYPE = '간접' THEN '02'
+		   		WHEN EMPORGNO = 'SI부문'  AND COSTTYPE = '직접' THEN '03'
+		   		WHEN EMPORGNO = 'SI부문'  AND COSTTYPE = '간접' THEN '04'
+				WHEN EMPORGNO = 'ITO부문' AND COSTTYPE = '직접' THEN '05'
+				WHEN EMPORGNO = 'ITO부문' AND COSTTYPE = '간접' THEN '06'
+				WHEN EMPORGNO = '경영지원부문' AND COSTTYPE = '직접' THEN '07' 
+				WHEN EMPORGNO = '경영지원부문' AND COSTTYPE = '간접' THEN '08'
+				WHEN EMPORGNO IS NULL AND COSTTYPE = '간접' THEN '01'
+		   ELSE '00' END SN,
+		   CASE WHEN EMPORGNO = 'GIS부문' THEN 'A'
+                WHEN EMPORGNO = 'SI부문'  THEN 'B'
+                WHEN EMPORGNO = 'ITO부문' THEN 'C'
+                WHEN EMPORGNO = '경영지원부문' THEN 'D'
+           ELSE 'Z' END FLAG, 
+		   ROW_NUMBER() OVER(PARTITION  BY EMPORGNO ORDER BY EMPORGNO, COSTTYPE DESC) RANK,
+		   COUNT(*) OVER(PARTITION BY  EMPORGNO ORDER BY 1)CNT,
+		   EMPORGNO, COSTTYPE,YEAR,
+			SUM(ROUND(MM_01/60)) AS MM_01,
+			SUM(ROUND(MM_02/60)) AS MM_02,
+			SUM(ROUND(MM_03/60)) AS MM_03,
+			SUM(ROUND(MM_04/60)) AS MM_04,
+			SUM(ROUND(MM_05/60)) AS MM_05,
+			SUM(ROUND(MM_06/60)) AS MM_06,
+			SUM(ROUND(MM_07/60)) AS MM_07,
+			SUM(ROUND(MM_08/60)) AS MM_08,
+			SUM(ROUND(MM_09/60)) AS MM_09,
+			SUM(ROUND(MM_10/60)) AS MM_10,
+			SUM(ROUND(MM_11/60)) AS MM_11,
+			SUM(ROUND(MM_12/60)) AS MM_12
+		FROM(
+			SELECT CASE WHEN SUBSTR(EMPORGNO,1,2) IN ('CA','CB','CC') THEN 'GIS부문'
+				   WHEN SUBSTR(EMPORGNO,1,2) IN ('CD','CE') THEN 'SI부문'
+				   WHEN SUBSTR(EMPORGNO,1,2) IN ('CG','CH','CI') THEN 'ITO부문' 
+				   WHEN SUBSTR(EMPORGNO,1,2) IN ('CP','CQ') THEN '경영지원부문'  
+				   ELSE EMPORGNO END EMPORGNO, COSTTYPE,  YEAR,
+				   MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12	   	
+			FROM(	
+				SELECT  (SELECT A.ORGCD ORGCD
+						FROM ORG A, EMPALL C
+						WHERE A.ORG_NO = C.ORGCD
+						AND C.EMPID=X.EMPID) AS EMPORGNO, EMPID, MAINOBJ_NO, YEAR,
+						CASE WHEN COSTTYPE IN ('D','$D')  THEN '직접' ELSE  '간접' END COSTTYPE,
+							 	  		DECODE( MONTH,'01',MM, 0) AS MM_01,
+										DECODE( MONTH,'02',MM, 0) AS MM_02,
+										DECODE( MONTH,'03',MM, 0) AS MM_03,
+										DECODE( MONTH,'04',MM, 0) AS MM_04,
+										DECODE( MONTH,'05',MM, 0) AS MM_05,
+										DECODE( MONTH,'06',MM, 0) AS MM_06,
+										DECODE( MONTH,'07',MM, 0) AS MM_07,
+										DECODE( MONTH,'08',MM, 0) AS MM_08,
+										DECODE( MONTH,'09',MM, 0) AS MM_09,
+										DECODE( MONTH,'10',MM, 0) AS MM_10,
+										DECODE( MONTH,'11',MM, 0) AS MM_11,
+										DECODE( MONTH,'12',MM, 0) AS MM_12
+								FROM  DAILYREPORT_RPTMH X 
+								WHERE COSTTYPE IS NOT NULL 
+								AND YEAR = ?
+			)
+			WHERE EMPORGNO IS NOT NULL	
+			AND EMPORGNO NOT LIKE 'R%'
+		) GROUP BY ROLLUP (EMPORGNO), COSTTYPE, YEAR
+		ORDER BY SN ,EMPORGNO desc		
+		]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="costRptYearDistinct"  value-count="0"		url="costRptYearDistinct">
+		<sql-content>
+			<![CDATA[
+			SELECT DISTINCT YEAR
+			FROM  DAILYREPORT_RPTMH X 
+			WHERE COSTTYPE IS NOT NULL 
+			ORDER BY 1 DESC
+		]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="costRptPart"  value-count="2"		url="costRptPart_부문">
+		<sql-content>
+			<![CDATA[
+        SELECT  COUNT(*) OVER(PARTITION BY EMPORGNO ORDER BY 1)CNT,
+		  TO_ORGCDNAME(EMPORGNO) ORGCDNAME, 
+                DECODE(EMPORGNO,'','A',EMPORGNO)EMPORGNO, COSTTYPE,YEAR,
+                ROW_NUMBER() OVER(PARTITION  BY EMPORGNO ORDER BY EMPORGNO, COSTTYPE DESC) RANK,
+                SUM(ROUND(MM_01/60)) AS MM_01,
+                SUM(ROUND(MM_02/60)) AS MM_02,
+                SUM(ROUND(MM_03/60)) AS MM_03,
+                SUM(ROUND(MM_04/60)) AS MM_04,
+                SUM(ROUND(MM_05/60)) AS MM_05,
+                SUM(ROUND(MM_06/60)) AS MM_06,
+                SUM(ROUND(MM_07/60)) AS MM_07,
+                SUM(ROUND(MM_08/60)) AS MM_08,
+                SUM(ROUND(MM_09/60)) AS MM_09,
+                SUM(ROUND(MM_10/60)) AS MM_10,
+                SUM(ROUND(MM_11/60)) AS MM_11,
+                SUM(ROUND(MM_12/60)) AS MM_12
+        FROM(
+        SELECT  CASE WHEN EMPORGNO != 'CC01' THEN SUBSTR(EMPORGNO,1,2)||'00' ELSE EMPORGNO END EMPORGNO,
+		COSTTYPE,YEAR,
+		MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+                FROM(
+                SELECT  (SELECT A.ORGCD ORGCD
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS EMPORGNO, EMPID, MAINOBJ_NO,YEAR,
+                         CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+	                         DECODE( MONTH,'01',MM, 0) AS MM_01,
+	                         DECODE( MONTH,'02',MM, 0) AS MM_02,
+	                         DECODE( MONTH,'03',MM, 0) AS MM_03,
+	                         DECODE( MONTH,'04',MM, 0) AS MM_04,
+	                         DECODE( MONTH,'05',MM, 0) AS MM_05,
+	                         DECODE( MONTH,'06',MM, 0) AS MM_06,
+	                         DECODE( MONTH,'07',MM, 0) AS MM_07,
+	                         DECODE( MONTH,'08',MM, 0) AS MM_08,
+	                         DECODE( MONTH,'09',MM, 0) AS MM_09,
+	                         DECODE( MONTH,'10',MM, 0) AS MM_10,
+	                         DECODE( MONTH,'11',MM, 0) AS MM_11,
+	                         DECODE( MONTH,'12',MM, 0) AS MM_12
+               FROM  DAILYREPORT_RPTMH X
+               WHERE COSTTYPE IS NOT NULL
+               AND YEAR = ?
+                )
+          WHERE SUBSTR(EMPORGNO,2,1) IN (?)				  
+        ) GROUP BY ROLLUP (EMPORGNO), COSTTYPE, YEAR
+        ORDER BY EMPORGNO , COSTTYPE DESC
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="costRptTeamA"  value-count="2"		url="costRptTeam_부문">
+		<sql-content>
+			<![CDATA[
+		SELECT  COUNT(*) OVER(PARTITION BY EMPORGNO, ORGNAME ORDER BY 1)CNT, 
+				EMPORGNO, ORGNAME, COSTTYPE, YEAR,
+				ROW_NUMBER() OVER(PARTITION  BY EMPORGNO ORDER BY EMPORGNO, COSTTYPE DESC) RANK,
+                SUM(ROUND(MM_01/60)) AS MM_01,
+                SUM(ROUND(MM_02/60)) AS MM_02,
+                SUM(ROUND(MM_03/60)) AS MM_03,
+                SUM(ROUND(MM_04/60)) AS MM_04,
+                SUM(ROUND(MM_05/60)) AS MM_05,
+                SUM(ROUND(MM_06/60)) AS MM_06,
+                SUM(ROUND(MM_07/60)) AS MM_07,
+                SUM(ROUND(MM_08/60)) AS MM_08,
+                SUM(ROUND(MM_09/60)) AS MM_09,
+                SUM(ROUND(MM_10/60)) AS MM_10,
+                SUM(ROUND(MM_11/60)) AS MM_11,
+                SUM(ROUND(MM_12/60)) AS MM_12
+            FROM(
+			SELECT  EMPORGNO, ORGNAME, COSTTYPE,  YEAR,
+			 		MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12	   	
+			FROM(	
+				SELECT  (SELECT A.ORGCD ORGCD
+						FROM ORG A, EMPALL C
+						WHERE A.ORG_NO = C.ORGCD
+						AND C.EMPID=X.EMPID) AS EMPORGNO,
+						(SELECT A.ORGNAME 
+						FROM ORG A, EMPALL C
+						WHERE A.ORG_NO = C.ORGCD
+						AND C.EMPID=X.EMPID) AS ORGNAME
+						, EMPID, MAINOBJ_NO,  YEAR,
+						CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+							 	  		DECODE( MONTH,'01',MM, 0) AS MM_01,
+										DECODE( MONTH,'02',MM, 0) AS MM_02,
+										DECODE( MONTH,'03',MM, 0) AS MM_03,
+										DECODE( MONTH,'04',MM, 0) AS MM_04,
+										DECODE( MONTH,'05',MM, 0) AS MM_05,
+										DECODE( MONTH,'06',MM, 0) AS MM_06,
+										DECODE( MONTH,'07',MM, 0) AS MM_07,
+										DECODE( MONTH,'08',MM, 0) AS MM_08,
+										DECODE( MONTH,'09',MM, 0) AS MM_09,
+										DECODE( MONTH,'10',MM, 0) AS MM_10,
+										DECODE( MONTH,'11',MM, 0) AS MM_11,
+										DECODE( MONTH,'12',MM, 0) AS MM_12
+								FROM  DAILYREPORT_RPTMH X
+								WHERE COSTTYPE IS NOT NULL 
+								AND YEAR = ?
+			)	
+		  WHERE EMPORGNO LIKE ? 
+		--  AND EMPORGNO != ?
+		) GROUP BY EMPORGNO, ORGNAME, COSTTYPE, YEAR
+		]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="costRptTeamB"  value-count="4"		url="costRptTeam_부문">
+		<sql-content>
+			<![CDATA[
+		SELECT  COUNT(*) OVER(PARTITION BY EMPORGNO, ORGNAME ORDER BY 1)CNT, 
+				EMPORGNO, ORGNAME, COSTTYPE, YEAR,
+				ROW_NUMBER() OVER(PARTITION  BY EMPORGNO ORDER BY EMPORGNO, COSTTYPE DESC) RANK,
+                SUM(ROUND(MM_01/60)) AS MM_01,
+                SUM(ROUND(MM_02/60)) AS MM_02,
+                SUM(ROUND(MM_03/60)) AS MM_03,
+                SUM(ROUND(MM_04/60)) AS MM_04,
+                SUM(ROUND(MM_05/60)) AS MM_05,
+                SUM(ROUND(MM_06/60)) AS MM_06,
+                SUM(ROUND(MM_07/60)) AS MM_07,
+                SUM(ROUND(MM_08/60)) AS MM_08,
+                SUM(ROUND(MM_09/60)) AS MM_09,
+                SUM(ROUND(MM_10/60)) AS MM_10,
+                SUM(ROUND(MM_11/60)) AS MM_11,
+                SUM(ROUND(MM_12/60)) AS MM_12
+       		FROM(
+			SELECT  EMPORGNO, ORGNAME, COSTTYPE, YEAR,
+			 		MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12	   	
+			FROM(		
+				SELECT  (SELECT A.ORGCD ORGCD
+						FROM ORG A, EMPALL C
+						WHERE A.ORG_NO = C.ORGCD
+						AND C.EMPID=X.EMPID) AS EMPORGNO,
+						(SELECT A.ORGNAME 
+						FROM ORG A, EMPALL C
+						WHERE A.ORG_NO = C.ORGCD
+						AND C.EMPID=X.EMPID) AS ORGNAME
+						, EMPID, MAINOBJ_NO,  YEAR,
+						CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+							 	  		DECODE( MONTH,'01',MM, 0) AS MM_01,
+										DECODE( MONTH,'02',MM, 0) AS MM_02,
+										DECODE( MONTH,'03',MM, 0) AS MM_03,
+										DECODE( MONTH,'04',MM, 0) AS MM_04,
+										DECODE( MONTH,'05',MM, 0) AS MM_05,
+										DECODE( MONTH,'06',MM, 0) AS MM_06,
+										DECODE( MONTH,'07',MM, 0) AS MM_07,
+										DECODE( MONTH,'08',MM, 0) AS MM_08,
+										DECODE( MONTH,'09',MM, 0) AS MM_09,
+										DECODE( MONTH,'10',MM, 0) AS MM_10,
+										DECODE( MONTH,'11',MM, 0) AS MM_11,
+										DECODE( MONTH,'12',MM, 0) AS MM_12
+								FROM  DAILYREPORT_RPTMH X
+								WHERE COSTTYPE IS NOT NULL 
+								AND YEAR = ?
+			)	
+		  WHERE EMPORGNO LIKE ?
+		  AND EMPORGNO != ? 
+		  AND EMPORGNO != ?
+		) GROUP BY COSTTYPE, EMPORGNO, ORGNAME  , YEAR
+		ORDER BY EMPORGNO, ORGNAME, COSTTYPE DESC
+		]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="costRptTeamC"  value-count="3"		url="costRptTeam_부문">
+		<sql-content>
+			<![CDATA[
+
+		SELECT  COUNT(*) OVER(PARTITION BY EMPORGNO, ORGNAME ORDER BY 1)CNT, 
+				EMPORGNO, ORGNAME, COSTTYPE, YEAR,
+				ROW_NUMBER() OVER(PARTITION  BY EMPORGNO ORDER BY EMPORGNO, COSTTYPE DESC) RANK,
+				SUM(ROUND(MM_01/60)) AS MM_01,
+				SUM(ROUND(MM_02/60)) AS MM_02,
+				SUM(ROUND(MM_03/60)) AS MM_03,
+				SUM(ROUND(MM_04/60)) AS MM_04,
+				SUM(ROUND(MM_05/60)) AS MM_05,
+				SUM(ROUND(MM_06/60)) AS MM_06,
+				SUM(ROUND(MM_07/60)) AS MM_07,
+				SUM(ROUND(MM_08/60)) AS MM_08,
+				SUM(ROUND(MM_09/60)) AS MM_09,
+				SUM(ROUND(MM_10/60)) AS MM_10,
+				SUM(ROUND(MM_11/60)) AS MM_11,
+				SUM(ROUND(MM_12/60)) AS MM_12
+			FROM(
+			SELECT  EMPORGNO, ORGNAME, COSTTYPE,  YEAR,
+			 		MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12	   	
+			FROM(	
+				SELECT  (SELECT A.ORGCD ORGCD
+						FROM ORG A, EMPALL C
+						WHERE A.ORG_NO = C.ORGCD
+						AND C.EMPID=X.EMPID) AS EMPORGNO,
+						(SELECT A.ORGNAME 
+						FROM ORG A, EMPALL C
+						WHERE A.ORG_NO = C.ORGCD
+						AND C.EMPID=X.EMPID) AS ORGNAME
+						, EMPID, MAINOBJ_NO,  YEAR,
+						CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+							 	  		DECODE( MONTH,'01',MM, 0) AS MM_01,
+										DECODE( MONTH,'02',MM, 0) AS MM_02,
+										DECODE( MONTH,'03',MM, 0) AS MM_03,
+										DECODE( MONTH,'04',MM, 0) AS MM_04,
+										DECODE( MONTH,'05',MM, 0) AS MM_05,
+										DECODE( MONTH,'06',MM, 0) AS MM_06,
+										DECODE( MONTH,'07',MM, 0) AS MM_07,
+										DECODE( MONTH,'08',MM, 0) AS MM_08,
+										DECODE( MONTH,'09',MM, 0) AS MM_09,
+										DECODE( MONTH,'10',MM, 0) AS MM_10,
+										DECODE( MONTH,'11',MM, 0) AS MM_11,
+										DECODE( MONTH,'12',MM, 0) AS MM_12
+								FROM  DAILYREPORT_RPTMH X
+								WHERE COSTTYPE IS NOT NULL 
+								AND YEAR = ?
+			)	
+		  WHERE EMPORGNO LIKE ? 
+		  AND EMPORGNO != ?
+		) GROUP BY EMPORGNO, ORGNAME, COSTTYPE, YEAR
+		]]>
+		</sql-content>
+	</sql-mapping>
+
+
+	<sql-mapping id="costRptGroup"  value-count="2"		url="costRptGroup_부문">
+		<sql-content>
+			<![CDATA[
+		SELECT  COUNT(*) OVER(PARTITION BY EMPORGNO, ORGNAME, EMPID ORDER BY 1)CNT, YEAR,
+				EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME, to_empgradecd(empid) gradecd,
+				ROW_NUMBER() OVER(PARTITION  BY EMPORGNO, EMPID ORDER BY EMPORGNO, COSTTYPE DESC) RANK,
+			SUM(ROUND(MM_01/60)) AS MM_01,
+			SUM(ROUND(MM_02/60)) AS MM_02,
+			SUM(ROUND(MM_03/60)) AS MM_03,
+			SUM(ROUND(MM_04/60)) AS MM_04,
+			SUM(ROUND(MM_05/60)) AS MM_05,
+			SUM(ROUND(MM_06/60)) AS MM_06,
+			SUM(ROUND(MM_07/60)) AS MM_07,
+			SUM(ROUND(MM_08/60)) AS MM_08,
+			SUM(ROUND(MM_09/60)) AS MM_09,
+			SUM(ROUND(MM_10/60)) AS MM_10,
+			SUM(ROUND(MM_11/60)) AS MM_11,
+			SUM(ROUND(MM_12/60)) AS MM_12
+			FROM(
+			SELECT  EMPORGNO, ORGNAME, COSTTYPE, EMPID ,YEAR,
+			 		MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12	   	
+			FROM(	
+				SELECT  (SELECT A.ORGCD ORGCD
+						FROM ORG A, EMPALL C
+						WHERE A.ORG_NO = C.ORGCD
+						AND C.EMPID=X.EMPID) AS EMPORGNO,
+						(SELECT A.ORGNAME 
+						FROM ORG A, EMPALL C
+						WHERE A.ORG_NO = C.ORGCD
+						AND C.EMPID=X.EMPID) AS ORGNAME
+						, EMPID, MAINOBJ_NO,  YEAR,
+						CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+							 	  		DECODE( MONTH,'01',MM, 0) AS MM_01,
+										DECODE( MONTH,'02',MM, 0) AS MM_02,
+										DECODE( MONTH,'03',MM, 0) AS MM_03,
+										DECODE( MONTH,'04',MM, 0) AS MM_04,
+										DECODE( MONTH,'05',MM, 0) AS MM_05,
+										DECODE( MONTH,'06',MM, 0) AS MM_06,
+										DECODE( MONTH,'07',MM, 0) AS MM_07,
+										DECODE( MONTH,'08',MM, 0) AS MM_08,
+										DECODE( MONTH,'09',MM, 0) AS MM_09,
+										DECODE( MONTH,'10',MM, 0) AS MM_10,
+										DECODE( MONTH,'11',MM, 0) AS MM_11,
+										DECODE( MONTH,'12',MM, 0) AS MM_12
+								FROM  DAILYREPORT_RPTMH X
+								WHERE COSTTYPE IS NOT NULL 
+								AND YEAR = ?
+			)	
+		  WHERE EMPORGNO = ?
+		) GROUP BY EMPORGNO, ORGNAME, COSTTYPE, EMPID, YEAR
+		ORDER BY GRADECD, EMPID, COSTTYPE DESC
+		]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="costRptMH"  value-count="8"		url="costRptMH_PJT 및 직무화면">
+	<sql-content>
+	<![CDATA[
+	SELECT	COUNT(*) OVER(PARTITION BY EMPORGNO, ORGNAME, EMPID, COSTTYPE ORDER BY 1)CNT,
+                ROW_NUMBER() OVER(PARTITION BY COSTTYPE ORDER BY USER_MAINOBJ_NO ) RANK,
+				YEAR, MAINOBJ_NO, USER_MAINOBJ_NO, MAINOBJNAME, EMPORGNO, ORGNAME, COSTTYPE, 
+				EMPID, EMPKNAME, GRADECD, VALUE, MON_TOT,
+				MM_01 , TOT_MON_01, RATE_01, MM_01_LB,
+                MM_02, TOT_MON_02, RATE_02,  MM_02_LB,
+                MM_03, TOT_MON_03, RATE_03,  MM_03_LB,
+                MM_04, TOT_MON_04, RATE_04,  MM_04_LB,
+                MM_05, TOT_MON_05, RATE_05,  MM_05_LB,
+                MM_06, TOT_MON_06, RATE_06,  MM_06_LB,
+                MM_07, TOT_MON_07, RATE_07,  MM_07_LB,
+                MM_08, TOT_MON_08, RATE_08,  MM_08_LB,
+                MM_09, TOT_MON_09, RATE_09,  MM_09_LB,
+                MM_10, TOT_MON_10, RATE_10,  MM_10_LB,
+                MM_11, TOT_MON_11, RATE_11,  MM_11_LB,
+                MM_12, TOT_MON_12, RATE_12,  MM_12_LB,
+                TODATE
+				FROM(
+        SELECT  YEAR, MAINOBJ_NO,
+					CASE WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+						THEN TO_pjtno_tocode(MAINOBJ_NO)
+						WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN TO_pjtno_tocode(MAINOBJ_NO)
+						ELSE MAINOBJ_NO END USER_MAINOBJ_NO,
+					CASE WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+						THEN (SELECT PJTNAME FROM PROJECT WHERE PJT_NO = MAINOBJ_NO ) 
+						WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN (SELECT PJTNAME FROM PROJECT WHERE PJT_NO = MAINOBJ_NO ) 
+						ELSE (SELECT JOBNAME FROM HISTJOB WHERE JOBCD = MAINOBJ_NO) END MAINOBJNAME,
+                   EMPORGNO, ORGNAME, COSTTYPE, EMPID, EMPKNAME, GRADECD,
+                   VALUE, MON_TOT,
+                   ROUND(MM_01/60) MM_01, TOT_MON_01, RATE_01, ROUND((MON_TOT*RATE_01)* 0.001) AS MM_01_LB,
+                   ROUND(MM_02/60) MM_02, TOT_MON_02, RATE_02, ROUND((MON_TOT*RATE_02)* 0.001) AS MM_02_LB,
+                   ROUND(MM_03/60) MM_03, TOT_MON_03, RATE_03, ROUND((MON_TOT*RATE_03)* 0.001) AS MM_03_LB,
+                   ROUND(MM_04/60) MM_04, TOT_MON_04, RATE_04, ROUND((MON_TOT*RATE_04)* 0.001) AS MM_04_LB,
+                   ROUND(MM_05/60) MM_05, TOT_MON_05, RATE_05, ROUND((MON_TOT*RATE_05)* 0.001) AS MM_05_LB,
+                   ROUND(MM_06/60) MM_06, TOT_MON_06, RATE_06, ROUND((MON_TOT*RATE_06)* 0.001) AS MM_06_LB,
+                   ROUND(MM_07/60) MM_07, TOT_MON_07, RATE_07, ROUND((MON_TOT*RATE_07)* 0.001) AS MM_07_LB,
+                   ROUND(MM_08/60) MM_08, TOT_MON_08, RATE_08, ROUND((MON_TOT*RATE_08)* 0.001) AS MM_08_LB,
+                   ROUND(MM_09/60) MM_09, TOT_MON_09, RATE_09, ROUND((MON_TOT*RATE_09)* 0.001) AS MM_09_LB,
+                   ROUND(MM_10/60) MM_10, TOT_MON_10, RATE_10, ROUND((MON_TOT*RATE_10)* 0.001) AS MM_10_LB,
+                   ROUND(MM_11/60) MM_11, TOT_MON_11, RATE_11, ROUND((MON_TOT*RATE_11)* 0.001) AS MM_11_LB,
+                   ROUND(MM_12/60) MM_12, TOT_MON_12, RATE_12, ROUND((MON_TOT*RATE_12)* 0.001) AS MM_12_LB,
+                  TODATE
+        FROM(
+                SELECT YEAR, MAINOBJ_NO, EMPORGNO, ORGNAME, COSTTYPE, EMPID, EMPKNAME, GRADECD,
+                       MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+                       MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+                       MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+                       MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+                       MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+                       MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,
+                       MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+                       MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+                       MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+                       MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+                       MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+                       MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12
+                FROM(
+             SELECT  YEAR, MAINOBJ_NO, EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME, TO_EMPGRADECD(EMPID) GRADECD,
+                     SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_01,
+                     SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_02,
+                     SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_03,
+                     SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_04,
+                     SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_05,
+                     SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_06,
+                     SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_07,
+                     SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_08,
+                     SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_09,
+                     SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_10,
+                     SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_11,
+                     SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_12
+              FROM(                   
+				   SELECT  YEAR, EMPORGNO, ORGNAME, COSTTYPE, EMPID , 
+				   		   CASE WHEN COSTTYPE = '직접' THEN MAINOBJ_NO ELSE 
+				   		   SUBSTR(SUBOBJ_NO,1,3)||'00'
+				   		   END MAINOBJ_NO,
+                           MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+                      FROM(  SELECT  (SELECT A.ORGCD ORGCD
+                                              FROM ORG A, EMPALL C
+                                              WHERE A.ORG_NO = C.ORGCD
+                                              AND C.EMPID=X.EMPID) AS EMPORGNO,
+                                              (SELECT A.ORGNAME
+                                              FROM ORG A, EMPALL C
+                                              WHERE A.ORG_NO = C.ORGCD
+                                              AND C.EMPID=X.EMPID) AS ORGNAME
+                                              , EMPID,MAINOBJ_NO,  YEAR, SUBOBJ_NO,
+                                              CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+                                                                              DECODE( MONTH,'01',MM, 0) AS MM_01,
+                                                                              DECODE( MONTH,'02',MM, 0) AS MM_02,
+                                                                              DECODE( MONTH,'03',MM, 0) AS MM_03,
+                                                                              DECODE( MONTH,'04',MM, 0) AS MM_04,
+                                                                              DECODE( MONTH,'05',MM, 0) AS MM_05,
+                                                                              DECODE( MONTH,'06',MM, 0) AS MM_06,
+                                                                              DECODE( MONTH,'07',MM, 0) AS MM_07,
+                                                                              DECODE( MONTH,'08',MM, 0) AS MM_08,
+                                                                              DECODE( MONTH,'09',MM, 0) AS MM_09,
+                                                                              DECODE( MONTH,'10',MM, 0) AS MM_10,
+                                                                              DECODE( MONTH,'11',MM, 0) AS MM_11,
+                                                                              DECODE( MONTH,'12',MM, 0) AS MM_12
+                                                              FROM  DAILYREPORT_RPTMH X
+                                                              WHERE COSTTYPE IS NOT NULL
+                      )
+                      WHERE EMPID = ?
+                      AND YEAR = ? -- THIS YEAR					  
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID,MAINOBJ_NO 
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC
+                        )
+                )A,(
+	SELECT  TYPE, TYPE EGRADE , YEAR AS TODATE, SUM(VALUE) MON_TOT, SUM(VALUE) VALUE
+	FROM (	
+		SELECT TYPE,  STARTDT, ENDDT,  
+			   CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE, 
+			   START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+		FROM (
+			SELECT TYPE, STARTDT, ENDDT, VALUE, 
+				   START_YEAR, END_YEAR, 
+				   CASE WHEN START_YEAR = ?
+				   OR END_YEAR = ?
+				   THEN ?
+				   ELSE '' END YEAR,
+				   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+				   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+			FROM(					
+				SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE, 
+					   SUBSTR(A.STARTDT,1,6) STARTDT, 
+					   SUBSTR(A.ENDDT,1,6) ENDDT,
+					   SUBSTR(A.STARTDT,1,4) START_YEAR,
+					   SUBSTR(A.ENDDT,1,4) END_YEAR, 
+					   TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+					   TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+				FROM ACCTSTDCOST A		
+				WHERE SUBSTR(A.STARTDT,1,4) = ?
+				OR SUBSTR(A.ENDDT,1,4) = ?
+				GROUP BY TYPE, A.STARTDT, A.ENDDT
+					)
+				WHERE TO_EMPGRADECD(?) = TYPE
+			)
+		)GROUP BY TYPE, YEAR	
+        )B
+        WHERE A.GRADECD = B.EGRADE
+        )
+		ORDER BY COSTTYPE DESC, USER_MAINOBJ_NO, RANK 
+        
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="costRptPrcsMH_D"  value-count="8"	url="rptCostPjtPrcsMH_D.jsp">
+	<sql-content>
+	<![CDATA[
+        SELECT YEAR,EMPORGNO, EMPID, TO_EMPKNAME(EMPID) EMPKNAME,  ROW_NUMBER() OVER(PARTITION  BY MAINOBJ_NO, SUBOBJ_NO ORDER BY 1) RANK,
+                   COUNT(*) OVER (PARTITION BY MAINOBJ_NO ORDER BY 1) CNT, MAINOBJ_NO,
+                   COUNT(*) OVER(PARTITION  BY SUBOBJ_NO ORDER BY 1) RANK_1,
+                   TO_pjtno_tocode(MAINOBJ_NO)USER_MAINOBJ_NO,
+                   TO_pjtName(MAINOBJ_NO) PJTNAME,SUBOBJ_NO, TO_PRCSNAME(SUBOBJ_NO) PRCSNAME,
+                   CASE WHEN ISAGREE = 'Y' THEN '합의투입'ELSE '직접투입' END ISAGREE,
+                   SUM(ROUND(MM_01/60))AS MM_01, SUM(ROUND((MON_TOT*RATE_01)*0.001)) AS MM_01_LB,
+                   SUM(ROUND(MM_02/60))AS MM_02, SUM(ROUND((MON_TOT*RATE_02)*0.001)) AS MM_02_LB,
+                   SUM(ROUND(MM_03/60))AS MM_03, SUM(ROUND((MON_TOT*RATE_03)*0.001)) AS MM_03_LB,
+                   SUM(ROUND(MM_04/60))AS MM_04, SUM(ROUND((MON_TOT*RATE_04)*0.001)) AS MM_04_LB,
+                   SUM(ROUND(MM_05/60))AS MM_05, SUM(ROUND((MON_TOT*RATE_05)*0.001)) AS MM_05_LB,
+                   SUM(ROUND(MM_06/60))AS MM_06, SUM(ROUND((MON_TOT*RATE_06)*0.001)) AS MM_06_LB,
+                   SUM(ROUND(MM_07/60))AS MM_07, SUM(ROUND((MON_TOT*RATE_07)*0.001)) AS MM_07_LB,
+                   SUM(ROUND(MM_08/60))AS MM_08, SUM(ROUND((MON_TOT*RATE_08)*0.001)) AS MM_08_LB,
+                   SUM(ROUND(MM_09/60))AS MM_09, SUM(ROUND((MON_TOT*RATE_09)*0.001)) AS MM_09_LB,
+                   SUM(ROUND(MM_10/60))AS MM_10, SUM(ROUND((MON_TOT*RATE_10)*0.001)) AS MM_10_LB,
+                   SUM(ROUND(MM_11/60))AS MM_11, SUM(ROUND((MON_TOT*RATE_11)*0.001)) AS MM_11_LB,
+                   SUM(ROUND(MM_12/60))AS MM_12, SUM(ROUND((MON_TOT*RATE_12)*0.001)) AS MM_12_LB 
+
+        FROM(
+        SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, GRADECD, EMPID, 
+                   MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+                   MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+                   MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+                   MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+                   MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+                   MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,
+                   MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+                   MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+                   MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+                   MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+                   MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+                   MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12
+        FROM(
+    SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME,
+           TO_EMPGRADECD(EMPID) GRADECD,
+           SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_01,
+           SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_02,
+           SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_03,
+           SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_04,
+           SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_05,
+           SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_06,
+           SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_07,
+           SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_08,
+           SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_09,
+           SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_10,
+           SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_11,
+           SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_12
+     FROM(
+        SELECT  YEAR, EMPORGNO, ORGNAME, COSTTYPE, EMPID , MAINOBJ_NO, SUBOBJ_NO, ISAGREE,
+                 MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+        FROM(
+                 SELECT  (SELECT A.ORGCD ORGCD
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS EMPORGNO,
+                         (SELECT A.ORGNAME
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS ORGNAME
+                         , EMPID,MAINOBJ_NO,  YEAR, SUBOBJ_NO, ISAGREE,
+                         CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+                                                         DECODE( MONTH,'01',MM, 0) AS MM_01,
+                                                         DECODE( MONTH,'02',MM, 0) AS MM_02,
+                                                         DECODE( MONTH,'03',MM, 0) AS MM_03,
+                                                         DECODE( MONTH,'04',MM, 0) AS MM_04,
+                                                         DECODE( MONTH,'05',MM, 0) AS MM_05,
+                                                         DECODE( MONTH,'06',MM, 0) AS MM_06,
+                                                         DECODE( MONTH,'07',MM, 0) AS MM_07,
+                                                         DECODE( MONTH,'08',MM, 0) AS MM_08,
+                                                         DECODE( MONTH,'09',MM, 0) AS MM_09,
+                                                         DECODE( MONTH,'10',MM, 0) AS MM_10,
+                                                         DECODE( MONTH,'11',MM, 0) AS MM_11,
+                                                         DECODE( MONTH,'12',MM, 0) AS MM_12
+                                         FROM  DAILYREPORT_RPTMH X
+                                         WHERE COSTTYPE IS NOT NULL
+                                )
+                                          WHERE MAINOBJ_NO = ?
+                                          AND EMPID = ?
+                                          AND YEAR = ? -- THIS YEAR
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID,MAINOBJ_NO , SUBOBJ_NO , ISAGREE
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC
+                ))A,(
+                    SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+		FROM (	
+			SELECT TYPE,  STARTDT, ENDDT,  
+				   CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE, 
+				   START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+			FROM (
+				SELECT TYPE, STARTDT, ENDDT, VALUE, 
+					   --STARTDT_MON, ENDDT_MON, 
+					   START_YEAR, END_YEAR, 
+					   CASE WHEN START_YEAR = ?
+					   OR END_YEAR = ?
+					   THEN ?
+					   ELSE '' END YEAR,
+					   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+					   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+				FROM(					
+					SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE, 
+						   SUBSTR(A.STARTDT,1,6) STARTDT, 
+						   SUBSTR(A.ENDDT,1,6) ENDDT,
+						   SUBSTR(A.STARTDT,1,4) START_YEAR,
+						   SUBSTR(A.ENDDT,1,4) END_YEAR, 
+						   TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+						   TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+					FROM ACCTSTDCOST A		
+					WHERE SUBSTR(A.STARTDT,1,4) = ?
+					OR SUBSTR(A.ENDDT,1,4) = ?
+					GROUP BY TYPE, A.STARTDT, A.ENDDT
+						)	
+				)
+			)GROUP BY TYPE, YEAR	
+		)B
+		WHERE A.GRADECD = B.TYPE
+		AND A.COSTTYPE = '직접'
+		GROUP BY YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPID, EMPORGNO
+		ORDER BY MAINOBJ_NO, SUBOBJ_NO, ISAGREE
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="costRptPrcsMH_I"  value-count="8"		url="rptCostPjtPrcsMH_I.jsp">
+	<sql-content>
+	<![CDATA[
+        SELECT YEAR,EMPORGNO, ROW_NUMBER() OVER(PARTITION  BY MAINOBJ_NO, SUBOBJ_NO_SUPER ORDER BY 1) RANK,
+                   COUNT(*) OVER (PARTITION BY SUBOBJ_NO_SUPER ORDER BY 1) CNT, MAINOBJ_NO,
+                   (SELECT ORGNAME FROM ORG WHERE MAINOBJ_NO = ORG_NO) PJTNAME,SUBOBJ_NO, SUBOBJ_NO_SUPER,
+				   (SELECT JOBNAME FROM HISTJOB WHERE SUBOBJ_NO = JOBCD) PRCSNAME, EMPID, 
+				   TO_EMPKNAME(EMPID) EMPKNAME, TO_ORGNAME(EMPID) ORGNAME, 
+                   SUM(ROUND(MM_01/60))AS MM_01, SUM(ROUND((MON_TOT*RATE_01)*0.001)) AS MM_01_LB,                 
+                   SUM(ROUND(MM_02/60))AS MM_02, SUM(ROUND((MON_TOT*RATE_02)*0.001)) AS MM_02_LB,
+                   SUM(ROUND(MM_03/60))AS MM_03, SUM(ROUND((MON_TOT*RATE_03)*0.001)) AS MM_03_LB,
+                   SUM(ROUND(MM_04/60))AS MM_04, SUM(ROUND((MON_TOT*RATE_04)*0.001)) AS MM_04_LB,
+                   SUM(ROUND(MM_05/60))AS MM_05, SUM(ROUND((MON_TOT*RATE_05)*0.001)) AS MM_05_LB,
+                   SUM(ROUND(MM_06/60))AS MM_06, SUM(ROUND((MON_TOT*RATE_06)*0.001)) AS MM_06_LB,
+                   SUM(ROUND(MM_07/60))AS MM_07, SUM(ROUND((MON_TOT*RATE_07)*0.001)) AS MM_07_LB,
+                   SUM(ROUND(MM_08/60))AS MM_08, SUM(ROUND((MON_TOT*RATE_08)*0.001)) AS MM_08_LB,
+                   SUM(ROUND(MM_09/60))AS MM_09, SUM(ROUND((MON_TOT*RATE_09)*0.001)) AS MM_09_LB,
+                   SUM(ROUND(MM_10/60))AS MM_10, SUM(ROUND((MON_TOT*RATE_10)*0.001)) AS MM_10_LB,
+                   SUM(ROUND(MM_11/60))AS MM_11, SUM(ROUND((MON_TOT*RATE_11)*0.001)) AS MM_11_LB,
+                   SUM(ROUND(MM_12/60))AS MM_12, SUM(ROUND((MON_TOT*RATE_12)*0.001)) AS MM_12_LB 
+        FROM(
+        SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, GRADECD,EMPID, SUBOBJ_NO_SUPER,
+                   MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+                   MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+                   MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+                   MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+                   MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+                   MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,
+                   MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+                   MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+                   MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+                   MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+                   MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+                   MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12
+        FROM(
+    SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME,
+           TO_EMPGRADECD(EMPID) GRADECD,SUBOBJ_NO_SUPER,
+           SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_01,
+           SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_02,
+           SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_03,
+           SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_04,
+           SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_05,
+           SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_06,
+           SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_07,
+           SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_08,
+           SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_09,
+           SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_10,
+           SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_11,
+           SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_12
+     FROM(
+        SELECT  YEAR, EMPORGNO, ORGNAME, COSTTYPE, EMPID , MAINOBJ_NO, SUBOBJ_NO, ISAGREE,
+			    CASE WHEN LENGTH(SUBOBJ_NO) ='5' 
+					 THEN SUBSTR(SUBOBJ_NO,1,3)||'00' 
+					 ELSE SUBOBJ_NO END SUBOBJ_NO_SUPER ,
+                 MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+        FROM(
+                 SELECT  (SELECT A.ORGCD ORGCD
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS EMPORGNO,
+                         (SELECT A.ORGNAME
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS ORGNAME
+                         , EMPID,MAINOBJ_NO,  YEAR, SUBOBJ_NO, ISAGREE,
+                         CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+                                                         DECODE( MONTH,'01',MM, 0) AS MM_01,
+                                                         DECODE( MONTH,'02',MM, 0) AS MM_02,
+                                                         DECODE( MONTH,'03',MM, 0) AS MM_03,
+                                                         DECODE( MONTH,'04',MM, 0) AS MM_04,
+                                                         DECODE( MONTH,'05',MM, 0) AS MM_05,
+                                                         DECODE( MONTH,'06',MM, 0) AS MM_06,
+                                                         DECODE( MONTH,'07',MM, 0) AS MM_07,
+                                                         DECODE( MONTH,'08',MM, 0) AS MM_08,
+                                                         DECODE( MONTH,'09',MM, 0) AS MM_09,
+                                                         DECODE( MONTH,'10',MM, 0) AS MM_10,
+                                                         DECODE( MONTH,'11',MM, 0) AS MM_11,
+                                                         DECODE( MONTH,'12',MM, 0) AS MM_12
+                                         FROM  DAILYREPORT_RPTMH X
+                                         WHERE COSTTYPE IS NOT NULL
+                                         )WHERE EMPID = ?
+                                         -- AND SUBOBJ_NO = 
+                                          AND YEAR = ? -- THIS YEAR
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID,MAINOBJ_NO , SUBOBJ_NO , ISAGREE,SUBOBJ_NO_SUPER
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC
+                ))A,(
+                                        SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+		FROM (	
+			SELECT TYPE,  STARTDT, ENDDT,  
+				   CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE, 
+				   START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+			FROM (
+				SELECT TYPE, STARTDT, ENDDT, VALUE, 
+					   --STARTDT_MON, ENDDT_MON, 
+					   START_YEAR, END_YEAR, 
+					   CASE WHEN START_YEAR = ?
+					   OR END_YEAR = ?
+					   THEN ?
+					   ELSE '' END YEAR,
+					   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+					   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+				FROM(					
+					SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE, 
+						   SUBSTR(A.STARTDT,1,6) STARTDT, 
+						   SUBSTR(A.ENDDT,1,6) ENDDT,
+						   SUBSTR(A.STARTDT,1,4) START_YEAR,
+						   SUBSTR(A.ENDDT,1,4) END_YEAR, 
+						   TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+						   TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+					FROM ACCTSTDCOST A		
+					WHERE SUBSTR(A.STARTDT,1,4) = ?
+					OR SUBSTR(A.ENDDT,1,4) = ?
+					GROUP BY TYPE, A.STARTDT, A.ENDDT
+						)	
+				)
+			)GROUP BY TYPE, YEAR	
+                )B
+                WHERE A.GRADECD = B.TYPE
+                AND A.COSTTYPE = '간접'
+                AND A.SUBOBJ_NO_SUPER = ?
+                GROUP BY YEAR, MAINOBJ_NO, SUBOBJ_NO, EMPID, EMPORGNO,SUBOBJ_NO_SUPER
+                ORDER BY MAINOBJ_NO, SUBOBJ_NO
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="costRptPjtPerson_D"  value-count="8"		url="rptCostPjtPersonMH_D.jsp">
+	<sql-content>
+	<![CDATA[
+	SELECT ROW_NUMBER() OVER (PARTITION BY MAINOBJ_NO, ISAGREE ORDER BY 1) AS RN,
+		   COUNT(ISAGREE) OVER(PARTITION BY MAINOBJ_NO, ISAGREE ORDER BY 1) ISAGREE_CNT,
+		   COUNT(*) OVER(PARTITION BY MAINOBJ_NO ORDER BY 1) CNT, EMPORGNO, 
+		   COUNT(*) OVER(PARTITION BY MAINOBJ_NO, SUBOBJ_NO, EMPID ORDER BY 1) CNT_1,
+		   YEAR,  TO_ORGNAME(EMPID) ORGNAME, TO_pjtno_tocode(MAINOBJ_NO)PJTCD, MAINOBJ_NO, EMPID, 
+		   EMPKNAME, TO_pjtName(MAINOBJ_NO) PJTNAME, SUBOBJ_NO, TO_PRCSNAME(SUBOBJ_NO) PRCSNAME, 
+		   CASE WHEN ISAGREE = 'N' THEN '직접투입' ELSE '합의투입' END ISAGREE, 
+		   SUM(ROUND(MM_01/60))AS MM_01, SUM(ROUND((MON_TOT*RATE_01)*0.001)) AS MM_01_LB,
+	   	   SUM(ROUND(MM_02/60))AS MM_02, SUM(ROUND((MON_TOT*RATE_02)*0.001)) AS MM_02_LB,
+		   SUM(ROUND(MM_03/60))AS MM_03, SUM(ROUND((MON_TOT*RATE_03)*0.001)) AS MM_03_LB,
+		   SUM(ROUND(MM_04/60))AS MM_04, SUM(ROUND((MON_TOT*RATE_04)*0.001)) AS MM_04_LB,
+		   SUM(ROUND(MM_05/60))AS MM_05, SUM(ROUND((MON_TOT*RATE_05)*0.001)) AS MM_05_LB,
+		   SUM(ROUND(MM_06/60))AS MM_06, SUM(ROUND((MON_TOT*RATE_06)*0.001)) AS MM_06_LB,
+		   SUM(ROUND(MM_07/60))AS MM_07, SUM(ROUND((MON_TOT*RATE_07)*0.001)) AS MM_07_LB, 
+		   SUM(ROUND(MM_08/60))AS MM_08, SUM(ROUND((MON_TOT*RATE_08)*0.001)) AS MM_08_LB,
+		   SUM(ROUND(MM_09/60))AS MM_09, SUM(ROUND((MON_TOT*RATE_09)*0.001)) AS MM_09_LB,
+		   SUM(ROUND(MM_10/60))AS MM_10, SUM(ROUND((MON_TOT*RATE_10)*0.001)) AS MM_10_LB,
+		   SUM(ROUND(MM_11/60))AS MM_11, SUM(ROUND((MON_TOT*RATE_11)*0.001)) AS MM_11_LB,
+		   SUM(ROUND(MM_12/60))AS MM_12, SUM(ROUND((MON_TOT*RATE_12)*0.001)) AS MM_12_LB
+	FROM(
+	SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, GRADECD, EMPID, EMPKNAME, 
+		   MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+		   MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+		   MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+		   MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+		   MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+		   MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06, 
+		   MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+		   MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+		   MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+		   MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+		   MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+		   MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12   
+	FROM(
+	
+    SELECT  YEAR,    MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME, TO_EMPGRADECD(EMPID) GRADECD,
+                     SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_01,
+                     SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_02,
+                     SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_03,
+                     SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_04,
+                     SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_05,
+                     SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_06,
+                     SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_07,
+                     SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_08,
+                     SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_09,
+                     SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_10,
+                     SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_11,
+                     SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_12
+     FROM(
+	SELECT  YEAR, EMPORGNO, ORGNAME, COSTTYPE, EMPID , EMPKNAME, MAINOBJ_NO, SUBOBJ_NO, ISAGREE,  
+	         MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+	FROM(
+		 	 SELECT  (SELECT A.ORGCD ORGCD
+	                 FROM ORG A, EMPALL C
+	                 WHERE A.ORG_NO = C.ORGCD
+	                 AND C.EMPID=X.EMPID) AS EMPORGNO,
+	                 (SELECT A.ORGNAME
+	                 FROM ORG A, EMPALL C
+	                 WHERE A.ORG_NO = C.ORGCD
+	                 AND C.EMPID=X.EMPID) AS ORGNAME
+	                 , MAINOBJ_NO,  YEAR, SUBOBJ_NO, ISAGREE, TO_EMPKNAME(EMPID) EMPKNAME, EMPID, 
+	                 CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+	                                                 DECODE( MONTH,'01',MM, 0) AS MM_01,
+	                                                 DECODE( MONTH,'02',MM, 0) AS MM_02,
+	                                                 DECODE( MONTH,'03',MM, 0) AS MM_03,
+	                                                 DECODE( MONTH,'04',MM, 0) AS MM_04,
+	                                                 DECODE( MONTH,'05',MM, 0) AS MM_05,
+	                                                 DECODE( MONTH,'06',MM, 0) AS MM_06,
+	                                                 DECODE( MONTH,'07',MM, 0) AS MM_07,
+	                                                 DECODE( MONTH,'08',MM, 0) AS MM_08,
+	                                                 DECODE( MONTH,'09',MM, 0) AS MM_09,
+	                                                 DECODE( MONTH,'10',MM, 0) AS MM_10,
+	                                                 DECODE( MONTH,'11',MM, 0) AS MM_11,
+	                                                 DECODE( MONTH,'12',MM, 0) AS MM_12
+	                                 FROM  DAILYREPORT_RPTMH X
+	                                 WHERE COSTTYPE IS NOT NULL
+	                        )							
+					  WHERE MAINOBJ_NO = ?
+					  AND YEAR = ? -- THIS YEAR					  					  					    
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID, MAINOBJ_NO , SUBOBJ_NO , ISAGREE,  EMPKNAME
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC	
+		))A,( 				
+		    SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+			FROM (	
+				SELECT TYPE,  STARTDT, ENDDT,  
+					   CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE, 
+					   START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+				FROM (
+					SELECT TYPE, STARTDT, ENDDT, VALUE, 
+						   --STARTDT_MON, ENDDT_MON, 
+						   START_YEAR, END_YEAR, 
+						   CASE WHEN START_YEAR = ?
+						   OR END_YEAR = ?
+						   THEN ?
+						   ELSE '' END YEAR,
+						   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+						   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+					FROM(					
+						SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE, 
+							   SUBSTR(A.STARTDT,1,6) STARTDT, 
+							   SUBSTR(A.ENDDT,1,6) ENDDT,
+							   SUBSTR(A.STARTDT,1,4) START_YEAR,
+							   SUBSTR(A.ENDDT,1,4) END_YEAR, 
+							   TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+							   TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+						FROM ACCTSTDCOST A		
+						WHERE SUBSTR(A.STARTDT,1,4) = ?
+						OR SUBSTR(A.ENDDT,1,4) = ?
+						GROUP BY TYPE, A.STARTDT, A.ENDDT
+							)	
+					)
+				)GROUP BY TYPE, YEAR	
+		)B
+		WHERE A.GRADECD = B.TYPE
+		AND A.COSTTYPE = '직접'
+		AND A.SUBOBJ_NO = ?
+		GROUP BY YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE ,EMPID, EMPKNAME, EMPORGNO
+		ORDER BY ISAGREE, RN, MAINOBJ_NO, SUBOBJ_NO  
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="costRptPjtPerson_I"  value-count="8"		url="rptCostPjtPersonMH_I.jsp">
+	<sql-content>
+	<![CDATA[
+	SELECT ROW_NUMBER() OVER (PARTITION BY MAINOBJ_NO ORDER BY 1) AS RN,
+		   COUNT(*) OVER(PARTITION BY MAINOBJ_NO ORDER BY 1) CNT, 
+		   (SELECT ORGCD FROM EMP WHERE EMPID = EMPIDORG) ORGCD,
+		   (SELECT EGRADE FROM EMP WHERE EMPID = EMPIDORG) GRADE,
+		   YEAR, TO_ORGNAME(EMPID) ORGNAME, EMPORGNO,
+		   MAINOBJ_NO, 
+		   (SELECT ORGNAME FROM ORG WHERE MAINOBJ_NO = ORG_NO) PJTNAME, 
+	       (SELECT JOBNAME FROM HISTJOB WHERE SUBOBJ_NO = JOBCD) PRCSNAME,
+		   SUBOBJ_NO, 
+		   (SELECT JOBNAME FROM HISTJOB WHERE SUBOBJ_NO= JOBCD) JOBNAME,
+		   (SELECT JOBCD FROM HISTJOB WHERE SUBSTR(SUBOBJ_NO,1,3)||0||0 = JOBCD) HIGHJOBCD,
+		   (SELECT JOBNAME FROM HISTJOB WHERE SUBSTR(SUBOBJ_NO,1,3)||0||0 = JOBCD) HIGHJOBNAME,
+		   EMPID, EMPKNAME, 
+		   SUM(ROUND(MM_01/60))AS MM_01, SUM(ROUND((MON_TOT*RATE_01)*0.001)) AS MM_01_LB,
+	   	   SUM(ROUND(MM_02/60))AS MM_02, SUM(ROUND((MON_TOT*RATE_02)*0.001)) AS MM_02_LB,
+		   SUM(ROUND(MM_03/60))AS MM_03, SUM(ROUND((MON_TOT*RATE_03)*0.001)) AS MM_03_LB,
+		   SUM(ROUND(MM_04/60))AS MM_04, SUM(ROUND((MON_TOT*RATE_04)*0.001)) AS MM_04_LB,
+		   SUM(ROUND(MM_05/60))AS MM_05, SUM(ROUND((MON_TOT*RATE_05)*0.001)) AS MM_05_LB,
+		   SUM(ROUND(MM_06/60))AS MM_06, SUM(ROUND((MON_TOT*RATE_06)*0.001)) AS MM_06_LB,
+		   SUM(ROUND(MM_07/60))AS MM_07, SUM(ROUND((MON_TOT*RATE_07)*0.001)) AS MM_07_LB, 
+		   SUM(ROUND(MM_08/60))AS MM_08, SUM(ROUND((MON_TOT*RATE_08)*0.001)) AS MM_08_LB,
+		   SUM(ROUND(MM_09/60))AS MM_09, SUM(ROUND((MON_TOT*RATE_09)*0.001)) AS MM_09_LB,
+		   SUM(ROUND(MM_10/60))AS MM_10, SUM(ROUND((MON_TOT*RATE_10)*0.001)) AS MM_10_LB,
+		   SUM(ROUND(MM_11/60))AS MM_11, SUM(ROUND((MON_TOT*RATE_11)*0.001)) AS MM_11_LB,
+		   SUM(ROUND(MM_12/60))AS MM_12, SUM(ROUND((MON_TOT*RATE_12)*0.001)) AS MM_12_LB
+   	FROM(
+	SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO,  EMPORGNO, ORGNAME, COSTTYPE, GRADECD, EMPID, EMPKNAME, EMPID AS EMPIDORG,
+		   MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+		   MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+		   MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+		   MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+		   MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+		   MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06, 
+		   MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+		   MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+		   MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+		   MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+		   MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+		   MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12   
+	FROM(
+    SELECT  YEAR,    MAINOBJ_NO, SUBOBJ_NO,  EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME, TO_EMPGRADECD(EMPID) GRADECD,
+                     SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_01,
+                     SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_02,
+                     SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_03,
+                     SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_04,
+                     SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_05,
+                     SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_06,
+                     SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_07,
+                     SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_08,
+                     SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_09,
+                     SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_10,
+                     SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_11,
+                     SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_12
+     FROM(
+	SELECT  YEAR, EMPORGNO, ORGNAME, COSTTYPE, EMPID , EMPKNAME, MAINOBJ_NO, SUBOBJ_NO,   
+	         MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+	FROM(
+		 	 SELECT  (SELECT A.ORGCD ORGCD
+	                 FROM ORG A, EMPALL C
+	                 WHERE A.ORG_NO = C.ORGCD
+	                 AND C.EMPID=X.EMPID) AS EMPORGNO,
+	                 (SELECT A.ORGNAME
+	                 FROM ORG A, EMPALL C
+	                 WHERE A.ORG_NO = C.ORGCD
+	                 AND C.EMPID=X.EMPID) AS ORGNAME
+	                 , MAINOBJ_NO,  YEAR, SUBOBJ_NO,  TO_EMPKNAME(EMPID) EMPKNAME, EMPID, 
+	                 CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+	                                                 DECODE( MONTH,'01',MM, 0) AS MM_01,
+	                                                 DECODE( MONTH,'02',MM, 0) AS MM_02,
+	                                                 DECODE( MONTH,'03',MM, 0) AS MM_03,
+	                                                 DECODE( MONTH,'04',MM, 0) AS MM_04,
+	                                                 DECODE( MONTH,'05',MM, 0) AS MM_05,
+	                                                 DECODE( MONTH,'06',MM, 0) AS MM_06,
+	                                                 DECODE( MONTH,'07',MM, 0) AS MM_07,
+	                                                 DECODE( MONTH,'08',MM, 0) AS MM_08,
+	                                                 DECODE( MONTH,'09',MM, 0) AS MM_09,
+	                                                 DECODE( MONTH,'10',MM, 0) AS MM_10,
+	                                                 DECODE( MONTH,'11',MM, 0) AS MM_11,
+	                                                 DECODE( MONTH,'12',MM, 0) AS MM_12
+	                                 FROM  DAILYREPORT_RPTMH X
+	                                 WHERE COSTTYPE IS NOT NULL
+	                        )							
+					  WHERE MAINOBJ_NO = ? 
+					  AND SUBOBJ_NO = ?
+					  AND YEAR = ? -- THIS YEAR					  					  					    
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID, MAINOBJ_NO , SUBOBJ_NO , EMPKNAME
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC			  
+		))A,( 				
+			SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+			FROM (	
+				SELECT TYPE,  STARTDT, ENDDT,  
+					   CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE, 
+					   START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+				FROM (
+					SELECT TYPE, STARTDT, ENDDT, VALUE, 
+						   --STARTDT_MON, ENDDT_MON, 
+						   START_YEAR, END_YEAR, 
+						   CASE WHEN START_YEAR = ?
+						   OR END_YEAR = ?
+						   THEN ?
+						   ELSE '' END YEAR,
+						   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+						   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+					FROM(					
+						SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE, 
+							   SUBSTR(A.STARTDT,1,6) STARTDT, 
+							   SUBSTR(A.ENDDT,1,6) ENDDT,
+							   SUBSTR(A.STARTDT,1,4) START_YEAR,
+							   SUBSTR(A.ENDDT,1,4) END_YEAR, 
+							   TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+							   TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+						FROM ACCTSTDCOST A		
+						WHERE SUBSTR(A.STARTDT,1,4) = ?
+						OR SUBSTR(A.ENDDT,1,4) = ?
+						GROUP BY TYPE, A.STARTDT, A.ENDDT
+							)	
+					)
+				)GROUP BY TYPE, YEAR	   
+		)B
+		WHERE A.GRADECD = B.TYPE
+		AND A.COSTTYPE = '간접'
+		GROUP BY YEAR, MAINOBJ_NO, SUBOBJ_NO, EMPID, EMPKNAME, EMPORGNO
+		ORDER BY  ORGCD, GRADE
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping id="rptCostDaily"  value-count="4"		url="rptCostDailyRpt.jsp">
+	<sql-content>
+	<![CDATA[
+		SELECT 
+			   REPORTDT, 
+			   CASE WHEN SUBSTR(JOBNO,1,1) ='9' THEN TO_pjtno_tocode(JOBNO) 
+			   ELSE JOBNO END USER_MAINOBJ_NO,
+			   SUBSTR(REPORTDT,1,4) YEAR,
+			   SUBSTR(REPORTDT,5,2) MONTH,
+			   SUBSTR(REPORTDT,7,2) DAY,
+			   REEMPID, TO_EMPKNAME(REEMPID) EMPKNAME, 
+			   TO_ORGNAME(REEMPID) ORGNAME,
+			   TO_EMPORGCD(REEMPID) ORGCD,
+			   JOBNO, JOBNAME, 
+			   CASE WHEN ACTFLAG IN ('D','$D') THEN PRCSNO ELSE TO_ORGNOCD(PRCSNO) END PRCSNO,
+			   PRCSNAME, JOBTITLE, JOBDETAIL, 
+			   HH, MM, CASE WHEN  ACTFLAG IN ('D','$D') THEN '직접' ELSE '간접' END ACTFLAG,
+			   CASE WHEN ACTFLAG IN ('D','$D')
+			   THEN  TO_PJTNO_TOCODE(JOBNO)  ELSE  
+			  		CASE WHEN PRCSNO>9000 THEN   TO_PJTCDNAME(PRCSNO)  ELSE  
+			  		TO_ORGNOCD(PRCSNO) END  
+			   END  JOBUSERNO,
+			   CASE WHEN ACTFLAG IN ('D','$D')
+               THEN  TO_pjtName(JOBNO)  ELSE
+               CASE WHEN PRCSNO>9000 THEN   TO_PJTCDNAME(PRCSNO)  ELSE
+                    TO_ORGNONAME(PRCSNO) END
+               END  JOBUSERNONAME
+		FROM   DAILYREPORTDETAIL
+		WHERE  REEMPID = ?
+		AND	   REPORTDT LIKE ?
+		AND 	JOBNO = ?
+		AND 	PRCSNO = ?
+		AND	   DELFLAG = 'N'
+		AND    HH||MM != 00
+		ORDER BY REPORTDT
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="detailScreen_part"  value-count="7"		url="rptCostDetailMH.jsp">
+	<sql-content>
+	<![CDATA[
+	SELECT COUNT(*) OVER(PARTITION BY  EMPORGNONAME,  COSTTYPE ORDER BY 1)CNT,
+       ROW_NUMBER() OVER(PARTITION  BY  COSTTYPE ORDER BY USER_MAINOBJ_NO) RANK,
+	   YEAR, COSTTYPE, EMPORGNONAME,  MAINOBJ_NO, USER_MAINOBJ_NO, MAINOBJNAME   
+	      ,MM_01, TOT_MON_01, RATE_01, MM_01_LB
+          ,MM_02, TOT_MON_02, RATE_02, MM_02_LB
+          ,MM_03, TOT_MON_03, RATE_03, MM_03_LB
+          ,MM_04, TOT_MON_04, RATE_04, MM_04_LB
+          ,MM_05, TOT_MON_05, RATE_05, MM_05_LB
+          ,MM_06, TOT_MON_06, RATE_06, MM_06_LB
+          ,MM_07, TOT_MON_07, RATE_07, MM_07_LB
+          ,MM_08, TOT_MON_08, RATE_08, MM_08_LB
+          ,MM_09, TOT_MON_09, RATE_09, MM_09_LB
+          ,MM_10, TOT_MON_10, RATE_10, MM_10_LB
+          ,MM_11, TOT_MON_11, RATE_11, MM_11_LB
+          ,MM_12, TOT_MON_12, RATE_12, MM_12_LB
+  FROM(
+		SELECT A.YEAR, COSTTYPE, EMPORGNONAME,  MAINOBJ_NO, 
+		   CASE WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '9'  
+                                    THEN TO_pjtno_tocode(MAINOBJ_NO) 
+                WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '1'  
+                                    THEN TO_pjtno_tocode(MAINOBJ_NO)                                    
+                                    ELSE MAINOBJ_NO END USER_MAINOBJ_NO,
+     		CASE WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '9'  
+                 THEN (SELECT PJTNAME FROM PROJECT WHERE PJT_NO = MAINOBJ_NO )
+                 WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '9'  
+                 THEN (SELECT PJTNAME FROM PROJECT WHERE PJT_NO = MAINOBJ_NO )
+                 WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '1'  
+                 THEN (SELECT PJTNAME FROM PROJECT WHERE PJT_NO = MAINOBJ_NO )
+                 ELSE (SELECT JOBNAME FROM HISTJOB WHERE JOBCD = MAINOBJ_NO) END MAINOBJNAME									             
+          , ROUND(SUM(MM_01/60)) MM_01, SUM(TOT_MON_01) TOT_MON_01, SUM(RATE_01) RATE_01, ROUND((SUM(MON_TOT)*SUM(RATE_01))*0.001) AS MM_01_LB
+          , ROUND(SUM(MM_02/60)) MM_02, SUM(TOT_MON_02) TOT_MON_02, SUM(RATE_02) RATE_02, ROUND((SUM(MON_TOT)*SUM(RATE_02))*0.001) AS MM_02_LB
+          , ROUND(SUM(MM_03/60)) MM_03, SUM(TOT_MON_03) TOT_MON_03, SUM(RATE_03) RATE_03, ROUND((SUM(MON_TOT)*SUM(RATE_03))*0.001) AS MM_03_LB
+          , ROUND(SUM(MM_04/60)) MM_04, SUM(TOT_MON_04) TOT_MON_04, SUM(RATE_04) RATE_04, ROUND((SUM(MON_TOT)*SUM(RATE_04))*0.001) AS MM_04_LB
+          , ROUND(SUM(MM_05/60)) MM_05, SUM(TOT_MON_05) TOT_MON_05, SUM(RATE_05) RATE_05, ROUND((SUM(MON_TOT)*SUM(RATE_05))*0.001) AS MM_05_LB
+          , ROUND(SUM(MM_06/60)) MM_06, SUM(TOT_MON_06) TOT_MON_06, SUM(RATE_06) RATE_06, ROUND((SUM(MON_TOT)*SUM(RATE_06))*0.001) AS MM_06_LB
+          , ROUND(SUM(MM_07/60)) MM_07, SUM(TOT_MON_07) TOT_MON_07, SUM(RATE_07) RATE_07, ROUND((SUM(MON_TOT)*SUM(RATE_07))*0.001) AS MM_07_LB
+          , ROUND(SUM(MM_08/60)) MM_08, SUM(TOT_MON_08) TOT_MON_08, SUM(RATE_08) RATE_08, ROUND((SUM(MON_TOT)*SUM(RATE_08))*0.001) AS MM_08_LB
+          , ROUND(SUM(MM_09/60)) MM_09, SUM(TOT_MON_09) TOT_MON_09, SUM(RATE_09) RATE_09, ROUND((SUM(MON_TOT)*SUM(RATE_09))*0.001) AS MM_09_LB
+          , ROUND(SUM(MM_10/60)) MM_10, SUM(TOT_MON_10) TOT_MON_10, SUM(RATE_10) RATE_10, ROUND((SUM(MON_TOT)*SUM(RATE_10))*0.001) AS MM_10_LB
+          , ROUND(SUM(MM_11/60)) MM_11, SUM(TOT_MON_11) TOT_MON_11, SUM(RATE_11) RATE_11, ROUND((SUM(MON_TOT)*SUM(RATE_11))*0.001) AS MM_11_LB
+          , ROUND(SUM(MM_12/60)) MM_12, SUM(TOT_MON_12) TOT_MON_12, SUM(RATE_12) RATE_12, ROUND((SUM(MON_TOT)*SUM(RATE_12))*0.001) AS MM_12_LB
+   	FROM(
+		SELECT YEAR, GRADECD, MAINOBJ_NO, COSTTYPE, EMPORGNONAME, EMPORGNO,                                             
+		       MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,  
+		       MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,  
+		       MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,  
+		       MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,  
+		       MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,  
+		       MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,  
+		       MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,  
+		       MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,  
+		       MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,  
+		       MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,  
+		       MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,  
+		       MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12   
+		FROM(	
+		SELECT YEAR, GRADECD, MAINOBJ_NO, COSTTYPE, EMPORGNONAME, EMPORGNO, 
+		 SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_01,
+		 SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_02,
+		 SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_03,
+		 SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_04,
+		 SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_05,
+		 SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_06,
+		 SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_07,
+		 SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_08,
+		 SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_09,
+		 SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_10,
+		 SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_11,
+		 SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_12 
+		FROM(	
+			SELECT YEAR, GRADECD, MAINOBJ_NO, COSTTYPE,
+				  CASE WHEN EMPORGNO IN ('CA','CB','CC') THEN  'GIS'
+				  	   WHEN EMPORGNO IN ('CD','CE') THEN  'SI'
+					   WHEN EMPORGNO IN ('CG','CH','CI') THEN  'ITO'
+					   WHEN EMPORGNO IN ('CP','CQ','CR') THEN  '경영지원' 
+				  ELSE '' END EMPORGNONAME, EMPORGNO, 
+				  MM_01,MM_02,MM_03,MM_04,MM_05,MM_06,MM_07,MM_08,MM_09,MM_10,MM_11,MM_12 
+			FROM(
+			  SELECT  (SELECT SUBSTR(A.ORGCD,1,2) ORGCD FROM ORG A, EMPALL C WHERE A.ORG_NO = C.ORGCD AND C.EMPID=X.EMPID) AS EMPORGNO, 
+			  		  YEAR, TO_EMPGRADECD(EMPID) GRADECD, 
+			  		  CASE WHEN COSTTYPE IN ('D','$D') THEN MAINOBJ_NO ELSE SUBOBJ_NO END MAINOBJ_NO,  
+			  		  CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+			          DECODE( MONTH,'01',MM, 0) AS MM_01,
+			          DECODE( MONTH,'02',MM, 0) AS MM_02,
+			          DECODE( MONTH,'03',MM, 0) AS MM_03,
+			          DECODE( MONTH,'04',MM, 0) AS MM_04,
+			          DECODE( MONTH,'05',MM, 0) AS MM_05,
+			          DECODE( MONTH,'06',MM, 0) AS MM_06,
+			          DECODE( MONTH,'07',MM, 0) AS MM_07,
+			          DECODE( MONTH,'08',MM, 0) AS MM_08,
+			          DECODE( MONTH,'09',MM, 0) AS MM_09,
+			          DECODE( MONTH,'10',MM, 0) AS MM_10,
+			          DECODE( MONTH,'11',MM, 0) AS MM_11,
+			          DECODE( MONTH,'12',MM, 0) AS MM_12
+			   FROM  DAILYREPORT_RPTMH X
+			   WHERE COSTTYPE IS NOT NULL
+			   AND YEAR = ?-- THIS YEAR
+			)WHERE EMPORGNO IN (?)  --('CA','CB','CC') PART ITEM 
+		)GROUP BY YEAR, GRADECD, MAINOBJ_NO, COSTTYPE, EMPORGNONAME, EMPORGNO
+	))A,	   					   
+	(SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+	FROM (	
+	SELECT TYPE,  STARTDT, ENDDT,  
+		   CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE, 
+		   START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+	FROM (
+		SELECT TYPE, STARTDT, ENDDT, VALUE, 
+			   --STARTDT_MON, ENDDT_MON, 
+			   START_YEAR, END_YEAR, 
+			   CASE WHEN START_YEAR = ?
+			    OR END_YEAR = ?
+			   THEN ?
+			   ELSE '' END YEAR,
+			   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+			   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+		FROM(					
+			SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE, 
+				   SUBSTR(A.STARTDT,1,6) STARTDT, 
+				   SUBSTR(A.ENDDT,1,6) ENDDT,
+				   SUBSTR(A.STARTDT,1,4) START_YEAR,
+				   SUBSTR(A.ENDDT,1,4) END_YEAR, 
+				   TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+				   TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+			FROM ACCTSTDCOST A		
+			WHERE SUBSTR(A.STARTDT,1,4) = ?
+			OR SUBSTR(A.ENDDT,1,4) = ?
+			GROUP BY TYPE, A.STARTDT, A.ENDDT
+				)	
+		)
+	)GROUP BY TYPE, YEAR	
+	)B
+	WHERE A.GRADECD = B.TYPE
+	GROUP BY A.YEAR, MAINOBJ_NO, COSTTYPE , EMPORGNONAME 
+	)
+    ORDER BY COSTTYPE DESC, USER_MAINOBJ_NO, RANK 
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping id="detailScreen_group"  value-count="7"		url="rptCostDetailMH.jsp">
+	<sql-content>
+	<![CDATA[
+SELECT COUNT(*) OVER(PARTITION BY  EMPORGNONAME,  COSTTYPE ORDER BY 1)CNT,
+       ROW_NUMBER() OVER(PARTITION  BY  COSTTYPE ORDER BY USER_MAINOBJ_NO) RANK,
+	   YEAR, COSTTYPE, EMPORGNONAME,  MAINOBJ_NO, USER_MAINOBJ_NO, MAINOBJNAME   
+	      ,MM_01, TOT_MON_01, RATE_01, MM_01_LB
+          ,MM_02, TOT_MON_02, RATE_02, MM_02_LB
+          ,MM_03, TOT_MON_03, RATE_03, MM_03_LB
+          ,MM_04, TOT_MON_04, RATE_04, MM_04_LB
+          ,MM_05, TOT_MON_05, RATE_05, MM_05_LB
+          ,MM_06, TOT_MON_06, RATE_06, MM_06_LB
+          ,MM_07, TOT_MON_07, RATE_07, MM_07_LB
+          ,MM_08, TOT_MON_08, RATE_08, MM_08_LB
+          ,MM_09, TOT_MON_09, RATE_09, MM_09_LB
+          ,MM_10, TOT_MON_10, RATE_10, MM_10_LB
+          ,MM_11, TOT_MON_11, RATE_11, MM_11_LB
+          ,MM_12, TOT_MON_12, RATE_12, MM_12_LB 
+  FROM(
+	SELECT A.YEAR, COSTTYPE, EMPORGNONAME, MAINOBJ_NO, EMPORGNO,
+		   CASE WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '9'  
+                                    THEN TO_pjtno_tocode(MAINOBJ_NO) 
+                WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '1'  
+                                    THEN TO_pjtno_tocode(MAINOBJ_NO)                                    
+                                    ELSE MAINOBJ_NO END USER_MAINOBJ_NO,
+     		CASE WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '9'  
+                              THEN (SELECT PJTNAME FROM PROJECT WHERE PJT_NO = MAINOBJ_NO )
+                 WHEN COSTTYPE = '직접' AND SUBSTR(MAINOBJ_NO,1,1) = '1'  
+                              THEN (SELECT PJTNAME FROM PROJECT WHERE PJT_NO = MAINOBJ_NO )             
+                              ELSE (SELECT JOBNAME FROM HISTJOB WHERE JOBCD = MAINOBJ_NO) END MAINOBJNAME									             
+		   , ROUND(SUM(MM_01/60)) MM_01, SUM(TOT_MON_01) TOT_MON_01, SUM(RATE_01) RATE_01, ROUND((SUM(MON_TOT)*SUM(RATE_01))*0.001) AS MM_01_LB
+		   , ROUND(SUM(MM_02/60)) MM_02, SUM(TOT_MON_02) TOT_MON_02, SUM(RATE_02) RATE_02, ROUND((SUM(MON_TOT)*SUM(RATE_02))*0.001) AS MM_02_LB
+		   , ROUND(SUM(MM_03/60)) MM_03, SUM(TOT_MON_03) TOT_MON_03, SUM(RATE_03) RATE_03, ROUND((SUM(MON_TOT)*SUM(RATE_03))*0.001) AS MM_03_LB
+		   , ROUND(SUM(MM_04/60)) MM_04, SUM(TOT_MON_04) TOT_MON_04, SUM(RATE_04) RATE_04, ROUND((SUM(MON_TOT)*SUM(RATE_04))*0.001) AS MM_04_LB
+		   , ROUND(SUM(MM_05/60)) MM_05, SUM(TOT_MON_05) TOT_MON_05, SUM(RATE_05) RATE_05, ROUND((SUM(MON_TOT)*SUM(RATE_05))*0.001) AS MM_05_LB
+		   , ROUND(SUM(MM_06/60)) MM_06, SUM(TOT_MON_06) TOT_MON_06, SUM(RATE_06) RATE_06, ROUND((SUM(MON_TOT)*SUM(RATE_06))*0.001) AS MM_06_LB
+		   , ROUND(SUM(MM_07/60)) MM_07, SUM(TOT_MON_07) TOT_MON_07, SUM(RATE_07) RATE_07, ROUND((SUM(MON_TOT)*SUM(RATE_07))*0.001) AS MM_07_LB
+		   , ROUND(SUM(MM_08/60)) MM_08, SUM(TOT_MON_08) TOT_MON_08, SUM(RATE_08) RATE_08, ROUND((SUM(MON_TOT)*SUM(RATE_08))*0.001) AS MM_08_LB
+		   , ROUND(SUM(MM_09/60)) MM_09, SUM(TOT_MON_09) TOT_MON_09, SUM(RATE_09) RATE_09, ROUND((SUM(MON_TOT)*SUM(RATE_09))*0.001) AS MM_09_LB
+		   , ROUND(SUM(MM_10/60)) MM_10, SUM(TOT_MON_10) TOT_MON_10, SUM(RATE_10) RATE_10, ROUND((SUM(MON_TOT)*SUM(RATE_10))*0.001) AS MM_10_LB
+		   , ROUND(SUM(MM_11/60)) MM_11, SUM(TOT_MON_11) TOT_MON_11, SUM(RATE_11) RATE_11, ROUND((SUM(MON_TOT)*SUM(RATE_11))*0.001) AS MM_11_LB
+		   , ROUND(SUM(MM_12/60)) MM_12, SUM(TOT_MON_12) TOT_MON_12, SUM(RATE_12) RATE_12, ROUND((SUM(MON_TOT)*SUM(RATE_12))*0.001) AS MM_12_LB
+   	FROM(
+		SELECT YEAR, GRADECD, MAINOBJ_NO, COSTTYPE, EMPORGNONAME, EMPORGNO,                                             
+		       MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,  
+		       MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,  
+		       MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,  
+		       MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,  
+		       MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,  
+		       MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,  
+		       MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,  
+		       MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,  
+		       MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,  
+		       MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,  
+		       MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,  
+		       MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12   
+		FROM(	
+		SELECT YEAR, GRADECD, MAINOBJ_NO, COSTTYPE, EMPORGNONAME, EMPORGNO, 
+		 SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_01,
+		 SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_02,
+		 SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_03,
+		 SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_04,
+		 SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_05,
+		 SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_06,
+		 SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_07,
+		 SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_08,
+		 SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_09,
+		 SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_10,
+		 SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_11,
+		 SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO ORDER BY 1) TOT_MON_12 
+		FROM(	
+			SELECT YEAR, GRADECD, MAINOBJ_NO, COSTTYPE,
+				    (SELECT ORGNAME FROM ORG WHERE  EMPORGNO = ORGCD)EMPORGNONAME, EMPORGNO, 
+				  MM_01,MM_02,MM_03,MM_04,MM_05,MM_06,MM_07,MM_08,MM_09,MM_10,MM_11,MM_12 
+			FROM(
+			  SELECT  (SELECT A.ORGCD ORGCD FROM ORG A, EMPALL C WHERE A.ORG_NO = C.ORGCD AND C.EMPID=X.EMPID) AS EMPORGNO, 
+			  		  YEAR, TO_EMPGRADECD(EMPID) GRADECD, 
+			  		  CASE WHEN COSTTYPE IN ('D','$D') THEN MAINOBJ_NO ELSE SUBOBJ_NO END MAINOBJ_NO,  
+			  		  CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+			          DECODE( MONTH,'01',MM, 0) AS MM_01,
+			          DECODE( MONTH,'02',MM, 0) AS MM_02,
+			          DECODE( MONTH,'03',MM, 0) AS MM_03,
+			          DECODE( MONTH,'04',MM, 0) AS MM_04,
+			          DECODE( MONTH,'05',MM, 0) AS MM_05,
+			          DECODE( MONTH,'06',MM, 0) AS MM_06,
+			          DECODE( MONTH,'07',MM, 0) AS MM_07,
+			          DECODE( MONTH,'08',MM, 0) AS MM_08,
+			          DECODE( MONTH,'09',MM, 0) AS MM_09,
+			          DECODE( MONTH,'10',MM, 0) AS MM_10,
+			          DECODE( MONTH,'11',MM, 0) AS MM_11,
+			          DECODE( MONTH,'12',MM, 0) AS MM_12
+			   FROM  DAILYREPORT_RPTMH X
+			   WHERE COSTTYPE IS NOT NULL
+			   AND YEAR = ?
+			)WHERE EMPORGNO = ? -- GROUP ITEM CODE
+		)GROUP BY YEAR, GRADECD, MAINOBJ_NO, COSTTYPE, EMPORGNONAME , EMPORGNO
+	))A,	   					   
+	(SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+	FROM (	
+	SELECT TYPE,  STARTDT, ENDDT,  
+		   CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE, 
+		   START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+	FROM (
+		SELECT TYPE, STARTDT, ENDDT, VALUE, 
+			   --STARTDT_MON, ENDDT_MON, 
+			   START_YEAR, END_YEAR, 
+			   CASE WHEN START_YEAR = ?
+			   OR END_YEAR = ?
+			   THEN ?
+			   ELSE '' END YEAR,
+			   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+			   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+		FROM(					
+			SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE, 
+				   SUBSTR(A.STARTDT,1,6) STARTDT, 
+				   SUBSTR(A.ENDDT,1,6) ENDDT,
+				   SUBSTR(A.STARTDT,1,4) START_YEAR,
+				   SUBSTR(A.ENDDT,1,4) END_YEAR, 
+				   TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+				   TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+			FROM ACCTSTDCOST A		
+			WHERE SUBSTR(A.STARTDT,1,4) = ?
+			OR SUBSTR(A.ENDDT,1,4) = ?
+			GROUP BY TYPE, A.STARTDT, A.ENDDT
+				)	
+		)
+	)GROUP BY TYPE, YEAR	
+	)B
+	WHERE A.GRADECD = B.TYPE
+	GROUP BY A.YEAR, MAINOBJ_NO, COSTTYPE , EMPORGNONAME , EMPORGNO
+	)
+    ORDER BY COSTTYPE DESC, USER_MAINOBJ_NO, RANK 
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping id="detailScreen_team"  value-count="7"		url="rptCostDetailMH.jsp">
+	<sql-content>
+	<![CDATA[
+SELECT   ROW_NUMBER() OVER(PARTITION BY EMPORGNO, COSTTYPE ORDER BY 1) RANK,
+		 COUNT(*) OVER(PARTITION BY COSTTYPE ORDER BY 1) CNT,
+		 EMPORGNO, YEAR, ORGNAME EMPORGNONAME, PJTCD, MAINOBJ_NO, MAINOBJ_NO USER_MAINOBJ_NO, 
+		 		PJTNAME , PJTNAME MAINOBJNAME, COSTTYPE,
+                SUM(MM_01) MM_01, SUM(MM_01_LB) MM_01_LB,
+                SUM(MM_02) MM_02, SUM(MM_02_LB) MM_02_LB,
+                SUM(MM_03) MM_03, SUM(MM_03_LB) MM_03_LB,
+                SUM(MM_04) MM_04, SUM(MM_04_LB) MM_04_LB,
+                SUM(MM_05) MM_05, SUM(MM_05_LB) MM_05_LB,
+                SUM(MM_06) MM_06, SUM(MM_06_LB) MM_06_LB,
+                SUM(MM_07) MM_07, SUM(MM_07_LB) MM_07_LB,
+                SUM(MM_08) MM_08, SUM(MM_08_LB) MM_08_LB,
+                SUM(MM_09) MM_09, SUM(MM_09_LB) MM_09_LB,
+                SUM(MM_10) MM_10, SUM(MM_10_LB) MM_10_LB,
+                SUM(MM_11) MM_11, SUM(MM_11_LB) MM_11_LB,
+                SUM(MM_12) MM_12, SUM(MM_12_LB) MM_12_LB   
+FROM(
+	    SELECT   EMPORGNO,
+                   YEAR,  TO_ORGNAME(EMPID) ORGNAME, 
+				   CASE WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 4 AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   		THEN TO_pjtno_tocode(MAINOBJ_NO)
+						WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 5 AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN TO_pjtno_tocode(MAINOBJ_NO)
+						ELSE SUBOBJ_NO END PJTCD,
+				   CASE WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 4 AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   		THEN MAINOBJ_NO 
+						WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 5 AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN MAINOBJ_NO
+						ELSE SUBOBJ_NO END MAINOBJ_NO, 
+                   	CASE WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 4 AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   		THEN TO_pjtName(MAINOBJ_NO)
+						WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 5 AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN TO_pjtName(MAINOBJ_NO)
+						ELSE (SELECT JOBNAME FROM HISTJOB WHERE JOBCD = SUBOBJ_NO) END PJTNAME,		
+				   COSTTYPE,
+                   SUM(ROUND(MM_01/60))AS MM_01, SUM(ROUND((MON_TOT*RATE_01)*0.001)) AS MM_01_LB,
+                   SUM(ROUND(MM_02/60))AS MM_02, SUM(ROUND((MON_TOT*RATE_02)*0.001)) AS MM_02_LB,
+                   SUM(ROUND(MM_03/60))AS MM_03, SUM(ROUND((MON_TOT*RATE_03)*0.001)) AS MM_03_LB,
+                   SUM(ROUND(MM_04/60))AS MM_04, SUM(ROUND((MON_TOT*RATE_04)*0.001)) AS MM_04_LB,
+                   SUM(ROUND(MM_05/60))AS MM_05, SUM(ROUND((MON_TOT*RATE_05)*0.001)) AS MM_05_LB,
+                   SUM(ROUND(MM_06/60))AS MM_06, SUM(ROUND((MON_TOT*RATE_06)*0.001)) AS MM_06_LB,
+                   SUM(ROUND(MM_07/60))AS MM_07, SUM(ROUND((MON_TOT*RATE_07)*0.001)) AS MM_07_LB,
+                   SUM(ROUND(MM_08/60))AS MM_08, SUM(ROUND((MON_TOT*RATE_08)*0.001)) AS MM_08_LB,
+                   SUM(ROUND(MM_09/60))AS MM_09, SUM(ROUND((MON_TOT*RATE_09)*0.001)) AS MM_09_LB,
+                   SUM(ROUND(MM_10/60))AS MM_10, SUM(ROUND((MON_TOT*RATE_10)*0.001)) AS MM_10_LB,
+                   SUM(ROUND(MM_11/60))AS MM_11, SUM(ROUND((MON_TOT*RATE_11)*0.001)) AS MM_11_LB,
+                   SUM(ROUND(MM_12/60))AS MM_12, SUM(ROUND((MON_TOT*RATE_12)*0.001)) AS MM_12_LB
+        FROM(
+        SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, GRADECD, EMPID, EMPKNAME,
+                   MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+                   MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+                   MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+                   MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+                   MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+                   MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,
+                   MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+                   MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+                   MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+                   MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+                   MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+                   MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12
+        FROM(
+    SELECT  YEAR,    MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME, TO_EMPGRADECD(EMPID) GRADECD,
+                     SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_01,
+                     SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_02,
+                     SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_03,
+                     SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_04,
+                     SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_05,
+                     SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_06,
+                     SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_07,
+                     SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_08,
+                     SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_09,
+                     SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_10,
+                     SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_11,
+                     SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_12
+     FROM(
+        SELECT  YEAR, EMPORGNO, ORGNAME, COSTTYPE, EMPID , EMPKNAME, MAINOBJ_NO, SUBOBJ_NO, ISAGREE,
+                 MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+        FROM(
+                         SELECT  (SELECT A.ORGCD ORGCD
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS EMPORGNO,
+                         (SELECT A.ORGNAME
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS ORGNAME
+                         , MAINOBJ_NO,  YEAR, SUBOBJ_NO, ISAGREE, TO_EMPKNAME(EMPID) EMPKNAME, EMPID,
+                         CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+                                                         DECODE( MONTH,'01',MM, 0) AS MM_01,
+                                                         DECODE( MONTH,'02',MM, 0) AS MM_02,
+                                                         DECODE( MONTH,'03',MM, 0) AS MM_03,
+                                                         DECODE( MONTH,'04',MM, 0) AS MM_04,
+                                                         DECODE( MONTH,'05',MM, 0) AS MM_05,
+                                                         DECODE( MONTH,'06',MM, 0) AS MM_06,
+                                                         DECODE( MONTH,'07',MM, 0) AS MM_07,
+                                                         DECODE( MONTH,'08',MM, 0) AS MM_08,
+                                                         DECODE( MONTH,'09',MM, 0) AS MM_09,
+                                                         DECODE( MONTH,'10',MM, 0) AS MM_10,
+                                                         DECODE( MONTH,'11',MM, 0) AS MM_11,
+                                                         DECODE( MONTH,'12',MM, 0) AS MM_12
+                                         FROM  DAILYREPORT_RPTMH X
+                                         WHERE COSTTYPE IS NOT NULL
+                                         
+                                )
+                                          WHERE YEAR = ? -- THIS YEAR
+                                          AND EMPORGNO = ?
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID, MAINOBJ_NO , SUBOBJ_NO , ISAGREE,  EMPKNAME
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC
+                ))A,(
+                    SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+                        FROM (
+                                SELECT TYPE,  STARTDT, ENDDT,
+                                           CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE,
+                                           START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+                                FROM (
+                                        SELECT TYPE, STARTDT, ENDDT, VALUE,
+                                                   --STARTDT_MON, ENDDT_MON,
+                                                   START_YEAR, END_YEAR,
+                                                   CASE WHEN START_YEAR = ?
+                                                   OR END_YEAR = ?
+                                                   THEN ?
+                                                   ELSE '' END YEAR,
+                                                   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+                                                   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+                                        FROM(
+                                                SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE,
+                                                           SUBSTR(A.STARTDT,1,6) STARTDT,
+                                                           SUBSTR(A.ENDDT,1,6) ENDDT,
+                                                           SUBSTR(A.STARTDT,1,4) START_YEAR,
+                                                           SUBSTR(A.ENDDT,1,4) END_YEAR,
+                                                           TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+                                                           TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+                                                FROM ACCTSTDCOST A
+                                                WHERE SUBSTR(A.STARTDT,1,4) = ?
+                                                OR SUBSTR(A.ENDDT,1,4) = ?
+                                                GROUP BY TYPE, A.STARTDT, A.ENDDT
+                                                        )
+                                        )
+                                )GROUP BY TYPE, YEAR
+                )B
+                WHERE A.GRADECD = B.TYPE
+                GROUP BY YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE ,EMPID, EMPKNAME, EMPORGNO, COSTTYPE
+				)GROUP BY EMPORGNO, YEAR, ORGNAME, PJTCD, MAINOBJ_NO, PJTNAME , COSTTYPE
+                ORDER BY COSTTYPE DESC, PJTCD   
+	]]>
+	</sql-content>
+	</sql-mapping>	
+
+
+	
+	<sql-mapping id="detailScreen_team_like"  value-count="7"		url="rptCostDetailMH.jsp">
+	<sql-content>
+	<![CDATA[
+SELECT   ROW_NUMBER() OVER(PARTITION BY COSTTYPE, EMPORGNO ORDER BY 1) RANK,
+		 COUNT(*) OVER(PARTITION BY COSTTYPE ORDER BY 1) CNT,
+		 EMPORGNO, YEAR, ORGNAME EMPORGNONAME, PJTCD, MAINOBJ_NO, PJTCD USER_MAINOBJ_NO, 
+		 		PJTNAME , PJTNAME MAINOBJNAME, COSTTYPE,
+                SUM(MM_01) MM_01, SUM(MM_01_LB) MM_01_LB,
+                SUM(MM_02) MM_02, SUM(MM_02_LB) MM_02_LB,
+                SUM(MM_03) MM_03, SUM(MM_03_LB) MM_03_LB,
+                SUM(MM_04) MM_04, SUM(MM_04_LB) MM_04_LB,
+                SUM(MM_05) MM_05, SUM(MM_05_LB) MM_05_LB,
+                SUM(MM_06) MM_06, SUM(MM_06_LB) MM_06_LB,
+                SUM(MM_07) MM_07, SUM(MM_07_LB) MM_07_LB,
+                SUM(MM_08) MM_08, SUM(MM_08_LB) MM_08_LB,
+                SUM(MM_09) MM_09, SUM(MM_09_LB) MM_09_LB,
+                SUM(MM_10) MM_10, SUM(MM_10_LB) MM_10_LB,
+                SUM(MM_11) MM_11, SUM(MM_11_LB) MM_11_LB,
+                SUM(MM_12) MM_12, SUM(MM_12_LB) MM_12_LB   
+FROM(
+	    SELECT   EMPORGNO,
+                   YEAR,  (SELECT ORGNAME FROM ORG WHERE EMPORGNO = ORGCD )ORGNAME,
+				   CASE WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 4 AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   		THEN TO_pjtno_tocode(MAINOBJ_NO)
+						WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 5 AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN TO_pjtno_tocode(MAINOBJ_NO)
+						ELSE SUBOBJ_NO END PJTCD,
+				   CASE WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 4 AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   		THEN MAINOBJ_NO 
+						WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 5 AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN MAINOBJ_NO
+						ELSE SUBOBJ_NO END MAINOBJ_NO, 
+                   	CASE WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 4 AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   		THEN TO_pjtName(MAINOBJ_NO)
+						WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 5 AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN TO_pjtName(MAINOBJ_NO)
+						ELSE (SELECT JOBNAME FROM HISTJOB WHERE JOBCD = SUBOBJ_NO) END PJTNAME,		
+				   COSTTYPE,
+                   SUM(ROUND(MM_01/60))AS MM_01, SUM(ROUND((MON_TOT*RATE_01)*0.001)) AS MM_01_LB,
+                   SUM(ROUND(MM_02/60))AS MM_02, SUM(ROUND((MON_TOT*RATE_02)*0.001)) AS MM_02_LB,
+                   SUM(ROUND(MM_03/60))AS MM_03, SUM(ROUND((MON_TOT*RATE_03)*0.001)) AS MM_03_LB,
+                   SUM(ROUND(MM_04/60))AS MM_04, SUM(ROUND((MON_TOT*RATE_04)*0.001)) AS MM_04_LB,
+                   SUM(ROUND(MM_05/60))AS MM_05, SUM(ROUND((MON_TOT*RATE_05)*0.001)) AS MM_05_LB,
+                   SUM(ROUND(MM_06/60))AS MM_06, SUM(ROUND((MON_TOT*RATE_06)*0.001)) AS MM_06_LB,
+                   SUM(ROUND(MM_07/60))AS MM_07, SUM(ROUND((MON_TOT*RATE_07)*0.001)) AS MM_07_LB,
+                   SUM(ROUND(MM_08/60))AS MM_08, SUM(ROUND((MON_TOT*RATE_08)*0.001)) AS MM_08_LB,
+                   SUM(ROUND(MM_09/60))AS MM_09, SUM(ROUND((MON_TOT*RATE_09)*0.001)) AS MM_09_LB,
+                   SUM(ROUND(MM_10/60))AS MM_10, SUM(ROUND((MON_TOT*RATE_10)*0.001)) AS MM_10_LB,
+                   SUM(ROUND(MM_11/60))AS MM_11, SUM(ROUND((MON_TOT*RATE_11)*0.001)) AS MM_11_LB,
+                   SUM(ROUND(MM_12/60))AS MM_12, SUM(ROUND((MON_TOT*RATE_12)*0.001)) AS MM_12_LB
+        FROM(
+        SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, GRADECD, EMPID, EMPKNAME,
+                   MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+                   MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+                   MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+                   MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+                   MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+                   MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,
+                   MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+                   MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+                   MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+                   MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+                   MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+                   MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12
+        FROM(
+    SELECT  YEAR,    MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME, TO_EMPGRADECD(EMPID) GRADECD,
+                     SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_01,
+                     SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_02,
+                     SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_03,
+                     SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_04,
+                     SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_05,
+                     SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_06,
+                     SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_07,
+                     SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_08,
+                     SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_09,
+                     SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_10,
+                     SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_11,
+                     SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_12
+     FROM(
+        SELECT  YEAR, SUBSTR(EMPORGNO,1,2)||'00' EMPORGNO, 
+				(SELECT ORGNAME FROM ORG WHERE SUBSTR(EMPORGNO,1,2)||'00' = ORGCD )ORGNAME,
+        	 COSTTYPE, EMPID , EMPKNAME, MAINOBJ_NO, SUBOBJ_NO, ISAGREE,
+                 MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+        FROM(
+                         SELECT  (SELECT A.ORGCD ORGCD
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS EMPORGNO,
+                         (SELECT A.ORGNAME
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS ORGNAME
+                         , MAINOBJ_NO,  YEAR, SUBOBJ_NO, ISAGREE, TO_EMPKNAME(EMPID) EMPKNAME, EMPID,
+                         CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+                                                         DECODE( MONTH,'01',MM, 0) AS MM_01,
+                                                         DECODE( MONTH,'02',MM, 0) AS MM_02,
+                                                         DECODE( MONTH,'03',MM, 0) AS MM_03,
+                                                         DECODE( MONTH,'04',MM, 0) AS MM_04,
+                                                         DECODE( MONTH,'05',MM, 0) AS MM_05,
+                                                         DECODE( MONTH,'06',MM, 0) AS MM_06,
+                                                         DECODE( MONTH,'07',MM, 0) AS MM_07,
+                                                         DECODE( MONTH,'08',MM, 0) AS MM_08,
+                                                         DECODE( MONTH,'09',MM, 0) AS MM_09,
+                                                         DECODE( MONTH,'10',MM, 0) AS MM_10,
+                                                         DECODE( MONTH,'11',MM, 0) AS MM_11,
+                                                         DECODE( MONTH,'12',MM, 0) AS MM_12
+                                         FROM  DAILYREPORT_RPTMH X
+                                         WHERE COSTTYPE IS NOT NULL
+                                )
+                                          WHERE YEAR = ? -- THIS YEAR
+                                          AND EMPORGNO like ?
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID, MAINOBJ_NO , SUBOBJ_NO , ISAGREE,  EMPKNAME
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC
+                ))A,(
+                    SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+                        FROM (
+                                SELECT TYPE,  STARTDT, ENDDT,
+                                           CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE,
+                                           START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+                                FROM (
+                                        SELECT TYPE, STARTDT, ENDDT, VALUE,
+                                                   --STARTDT_MON, ENDDT_MON,
+                                                   START_YEAR, END_YEAR,
+                                                   CASE WHEN START_YEAR = ?
+                                                   OR END_YEAR = ?
+                                                   THEN ?
+                                                   ELSE '' END YEAR,
+                                                   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+                                                   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+                                        FROM(
+                                                SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE,
+                                                           SUBSTR(A.STARTDT,1,6) STARTDT,
+                                                           SUBSTR(A.ENDDT,1,6) ENDDT,
+                                                           SUBSTR(A.STARTDT,1,4) START_YEAR,
+                                                           SUBSTR(A.ENDDT,1,4) END_YEAR,
+                                                           TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+                                                           TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+                                                FROM ACCTSTDCOST A
+                                                WHERE SUBSTR(A.STARTDT,1,4) = ?
+                                                OR SUBSTR(A.ENDDT,1,4) = ?
+                                                GROUP BY TYPE, A.STARTDT, A.ENDDT
+                                                        )
+                                        )
+                                )GROUP BY TYPE, YEAR
+                )B
+                WHERE A.GRADECD = B.TYPE
+                GROUP BY YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE ,EMPID, EMPKNAME, EMPORGNO, COSTTYPE
+				)GROUP BY EMPORGNO, YEAR, ORGNAME, PJTCD, MAINOBJ_NO, PJTNAME , COSTTYPE
+                ORDER BY COSTTYPE DESC, PJTCD   
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping id="detailScreen_team_1"  value-count="7"		url="rptCostDetailMH.jsp">
+	<sql-content>
+	<![CDATA[
+SELECT   ROW_NUMBER() OVER(PARTITION BY COSTTYPE, EMPORGNO ORDER BY 1) RANK,
+		 COUNT(*) OVER(PARTITION BY COSTTYPE ORDER BY 1) CNT,
+		 EMPORGNO, YEAR, ORGNAME EMPORGNONAME, PJTCD, MAINOBJ_NO, MAINOBJ_NO USER_MAINOBJ_NO, 
+		 		PJTNAME , PJTNAME MAINOBJNAME, COSTTYPE,
+                SUM(MM_01) MM_01, SUM(MM_01_LB) MM_01_LB,
+                SUM(MM_02) MM_02, SUM(MM_02_LB) MM_02_LB,
+                SUM(MM_03) MM_03, SUM(MM_03_LB) MM_03_LB,
+                SUM(MM_04) MM_04, SUM(MM_04_LB) MM_04_LB,
+                SUM(MM_05) MM_05, SUM(MM_05_LB) MM_05_LB,
+                SUM(MM_06) MM_06, SUM(MM_06_LB) MM_06_LB,
+                SUM(MM_07) MM_07, SUM(MM_07_LB) MM_07_LB,
+                SUM(MM_08) MM_08, SUM(MM_08_LB) MM_08_LB,
+                SUM(MM_09) MM_09, SUM(MM_09_LB) MM_09_LB,
+                SUM(MM_10) MM_10, SUM(MM_10_LB) MM_10_LB,
+                SUM(MM_11) MM_11, SUM(MM_11_LB) MM_11_LB,
+                SUM(MM_12) MM_12, SUM(MM_12_LB) MM_12_LB   
+FROM(
+	    SELECT   EMPORGNO,
+                   YEAR,  (SELECT ORGNAME FROM ORG WHERE EMPORGNO = ORGCD )ORGNAME,
+				   CASE WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 4 AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   		THEN TO_pjtno_tocode(MAINOBJ_NO)
+						WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 5 AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN TO_pjtno_tocode(MAINOBJ_NO)
+						ELSE SUBOBJ_NO END PJTCD,
+				   CASE WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 4 AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   		THEN MAINOBJ_NO 
+						WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 5 AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN MAINOBJ_NO
+						ELSE SUBOBJ_NO END MAINOBJ_NO, 
+                   	CASE WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 4 AND SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   		THEN TO_pjtName(MAINOBJ_NO)
+						WHEN COSTTYPE = '직접' AND LENGTH(MAINOBJ_NO) = 5 AND SUBSTR(MAINOBJ_NO,1,1) = '1'
+						THEN TO_pjtName(MAINOBJ_NO)
+						ELSE (SELECT JOBNAME FROM HISTJOB WHERE JOBCD = SUBOBJ_NO) END PJTNAME,		
+				   COSTTYPE,
+                   SUM(ROUND(MM_01/60))AS MM_01, SUM(ROUND((MON_TOT*RATE_01)*0.001)) AS MM_01_LB,
+                   SUM(ROUND(MM_02/60))AS MM_02, SUM(ROUND((MON_TOT*RATE_02)*0.001)) AS MM_02_LB,
+                   SUM(ROUND(MM_03/60))AS MM_03, SUM(ROUND((MON_TOT*RATE_03)*0.001)) AS MM_03_LB,
+                   SUM(ROUND(MM_04/60))AS MM_04, SUM(ROUND((MON_TOT*RATE_04)*0.001)) AS MM_04_LB,
+                   SUM(ROUND(MM_05/60))AS MM_05, SUM(ROUND((MON_TOT*RATE_05)*0.001)) AS MM_05_LB,
+                   SUM(ROUND(MM_06/60))AS MM_06, SUM(ROUND((MON_TOT*RATE_06)*0.001)) AS MM_06_LB,
+                   SUM(ROUND(MM_07/60))AS MM_07, SUM(ROUND((MON_TOT*RATE_07)*0.001)) AS MM_07_LB,
+                   SUM(ROUND(MM_08/60))AS MM_08, SUM(ROUND((MON_TOT*RATE_08)*0.001)) AS MM_08_LB,
+                   SUM(ROUND(MM_09/60))AS MM_09, SUM(ROUND((MON_TOT*RATE_09)*0.001)) AS MM_09_LB,
+                   SUM(ROUND(MM_10/60))AS MM_10, SUM(ROUND((MON_TOT*RATE_10)*0.001)) AS MM_10_LB,
+                   SUM(ROUND(MM_11/60))AS MM_11, SUM(ROUND((MON_TOT*RATE_11)*0.001)) AS MM_11_LB,
+                   SUM(ROUND(MM_12/60))AS MM_12, SUM(ROUND((MON_TOT*RATE_12)*0.001)) AS MM_12_LB
+        FROM(
+        SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, GRADECD, EMPID, EMPKNAME,
+                   MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+                   MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+                   MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+                   MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+                   MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+                   MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,
+                   MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+                   MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+                   MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+                   MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+                   MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+                   MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12
+        FROM(
+    SELECT  YEAR,    MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME, TO_EMPGRADECD(EMPID) GRADECD,
+                     SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_01,
+                     SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_02,
+                     SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_03,
+                     SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_04,
+                     SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_05,
+                     SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_06,
+                     SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_07,
+                     SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_08,
+                     SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_09,
+                     SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_10,
+                     SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_11,
+                     SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, MAINOBJ_NO,  EMPID  ORDER BY 1) TOT_MON_12
+     FROM(
+        SELECT  YEAR, SUBSTR(EMPORGNO,1,2)||'00' EMPORGNO, 
+				(SELECT ORGNAME FROM ORG WHERE SUBSTR(EMPORGNO,1,2)||'00' = ORGCD )ORGNAME,
+        	 COSTTYPE, EMPID , EMPKNAME, MAINOBJ_NO, SUBOBJ_NO, ISAGREE,
+                 MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+        FROM(
+                         SELECT  (SELECT A.ORGCD ORGCD
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS EMPORGNO,
+                         (SELECT A.ORGNAME
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS ORGNAME
+                         , MAINOBJ_NO,  YEAR, SUBOBJ_NO, ISAGREE, TO_EMPKNAME(EMPID) EMPKNAME, EMPID,
+                         CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+                                                         DECODE( MONTH,'01',MM, 0) AS MM_01,
+                                                         DECODE( MONTH,'02',MM, 0) AS MM_02,
+                                                         DECODE( MONTH,'03',MM, 0) AS MM_03,
+                                                         DECODE( MONTH,'04',MM, 0) AS MM_04,
+                                                         DECODE( MONTH,'05',MM, 0) AS MM_05,
+                                                         DECODE( MONTH,'06',MM, 0) AS MM_06,
+                                                         DECODE( MONTH,'07',MM, 0) AS MM_07,
+                                                         DECODE( MONTH,'08',MM, 0) AS MM_08,
+                                                         DECODE( MONTH,'09',MM, 0) AS MM_09,
+                                                         DECODE( MONTH,'10',MM, 0) AS MM_10,
+                                                         DECODE( MONTH,'11',MM, 0) AS MM_11,
+                                                         DECODE( MONTH,'12',MM, 0) AS MM_12
+                                         FROM  DAILYREPORT_RPTMH X
+                                         WHERE COSTTYPE IS NOT NULL
+                                         AND YEAR = ?
+                                )
+                                          WHERE YEAR = TO_CHAR(SYSDATE,'YYYY')-- THIS YEAR
+                                          AND EMPORGNO like ?
+                                          AND EMPORGNO != 'CC01'
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID, MAINOBJ_NO , SUBOBJ_NO , ISAGREE,  EMPKNAME
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC
+                ))A,(
+                    SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+                        FROM (
+                                SELECT TYPE,  STARTDT, ENDDT,
+                                           CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE,
+                                           START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+                                FROM (
+                                        SELECT TYPE, STARTDT, ENDDT, VALUE,
+                                                   --STARTDT_MON, ENDDT_MON,
+                                                   START_YEAR, END_YEAR,
+                                                   CASE WHEN START_YEAR = ?
+                                                   OR END_YEAR = ?
+                                                   THEN ?
+                                                   ELSE '' END YEAR,
+                                                   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+                                                   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+                                        FROM(
+                                                SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE,
+                                                           SUBSTR(A.STARTDT,1,6) STARTDT,
+                                                           SUBSTR(A.ENDDT,1,6) ENDDT,
+                                                           SUBSTR(A.STARTDT,1,4) START_YEAR,
+                                                           SUBSTR(A.ENDDT,1,4) END_YEAR,
+                                                           TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+                                                           TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+                                                FROM ACCTSTDCOST A
+                                                WHERE SUBSTR(A.STARTDT,1,4) = ?
+                                                OR SUBSTR(A.ENDDT,1,4) = ?
+                                                GROUP BY TYPE, A.STARTDT, A.ENDDT
+                                                        )
+                                        )
+                                )GROUP BY TYPE, YEAR
+                )B
+                WHERE A.GRADECD = B.TYPE
+                GROUP BY YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE ,EMPID, EMPKNAME, EMPORGNO, COSTTYPE
+				)GROUP BY EMPORGNO, YEAR, ORGNAME, PJTCD, MAINOBJ_NO, PJTNAME , COSTTYPE
+                ORDER BY COSTTYPE DESC, PJTCD   
+	]]>
+	</sql-content>
+	</sql-mapping>	
+			
+	<sql-mapping id="costRptPrcsMH_TOT_D"  value-count="7"	url="rptCostPjtPrcsMH_TOT_D.jsp">
+	<sql-content>
+	<![CDATA[
+        SELECT YEAR, ROW_NUMBER() OVER(PARTITION  BY MAINOBJ_NO, SUBOBJ_NO ORDER BY 1) RANK,
+                   COUNT(*) OVER (PARTITION BY MAINOBJ_NO ORDER BY 1) CNT, MAINOBJ_NO,
+                   COUNT(*) OVER(PARTITION  BY SUBOBJ_NO ORDER BY 1) RANK_1,
+                   TO_pjtno_tocode(MAINOBJ_NO)USER_MAINOBJ_NO,
+                   TO_pjtName(MAINOBJ_NO) PJTNAME,SUBOBJ_NO, TO_PRCSNAME(SUBOBJ_NO) PRCSNAME,
+                   CASE WHEN ISAGREE = 'Y' THEN '합의투입'ELSE '직접투입' END ISAGREE,
+                   SUM(ROUND(MM_01/60))AS MM_01, SUM(ROUND((MON_TOT*RATE_01)*0.001)) AS MM_01_LB,
+                   SUM(ROUND(MM_02/60))AS MM_02, SUM(ROUND((MON_TOT*RATE_02)*0.001)) AS MM_02_LB,
+                   SUM(ROUND(MM_03/60))AS MM_03, SUM(ROUND((MON_TOT*RATE_03)*0.001)) AS MM_03_LB,
+                   SUM(ROUND(MM_04/60))AS MM_04, SUM(ROUND((MON_TOT*RATE_04)*0.001)) AS MM_04_LB,
+                   SUM(ROUND(MM_05/60))AS MM_05, SUM(ROUND((MON_TOT*RATE_05)*0.001)) AS MM_05_LB,
+                   SUM(ROUND(MM_06/60))AS MM_06, SUM(ROUND((MON_TOT*RATE_06)*0.001)) AS MM_06_LB,
+                   SUM(ROUND(MM_07/60))AS MM_07, SUM(ROUND((MON_TOT*RATE_07)*0.001)) AS MM_07_LB,
+                   SUM(ROUND(MM_08/60))AS MM_08, SUM(ROUND((MON_TOT*RATE_08)*0.001)) AS MM_08_LB,
+                   SUM(ROUND(MM_09/60))AS MM_09, SUM(ROUND((MON_TOT*RATE_09)*0.001)) AS MM_09_LB,
+                   SUM(ROUND(MM_10/60))AS MM_10, SUM(ROUND((MON_TOT*RATE_10)*0.001)) AS MM_10_LB,
+                   SUM(ROUND(MM_11/60))AS MM_11, SUM(ROUND((MON_TOT*RATE_11)*0.001)) AS MM_11_LB,
+                   SUM(ROUND(MM_12/60))AS MM_12, SUM(ROUND((MON_TOT*RATE_12)*0.001)) AS MM_12_LB
+         FROM(
+        SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, GRADECD, EMPID,
+                   MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+                   MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+                   MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+                   MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+                   MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+                   MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,
+                   MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+                   MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+                   MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+                   MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+                   MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+                   MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12
+        FROM(
+    SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME,
+           TO_EMPGRADECD(EMPID) GRADECD,
+           SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_01,
+           SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_02,
+           SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_03,
+           SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_04,
+           SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_05,
+           SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_06,
+           SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_07,
+           SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_08,
+           SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_09,
+           SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_10,
+           SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_11,
+           SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_12
+     FROM(
+        SELECT  YEAR, EMPORGNO, ORGNAME, COSTTYPE, EMPID , MAINOBJ_NO, SUBOBJ_NO, ISAGREE,
+                 MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+        FROM(
+                 SELECT  (SELECT A.ORGCD ORGCD
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS EMPORGNO,
+                         (SELECT A.ORGNAME
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS ORGNAME
+                         , EMPID,MAINOBJ_NO,  YEAR, SUBOBJ_NO, ISAGREE,
+                         CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+                                                         DECODE( MONTH,'01',MM, 0) AS MM_01,
+                                                         DECODE( MONTH,'02',MM, 0) AS MM_02,
+                                                         DECODE( MONTH,'03',MM, 0) AS MM_03,
+                                                         DECODE( MONTH,'04',MM, 0) AS MM_04,
+                                                         DECODE( MONTH,'05',MM, 0) AS MM_05,
+                                                         DECODE( MONTH,'06',MM, 0) AS MM_06,
+                                                         DECODE( MONTH,'07',MM, 0) AS MM_07,
+                                                         DECODE( MONTH,'08',MM, 0) AS MM_08,
+                                                         DECODE( MONTH,'09',MM, 0) AS MM_09,
+                                                         DECODE( MONTH,'10',MM, 0) AS MM_10,
+                                                         DECODE( MONTH,'11',MM, 0) AS MM_11,
+                                                         DECODE( MONTH,'12',MM, 0) AS MM_12
+                                         FROM  DAILYREPORT_RPTMH X
+                                         WHERE COSTTYPE IS NOT NULL
+                                )
+                                          WHERE MAINOBJ_NO = ?
+                                          --AND EMPID = '20030011' // TOTAL 
+                                          AND YEAR = ? -- THIS YEAR
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID,MAINOBJ_NO , SUBOBJ_NO , ISAGREE
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC
+                ))A,(
+                    SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+                FROM (
+                        SELECT TYPE,  STARTDT, ENDDT,
+                                   CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE,
+                                   START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+                        FROM (
+                                SELECT TYPE, STARTDT, ENDDT, VALUE,
+                                           --STARTDT_MON, ENDDT_MON,
+                                           START_YEAR, END_YEAR,
+                                           CASE WHEN START_YEAR = ? 
+                                           OR END_YEAR = ?
+                                           THEN ?
+                                           ELSE '' END YEAR,
+                                           (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+                                           (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+                                FROM(
+                                        SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE,
+                                                   SUBSTR(A.STARTDT,1,6) STARTDT,
+                                                   SUBSTR(A.ENDDT,1,6) ENDDT,
+                                                   SUBSTR(A.STARTDT,1,4) START_YEAR,
+                                                   SUBSTR(A.ENDDT,1,4) END_YEAR,
+                                                   TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+                                                   TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+                                        FROM ACCTSTDCOST A
+                                        WHERE SUBSTR(A.STARTDT,1,4) = ?
+                                        OR SUBSTR(A.ENDDT,1,4) = ?
+                                        GROUP BY TYPE, A.STARTDT, A.ENDDT
+                                                )
+                                )
+                        )GROUP BY TYPE, YEAR
+                )B
+                WHERE A.GRADECD = B.TYPE
+                AND A.COSTTYPE = '직접'
+                GROUP BY YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE 
+                ORDER BY MAINOBJ_NO, SUBOBJ_NO, ISAGREE
+	]]>
+	</sql-content>
+	</sql-mapping>
+				
+	<sql-mapping id="costRptPrcsMH_TOT_I"  value-count="7"		url="rptCostPjtPrcsMH_TOT_I.jsp">
+	<sql-content>
+	<![CDATA[
+        SELECT YEAR, ROW_NUMBER() OVER(PARTITION  BY MAINOBJ_NO, SUBOBJ_NO ORDER BY 1) RANK,
+                   COUNT(*) OVER (PARTITION BY SUBOBJ_NO ORDER BY 1) CNT, MAINOBJ_NO,
+                   CASE WHEN  SUBSTR(MAINOBJ_NO,1,1) = '9' 
+				   THEN (SELECT PJTNAME FROM PROJECT WHERE PJT_NO = MAINOBJ_NO) 
+				   ELSE (SELECT ORGNAME FROM ORG WHERE MAINOBJ_NO = ORG_NO) END  PJTNAME,
+				   SUBOBJ_NO,
+				   (SELECT JOBNAME FROM HISTJOB WHERE SUBOBJ_NO = JOBCD) PRCSNAME, 
+                   SUM(ROUND(MM_01/60))AS MM_01, SUM(ROUND((MON_TOT*RATE_01)*0.001)) AS MM_01_LB,
+                   SUM(ROUND(MM_02/60))AS MM_02, SUM(ROUND((MON_TOT*RATE_02)*0.001)) AS MM_02_LB,
+                   SUM(ROUND(MM_03/60))AS MM_03, SUM(ROUND((MON_TOT*RATE_03)*0.001)) AS MM_03_LB,
+                   SUM(ROUND(MM_04/60))AS MM_04, SUM(ROUND((MON_TOT*RATE_04)*0.001)) AS MM_04_LB,
+                   SUM(ROUND(MM_05/60))AS MM_05, SUM(ROUND((MON_TOT*RATE_05)*0.001)) AS MM_05_LB,
+                   SUM(ROUND(MM_06/60))AS MM_06, SUM(ROUND((MON_TOT*RATE_06)*0.001)) AS MM_06_LB,
+                   SUM(ROUND(MM_07/60))AS MM_07, SUM(ROUND((MON_TOT*RATE_07)*0.001)) AS MM_07_LB,
+                   SUM(ROUND(MM_08/60))AS MM_08, SUM(ROUND((MON_TOT*RATE_08)*0.001)) AS MM_08_LB,
+                   SUM(ROUND(MM_09/60))AS MM_09, SUM(ROUND((MON_TOT*RATE_09)*0.001)) AS MM_09_LB,
+                   SUM(ROUND(MM_10/60))AS MM_10, SUM(ROUND((MON_TOT*RATE_10)*0.001)) AS MM_10_LB,
+                   SUM(ROUND(MM_11/60))AS MM_11, SUM(ROUND((MON_TOT*RATE_11)*0.001)) AS MM_11_LB,
+                   SUM(ROUND(MM_12/60))AS MM_12, SUM(ROUND((MON_TOT*RATE_12)*0.001)) AS MM_12_LB
+        FROM(
+        SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, GRADECD,EMPID, 
+                   MM_01, TOT_MON_01, CASE WHEN TOT_MON_01 = 0 THEN 0 ELSE MM_01/TOT_MON_01 END RATE_01,
+                   MM_02, TOT_MON_02, CASE WHEN TOT_MON_02 = 0 THEN 0 ELSE MM_02/TOT_MON_02 END RATE_02,
+                   MM_03, TOT_MON_03, CASE WHEN TOT_MON_03 = 0 THEN 0 ELSE MM_03/TOT_MON_03 END RATE_03,
+                   MM_04, TOT_MON_04, CASE WHEN TOT_MON_04 = 0 THEN 0 ELSE MM_04/TOT_MON_04 END RATE_04,
+                   MM_05, TOT_MON_05, CASE WHEN TOT_MON_05 = 0 THEN 0 ELSE MM_05/TOT_MON_05 END RATE_05,
+                   MM_06, TOT_MON_06, CASE WHEN TOT_MON_06 = 0 THEN 0 ELSE MM_06/TOT_MON_06 END RATE_06,
+                   MM_07, TOT_MON_07, CASE WHEN TOT_MON_07 = 0 THEN 0 ELSE MM_07/TOT_MON_07 END RATE_07,
+                   MM_08, TOT_MON_08, CASE WHEN TOT_MON_08 = 0 THEN 0 ELSE MM_08/TOT_MON_08 END RATE_08,
+                   MM_09, TOT_MON_09, CASE WHEN TOT_MON_09 = 0 THEN 0 ELSE MM_09/TOT_MON_09 END RATE_09,
+                   MM_10, TOT_MON_10, CASE WHEN TOT_MON_10 = 0 THEN 0 ELSE MM_10/TOT_MON_10 END RATE_10,
+                   MM_11, TOT_MON_11, CASE WHEN TOT_MON_11 = 0 THEN 0 ELSE MM_11/TOT_MON_11 END RATE_11,
+                   MM_12, TOT_MON_12, CASE WHEN TOT_MON_12 = 0 THEN 0 ELSE MM_12/TOT_MON_12 END RATE_12
+        FROM(
+    SELECT YEAR, MAINOBJ_NO, SUBOBJ_NO, ISAGREE, EMPORGNO, ORGNAME, COSTTYPE, EMPID, TO_EMPKNAME(EMPID) EMPKNAME,
+           TO_EMPGRADECD(EMPID) GRADECD,
+           SUM(MM_01) AS MM_01, SUM(SUM(MM_01)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_01,
+           SUM(MM_02) AS MM_02, SUM(SUM(MM_02)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_02,
+           SUM(MM_03) AS MM_03, SUM(SUM(MM_03)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_03,
+           SUM(MM_04) AS MM_04, SUM(SUM(MM_04)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_04,
+           SUM(MM_05) AS MM_05, SUM(SUM(MM_05)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_05,
+           SUM(MM_06) AS MM_06, SUM(SUM(MM_06)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_06,
+           SUM(MM_07) AS MM_07, SUM(SUM(MM_07)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_07,
+           SUM(MM_08) AS MM_08, SUM(SUM(MM_08)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_08,
+           SUM(MM_09) AS MM_09, SUM(SUM(MM_09)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_09,
+           SUM(MM_10) AS MM_10, SUM(SUM(MM_10)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_10,
+           SUM(MM_11) AS MM_11, SUM(SUM(MM_11)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_11,
+           SUM(MM_12) AS MM_12, SUM(SUM(MM_12)) OVER(PARTITION BY EMPORGNO, ORGNAME,  EMPID  ORDER BY 1) TOT_MON_12
+     FROM(
+        SELECT  YEAR, EMPORGNO, ORGNAME, COSTTYPE, EMPID , MAINOBJ_NO, SUBOBJ_NO, ISAGREE,
+                 MM_01, MM_02, MM_03, MM_04, MM_05, MM_06, MM_07, MM_08, MM_09, MM_10, MM_11, MM_12
+        FROM(
+                 SELECT  (SELECT A.ORGCD ORGCD
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS EMPORGNO,
+                         (SELECT A.ORGNAME
+                         FROM ORG A, EMPALL C
+                         WHERE A.ORG_NO = C.ORGCD
+                         AND C.EMPID=X.EMPID) AS ORGNAME
+                         , EMPID,MAINOBJ_NO,  YEAR, SUBOBJ_NO, ISAGREE,
+                         CASE WHEN COSTTYPE IN ('D','$D') THEN '직접' ELSE  '간접' END COSTTYPE,
+                                                         DECODE( MONTH,'01',MM, 0) AS MM_01,
+                                                         DECODE( MONTH,'02',MM, 0) AS MM_02,
+                                                         DECODE( MONTH,'03',MM, 0) AS MM_03,
+                                                         DECODE( MONTH,'04',MM, 0) AS MM_04,
+                                                         DECODE( MONTH,'05',MM, 0) AS MM_05,
+                                                         DECODE( MONTH,'06',MM, 0) AS MM_06,
+                                                         DECODE( MONTH,'07',MM, 0) AS MM_07,
+                                                         DECODE( MONTH,'08',MM, 0) AS MM_08,
+                                                         DECODE( MONTH,'09',MM, 0) AS MM_09,
+                                                         DECODE( MONTH,'10',MM, 0) AS MM_10,
+                                                         DECODE( MONTH,'11',MM, 0) AS MM_11,
+                                                         DECODE( MONTH,'12',MM, 0) AS MM_12
+                                         FROM  DAILYREPORT_RPTMH X
+                                         WHERE COSTTYPE IS NOT NULL
+                                         )
+                                          WHERE YEAR = ? -- THIS YEAR
+              ) GROUP BY YEAR,EMPORGNO, ORGNAME, COSTTYPE, EMPID,MAINOBJ_NO , SUBOBJ_NO , ISAGREE
+              ORDER BY GRADECD, EMPID, COSTTYPE DESC
+                ))A,(
+                                        SELECT TYPE, YEAR AS TODATE, SUM(VALUE) MON_TOT
+		FROM (	
+			SELECT TYPE,  STARTDT, ENDDT,  
+				   CASE WHEN START_YEAR = YEAR THEN VALUE * STARTDT_AVG ELSE VALUE * ENDDT_AVG END VALUE, 
+				   START_YEAR, END_YEAR, YEAR, STARTDT_AVG, ENDDT_AVG
+			FROM (
+				SELECT TYPE, STARTDT, ENDDT, VALUE, 
+					   --STARTDT_MON, ENDDT_MON, 
+					   START_YEAR, END_YEAR, 
+					   CASE WHEN START_YEAR = ?
+					   OR END_YEAR = ?
+					   THEN ?
+					   ELSE '' END YEAR,
+					   (STARTDT_MON-STARTDT)+1 STARTDT_AVG,
+					   (ENDDT-ENDDT_MON)+1 ENDDT_AVG
+				FROM(					
+					SELECT TYPE, ROUND(SUM(A.VALUE)/12) VALUE, 
+						   SUBSTR(A.STARTDT,1,6) STARTDT, 
+						   SUBSTR(A.ENDDT,1,6) ENDDT,
+						   SUBSTR(A.STARTDT,1,4) START_YEAR,
+						   SUBSTR(A.ENDDT,1,4) END_YEAR, 
+						   TO_CHAR(SUBSTR(A.STARTDT,1,4)||'12') STARTDT_MON,
+						   TO_CHAR(SUBSTR(A.ENDDT,1,4)||'01') ENDDT_MON
+					FROM ACCTSTDCOST A		
+					WHERE SUBSTR(A.STARTDT,1,4) = ?
+					OR SUBSTR(A.ENDDT,1,4) = ?
+					GROUP BY TYPE, A.STARTDT, A.ENDDT
+						)	
+				)
+			)GROUP BY TYPE, YEAR	
+                )B
+                WHERE A.GRADECD = B.TYPE
+                AND A.COSTTYPE = '간접'
+                AND A.SUBOBJ_NO = ?
+                GROUP BY YEAR, MAINOBJ_NO, SUBOBJ_NO
+                ORDER BY MAINOBJ_NO, SUBOBJ_NO
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql>

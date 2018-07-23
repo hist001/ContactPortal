@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="COLL_01"   value-count="0"  url="채권/채무조회" >  
+   	<sql-content>
+  		<![CDATA[
+		SELECT DISTINCT
+							ORG_NO,
+							DOCNO,
+							BILLNO,
+							ACCTCD,
+							ACCTNAME,
+							CUSTCD,
+							CUSTNAME,
+							SALE,
+							PRERECEIPT,
+							TOTRECEIPT,
+							RECEIVABLE,
+							DESCRIPTION,
+							BILLDT,
+							RECEIPTEXPDT,
+							ORGCD,
+							ACCEPTDT,
+							ORGNAME,
+							RECEIPTDT,
+							RECEIVABLECHK,
+							CREMPID
+		
+		FROM                 (
+			SELECT A.*, SUBSTR(B.CREMPID,1,12) AS DOCNO,B.*
+
+			FROM (SELECT DISTINCT EMPID,EMPKNAME,ORGCD  AS ORG_NO FROM EMPALL
+				    WHERE EDUTY IN ('E','G','T','A','C','Y') --그룹장,팀장,그룹장,부문장,팀원
+					AND WENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD')) A,
+		(SELECT
+					A.BILLNO,
+					A.ACCTCD,
+					A.ACCTNAME,
+					A.CUSTCD,
+					A.CUSTNAME,
+					A.SALE,
+					A.PRERECEIPT,
+					B.AA12_AMT AS TOTRECEIPT,
+					A.RECEIVABLE,
+					A.DESCRIPTION,
+					A.BILLDT,
+					A.RECEIPTEXPDT,
+					A.ORGCD,
+					A.ACCEPTDT,
+					NVL((SELECT MAX(ORGNAME)
+					FROM ORGHISTORY B
+					WHERE  AA12_HGIL  BETWEEN STARTDT AND ENDDT
+					AND ORGCD= DECODE(AA12_BSCD,NULL,A.ORGCD,AA12_BSCD )),TO_ORGNONAME_N('1049',A.BILLDT))
+					AS ORGNAME,
+					SUBSTR(B.AA12_HGIL,1,8) RECEIPTDT,
+					RECEIVABLECHK,
+					A.BILLNO||(SELECT TO_EMPORGNO(CREMPID)
+					FROM ACCTRPTHD
+					WHERE DOCNO=BILLNO) AS CREMPID
+		
+		                FROM    (SELECT A.AA30_JPNO BILLNO,
+		                                        A.AA30_GJCD ACCTCD,
+		                                        B.AZ01_GJNM ACCTNAME,
+		                                        A.AA30_CUST CUSTCD,
+		                                        C.AZ25_SANGHO CUSTNAME,
+		                                        A.AA30_AMT1 SALE,
+		                                        A.AA30_AMT2 PRERECEIPT,
+		                                        A.AA30_AMT3 TOTRECEIPT,
+		                                        A.AA30_AMT4 RECEIVABLE,
+		                                        A.AA30_JEYO DESCRIPTION,
+		                                        A.AA30_ILJA BILLDT,
+		                                        A.AA30_DUE RECEIPTEXPDT,
+		                                        A.AA30_BSCD ORGCD,
+		                                        A.AA30_DATE ACCEPTDT,
+		                                        DECODE(A.AA30_AMT4,0,'N','Y') AS RECEIVABLECHK
+		                        FROM   TBAA30@TO_INHAUH A,
+		                                        TBAZ01@TO_INHAUH B,
+		                                        ACCTN.TBAZ25 C,
+		                                        TBBG01 D
+		
+		                        WHERE  (A.AA30_GJCD = B.AZ01_GJCD
+		                                AND    A.AA30_CUST = C.AZ25_CUST_CD
+		                                AND    A.AA30_BSCD = D.BG01_BSCD
+		                                AND    A.AA30_ILJA BETWEEN REPLACE(FROMDT:,'-','') AND REPLACE(ENDDT:,'-',''))
+		                        ) A,
+		                        TBAA12@TO_INHAUH B,
+		                        ORG C
+				 WHERE    C.ORGNAME LIKE '%'||ORGNAME:||'%'
+				 AND   	A.BILLNO LIKE BILLNO:||'%'
+				 AND    A.SALE >= SALE:
+				 AND    A.CUSTNAME LIKE '%'||CUSTNAME:||'%'
+				 AND    RECEIVABLECHK LIKE RECEIVABLECHK:||'%'
+				 AND 	AA12_JJNO(+)  LIKE BILLNO||'___'
+				 AND 	A.ORGCD=C.ORGCD(+)
+				 AND   A.BILLNO LIKE DOCTYPE:||'%') B
+		WHERE A.ORG_NO= SUBSTR(B.CREMPID,13,8)
+        AND   (EMPID LIKE DECODE(DOCTYPE:,'A','',DECODE(ORG_NO:,'1049','','1046','',
+        												DECODE(EMPID:,'20000189','00001422',
+				        											  '20000007','',
+				        											  '20000022','',
+				        											  '20000109','',
+				        											  '09500352','',
+				        											  '09100022','',
+				        											  '09600500','',--박중식				        											  
+				        											  '09500433','',--김대식				        											  
+				        											  '09700176','',
+				        											  '20000022','',--김상일
+				        											   EMPID:)))||'%'
+        													-- 재무팀 전체조회 , 작성자 상위자 조회
+                                                            -- 육영혜(20000189) SI영업팀,SI사업팀 조회 ,
+                                                            -- 이수임(20060021) SI영업팀,SI사업팀 조회 ,
+                                                            -- 이현주(20000007) 전체,
+                                                            -- 김상일(20000022)전체, 
+                                                            -- 조경훈(20000109)전체,
+                                                            -- 고영석(09500352)전체,
+                                                            -- 김용현(09100022)전체,
+                                                            -- 박중식(09600500)전체,
+                                                            -- 김성경(20000037) 팀장조회             			 																			
+                                                            -- 김충식(09700176)                                                               
+			   OR ORG_NO = ORG_NO:)             	
+		AND NOT EXISTS (SELECT * FROM COMCODE   --가상직원 제외처리
+						WHERE HIGHCODE ='CD-20090401-001'
+						AND CODENAME=EMPID:)	   		 
+		ORDER BY DOCNO)  		  			   
+		]]>
+	</sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="COLL_02"   value-count="0"  url="채권/채무 세부조회" >  
+   	<sql-content>
+  		<![CDATA[		   
+		SELECT * 
+		FROM (SELECT A.AA30_JPNO BILLNO,
+					A.AA30_GJCD ACCTCD,
+					B.AZ01_GJNM ACCTNAME,
+					A.AA30_CUST CUSTCD,
+					C.AZ25_SANGHO CUSTNAME,
+					A.AA30_AMT1 SALE,
+					A.AA30_AMT2 PRERECEIPT,
+					A.AA30_AMT3 TOTRECEIPT,
+					A.AA30_AMT4 RECEIVABLE,
+					A.AA30_JEYO DESCRIPTION,
+					A.AA30_ILJA BILLDT,
+					A.AA30_DUE RECEIPTEXPDT,
+					A.AA30_BSCD ORGCD,
+					(SELECT AA12_HGIL FROM TBAA12@TO_INHAUH WHERE AA12_JJNO LIKE AA30_JPNO||'%' AND ROWNUM=1) AS ACCEPTDT
+			FROM   TBAA30@TO_INHAUH A,
+					TBAZ01@TO_INHAUH B,
+					ACCTN.TBAZ25 C,
+					TBBG01 D
+		
+			WHERE  (A.AA30_GJCD = B.AZ01_GJCD
+				AND    A.AA30_CUST = C.AZ25_CUST_CD
+				AND    A.AA30_BSCD = D.BG01_BSCD
+				AND    A.AA30_ILJA > '20040101')
+			OR (A.AA30_GJCD = B.AZ01_GJCD
+				AND    A.AA30_CUST = C.AZ25_CUST_CD
+				AND    A.AA30_BSCD = D.BG01_BSCD
+				AND    A.AA30_AMT4 > 0
+				AND    A.AA30_ILJA < '20040101'))
+			 A 
+		WHERE A.BILLNO = BILLNO: 
+		AND   A.BILLNO LIKE DOCTYPE:||'%'
+		AND ROWNUM = 1   
+
+		]]>
+	</sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="COLL_03"   value-count="0"  url="채권/채무 세부리스트 조회" >  
+   	<sql-content>
+  		<![CDATA[		   
+		SELECT  A.AA12_JPNO AS BILLNO,
+				A.AA12_JJNO AS REFBILLNO,
+				SUBSTR(A.AA12_JPNO,2,8) RECEIPTDT,
+				A.AA12_AMT AS RECEIPT
+		FROM TBAA12@TO_INHAUH A
+		WHERE A.aa12_jjno  LIKE BILLNO:||'%'
+		]]>
+	</sql-content>
+   </sql-mapping>
+
+</sql>

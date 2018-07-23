@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+    <sql-mapping  id="OJT_001"   value-count="0" url="사원조회" >  
+	<sql-content>
+	<![CDATA[
+	 SELECT 
+	 		EMPID
+			,EMPKNAME
+			,ORGCD
+			,ETYPE
+			,WSTARTDT
+			,WENDDT
+			,EDUTY
+			,EGRADE
+			,JOBDS
+			,JOBAGENCY
+			,MAINJOBCD
+			,TECHGRADE
+			,APRVEMPID
+			,REPORTYN
+			,SUBEMPID
+			,EMPMEMO
+			,EGROUP
+			,SYSEMPID
+			,ID
+			,PASSWORD
+	 	FROM EMPALL			
+		WHERE EMPKNAME LIKE [S_EMPKNAME]||'%'
+		OR EMPID = [S_EMPID]	
+		
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>

@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+
+   <sql-mapping  id="bizAcqPerson"   value-count="1"  url="거래처 관련자 조회" >  
+   	<sql-content>
+  		<![CDATA[		   
+		SELECT 	BIZACQCD, 
+				BIZSN, 
+				BIZSEC, 
+				BIZPSNEMPID, 
+				to_empkname(BIZPSNEMPID)regEmpKname, 
+				BIZPSNNAME, 
+				BIZPSNPHNO, 
+			  	BIZPSNPOST, 
+			  	BIZPSNRANK, 
+			  	BIZEMAIL, 
+			  	BIZNOTE, 
+			  	BIZEMPID, 
+			  	to_empkname(BIZEMPID)empKname
+		FROM BIZACQPERSON
+		WHERE BIZACQCD = ?
+		]]>
+	</sql-content>
+   </sql-mapping>
+   
+     <sql-mapping  id="bizAcq"   value-count="1"  url="거래처 조회" >  
+   	<sql-content>
+  		<![CDATA[		   
+		SELECT 	BIZACQCD, 
+				BIZACQNAME, 
+				BIZGROUPFLAG, 
+				BIZUSEFLAG, 
+				BIZDIVTYPE, 
+				BIZREGNO, 
+				BIZFIRMNO, 
+				BIZTYPE, 
+				BIZITEM, 
+				UPDFLAG,
+				BIZJOINITEM, 
+				BIZACQADDR,  
+				BIZCEONAME, 
+				BIZPHNO, 
+				BIZFAXNO, 
+				BIZBANKNAME, 
+				BIZACCTNO, 
+				BIZACCTNAME, 
+				BIZACQACCTCD, 
+				BIZHEADSPOTFLAG, 
+				BIZHEADACQCD, 
+				BIZCURRFLAG, 
+				BIZHOMEPAGE, 
+				BIZALIAS, 
+				BIZMEMO, 
+				BIZSTARTDT, 
+				BIZENDDT, 
+				BIZUPDDT, 
+				BIZUPDEMPID, 
+				TO_EMPKNAME(BIZUPDEMPID) AS bizEmpKName
+		FROM BIZACQCORP WHERE BIZACQCD = ?
+		]]>
+	</sql-content>
+   </sql-mapping>
+
+     <sql-mapping  id="BIZ_001"   value-count="0"  url="거래처 삭제" >  
+   	<sql-content>
+  		<![CDATA[		   
+		DELETE FROM BIZACQCORP
+		WHERE BIZACQCD = BIZACQCD:
+		]]>
+	</sql-content>
+   </sql-mapping> 
+
+     <sql-mapping  id="BIZ_002"   value-count="0"  url="거래처 관련자 삭제" >  
+   	<sql-content>
+  		<![CDATA[		   
+		DELETE FROM BIZACQPERSON
+		WHERE BIZACQCD = BIZACQCD:
+		]]>
+	</sql-content>
+   </sql-mapping> 
+
+     <sql-mapping  id="BIZ_003"   value-count="0"  url="거래처 조회" >  
+   	<sql-content>
+  		<![CDATA[
+		SELECT
+			A.BIZACQCD,
+			BIZCEONAME,
+			UPDFLAG,
+			BIZREGNO,
+			BIZSTARTDT,
+			TRIM(	REPLACE(
+					REPLACE(
+					REPLACE(
+					REPLACE(
+					REPLACE(
+					REPLACE(
+					REPLACE(
+					REPLACE(
+					REPLACE(UPPER(BIZACQNAME),'(주)',''),
+					'(사)',''),
+					'(재)',''),
+					'(유)',''),
+					'(주)',''),
+					'(학)',''),
+					'(의)',''),
+					'(합)',''),
+					'(복)',''))
+			AS BIZACQNAME,
+			BIZACQADDR,
+			BIZGROUPFLAG,
+			BIZTYPE,
+			BIZITEM,
+			BIZACQACCTCD
+		FROM  BIZACQCORP A, BIZACQPERSON B
+		WHERE A.BIZACQCD = B.BIZACQCD
+		WHERE bizAcqName 	LIKE bizAcqName:||'%'
+		AND bizCeoName 		LIKE bizCeoName:||'%'
+		AND bizRegNo	 	LIKE bizRegNo:||'%'
+		AND bizAcqAcctCd 	LIKE bizAcqAcctCd:||'%'
+		AND bizAcqAddr 		LIKE bizAcqAddr:||'%'
+		AND bizPsnName 		LIKE bizPsnName:||'%'
+		AND bizPsnPhNo 		LIKE bizPsnPhNo:||'%'
+		AND bizPsnPost 		LIKE bizPsnPost:||'%'
+
+		]]>
+	</sql-content>
+	</sql-mapping>
+	
+	     <sql-mapping  id="BIZ_004"   value-count="0"  url="명함상세조회" >  
+   	<sql-content>
+  		<![CDATA[
+				SELECT   BIZACQNAME,
+		         BIZPSNNAME,
+			BIZPSNPHNO,
+			BIZPSNPOST,
+			BIZPSNRANK,
+			BIZPSNEMPID,
+			TO_EMPKNAME(BIZPSNEMPID) AS BIZPSNEMPKNM,
+			BIZSEC,
+			BIZNOTE,
+	        C.FILEORIGINNAME,
+	        C.FILESYSTEMNAME			
+		FROM BIZACQCORP A, BIZACQPERSON B,COM_FILES C
+		WHERE A.BIZACQCD = B.BIZACQCD 
+		AND   A.BIZACQCD LIKE  [S_BIZACQCD]||'%'
+		AND   B.BIZSN   LIKE  [S_BIZSN]||'%'
+	   AND  B.BIZACQCD=UI_NO(+)
+	   AND  B.BIZSN= OBJ_NO(+)			
+		]]>
+	</sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="BIZ_005"   value-count="0"  url="명함리스트조회" >  
+   	<sql-content>
+  		<![CDATA[
+	   SELECT
+	        A.BIZACQCD,
+	        B.BIZSN ,
+	        C.FILEORIGINNAME,
+	        C.FILESYSTEMNAME
+	   FROM BIZACQCORP A, BIZACQPERSON B,COM_FILES C
+	   WHERE A.BIZACQCD=B.BIZACQCD
+				AND   A.BIZACQCD like [S_BIZACQCD]||'%'
+				AND  BIZACQNAME like '%'||[S_BIZACQNAME]||'%'
+	   AND  B.BIZACQCD=UI_NO(+)
+	   AND  B.BIZSN= OBJ_NO(+)			
+		]]>
+	</sql-content>
+   </sql-mapping>
+   
+</sql>

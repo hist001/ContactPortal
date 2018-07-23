@@ -1,0 +1,955 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="LogConferStatusA"   value-count="2"   
+   url="수입완료시 history 에 Log 기록" >  
+   <sql-content>
+   <![CDATA[
+		insert into conferhistory
+		(
+			select a.conf_no, (SELECT NVL(MAX(CONFHIST_NO),0)+1 FROM CONFERHISTORY) confhist_no, sysdate updtm,'' upempid,'STATUS' columnname,''before,? after
+			from 
+					(
+                   		select a.conf_no,
+                   				case b.unitType when 1 then
+                   				       a.amt * 1000
+                       				when 2 then
+                       				   a.amt
+                                end amt
+                        from  CONFER A, SALECONFER B 
+                        where a.conf_no=b.conf_no
+                     )  A,
+				 	(
+				  	select conf_no, sum(amt) amt
+					from 
+					(
+			          select conf_no, sum(supplyamt) amt from acctrpthd
+			          where  status in ('DD1','DE0')
+					  and doctype= 'A'
+					  and conf_no = (select conf_no from acctrpthd where docno = ?)
+			          group by conf_no
+					)
+					group by conf_no
+				 ) B
+			where a.conf_no = b.conf_no
+			and   a.amt = b.amt
+		)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="LogConferStatusB"   value-count="2"   
+   url="지급완료시 history 에 Log 기록" >  
+   <sql-content>
+   <![CDATA[
+		insert into conferhistory
+		(
+		
+			select a.conf_no, (SELECT NVL(MAX(CONFHIST_NO),0)+1 FROM CONFERHISTORY) confhist_no, sysdate updtm,'' upempid,'STATUS' columnname,''before, ? after
+			from 
+					(
+                   		select a.conf_no,
+                   				case b.unitType when 1 then
+                   				       a.amt * 1000
+                       				when 2 then
+                       				   a.amt
+                                end amt
+                        from  CONFER A, BUYCONFER B 
+                        where a.conf_no=b.conf_no
+                     )  A,
+				 	(
+				  	select conf_no, sum(amt) amt
+					from 
+					(
+			          select conf_no, sum(supplyamt) amt from acctrpthd
+			          where  status in ('DD1','DE0')
+					  and doctype= 'B'
+					  and conf_no = (select conf_no from acctrpthd where docno = ?)
+			          group by conf_no
+					)
+					group by conf_no
+				 ) B
+			where a.conf_no = b.conf_no
+			and   a.amt = b.amt
+			
+		)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="UptRefConfStatus"   value-count="1"   
+   url="결재상태 변경" >  
+   <sql-content>
+   <![CDATA[
+		Update Confer
+		   SET status = 'EAA'
+		WHERE conf_no = (select refconf_no from confer where conf_no = ?)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="UptConfCd"   value-count="4"
+   url="결재상태 변경" >  
+   <sql-content>
+   <![CDATA[
+		Update Confer
+		   SET confCd = ?, PIID=?, FIID=?
+		WHERE conf_no =?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="logConferStatus"   value-count="3" url="지급 품의 이미지 정보 삭제" >  
+   <sql-content>
+   <![CDATA[
+		INSERT INTO CONFERHISTORY
+		(
+		 	    SELECT 	 A.conf_no,
+					 	(SELECT NVL(MAX(CONFHIST_NO),0)+1 FROM CONFERHISTORY),
+					 	sysdate,
+					 	?,
+					 	'STATUS',
+						'',
+						'EDA'
+				 FROM 
+					(
+                   		select a.conf_no,
+                   				case b.unitType when 1 then
+                   				       a.amt * 1000
+                       				when 2 then
+                       				   a.amt
+                                end amt
+                        from  CONFER A, BUYCONFER B 
+                        where a.conf_no=b.conf_no
+                     )  A,
+				    (
+					  	select conf_no, sum(amt) amt
+						from 
+						(
+				          select conf_no, sum(supplyamt) amt from acctrpthd
+				          where
+				          conf_no = (select conf_no from acctrpthd where docno = ?)
+				          and status in ('DD1','DE0')
+				          group by conf_no
+						  --union all
+						  --select conf_no,supplyamt amt from acctrpthd where docno = ?   
+						)
+						group by conf_no
+				   )B
+				 where
+				           a.CONF_NO = b.CONF_NO
+				 and   a.amt = b.amt
+		)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="uptConferStatusB"   value-count="3" url="지급완료시 구매품의서 지급완료" >  
+   <sql-content>
+   <![CDATA[
+		UPDATE CONFER
+		set status= ?
+		where conf_no =
+		(
+			select a.conf_no
+			from 
+					(
+						select a.conf_no, a.amt, b.unittype,b.isvat,a.pjt_no,
+							   case b.isVat when 'Y' then
+						                         case b.unitType when 1 then
+												 	  			 	  a.amt*1000-a.amt*10/110*1000
+												 	  			 when 2 then
+																 	  a.amt-a.amt*10/110
+												 end
+						                    when 'N' then
+						                         case b.unitType when 1 then
+												 	  			 	  a.amt*1000
+												                 when 2 then
+																 	  a.amt
+												 end
+						       end amount
+						from  CONFER A, BUYCONFER B
+						where a.conf_no = b.conf_no
+                     )  A,
+				 	(
+							select a.conf_no,sum(b.amount) amount
+							from acctrpthd a, acctrptsb b
+							where a.mainno=b.mainno
+							and b.acctcd not like '1113%'
+							and conf_no = (select conf_no from acctrpthd where docno =?)
+							and status in ('DD1','DE0')
+							group by conf_no
+							--union all
+					  		--select conf_no,supplyamt amt from acctrpthd where docno = ? 
+				 ) B
+			where 
+				  a.conf_no = b.conf_no
+			and   a.amount = b.amount
+		)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="uptConferStatusA"   value-count="3" url="수입완료시 판매품의서 수입완료" >  
+   <sql-content>
+   <![CDATA[
+		UPDATE CONFER
+		set status= ?
+		where conf_no =
+		(
+			select a.conf_no
+			from 
+					(
+						select a.conf_no, a.amt, b.unittype,b.isvat,a.pjt_no,
+							   case b.isVat when 'Y' then
+						                         case b.unitType when 1 then
+												 	  			 	  a.amt*1000-a.amt*10/110*1000
+												 	  			 when 2 then
+																 	  a.amt-a.amt*10/110
+												 end
+						                    when 'N' then
+						                         case b.unitType when 1 then
+												 	  			 	  a.amt*1000
+												                 when 2 then
+																 	  a.amt
+												 end
+						       end amount
+						from  CONFER A, SALECONFER B
+						where a.conf_no = b.conf_no
+                     )  A,
+				 	(
+							select a.conf_no,sum(b.amount) amount
+							from acctrpthd a, acctrptsb b
+							where a.mainno=b.mainno
+							and b.acctcd like '4%'
+							and conf_no = (select conf_no from acctrpthd where docno =?)
+							and status in ('DD1','DE0')
+							group by conf_no 
+							--union all
+					  		--select conf_no,supplyamt amt from acctrpthd where docno = ? 
+				 ) B
+			where 
+				  a.conf_no = b.conf_no
+			and   a.amount = b.amount
+		)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="uptConferStatusEAA"   value-count="3" url="지급완료시 구매품의서 진행완료" >  
+   <sql-content>
+   <![CDATA[
+		UPDATE CONFER
+		set status= ?
+		where conf_no =
+		(
+			select a.conf_no
+			from 
+					(
+                   		select a.conf_no,
+                   				case b.unitType when 1 then
+                   				       a.amt * 1000
+                       				when 2 then
+                       				   a.amt
+                                end amt
+                        from  CONFER A, BUYCONFER B 
+                        where a.conf_no=b.conf_no
+                     )  A,
+				 	(
+				  	select conf_no, sum(amt) amt
+					from 
+					(
+			          select conf_no, sum(supplyamt) amt from acctrpthd
+			          where
+			          conf_no = (select conf_no from acctrpthd where docno = ?)
+			          and status in ('DD1','DE0','DC0')
+			          group by conf_no
+					  --union all
+					  --select conf_no,supplyamt amt from acctrpthd where docno = ?   
+					)
+					group by conf_no
+				 ) B
+			where 
+				  a.conf_no = b.conf_no
+			and   a.amt = b.amt
+		)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="uptConferStatusAEAA"   value-count="3" url="지급완료시 구매품의서 진행완료" >  
+   <sql-content>
+   <![CDATA[
+		UPDATE CONFER
+		set status= ?
+		where conf_no =
+		(
+			select a.conf_no
+			from 
+					(
+                   		select a.conf_no,
+                   				case b.unitType when 1 then
+                   				       a.amt * 1000
+                       				when 2 then
+                       				   a.amt
+                                end amt
+                        from  CONFER A, SALECONFER B 
+                        where a.conf_no=b.conf_no
+                     )  A,
+				 	(
+				  	select conf_no, sum(amt) amt
+					from 
+					(
+			          select conf_no, sum(supplyamt) amt from acctrpthd
+			          where
+			          conf_no = (select conf_no from acctrpthd where docno = ?)
+			          and status in ('DD1','DE0','DC0')
+			          group by conf_no
+					  --union all
+					  --select conf_no,supplyamt amt from acctrpthd where docno = ?   
+					)
+					group by conf_no
+				 ) B
+			where 
+				  a.conf_no = b.conf_no
+			and   a.amt = b.amt
+		)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="uptPJTStatus_A"   value-count="2" url="수입완료시 판매PJT종료" >  
+   <sql-content>
+   <![CDATA[
+			UPDATE PROJECT
+			SET PJTSTATUS = 'END'
+			WHERE PJT_NO =
+			(
+				SELECT F.PJT_NO
+				FROM
+				(
+					select C.REFCONF_NO CONF_NO, c.amount
+					from 
+					(
+					select a.conf_no, A.REFCONF_NO, a.amt, b.unittype,b.isvat,
+						   case b.isVat when 'Y' then
+					                         case b.unitType when 1 then
+											 	  			 	  a.amt*1000-a.amt*10/110*1000
+											 	  			 when 2 then
+															 	  a.amt-a.amt*10/110
+											 end
+					                    when 'N' then
+					                         case b.unitType when 1 then
+											 	  			 	  a.amt*1000
+											                 when 2 then
+															 	  a.amt
+											 end
+					       end amount
+					from confer a, buyconfer b 
+					where a.conf_no = b.conf_no
+					) c,
+					(
+					select a.conf_no,obj_no, sum(amount) amount 
+					from 
+					acctrpthd a, 
+					acctrptsb b
+					where a.mainno = b.mainno
+					and a.status in ('DD1','DE0') 
+					and b.acctcd like '5%'
+					and a.docno =(select c.docno from acctrpthd a,confer b,acctrpthd c where b.refconf_no=a.conf_no and c.conf_no=b.conf_no and a.docno =?)
+					group by  a.conf_no,obj_no
+					) d
+					where c.conf_no = d.conf_no
+					and c.amount = d.amount
+				) E,
+				(
+					select c.conf_no, c.amount,c.pjt_no
+					from 
+					(
+					select a.conf_no, a.amt, b.unittype,b.isvat,a.pjt_no,
+						   case b.isVat when 'Y' then
+					                         case b.unitType when 1 then
+											 	  			 	  a.amt*1000-a.amt*10/110*1000
+											 	  			 when 2 then
+															 	  a.amt-a.amt*10/110
+											 end
+					                    when 'N' then
+					                         case b.unitType when 1 then
+											 	  			 	  a.amt*1000
+											                 when 2 then
+															 	  a.amt
+											 end
+					       end amount
+					from confer a, SALECONFER b, PROJECT C
+					where a.conf_no = b.conf_no
+					AND A.PJT_NO = C.PJT_NO
+					AND C.PJTTYPE ='S'
+					) c,
+					(
+					SELECT A.CONF_NO,SUM(B.AMOUNT) AMOUNT FROM ACCTRPTHD A, ACCTRPTSB B
+					WHERE A.MAINNO = B.MAINNO
+					AND B.ACCTCD LIKE '4%'
+					AND A.STATUS IN ('DD1','DE0')
+					AND A.DOCNO = ?
+					GROUP BY A.CONF_NO
+					) D
+					where c.conf_no = d.conf_no
+					and c.amount = d.amount
+				) F
+				WHERE E.CONF_NO = F.CONF_NO
+			)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="uptPJTStatus_B"   value-count="2" url="지급완료시 판매PJT종료" >  
+   <sql-content>
+   <![CDATA[
+			UPDATE PROJECT
+			SET PJTSTATUS = 'END'
+			WHERE PJT_NO =
+			(
+				SELECT F.PJT_NO
+				FROM
+				(
+					select C.REFCONF_NO CONF_NO, c.amount
+					from 
+					(
+					select a.conf_no, A.REFCONF_NO, a.amt, b.unittype,b.isvat,
+						   case b.isVat when 'Y' then
+					                         case b.unitType when 1 then
+											 	  			 	  a.amt*1000-a.amt*10/110*1000
+											 	  			 when 2 then
+															 	  a.amt-a.amt*10/110
+											 end
+					                    when 'N' then
+					                         case b.unitType when 1 then
+											 	  			 	  a.amt*1000
+											                 when 2 then
+															 	  a.amt
+											 end
+					       end amount
+					from confer a, buyconfer b 
+					where a.conf_no = b.conf_no
+					) c,
+					(
+					select a.conf_no,obj_no, sum(amount) amount 
+					from 
+					acctrpthd a, 
+					acctrptsb b
+					where a.mainno = b.mainno
+					and a.status in ('DD1','DE0') 
+					and b.acctcd like '5%'
+					and a.docno =(select c.docno from acctrpthd a,confer b,acctrpthd c where b.refconf_no=a.conf_no and c.conf_no=b.conf_no and a.docno =?)
+					group by  a.conf_no,obj_no
+					) d
+					where c.conf_no = d.conf_no
+					and c.amount = d.amount
+				) E,
+				(
+					select c.conf_no, c.amount,c.pjt_no
+					from 
+					(
+					select a.conf_no, a.amt, b.unittype,b.isvat,a.pjt_no,
+						   case b.isVat when 'Y' then
+					                         case b.unitType when 1 then
+											 	  			 	  a.amt*1000-a.amt*10/110*1000
+											 	  			 when 2 then
+															 	  a.amt-a.amt*10/110
+											 end
+					                    when 'N' then
+					                         case b.unitType when 1 then
+											 	  			 	  a.amt*1000
+											                 when 2 then
+															 	  a.amt
+											 end
+					       end amount
+					from confer a, SALECONFER b, PROJECT C
+					where a.conf_no = b.conf_no
+					AND A.PJT_NO = C.PJT_NO
+					AND C.PJTTYPE ='S'
+					) c,
+					(
+					SELECT A.CONF_NO,SUM(B.AMOUNT) AMOUNT FROM ACCTRPTHD A, ACCTRPTSB B
+					WHERE A.MAINNO = B.MAINNO
+					AND B.ACCTCD LIKE '4%'
+					AND A.STATUS IN ('DD1','DE0')
+					AND A.DOCNO =?
+					GROUP BY A.CONF_NO
+					) D
+					where c.conf_no = d.conf_no
+					and c.amount = d.amount
+				) F
+				WHERE E.CONF_NO = F.CONF_NO
+			)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="delDocApplInfo"   value-count="2"
+   url="지급 품의 이미지 정보 삭제" >  
+   <sql-content>
+   <![CDATA[
+delete APPRPROSINFO 
+Where docNo = ?
+and empId = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="GetApproDoc"   value-count="1"
+   url="결재문서 읽기" >  
+   <sql-content>
+   <![CDATA[
+SELECT DOCCLASS, DOCNO, APPRSTARTDTM, STATUS, MBODY
+  FROM MASM_INHAUH.DOCAPPRINFO
+ WHERE docNo =?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="UptApproDoc"   value-count="2"
+   url="결재상태 변경" >  
+   <sql-content>
+   <![CDATA[
+Update MASM_INHAUH.DOCAPPRINFO
+   SET STATUS = ?
+ WHERE docNo =?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="UptDoc"   value-count="3"
+   url="결재상태 변경" >  
+   <sql-content>
+   <![CDATA[
+Update ?
+   SET STATUS = ?
+ WHERE docNo =?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="UptConfDoc"   value-count="3"
+   url="결재상태 변경" >  
+   <sql-content>
+   <![CDATA[
+Update ?
+   SET STATUS = ?
+ WHERE conf_no =?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="GetPayKey"   value-count="1"
+   url="결재문서번호에서 문서번호읽기" >  
+   <sql-content>
+   <![CDATA[
+Select MAINNO FROM ACCTRPTHD
+ WHERE docNo =?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="GetDoc"   value-count="1"
+   url="문서읽기" >  
+   <sql-content>
+   <![CDATA[
+SELECT a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD HH24:mi:ss') CREATEDTM, a.CRORGCD, TO_ORGCDNAME(a.CRORGCD) CRORGNAME, 
+  a.CREMPID, a.EVENTDT, TO_EMPKNAME(a.CREMPID) CREMPNAME, a.USEORGCD, TO_ORGCDNAME(a.USEORGCD) USEORGNAME, 
+  a.USEEMPID, TO_EMPKNAME(a.USEEMPID) USEEMPNAME, a.PHONNO, a.DOCTYPE, a.PAYTYPE, a.MTITLE, 
+  a.STATUS, TO_STATUSNM(a.STATUS) STATUSNAME, a.BIZACQACCTCD, TO_BIZACQACCTNAME(a.BIZACQACCTCD) BIZACQNAME,
+  TO_BIZACQCEONAME(a.BIZACQACCTCD) BIZCEONAME, a.BIZACQREGNO, a.DOMICILE, nvl(a.TOTAMT, 0) TOTAMT,  
+  nvl(a.SUPPLYAMT, 0) SUPPLYAMT, nvl(a.TAXAMT, 0) TAXAMT, nvl(a.REALAMT, 0) REALAMT, nvl(a.DIFFAMT, 0) DIFFAMT, 
+  a.PCARDYN, a.BILLTYPE, a.DETAILTYPE, a.DETAIL, a.ADVANCECLASS, a.SUPPLYAMTCLASS, a.RECIVEDT, a.OUTSOURCETYPE, 
+  a.CONTENTS1, a.QUANTITY1, a.UNITCOST1, a.SUPPLYAMT1, a.TAXAMT1, 
+  a.CONTENTS2, a.QUANTITY2, a.UNITCOST2, a.SUPPLYAMT2, a.TAXAMT2, 
+  a.CONTENTS3, a.QUANTITY3, a.UNITCOST3, a.SUPPLYAMT3, a.TAXAMT3, 
+  a.CONTENTS4, a.QUANTITY4, a.UNITCOST4, a.SUPPLYAMT4, a.TAXAMT4, 
+  b.mainNo, b.SN, 
+  case substr(b.acctCd,1,1) when '5' then
+	 case C.LABCOSTTYPE 
+	      when 'G' then '59'||substr(b.acctCd,3,3) 
+	      else  '51'||substr(b.acctCd,3,3)
+	 end
+else b.acctcd end   ACCTCD, 
+  TO_ACCTNAME(b.ACCTCD) ACCTNAME, b.ORGCD, 
+  TO_ORGCDNAME(b.ORGCD) ORGNAME, b.JOBNO, GET_JOBNAME(SUBSTR(b.JOBNO,1,5)) JOBNAME, b.CDTYPE, 
+  nvl(b.AMOUNT, 0) AMOUNT, b.TITLE, b.CERTIFTYPE, nvl(b.BUDGETAMT, 0) BUDGETAMT, nvl(b.BUDGETRATE, 0) BUDGETRATE, 
+  b.CERTIFNO, b.CDAPPLNO, b.BUDGETUSEDAMT, b.OVERRATE,
+  to_orgnocd(a.CRORGCD) crOrgUserCd, to_orgnocd(a.useORGCD) useOrgUserCd,  to_orgnocd(b.orgcd) orgusercd
+ FROM MASM_INHAUH.ACCTRPTHD a, MASM_INHAUH.ACCTRPTSB b, org c
+WHERE a.mainNo = b.mainNo
+  AND a.useorgcd = c.orgcd
+  AND a.DocNo = ?
+  ORDER BY TO_NUMBER( b.SN)
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DocList"   value-count="0"
+   url="문서읽기" >  
+   <sql-content>
+   <![CDATA[
+select * from (
+SELECT a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, a.CRORGCD, TO_ORGCDNAME(a.CRORGCD) CRORGNAME, 
+  a.CREMPID, TO_EMPKNAME(a.CREMPID) CREMPNAME, to_empgradename(a.CREMPID) crgradename, a.DOCTYPE, 
+  a.STATUS, TO_STATUSNM(a.STATUS) STATUSNAME, mTitle ,
+  to_orgnocd(a.CRORGCD) crOrgUserCd
+ FROM MASM_INHAUH.ACCTRPTHD a
+WHERE  a.STATUS in ('DA0','DB0')
+union all
+SELECT  a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, a.CRORGCD, TO_ORGCDNAME(a.CRORGCD) CRORGNAME, 
+a.CREMPID, to_empKname(a.CREMPID) crempName, to_empgradename(a.CREMPID) crgradename, 'C' DOCTYPE,
+a.STATUS, to_statusnm(a.STATUS) statusname, SUBSTANCE mTitle,
+a.CRORGCD crOrgUserCd
+FROM  MASM_INHAUH.BUDGETDOC a
+WHERE  a.STATUS in ('DA0','DB0')
+union all
+SELECT  a.BTMKEMPID||a.BTMKDTM||a.BIZTRIPTYPE MAINNO, a.DOCNO, SUBSTR(a.BTMKDTM,1,10) CREATEDTM, TO_EMPORGCD(a.BTMKEMPID) CRORGCD, TO_orgname(a.BTMKEMPID) CRORGNAME, 
+a.BTMKEMPID CREMPID, to_empKname(a.BTMKEMPID) crempName, to_empgradename(a.BTMKEMPID) crgradename, 'D' DOCTYPE,
+a.STATUS, to_statusnm(a.STATUS) statusname, a.BTNAME mTitle,
+TO_EMPORGCD(a.BTMKEMPID) crOrgUserCd
+FROM  MASM_INHAUH.BIZTRIP a
+WHERE  a.STATUS in ('DA0','DB0')
+UNION ALL
+SELECT CONF_NO MAINNO, CONF_NO DOCNO, TO_CHAR(CRDTM,'YYYY-MM-DD') CREATEDTM, TO_EMPORGCD(CREMPID) CRORGCD, TO_orgname(CREMPID) CRORGNAME,
+		CREMPID,to_empKname(CREMPID) crempName, to_empgradename(CREMPID) crgradename, CONFTYPE DOCTYPE,
+		STATUS, to_statusnm(a.STATUS) statusname, CONFTITLE mTitle,
+		TO_EMPORGCD(CREMPID) crOrgUserCd
+FROM CONFER A
+WHERE A.STATUS IN ('DA0','DB0')
+and a.CONFDELFLAG = 'N'
+AND A.CONFTYPE IN ('SAPJ','REPP','RECP','RECO','BUSP','BUPP','BUGB','BUCP','BUCO')
+
+)
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DocAllList"   value-count="0"
+   url="문서조회 Master" >  
+   <sql-content>
+   <![CDATA[
+select * from (
+
+	SELECT 	a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, 
+			a.CRORGCD, TO_ORGNONAME_N(a.CRORGCD,TO_CHAR(A.CREATEDTM,'YYYYMM')) CRORGNAME, 
+	  		a.CREMPID, TO_EMPKNAME(a.CREMPID) CREMPNAME, 
+	  		to_empgradename(a.CREMPID) crgradename, a.DOCTYPE, 
+	  		a.STATUS, TO_STATUSNM(a.STATUS) STATUSNAME, mTitle ,
+	  		to_orgnocd(a.CRORGCD) crOrgUserCd
+	FROM MASM_INHAUH.ACCTRPTHD a
+	WHERE to_char(CREATEDTM,'YYYY-MM-DD') >= to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD') 
+	AND to_char(CREATEDTM,'YYYY-MM-DD') <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+	
+	union all
+	
+	SELECT  a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, 
+	a.CRORGCD, TO_ORGCDNAME(a.CRORGCD) CRORGNAME, 
+			a.CREMPID, to_empKname(a.CREMPID) crempName, 
+			to_empgradename(a.CREMPID) crgradename, 'C' DOCTYPE,
+			a.STATUS, to_statusnm(a.STATUS) statusname, SUBSTANCE mTitle,
+			a.CRORGCD crOrgUserCd
+	FROM  MASM_INHAUH.BUDGETDOC a
+	WHERE to_char(CREATEDTM,'YYYY-MM-DD') >=   to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD') 
+	AND to_char(CREATEDTM,'YYYY-MM-DD') <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+	
+	union all
+	
+	SELECT  a.BTMKEMPID||a.BTMKDTM||a.BIZTRIPTYPE MAINNO, a.DOCNO, 
+			SUBSTR(a.BTMKDTM,1,10) CREATEDTM, TO_EMPORGCD(a.BTMKEMPID) CRORGCD, 
+			TO_orgname(a.BTMKEMPID) CRORGNAME, 
+			a.BTMKEMPID CREMPID, to_empKname(a.BTMKEMPID) crempName, 
+			to_empgradename(a.BTMKEMPID) crgradename, 'D' DOCTYPE,
+			a.STATUS, to_statusnm(a.STATUS) statusname, a.BTNAME mTitle,
+			TO_EMPORGCD(a.BTMKEMPID) crOrgUserCd
+	FROM  MASM_INHAUH.BIZTRIP a
+	WHERE to_char(a.BTMKDTM) >=  to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD')
+	AND to_char(a.BTMKDTM) <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+
+	UNION ALL
+	
+	SELECT CONF_NO MAINNO, CONF_NO DOCNO, TO_CHAR(CRDTM,'YYYY-MM-DD') CREATEDTM, 
+	TO_EMPORGCD(CREMPID) CRORGCD, TO_orgname(CREMPID) CRORGNAME,
+			CREMPID,to_empKname(CREMPID) crempName, to_empgradename(CREMPID) crgradename, 
+			-- substr(CONFTYPE,1,2) DOCTYPE,
+			CONFTYPE DOCTYPE,
+			STATUS, to_statusnm(a.STATUS) statusname, CONFTITLE mTitle,
+			TO_EMPORGCD(CREMPID) crOrgUserCd
+	FROM CONFER A
+	WHERE to_char(CRDTM,'YYYY-MM-DD') >= to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD') 
+	AND  to_char(CRDTM,'YYYY-MM-DD') <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD')
+	and A.STATUS like status:||'%'
+	and a.CONFDELFLAG = 'N'
+	AND A.CONFTYPE IN ('SAPJ','REPP','RECP','RECO','BUSP','BUPP','BUGB','BUCP','BUCO')
+)
+where ( docType like docType:||'%' OR   docType IS NULL)
+AND CREMPID LIKE [EMPNO]||'%'
+Order by CREATEDTM desc
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DocListWithAcctAdmin"   value-count="0"
+   url="문서조회 Master" >  
+   <sql-content>
+   <![CDATA[
+select * from (
+
+	SELECT 	a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, a.CRORGCD, TO_ORGNONAME_N(a.CRORGCD,TO_CHAR(A.CREATEDTM,'YYYYMM')) CRORGNAME, 
+	  		a.CREMPID, TO_EMPKNAME(a.CREMPID) CREMPNAME, to_empgradename(a.CREMPID) crgradename, a.DOCTYPE, 
+	  		a.STATUS, TO_STATUSNM(a.STATUS) STATUSNAME, mTitle ,
+	  		to_orgnocd(a.CRORGCD) crOrgUserCd
+	FROM MASM_INHAUH.ACCTRPTHD a
+	WHERE to_char(CREATEDTM,'YYYY-MM-DD') >= to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD') 
+	AND to_char(CREATEDTM,'YYYY-MM-DD') <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+	
+	union all
+	
+	SELECT  a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, a.CRORGCD, TO_ORGCDNAME(a.CRORGCD) CRORGNAME, 
+			a.CREMPID, to_empKname(a.CREMPID) crempName, to_empgradename(a.CREMPID) crgradename, 'C' DOCTYPE,
+			a.STATUS, to_statusnm(a.STATUS) statusname, SUBSTANCE mTitle,
+			a.CRORGCD crOrgUserCd
+	FROM  MASM_INHAUH.BUDGETDOC a
+	WHERE to_char(CREATEDTM,'YYYY-MM-DD') >=   to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD')
+	AND to_char(CREATEDTM,'YYYY-MM-DD') <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+	
+	union all
+	
+	SELECT  a.BTMKEMPID||a.BTMKDTM||a.BIZTRIPTYPE MAINNO, a.DOCNO, SUBSTR(a.BTMKDTM,1,10) CREATEDTM, TO_EMPORGCD(a.BTMKEMPID) CRORGCD, TO_orgname(a.BTMKEMPID) CRORGNAME, 
+			a.BTMKEMPID CREMPID, to_empKname(a.BTMKEMPID) crempName, to_empgradename(a.BTMKEMPID) crgradename, 'D' DOCTYPE,
+			a.STATUS, to_statusnm(a.STATUS) statusname, a.BTNAME mTitle,
+			TO_EMPORGCD(a.BTMKEMPID) crOrgUserCd
+	FROM  MASM_INHAUH.BIZTRIP a
+	WHERE to_char(a.BTMKDTM) >=  to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD') 
+	AND to_char(a.BTMKDTM) <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+
+	UNION ALL
+	
+	SELECT CONF_NO MAINNO, CONF_NO DOCNO, TO_CHAR(CRDTM,'YYYY-MM-DD') CREATEDTM, TO_EMPORGCD(CREMPID) CRORGCD, TO_orgname(CREMPID) CRORGNAME,
+			CREMPID,to_empKname(CREMPID) crempName, to_empgradename(CREMPID) crgradename, -- substr(CONFTYPE,1,2) DOCTYPE,
+			CONFTYPE DOCTYPE,
+			STATUS, to_statusnm(a.STATUS) statusname, CONFTITLE mTitle,
+			TO_EMPORGCD(CREMPID) crOrgUserCd
+	FROM CONFER A
+	WHERE to_char(CRDTM,'YYYY-MM-DD') >= to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD')
+	AND  to_char(CRDTM,'YYYY-MM-DD') <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD')
+	and A.STATUS like status:||'%'
+	and crEmpId = empid:
+	and a.CONFDELFLAG = 'N'
+	AND A.CONFTYPE IN ('SAPJ','REPP','RECP','RECO','BUSP','BUPP','BUGB','BUCP','BUCO')
+/*	
+	UNION ALL
+        SELECT ODC_NO MAINNO, ODCCD DOCNO,TO_CHAR(SYSDATE,'YYYY-MM-DD') CREATEDTM,'' CRORGCD,'' CRORGNAME,
+        '' CREMPID,'' CREMPNAME, '' CRGRADENAME, 'OR ' DOCTYPE,
+        'DA0' STATUS,''statusname,'주문서' mTitle,'' crOrgUserCd
+        FROM ITEMORDER
+*/
+)
+where ( docType like docType:||'%' OR   docType IS NULL)
+AND CREMPID LIKE [EMPNO]||'%'
+Order by CREATEDTM desc
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DocListWithBuyAdmin"   value-count="0"
+   url="문서조회 Master" >  
+   <sql-content>
+   <![CDATA[
+select * from (
+
+	SELECT 	a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, a.CRORGCD, TO_ORGNONAME_N(a.CRORGCD,TO_CHAR(A.CREATEDTM,'YYYYMM')) CRORGNAME,
+	  		a.CREMPID, TO_EMPKNAME(a.CREMPID) CREMPNAME, to_empgradename(a.CREMPID) crgradename, a.DOCTYPE, 
+	  		a.STATUS, TO_STATUSNM(a.STATUS) STATUSNAME, mTitle ,
+	  		to_orgnocd(a.CRORGCD) crOrgUserCd
+	FROM MASM_INHAUH.ACCTRPTHD a
+	WHERE to_char(CREATEDTM,'YYYY-MM-DD') >=  to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD') 
+	AND to_char(CREATEDTM,'YYYY-MM-DD') <=  to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+	and crEmpId = empid:
+	
+	union all
+	
+	SELECT  a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, a.CRORGCD, TO_ORGCDNAME(a.CRORGCD) CRORGNAME, 
+			a.CREMPID, to_empKname(a.CREMPID) crempName, to_empgradename(a.CREMPID) crgradename, 'C' DOCTYPE,
+			a.STATUS, to_statusnm(a.STATUS) statusname, SUBSTANCE mTitle,
+			a.CRORGCD crOrgUserCd
+	FROM  MASM_INHAUH.BUDGETDOC a
+	WHERE to_char(CREATEDTM,'YYYY-MM-DD') >=    to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD')
+	AND to_char(CREATEDTM,'YYYY-MM-DD') <=  to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+	and crEmpId = empid:
+	
+	union all
+	
+	SELECT  a.BTMKEMPID||a.BTMKDTM||a.BIZTRIPTYPE MAINNO, a.DOCNO, SUBSTR(a.BTMKDTM,1,10) CREATEDTM, TO_EMPORGCD(a.BTMKEMPID) CRORGCD, TO_orgname(a.BTMKEMPID) CRORGNAME, 
+			a.BTMKEMPID CREMPID, to_empKname(a.BTMKEMPID) crempName, to_empgradename(a.BTMKEMPID) crgradename, 'D' DOCTYPE,
+			a.STATUS, to_statusnm(a.STATUS) statusname, a.BTNAME mTitle,
+			TO_EMPORGCD(a.BTMKEMPID) crOrgUserCd
+	FROM  MASM_INHAUH.BIZTRIP a
+	WHERE to_char(a.BTMKDTM) >=   to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD') 
+	AND to_char(a.BTMKDTM) <=  to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+	and BTMKEMPID = empid:
+
+	UNION ALL
+	
+	SELECT CONF_NO MAINNO, CONF_NO DOCNO, TO_CHAR(CRDTM,'YYYY-MM-DD') CREATEDTM, TO_EMPORGCD(CREMPID) CRORGCD, TO_orgname(CREMPID) CRORGNAME,
+			CREMPID,to_empKname(CREMPID) crempName, to_empgradename(CREMPID) crgradename, -- substr(CONFTYPE,1,2) DOCTYPE,
+			CONFTYPE DOCTYPE,
+			STATUS, to_statusnm(a.STATUS) statusname, CONFTITLE mTitle,
+			TO_EMPORGCD(CREMPID) crOrgUserCd
+	FROM CONFER A
+	WHERE to_char(CRDTM,'YYYY-MM-DD') >=  to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD')
+	AND  to_char(CRDTM,'YYYY-MM-DD') <=  to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and A.STATUS like status:||'%'
+	and a.CONFDELFLAG = 'N'
+	AND A.CONFTYPE IN ('SAPJ','REPP','RECP','RECO','BUSP','BUPP','BUGB','BUCP','BUCO')
+/*	
+	UNION ALL
+        SELECT ODC_NO MAINNO, ODCCD DOCNO,TO_CHAR(SYSDATE,'YYYY-MM-DD') CREATEDTM,'' CRORGCD,'' CRORGNAME,
+        '' CREMPID,'' CREMPNAME, '' CRGRADENAME, 'OR ' DOCTYPE,
+        'DA0' STATUS,''statusname,'주문서' mTitle,'' crOrgUserCd
+        FROM ITEMORDER
+*/
+)
+where ( docType like docType:||'%' OR   docType IS NULL)
+AND CREMPID LIKE [EMPNO]||'%'
+Order by CREATEDTM desc
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DocAllListWithoutAdmin"   value-count="0"
+   url="문서조회 Master" >  
+   <sql-content>
+   <![CDATA[
+select * from (
+
+	SELECT 	a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, a.CRORGCD, TO_ORGCDNAME(a.CRORGCD) CRORGNAME, 
+	  		a.CREMPID, TO_EMPKNAME(a.CREMPID) CREMPNAME, to_empgradename(a.CREMPID) crgradename, a.DOCTYPE, 
+	  		a.STATUS, TO_STATUSNM(a.STATUS) STATUSNAME, mTitle ,
+	  		to_orgnocd(a.CRORGCD) crOrgUserCd
+	FROM MASM_INHAUH.ACCTRPTHD a
+	WHERE to_char(CREATEDTM,'YYYY-MM-DD') >= to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD') 
+	AND to_char(CREATEDTM,'YYYY-MM-DD') <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+	
+	union all
+	
+	SELECT  a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, a.CRORGCD, TO_ORGCDNAME(a.CRORGCD) CRORGNAME, 
+			a.CREMPID, to_empKname(a.CREMPID) crempName, to_empgradename(a.CREMPID) crgradename, 'C' DOCTYPE,
+			a.STATUS, to_statusnm(a.STATUS) statusname, SUBSTANCE mTitle,
+			a.CRORGCD crOrgUserCd
+	FROM  MASM_INHAUH.BUDGETDOC a
+	WHERE to_char(CREATEDTM,'YYYY-MM-DD') >=   to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD')
+	AND to_char(CREATEDTM,'YYYY-MM-DD') <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+	
+	union all
+	
+	SELECT  a.BTMKEMPID||a.BTMKDTM||a.BIZTRIPTYPE MAINNO, a.DOCNO, SUBSTR(a.BTMKDTM,1,10) CREATEDTM, TO_EMPORGCD(a.BTMKEMPID) CRORGCD, TO_orgname(a.BTMKEMPID) CRORGNAME, 
+			a.BTMKEMPID CREMPID, to_empKname(a.BTMKEMPID) crempName, to_empgradename(a.BTMKEMPID) crgradename, 'D' DOCTYPE,
+			a.STATUS, to_statusnm(a.STATUS) statusname, a.BTNAME mTitle,
+			TO_EMPORGCD(a.BTMKEMPID) crOrgUserCd
+	FROM  MASM_INHAUH.BIZTRIP a
+	WHERE to_char(a.BTMKDTM) >=  to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD') 
+	AND to_char(a.BTMKDTM) <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and a.STATUS  like status:||'%'
+
+	UNION ALL
+	
+	SELECT CONF_NO MAINNO, CONF_NO DOCNO, TO_CHAR(CRDTM,'YYYY-MM-DD') CREATEDTM, TO_EMPORGCD(CREMPID) CRORGCD, TO_orgname(CREMPID) CRORGNAME,
+			CREMPID,to_empKname(CREMPID) crempName, to_empgradename(CREMPID) crgradename, -- substr(CONFTYPE,1,2) DOCTYPE,
+			CONFTYPE DOCTYPE,
+			STATUS, to_statusnm(a.STATUS) statusname, CONFTITLE mTitle,
+			TO_EMPORGCD(CREMPID) crOrgUserCd
+	FROM CONFER A
+	WHERE to_char(CRDTM,'YYYY-MM-DD') >= to_char(to_date(FR_YYMM:,'YYYY-MM-DD'),'YYYY-MM-DD')
+	AND  to_char(CRDTM,'YYYY-MM-DD') <= to_char(to_date(TO_YYMM:,'YYYY-MM-DD')+1,'YYYY-MM-DD')
+	and A.STATUS like status:||'%'
+	and a.CONFDELFLAG = 'N'
+	AND A.CONFTYPE IN ('SAPJ','REPP','RECP','RECO','BUSP','BUPP','BUGB','BUCP','BUCO')
+/*	
+	UNION ALL
+        SELECT ODC_NO MAINNO, ODCCD DOCNO,TO_CHAR(SYSDATE,'YYYY-MM-DD') CREATEDTM,'' CRORGCD,'' CRORGNAME,
+        '' CREMPID,'' CREMPNAME, '' CRGRADENAME, 'OR ' DOCTYPE,
+        'DA0' STATUS,''statusname,'주문서' mTitle,'' crOrgUserCd
+        FROM ITEMORDER
+*/
+)
+where ( docType like docType:||'%' OR   docType IS NULL)
+and crEmpId = empid:
+AND CREMPID LIKE [EMPNO]||'%'
+Order by CREATEDTM desc
+  	]]>
+   </sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DocListOfGoing_docNo"   value-count="0"
+   url="문서조회 Master" >  
+   <sql-content>
+   <![CDATA[
+		SELECT a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, 
+			   a.CRORGCD, TO_ORGNONAME(a.CRORGCD) CRORGNAME, 
+		  	   a.CREMPID, TO_EMPKNAME(a.CREMPID) CREMPNAME, to_empgradename(a.CREMPID) crgradename, 
+			   a.DOCTYPE, a.STATUS, TO_STATUSNM(a.STATUS) STATUSNAME, substrb(mTitle,1,45) mTitle ,
+		  	   to_orgnocd(a.CRORGCD) crOrgUserCd, 
+		  	   SUBSTR(eventdt,1,4)||'-'||SUBSTR(EVENTDT,5,2)||'-'||SUBSTR(EVENTDT,7,2) EVENTDT
+		FROM ACCTRPTHD a
+		WHERE   EVENTDT BETWEEN REPLACE(STARTDT:,'-') AND REPLACE(ENDDT:,'-')
+		AND A.STATUS IN ('DA0','DB0')
+		AND DOCNO LIKE '%'||CONTENTS:||'%'
+		AND CREMPID LIKE '%'||CREMPID:||'%'
+		AND A.DELFLAG = 'N'
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DocListOfGoing_mTitle"   value-count="0"
+   url="문서조회 Master" >  
+   <sql-content>
+   <![CDATA[
+		SELECT a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, 
+			   a.CRORGCD, TO_ORGNONAME(a.CRORGCD) CRORGNAME, 
+		  	   a.CREMPID, TO_EMPKNAME(a.CREMPID) CREMPNAME, to_empgradename(a.CREMPID) crgradename, 
+			   a.DOCTYPE, a.STATUS, TO_STATUSNM(a.STATUS) STATUSNAME, substrb(mTitle,1,45) mTitle ,
+		  	   to_orgnocd(a.CRORGCD) crOrgUserCd, 
+		  	   SUBSTR(eventdt,1,4)||'-'||SUBSTR(EVENTDT,5,2)||'-'||SUBSTR(EVENTDT,7,2) EVENTDT
+		FROM ACCTRPTHD a
+		WHERE   EVENTDT BETWEEN REPLACE(STARTDT:,'-') AND REPLACE(ENDDT:,'-')
+		AND A.STATUS IN ('DA0','DB0')
+		AND MTITLE LIKE '%'||CONTENTS:||'%'
+		AND CREMPID LIKE '%'||CREMPID:||'%'
+		AND A.DELFLAG = 'N'
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DocListOfGoing"   value-count="0"
+   url="문서조회 Master" >  
+   <sql-content>
+   <![CDATA[
+		SELECT a.MAINNO, a.DOCNO, TO_CHAR(a.CREATEDTM,'YYYY-MM-DD') CREATEDTM, 
+			   a.CRORGCD, TO_ORGNONAME(a.CRORGCD) CRORGNAME, 
+		  	   a.CREMPID, TO_EMPKNAME(a.CREMPID) CREMPNAME, to_empgradename(a.CREMPID) crgradename, 
+			   a.DOCTYPE, a.STATUS, TO_STATUSNM(a.STATUS) STATUSNAME, substrb(mTitle,1,45) mTitle ,
+		  	   to_orgnocd(a.CRORGCD) crOrgUserCd, 
+		  	   SUBSTR(eventdt,1,4)||'-'||SUBSTR(EVENTDT,5,2)||'-'||SUBSTR(EVENTDT,7,2) EVENTDT
+		FROM ACCTRPTHD a
+		WHERE   EVENTDT BETWEEN REPLACE(STARTDT:,'-') AND REPLACE(ENDDT:,'-')
+		AND A.STATUS IN ('DA0','DB0')
+		AND CREMPID LIKE '%'||CREMPID:||'%'
+		AND A.DELFLAG = 'N'
+  	]]>
+	</sql-content>
+   </sql-mapping>
+      <sql-mapping  id="FixAssetChangeList"  value-count="0" url="고정자산 변경신청 리스트" >  
+   <sql-content>
+   <![CDATA[
+		SELECT *
+		FROM
+		(	   
+			SELECT CONF_NO,CONFCD,CONFTITLE,
+				   CONFTYPE, GET_CODENAME('FA_CONF',CONFTYPE) CONFTYPENAME,
+				   CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME,
+				   STATUS, GET_CODENAME('ST',STATUS) STATUSNAME,
+				   TO_CHAR(CRDTM,'YYYY-MM-DD') CREATEDT,
+				   TO_ORGNONAME(ORGCD) ORGNAME
+			FROM CONFER A, EMPALL B
+			WHERE A.CREMPID = B.EMPID 
+			AND CONFTYPE LIKE 'FA%' 
+			AND CONFDELFLAG = 'N' 
+		)
+		WHERE CONFTYPE LIKE CONFTYPE:||'%'
+		AND STATUS LIKE STATUS:||'%'
+		AND CREMPID LIKE CREMPID:||'%'
+		AND CREATEDT BETWEEN DECODE( STRDT:,'','00000000', STRDT:)
+        AND DECODE( ENDDT:,'','99999999', ENDDT:)
+        ORDER BY STATUS
+  	]]>
+	</sql-content>
+   </sql-mapping>
+</sql>

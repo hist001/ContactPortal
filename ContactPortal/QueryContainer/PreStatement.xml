@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="PRE_001"   value-count="0" url="선금내역서" >  
+	<sql-content>
+	<![CDATA[
+
+	SELECT SBN EMPID,BA01_SM_KOR EMPNAME, BA01_JMNO EMP_JMNO
+	      ,MIN(AMT0)AMT0
+	      ,MIN(AMT1)AMT1
+	      ,MIN(AMT2)AMT2
+	      ,MIN(AMT3)AMT3
+	      ,MIN(AMT4)AMT4
+	      ,MIN(AMT5)AMT5
+	      ,MIN(AMT6)AMT6
+	      ,MIN(AMT7)AMT7
+	      ,MIN(AMT8)AMT8
+	      ,MIN(AMT9)AMT9
+	      ,MIN(AMT10)AMT10
+	      ,MIN(AMT11)AMT11
+	      ,MIN(AMT12)AMT12
+	      ,MIN(AMT13)AMT13
+	      ,MIN(AMT14)AMT14
+	      ,MIN(AMT15)AMT15
+	      ,MIN(AMT16)AMT16
+	      ,MIN(AMT17)AMT17
+	      ,MIN(AMT18)AMT18
+	      ,MIN(AMT19)AMT19
+	      ,MIN(AMT20)AMT20
+	      ,MIN(AMT21)AMT21
+	      ,MIN(AMT22)AMT22
+	      ,MIN(AMT23)AMT23
+	      ,MIN(AMT24)AMT24
+	      ,MIN(AMT25)AMT25
+	      ,MIN(AMT26)AMT26
+	      ,MIN(AMT27)AMT27
+	      ,MIN(AMT28)AMT28
+	      ,MIN(AMT29)AMT29
+	      ,MIN(AMT30)AMT30
+	      ,MIN(AMT31)AMT31
+	      ,MIN(AMT32)AMT32
+	      ,MIN(AMT33)AMT33
+	      ,MIN(AMT34)AMT34
+	      ,MIN(AMT35)AMT35
+	      ,MIN(AMT26)AMT36
+	FROM (
+	SELECT SBN,BA01_SM_KOR, BA01_JMNO,
+	       DECODE(YYMM,REPLACE([S_YYMM],'-',''),AMT) AS AMT0,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),1), 'YYYYMM'),AMT) AS AMT1,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),2), 'YYYYMM'),AMT) AS AMT2,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),3), 'YYYYMM'),AMT) AS AMT3,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),4), 'YYYYMM'),AMT) AS AMT4,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),5), 'YYYYMM'),AMT) AS AMT5,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),6), 'YYYYMM'),AMT) AS AMT6,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),7), 'YYYYMM'),AMT) AS AMT7,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),8), 'YYYYMM'),AMT) AS AMT8,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),9), 'YYYYMM'),AMT) AS AMT9,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),10), 'YYYYMM'),AMT) AS AMT10,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),11), 'YYYYMM'),AMT) AS AMT11,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),12), 'YYYYMM'),AMT) AS AMT12,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),13), 'YYYYMM'),AMT) AS AMT13,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),14), 'YYYYMM'),AMT) AS AMT14,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),15), 'YYYYMM'),AMT) AS AMT15,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),16), 'YYYYMM'),AMT) AS AMT16,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),17), 'YYYYMM'),AMT) AS AMT17,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),18), 'YYYYMM'),AMT) AS AMT18,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),19), 'YYYYMM'),AMT) AS AMT19,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),20), 'YYYYMM'),AMT) AS AMT20,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),21), 'YYYYMM'),AMT) AS AMT21,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),22), 'YYYYMM'),AMT) AS AMT22,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),23), 'YYYYMM'),AMT) AS AMT23,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),24), 'YYYYMM'),AMT) AS AMT24,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),25), 'YYYYMM'),AMT) AS AMT25,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),26), 'YYYYMM'),AMT) AS AMT26,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),27), 'YYYYMM'),AMT) AS AMT27,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),28), 'YYYYMM'),AMT) AS AMT28,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),29), 'YYYYMM'),AMT) AS AMT29,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),30), 'YYYYMM'),AMT) AS AMT30,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),31), 'YYYYMM'),AMT) AS AMT31,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),32), 'YYYYMM'),AMT) AS AMT32,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),33), 'YYYYMM'),AMT) AS AMT33,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),34), 'YYYYMM'),AMT) AS AMT34,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),35), 'YYYYMM'),AMT) AS AMT35,
+	       DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),36), 'YYYYMM'),AMT) AS AMT36
+	FROM (
+	SELECT SBN, BA01_SM_KOR,BA01_JMNO, YYMM, SUM(AMT) AMT
+	  FROM (SELECT '1', BC05_SBN SBN , BC05_YYMM YYMM,
+	               SUM(BC05_PAYTOT - BC05_SD08 - BC05_SD32) - SUM(BC05_SD37) AMT
+	          FROM BBDBO.TBBC05
+	         WHERE BC05_YYMM BETWEEN REPLACE([S_YYMM],'-','') AND REPLACE([E_YYMM],'-','')
+	           AND BC05_YYMM NOT LIKE '%99'
+	         GROUP BY BC05_SBN, BC05_YYMM
+			 UNION ALL
+		    SELECT '2',BC06_SBN SBN ,BC06_YYMM YYMM,  SUM(BC06_PAYTOT) AMT
+	          FROM   BBDBO.TBBC06
+	         WHERE BC06_YYMM BETWEEN REPLACE([S_YYMM],'-','') AND REPLACE([E_YYMM],'-','')
+	         GROUP BY BC06_SBN, BC06_YYMM)A, BBDBO.TBBA01
+	WHERE SBN  = BA01_SBN
+	  AND  [S_EMPID] like '%'||BA01_SBN||'%'
+	GROUP BY SBN , BA01_SM_KOR, BA01_JMNO,  YYMM)
+	)GROUP BY SBN,BA01_SM_KOR, BA01_JMNO
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PRE_002"   value-count="0" url="조회월리스" >  
+	<sql-content>
+	<![CDATA[
+	SELECT ROWNUM RNUM, TO_CHAR(TO_DATE(YYMM,'YYYYMM'),'YYYY/MM') YYMM
+      FROM (SELECT MAX(BC05_YYMM)YYMM
+	          FROM BBDBO.TBBC05
+	         WHERE BC05_YYMM BETWEEN REPLACE([S_YYMM],'-','') AND REPLACE([E_YYMM],'-','')
+	           AND BC05_YYMM NOT LIKE '%99'
+	         GROUP BY BC05_YYMM
+	         ORDER BY YYMM)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="PRE_003"   value-count="0" url="조회월리스" >  
+	<sql-content>
+	<![CDATA[
+select 'T'type ,'사번' sbn, '성명' ba01_sm_kor,
+       REPLACE([S_YYMM],'-','') AS AMT0,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),1), 'yyyymm') as amt1,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),2), 'yyyymm') as amt2,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),3), 'yyyymm') as amt3,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),4), 'yyyymm') as amt4,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),5), 'yyyymm') as amt5,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),6), 'yyyymm') as amt6,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),7), 'yyyymm') as amt7,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),8), 'yyyymm') as amt8,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),9), 'yyyymm') as amt9,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),10), 'yyyymm') as amt10,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),11), 'yyyymm') as amt11,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),12), 'yyyymm') as amt12,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),13), 'yyyymm') as amt13,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),14), 'yyyymm') as amt14,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),15), 'yyyymm') as amt15,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),16), 'yyyymm') as amt16,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),17), 'yyyymm') as amt17,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),18), 'yyyymm') as amt18,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),19), 'yyyymm') as amt19,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),20), 'yyyymm') as amt20,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),21), 'yyyymm') as amt21,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),22), 'yyyymm') as amt22,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),23), 'yyyymm') as amt23,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),24), 'yyyymm') as amt24,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),25), 'yyyymm') as amt25,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),26), 'yyyymm') as amt26,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),27), 'yyyymm') as amt27,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),28), 'yyyymm') as amt28,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),29), 'yyyymm') as amt29,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),30), 'yyyymm') as amt30,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),31), 'yyyymm') as amt31,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),32), 'yyyymm') as amt32,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),33), 'yyyymm') as amt33,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),34), 'yyyymm') as amt34,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),35), 'yyyymm') as amt35,
+       TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),36), 'yyyymm') as amt36
+       from dual
+
+union all
+select 'A' type, sbn,ba01_sm_kor,
+		to_char(min(amt0))amt    ,to_char(min(amt1))amt1   ,to_char(min(amt2))amt2   ,to_char(min(amt3))amt3   ,to_char(min(amt4))amt4,
+		to_char(min(amt5))amt5   ,to_char(min(amt6))amt6   ,to_char(min(amt7))amt7   ,to_char(min(amt8))amt8   ,to_char(min(amt9))amt9,
+		to_char(min(amt10))amt10 ,to_char(min(amt11))amt11 ,to_char(min(amt12))amt12 ,to_char(min(amt13))amt13 ,to_char(min(amt14))amt14,
+		to_char(min(amt15))amt15 ,to_char(min(amt16))amt16 ,to_char(min(amt17))amt17 ,to_char(min(amt18))amt18 ,to_char(min(amt19))amt19,
+		to_char(min(amt20))amt20 ,to_char(min(amt21))amt21 ,to_char(min(amt22))amt22 ,to_char(min(amt23))amt23 ,to_char(min(amt24))amt24,
+		to_char(min(amt25))amt25 ,to_char(min(amt26))amt26 ,to_char(min(amt27))amt27 ,to_char(min(amt28))amt28 ,to_char(min(amt29))amt29,
+		to_char(min(amt30))amt30 ,to_char(min(amt31))amt31 ,to_char(min(amt32))amt32 ,to_char(min(amt33))amt33 ,to_char(min(amt34))amt34,
+		to_char(min(amt35))amt35 ,to_char(min(amt36))amt36
+from (
+select sbn,ba01_sm_kor,
+        DECODE(YYMM,REPLACE([S_YYMM],'-',''),AMT) AS AMT0,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),1), 'YYYYMM'),AMT) AS AMT1,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01','YYYYMMDD' ),2), 'YYYYMM'),AMT) AS AMT2,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),3), 'YYYYMM'),AMT) AS AMT3,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),4), 'YYYYMM'),AMT) AS AMT4,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),5), 'YYYYMM'),AMT) AS AMT5,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),6), 'YYYYMM'),AMT) AS AMT6,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),7), 'YYYYMM'),AMT) AS AMT7,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),8), 'YYYYMM'),AMT) AS AMT8,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),9), 'YYYYMM'),AMT) AS AMT9,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),10), 'YYYYMM'),AMT) AS AMT10,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),11), 'YYYYMM'),AMT) AS AMT11,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),12), 'YYYYMM'),AMT) AS AMT12,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),13), 'YYYYMM'),AMT) AS AMT13,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),14), 'YYYYMM'),AMT) AS AMT14,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),15), 'YYYYMM'),AMT) AS AMT15,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),16), 'YYYYMM'),AMT) AS AMT16,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),17), 'YYYYMM'),AMT) AS AMT17,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),18), 'YYYYMM'),AMT) AS AMT18,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),19), 'YYYYMM'),AMT) AS AMT19,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),20), 'YYYYMM'),AMT) AS AMT20,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),21), 'YYYYMM'),AMT) AS AMT21,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),22), 'YYYYMM'),AMT) AS AMT22,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),23), 'YYYYMM'),AMT) AS AMT23,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),24), 'YYYYMM'),AMT) AS AMT24,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),25), 'YYYYMM'),AMT) AS AMT25,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),26), 'YYYYMM'),AMT) AS AMT26,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),27), 'YYYYMM'),AMT) AS AMT27,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),28), 'YYYYMM'),AMT) AS AMT28,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),29), 'YYYYMM'),AMT) AS AMT29,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),30), 'YYYYMM'),AMT) AS AMT30,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),31), 'YYYYMM'),AMT) AS AMT31,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),32), 'YYYYMM'),AMT) AS AMT32,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),33), 'YYYYMM'),AMT) AS AMT33,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),34), 'YYYYMM'),AMT) AS AMT34,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),35), 'YYYYMM'),AMT) AS AMT35,
+               DECODE(YYMM,TO_CHAR(ADD_MONTHS(TO_DATE(REPLACE([S_YYMM],'-','')||'01', 'YYYYMMDD' ),36), 'YYYYMM'),AMT) AS AMT36
+from (
+select sbn, ba01_sm_kor, yymm, sum(amt) amt
+  from (select '1', bc05_sbn sbn , bc05_yymm yymm,
+               sum(bc05_paytot) amt
+          from bbdbo.tbbc05
+          WHERE BC05_YYMM BETWEEN REPLACE([S_YYMM],'-','') AND REPLACE([E_YYMM],'-','')
+            AND BC05_YYMM NOT LIKE '%99'
+         group by bc05_sbn, bc05_yymm
+		 union all
+	    select '2',bc06_sbn sbn ,bc06_yymm yymm,  sum(bc06_paytot) amt
+          from  bbdbo.tbbc06
+         where BC06_YYMM BETWEEN REPLACE([S_YYMM],'-','') AND REPLACE([E_YYMM],'-','')
+         group by bc06_sbn, bc06_yymm)a, bbdbo.tbba01
+where sbn  = ba01_sbn
+  and  [S_EMPID] like '%'||BA01_SBN||'%'
+group by sbn , ba01_sm_kor, yymm)
+)group by sbn,ba01_sm_kor
+
+
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+

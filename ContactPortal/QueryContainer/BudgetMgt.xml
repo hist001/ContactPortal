@@ -1,0 +1,731 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="chkBizacqAcctcd" value-count="2" url="거래처별 계정 체크" >  
+   <sql-content>
+   <![CDATA[
+		SELECT CHK_BIZACQACCTCD(?,?) BAFLAG 
+		FROM DUAL	
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="getPjtPlan" value-count="0" url="원가계획의 계획가져오기" >  
+   <sql-content>
+   <![CDATA[
+        select  a.yyyy,
+                a.budgetOrg org_no,
+                a.acctcd, TO_ACCTNAME(a.acctcd) ACCTNAME,
+                        nvl(execbudget01,0) execbudget01,nvl(usedBudget01,0) usedBudget01,nvl(execbudget01,0)-nvl(usedBudget01,0) remBudget01, 'Y' finishflag01,
+                        nvl(execbudget02,0) execbudget02,nvl(usedBudget02,0) usedBudget02,nvl(execbudget02,0)-nvl(usedBudget02,0) remBudget02, 'Y' finishflag02,
+                        nvl(execbudget03,0) execbudget03,nvl(usedBudget03,0) usedBudget03,nvl(execbudget03,0)-nvl(usedBudget03,0) remBudget03, 'Y' finishflag03,
+                        nvl(execbudget01,0)+nvl(execbudget02,0)+nvl(execbudget03,0) bquarter01,
+                        nvl(usedBudget01,0)+nvl(usedBudget02,0)+nvl(usedBudget03,0) uquarter01,
+                        nvl(execbudget01,0)+nvl(execbudget02,0)+nvl(execbudget03,0)-(nvl(usedBudget01,0)+nvl(usedBudget02,0)+nvl(usedBudget03,0)) rquarter01,
+
+                        nvl(execbudget04,0) execbudget04,nvl(usedBudget04,0) usedBudget04,nvl(execbudget04,0)-nvl(usedBudget04,0) remBudget04, 'Y' finishflag04,
+                        nvl(execbudget05,0) execbudget05,nvl(usedBudget05,0) usedBudget05,nvl(execbudget05,0)-nvl(usedBudget05,0) remBudget05, 'Y' finishflag05,
+                        nvl(execbudget06,0) execbudget06,nvl(usedBudget06,0) usedBudget06,nvl(execbudget06,0)-nvl(usedBudget06,0) remBudget06, 'Y' finishflag06,
+                        case (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd)
+                             when 'Y' then nvl(execbudget01,0)+nvl(execbudget02,0)+nvl(execbudget03,0)+nvl(execbudget04,0)+nvl(execbudget05,0)+nvl(execbudget06,0)
+                             when 'Q' then nvl(execbudget04,0)+nvl(execbudget05,0)+nvl(execbudget06,0)
+                        end bquarter02,
+                        case (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd)
+                             when 'Y' then nvl(usedBudget01,0)+nvl(usedBudget02,0)+nvl(usedBudget03,0)+nvl(usedBudget04,0)+nvl(usedBudget05,0)+nvl(usedBudget06,0)
+                             when 'Q' then nvl(usedBudget04,0)+nvl(usedBudget05,0)+nvl(usedBudget06,0)
+                        end uquarter02,
+                        case (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd)
+                             when 'Y' then nvl(execbudget01,0)+nvl(execbudget02,0)+nvl(execbudget03,0)+nvl(execbudget04,0)+nvl(execbudget05,0)+nvl(execbudget06,0)
+                             			-(nvl(usedBudget01,0)+nvl(usedBudget02,0)+nvl(usedBudget03,0)+nvl(usedBudget04,0)+nvl(usedBudget05,0)+nvl(usedBudget06,0))
+                             when 'Q' then nvl(execbudget04,0)+nvl(execbudget05,0)+nvl(execbudget06,0)-(nvl(usedBudget04,0)+nvl(usedBudget05,0)+nvl(usedBudget06,0))
+                        end rquarter02,
+                        nvl(execbudget07,0) execbudget07,nvl(usedBudget07,0) usedBudget07,nvl(execbudget07,0)-nvl(usedBudget07,0) remBudget07, 'Y' finishflag07,
+                        nvl(execbudget08,0) execbudget08,nvl(usedBudget08,0) usedBudget08,nvl(execbudget08,0)-nvl(usedBudget08,0) remBudget08, 'Y' finishflag08,
+                        nvl(execbudget09,0) execbudget09,nvl(usedBudget09,0) usedBudget09,nvl(execbudget09,0)-nvl(usedBudget09,0) remBudget09, 'Y' finishflag09,
+
+                        case (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd)
+                             when 'Y' then nvl(execbudget01,0)+nvl(execbudget02,0)+nvl(execbudget03,0)
+                             				+nvl(execbudget04,0)+nvl(execbudget05,0)+nvl(execbudget06,0)
+                             				+nvl(execbudget07,0)+nvl(execbudget08,0)+nvl(execbudget09,0)
+                             when 'Q' then nvl(execbudget07,0)+nvl(execbudget08,0)+nvl(execbudget09,0)
+                        end bquarter03,
+                        case (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd)
+                             when 'Y' then nvl(usedBudget01,0)+nvl(usedBudget02,0)+nvl(usedBudget03,0)
+                             				+nvl(usedBudget04,0)+nvl(usedBudget05,0)+nvl(usedBudget06,0)
+                             				+nvl(usedBudget07,0)+nvl(usedBudget08,0)+nvl(usedBudget09,0)
+                             when 'Q' then nvl(usedBudget07,0)+nvl(usedBudget08,0)+nvl(usedBudget09,0)
+                        end uquarter03,
+                        case (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd)
+                             when 'Y' then nvl(execbudget01,0)+nvl(execbudget02,0)+nvl(execbudget03,0)
+                             				+nvl(execbudget04,0)+nvl(execbudget05,0)+nvl(execbudget06,0)
+                             				+nvl(execbudget07,0)+nvl(execbudget08,0)+nvl(execbudget09,0)
+                             			-(nvl(usedBudget01,0)+nvl(usedBudget02,0)+nvl(usedBudget03,0)
+                             			+nvl(usedBudget04,0)+nvl(usedBudget05,0)+nvl(usedBudget06,0)
+                             			+nvl(usedBudget07,0)+nvl(usedBudget08,0)+nvl(usedBudget09,0))
+                             when 'Q' then nvl(execbudget07,0)+nvl(execbudget08,0)+nvl(execbudget09,0)
+                             			-(nvl(usedBudget07,0)+nvl(usedBudget08,0)+nvl(usedBudget09,0))
+                        end rquarter03,
+
+                        nvl(execbudget10,0) execbudget10,nvl(usedBudget10,0) usedBudget10,nvl(execbudget10,0)-nvl(usedBudget10,0) remBudget10, 'Y' finishflag10,
+                        nvl(execbudget11,0) execbudget11,nvl(usedBudget11,0) usedBudget11,nvl(execbudget11,0)-nvl(usedBudget11,0) remBudget11, 'Y' finishflag11,
+                        nvl(execbudget12,0) execbudget12,nvl(usedBudget12,0) usedBudget12,nvl(execbudget12,0)-nvl(usedBudget12,0) remBudget12, 'Y' finishflag12,
+						case (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd)
+                             when 'Y' then nvl(execbudget01,0)+nvl(execbudget02,0)+nvl(execbudget03,0)
+                             				+nvl(execbudget04,0)+nvl(execbudget05,0)+nvl(execbudget06,0)
+                             				+nvl(execbudget07,0)+nvl(execbudget08,0)+nvl(execbudget09,0)
+                             				+nvl(execbudget10,0)+nvl(execbudget11,0)+nvl(execbudget12,0)
+                             when 'Q' then nvl(execbudget10,0)+nvl(execbudget11,0)+nvl(execbudget12,0)
+                        end bquarter04,
+                        case (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd)
+                             when 'Y' then nvl(usedBudget01,0)+nvl(usedBudget02,0)+nvl(usedBudget03,0)
+                             				+nvl(usedBudget04,0)+nvl(usedBudget05,0)+nvl(usedBudget06,0)
+                             				+nvl(usedBudget07,0)+nvl(usedBudget08,0)+nvl(usedBudget09,0)
+                             				+nvl(usedBudget10,0)+nvl(usedBudget11,0)+nvl(usedBudget12,0)
+                             when 'Q' then nvl(usedBudget10,0)+nvl(usedBudget11,0)+nvl(usedBudget12,0)
+                        end uquarter04,
+                        case (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd)
+                             when 'Y' then nvl(execbudget01,0)+nvl(execbudget02,0)+nvl(execbudget03,0)
+                             				+nvl(execbudget04,0)+nvl(execbudget05,0)+nvl(execbudget06,0)
+                             				+nvl(execbudget07,0)+nvl(execbudget08,0)+nvl(execbudget09,0)
+                             				+nvl(execbudget10,0)+nvl(execbudget11,0)+nvl(execbudget12,0)
+                             			-(nvl(usedBudget01,0)+nvl(usedBudget02,0)+nvl(usedBudget03,0)
+                             			+nvl(usedBudget04,0)+nvl(usedBudget05,0)+nvl(usedBudget06,0)
+                             			+nvl(usedBudget07,0)+nvl(usedBudget08,0)+nvl(usedBudget09,0)
+                             			+nvl(usedBudget10,0)+nvl(usedBudget11,0)+nvl(usedBudget12,0))
+                             when 'Q' then nvl(execbudget10,0)+nvl(execbudget11,0)+nvl(execbudget12,0)
+                             			-(nvl(usedBudget10,0)+nvl(usedBudget11,0)+nvl(usedBudget12,0))
+                        end rquarter04,
+
+                        '20051220' createdt, '' lastupdtm, '' lastupempid
+        from
+        (
+                select  a.yyyy,a.budgetOrg,a.acctcd,
+                        sum(execbudget01) execbudget01, sum(execbudget02) execbudget02,
+                        sum(execbudget03) execbudget03, sum(execbudget04) execbudget04,
+                        sum(execbudget05) execbudget05, sum(execbudget06) execbudget06,
+                        sum(execbudget07) execbudget07, sum(execbudget08) execbudget08,
+                        sum(execbudget09) execbudget09, sum(execbudget10) execbudget10,
+                        sum(execbudget11) execbudget11, sum(execbudget12) execbudget12
+                from
+                (
+                        select year yyyy, month mm, pjt_no budgetOrg, substr(acctcd,1,4)||'0' acctcd,
+                                           decode(month,'01',amt) execbudget01,decode(month,'02',amt) execbudget02,
+                                       decode(month,'03',amt) execbudget03,decode(month,'04',amt) execbudget04,
+                                       decode(month,'05',amt) execbudget05,decode(month,'06',amt) execbudget06,
+                                       decode(month,'07',amt) execbudget07,decode(month,'08',amt) execbudget08,
+                                       decode(month,'09',amt) execbudget09,decode(month,'10',amt) execbudget10,
+                                       decode(month,'11',amt) execbudget11,decode(month,'12',amt) execbudget12
+                            from pjtcostdetail a
+                            where costtype = 'T'
+                            and acctcd like '5%'
+                ) a
+                where a.yyyy= ? and a.budgetOrg = ?
+                group by a.yyyy, a.budgetOrg,a.acctcd
+        ) a,
+        (
+                select yyyy,budgetOrg,acctcd,
+                           nvl(sum(usedBudget01),0) usedBudget01,nvl(sum(usedBudget02),0) usedBudget02,nvl(sum(usedBudget03),0) usedBudget03,
+                           nvl(sum(usedBudget04),0) usedBudget04,nvl(sum(usedBudget05),0) usedBudget05,nvl(sum(usedBudget06),0) usedBudget06,
+                           nvl(sum(usedBudget07),0) usedBudget07,nvl(sum(usedBudget08),0) usedBudget08,nvl(sum(usedBudget09),0) usedBudget09,
+                           nvl(sum(usedBudget10),0) usedBudget10,nvl(sum(usedBudget11),0) usedBudget11,nvl(sum(usedBudget12),0) usedBudget12
+                from
+                (
+                        select a.yyyy,a.budgetOrg,a.acctcd,
+                               decode(a.mm,'01',usedBudget) usedBudget01,decode(a.mm,'02',usedBudget) usedBudget02,decode(a.mm,'03',usedBudget) usedBudget03,
+                               decode(a.mm,'04',usedBudget) usedBudget04,decode(a.mm,'05',usedBudget) usedBudget05,decode(a.mm,'06',usedBudget) usedBudget06,
+                               decode(a.mm,'07',usedBudget) usedBudget07,decode(a.mm,'08',usedBudget) usedBudget08,decode(a.mm,'09',usedBudget) usedBudget09,
+                               decode(a.mm,'10',usedBudget) usedBudget10,decode(a.mm,'11',usedBudget) usedBudget11,decode(a.mm,'12',usedBudget) usedBudget12
+                        from
+                        (
+
+                                                select 	substr(a.docno,2,4) yyyy,substr(a.docno,6,2) mm,
+														substr(b.acctcd,1,4)||'0' acctcd,
+                                                        --b.amount
+                                                     	sum(b.amount) usedBudget
+                                                from acctrpthd a, acctrptsb b
+                                                where a.mainno = b.mainno
+                                                and a.status in ('DB0','DC0','DD0','DD1','DE0')
+                                                and b.acctcd like '5%'
+                                                and a.docno like 'B'||?||'%'
+                                                group by substr(a.docno,2,4),substr(a.docno,6,2),orgcd,substr(b.acctcd,1,4)
+
+                        ) a
+                )
+                group by yyyy,budgetOrg,acctcd
+        ) b
+        where a.yyyy= b.yyyy(+)
+        and a.budgetOrg = b.budgetOrg(+)
+        and a.acctcd =b.acctcd(+)
+        order by a.acctcd
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+	<sql-mapping  id="uptExecBudget"   value-count="4" url="실행예산 수정" >  
+	<sql-content>
+	<![CDATA[			
+		update budgetMain
+		set execBudget = ?
+		where yyyy=?
+		and mm='00'
+		and budgetOrg = ?
+		and acctCd = ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="insertExecBudgetDoc"   value-count="5" url="실행예산-문서 입력" >  
+	<sql-content>
+	<![CDATA[			
+		insert into execbudgetdoc_log
+		(mainno,budgetOrg,sn,acctcd,amount,createdtm)
+		values(?,?,?,?,?,sysdate)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="deleteExecBudgetDoc"   value-count="4" url="실행예산-문서 삭제" >  
+	<sql-content>
+	<![CDATA[			
+		delete from execbudgetdoc_log
+		where mainno = ?
+		and budgetOrg = ?
+		and acctcd = ?
+		and sn = ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="chkBudgetMgtInfo_last"   value-count="0" url="비용계성이 아닌것 예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[			
+		select
+				'OYY' budCheck,
+				orgCd: budgetOrg,
+				'O' budgetOrgType,
+				yyyy: yyyy,
+				acctCd: acctCd,
+				1 chkAmount,
+				0 execBudget,
+				amount: usedBudget,
+				0 remBudget
+		from dual
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="chkBudgetMgtInfo1"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[
+		select 
+			   case when (budgetOrgType: = 'R') or (budgetOrgType: = 'T') or (budgetOrgType: = 'RI') then
+			   			   case chk_budCheck(acctCd:) when 'Y' then
+			   			    	case isBudgetFive: when 'Y' then
+			   			    			case when chkAmount >= 0 then 
+									   			   case when execBudget-(nvl(usedBudget,0)+ amount: - get_AmtOfDoc(orgCd:,acctCd:,docNo:)) >= 0
+												   		then 'RYY'
+												   		else 'RYN'
+												   end 
+										    
+											else 
+									   		 	  case when execBudget-(nvl(usedBudget,0)+ amount: - get_AmtOfDoc(orgCd:,acctCd:,docNo:)) >= 0
+												  then 'RNY'
+												  else 'RNN'
+												  end 
+									    end
+							     else
+							     		case when chkAmount >= 0 then 
+									   			   case when execBudget-(nvl(usedBudget,0)+ amount: - get_AmtOfDoc(orgCd:,acctCd:,docNo:)) >= 0
+												   		then 'RYY'
+												   		else 'RYN'
+												   end 
+										    
+											else 
+									   		 	  case when execBudget-(nvl(usedBudget,0)+ amount: - get_AmtOfDoc(orgCd:,acctCd:,docNo:)) >= 0
+												  then 'RYY'
+												  else 'RYN'
+												  end 
+									    end
+			   			    	end
+						    else 'RYY'
+						    end
+			   	else 
+			   			 case chk_budCheck(acctCd:) when 'Y' then
+							  	   case when execBudget-(nvl(usedBudget,0)+ amount: - get_AmtOfDoc(orgCd:,acctCd:,docNo:)) >= 0
+								   		 then 'OYY'
+								   else 'ONN'
+								   		
+								   end
+						 else 'OYY'
+					     end		   
+			   end budCheck,
+			   a.budgetOrg,
+			   a.budgetOrgType,
+			   a.yyyy,
+			   --a.mm,
+			   acctCd: acctCd,
+			   nvl(chkAmount,0) chkAmount,
+			   case chk_budCheck(acctCd:) when 'Y' then execBudget
+						   				  when 'N' then 0
+			   end execBudget,
+			   nvl(usedBudget,0)+ amount: - get_AmtOfDoc(orgCd:,acctCd:,docNo:) usedBudget,
+			   case chk_budCheck(acctCd:) when 'Y' then (execBudget-(nvl(usedBudget,0)+ amount: - get_AmtOfDoc(orgCd:,acctCd:,docNo:)))
+						   				  when 'N' then 0
+			   end remBudget
+		from 
+		(
+			select a.budgetOrg,
+				   a.budgetOrgType,
+				   yyyy,acctcd,
+				   Get_ExecBudget_NonOrg(b.yyyy,a.budgetOrg,b.acctcd)+Get_AmtOfExecbudgetDoc(orgCd:,acctCd:,mainNo:) - amount: chkAmount, --+ get_AmtOfDoc(orgCd:,acctCd:,docNo:) chkAmount,
+				   sum(execbudget) execBudget
+			from budgetOrg a, budgetMain b
+			where a.budgetOrg = b.budgetOrg
+			and a.useflag= 'Y'
+			and b.yyyy= yyyy:
+			and b.budgetOrg in (orgCd:, 
+									nvl((select 	case budgetOrgType
+												when 'P' then (select pjtOrg_no from project where pjt_no = orgCd:)
+												else orgCd:
+									end
+									from budgetOrg where budgetOrg = orgCd:),'1051')
+				)
+			and b.acctcd like substr(acctCd:,1,4)||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="chkBudgetMgtInfo2"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[			
+			group by a.budgetOrg,a.budgetOrgType,yyyy,acctcd
+			
+		) a,
+		(
+			select orgcd,yyyy,acctcd,sum(usedBudget) usedBudget
+			from
+			(
+				select get_BudgetOrg(orgCd:) orgcd, a.yyyy,b.acctcd,sum(amount) usedBudget 
+				from ( select docno,doctype,mainno,substr(docno,2,4) yyyy,substr(docno,6,2) mm, status from acctrpthd) a,
+					 ( select mainno,cdtype,orgcd,substr(acctcd,1,4)||'0' acctcd,amount from acctrptsb) b
+				where a.mainno = b.mainno
+				and a.doctype ='B'
+				and a.status in ('DB0','DC0','DD0','DD1','DE0')
+				and b.acctcd like '5%'
+				and b.cdtype = 'C'
+				and a.docno like 'B'||yyyy:||'%'
+				and b.orgcd in (orgCd:, 
+									(select 	case budgetOrgType
+												when 'P' then (select pjtOrg_no from project where pjt_no = orgCd:)
+												else orgCd:
+									end
+									from budgetOrg where budgetOrg = orgCd:)
+								)
+				and b.orgcd not in ('1023','1029')
+				and b.acctcd like substr(acctCd:,1,4)||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="chkBudgetMgtInfo3"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[			
+				group by b.orgcd,a.yyyy,b.acctcd
+			)
+			group by orgcd,yyyy,acctcd
+			
+		) b
+		where a.yyyy = b.yyyy(+)
+		--and a.mm = b.mm(+)
+		and a.budgetOrg = b.orgcd(+)
+		and a.acctcd = b.acctcd(+)
+		order by budgetOrg desc
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="getQ1"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[
+		and mm>='01'
+		and mm <=mm:
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="getQ2"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[
+		and mm>='04'
+		and mm <=mm:
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="getQ3"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[
+		and mm>='07'
+		and mm <=mm:
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="getQ4"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[
+		and mm>='10'
+		and mm <=mm:
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="getY"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[
+		and mm>='01'
+		and mm <=mm:
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="getTY"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[
+		and mm>='01'
+		and mm <='12'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="getBudgetMgtInfo2" value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[
+		select  orgCd: orgCd, 
+				acctCd: acctCd,
+				chk_mainOrg(acctCd:,useOrgCd:) mainFlg,
+				chk_orgType(orgCd:) orgType,
+				Get_BudgetTerm2(acctCd:,orgCd:) budgetTerm,
+				--case get_orgdiv(crOrgCd:) when '1010' then 'Y'
+				--		 	  			else  
+				Chk_CEOApproved(acctCd:,amount:,eventDt:)
+				--		 end 
+				isCeoCheck, 
+				chk_BudgetFive(acctCd:) isBudgetFive
+		from dual
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="uptBudgetFive"   value-count="5" url="실행예산수정" >  
+	<sql-content>
+	<![CDATA[
+				update budgetMain set execBudget = ?
+				where yyyy=? and mm=? and budgetOrg =? and acctcd=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="getExecBudgetFive"   value-count="2" url="5대비목 실행예산 검색" >  
+	<sql-content>
+	<![CDATA[
+		select 	yyyy,mm,a.budgetOrg,
+				case when a.budgetOrg >= 9000 then
+				          to_pjtno_tocode(a.budgetOrg)
+				     else
+				          to_orgnocd(a.budgetOrg)
+				end orgCd,
+				case when a.budgetOrg >= 9000 then
+				          to_pjtname(a.budgetOrg)
+				     else
+				          to_orgnoname(a.budgetOrg)
+				end orgName,
+				a.acctCd,to_acctname(a.acctcd) acctName, a.execBudget
+		from
+		( 
+			select yyyy,mm,budgetOrg,acctCd, execBudget 
+			from budgetMain
+			where mm='00'
+			and acctcd in ('50150','50160','50220','50260','50990') 
+		) a,
+		(
+			select budgetOrg,budgetOrgType from budgetOrg
+			where useFlag = 'Y'
+			--and budgetOrgType = 'R'
+		) b
+		where a.budgetOrg = b.budgetOrg
+		and a.yyyy = ?
+		and a.budgetOrg = ?
+		order by a.acctCd
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="getBudgetMgtInfo"   value-count="0" url="예산체크정보조회" >  
+	<sql-content>
+	<![CDATA[
+select
+		case when ((mainFlg ='NN') or (mainFlg ='YY')) then
+			 	  case when orgType = 'R' then
+				  	   		case when remBudget>=0 then
+									 case when chkAmount >= 0 then 'Y'
+									 	  else 'N'
+								     end
+								else 'N'
+							end
+				  	   else
+				  	   	   case when remBudget >=0 then 'Y'
+						   		else 'N'
+						   end
+				  end
+			 else 'N'
+		end bcFlg,
+		decode(mainFlg,'NN','Y','YY','Y','YN','N') mainFlg,
+		case when remBudget >=0 then 'Y'
+			 else 'N'
+		end budFlg,
+		case when chkAmount >=0 then 'Y'
+			 else 'N'
+		end exeFlg,
+		isCeoCheck,orgType,isBudgetFive,yyyy,mm,orgcd,acctcd,
+		nvl(chkAmount,0) chkAmount,nvl(execBudget,0) execBudget,nvl(usedBudget,0) usedBudget,nvl(remBudget,0) remBudget
+from
+(
+	select chk_mainOrg(acctCd:,crOrgCd:) mainFlg,chk_orgType(orgCd:) orgType,
+		   Chk_CEOApproved(acctCd:,amount:) isCeoCheck, chk_BudgetFive(acctCd:) isBudgetFive,
+		   yyyy: yyyy,mm: mm, orgCd: orgcd, acctCd: acctcd,
+		   case chk_orgType(orgCd:)
+				when 'R' then
+					 (case  Chk_BudgetFive(acctCd:)
+					 		when 'Y' then Get_ExecBudget_NonOrg(yyyy:,orgCd:,acctCd:)- Get_SumUsedBud_ForExecBud(yyyy:,mm:,orgCd:,acctCd:,amount:,docNo:)
+					        else Get_SumExecBud_NonOrg(yyyy:,orgCd:,acctCd:)-Get_SumUsedBud_NonOrg(yyyy:,orgCd:,acctCd:,amount:,docNo:)
+					  end
+					  ) 
+		   		else  
+					 (
+					  	case Get_BudgetTerm(acctCd:)
+							 when 'Y' then Get_SumYExecBud_Org(yyyy:,'02',orgCd:,acctCd:)-Get_SumYUsedBud_Org(yyyy:,'02',orgCd:,acctCd:,amount:,docNo:)
+							 when 'Q' then Get_SumQExecBud_Org(yyyy:,'02',orgCd:,acctCd:)-Get_SumQUsedBud_Org(yyyy:,'02',orgCd:,acctCd:,amount:,docNo:)
+						end
+					 )
+		   end chkAmount,
+		   case chk_orgType(orgCd:)
+				when 'R' then Get_SumExecBud_NonOrg(yyyy:,orgCd:,acctCd:)
+		   		else  
+					 (
+					  	case Get_BudgetTerm(acctCd:)
+							 when 'Y' then Get_SumYExecBud_Org(yyyy:,'02',orgCd:,acctCd:)
+							 when 'Q' then Get_SumQExecBud_Org(yyyy:,'02',orgCd:,acctCd:)
+						end
+					 )
+		   end execbudget,
+		   case chk_orgType(orgCd:)
+				when 'R' then Get_SumUsedBud_NonOrg(yyyy:,orgCd:,acctCd:,amount:,docNo:)
+		   		else  
+					 (
+					  	case Get_BudgetTerm(acctCd:)
+							 when 'Y' then Get_SumYUsedBud_Org(yyyy:,'02',orgCd:,acctCd:,amount:,docNo:)
+							 when 'Q' then Get_SumQUsedBud_Org(yyyy:,'02',orgCd:,acctCd:,amount:,docNo:)
+						end
+					 )
+		   end usedbudget,
+		   case chk_orgType(orgCd:)
+				when 'R' then Get_SumExecBud_NonOrg(yyyy:,orgCd:,acctCd:)-Get_SumUsedBud_NonOrg(yyyy:,orgCd:,acctCd:,amount:,docNo:)
+		   		else  
+					 (
+					  	case Get_BudgetTerm(acctCd:)
+							 when 'Y' then Get_SumYExecBud_Org(yyyy:,'02',orgCd:,acctCd:)-Get_SumYUsedBud_Org(yyyy:,'02',orgCd:,acctCd:,amount:,docNo:)
+							 when 'Q' then Get_SumQExecBud_Org(yyyy:,'02',orgCd:,acctCd:)-Get_SumQUsedBud_Org(yyyy:,'02',orgCd:,acctCd:,amount:,docNo:)
+						end
+					 )
+		   end rembudget
+	from dual
+)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="viewBudgetLog"   value-count="2" url="예산수정이력조회" >  
+	<sql-content>
+	<![CDATA[
+                select yyyy,mm,
+                           budgetOrg,
+						   to_orgnocd(budgetorg) orgcd,
+						   to_orgnoname(budgetorg) orgname,									
+                           acctCd, to_acctname(acctCd) acctKname,
+                           oldBudget,execBudget,reqCost,
+                           uptEmpid, to_empkname(uptEmpid) uptempkname,
+                           to_char(uptDtm,'yyyy-mm-dd hh:mm') uptDtm
+                from budgetMgtlog
+                where yyyy||mm between [YYYY]||'03' and  to_char(to_number([YYYY])+1)||'02' 
+                and budgetOrg = [ORG_NO]
+                order by acctcd, yyyy,mm				
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="crtBudgetLog"   value-count="8" url="예산수정이력" >  
+	<sql-content>
+	<![CDATA[
+				insert into BudgetMgtLog (YYYY,MM, budgetOrg, acctCd,uptDtm,oldBudget,execBudget,reqCost,uptEmpId)
+				values(?,?,?,?, sysdate, ?,?,?,?)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="crtBudgetLog_fromPJT"   value-count="12" url="예산수정이력_원가계획변경시 로그" >  
+	<sql-content>
+	<![CDATA[
+				INSERT INTO BUDGETMGTLOG
+				SELECT ?,?,?,?,SYSDATE,EXECBUDGET,?,?-EXECBUDGET,? FROM BUDGETMAIN 
+					--(YYYY,MM,BUDGETORG,ACCTCD,UPTDTM,OLDBUDGET,EXECBUDGET,REQCOST,UPTEMPID)
+				WHERE YYYY = ?
+				AND MM= ?
+				AND BUDGETORG = ?
+				AND ACCTCD = ?
+				and execbudget < ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="uptBudget"   value-count="7" url="예산수정" >  
+	<sql-content>
+	<![CDATA[
+				update budgetMain set execBudget = ?, usedBudget=?, remBudget=?
+				where yyyy=? and mm=? and budgetOrg =? and acctcd=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="uptBudget_fromPJT"   value-count="8" url="예산수정" >  
+	<sql-content>
+	<![CDATA[
+				update budgetMain set execBudget = ?, usedBudget=?, remBudget=?
+				where yyyy=? and mm=? and budgetOrg =? and acctcd=?
+				and execbudget < ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+   <sql-mapping  id="execBudgetGroupList" value-count="0" url="집행예산" >  
+   <sql-content>
+   <![CDATA[
+select  a.yyyy,
+        a.budgetOrg org_no,
+        a.acctcd, TO_ACCTNAME(a.acctcd) ACCTNAME, a.chkvalue,		
+        nvl(execbudget01,0) execbudget01,nvl(usedBudget01,0) usedBudget01,nvl(execbudget01,0)-nvl(usedBudget01,0) remBudget01, 'Y' finishflag01,
+        nvl(execbudget02,0) execbudget02,nvl(usedBudget02,0) usedBudget02,nvl(execbudget02,0)-nvl(usedBudget02,0) remBudget02, 'Y' finishflag02,
+        nvl(execbudget03,0) execbudget03,nvl(usedBudget03,0) usedBudget03,nvl(execbudget03,0)-nvl(usedBudget03,0) remBudget03, 'Y' finishflag03,
+		nvl(bquarter01,0) bquarter01, nvl(uquarter01,0) uquarter01,nvl(bquarter01,0)- nvl(uquarter01,0) rquarter01,
+        nvl(execbudget04,0) execbudget04,nvl(usedBudget04,0) usedBudget04,nvl(execbudget04,0)-nvl(usedBudget04,0) remBudget04, 'Y' finishflag04,
+        nvl(execbudget05,0) execbudget05,nvl(usedBudget05,0) usedBudget05,nvl(execbudget05,0)-nvl(usedBudget05,0) remBudget05, 'Y' finishflag05,
+        nvl(execbudget06,0) execbudget06,nvl(usedBudget06,0) usedBudget06,nvl(execbudget06,0)-nvl(usedBudget06,0) remBudget06, 'Y' finishflag06,
+		nvl(bquarter02,0) bquarter02, nvl(uquarter02,0) uquarter02,nvl(bquarter02,0)- nvl(uquarter02,0) rquarter02,
+        nvl(execbudget07,0) execbudget07,nvl(usedBudget07,0) usedBudget07,nvl(execbudget07,0)-nvl(usedBudget07,0) remBudget07, 'Y' finishflag07,
+        nvl(execbudget08,0) execbudget08,nvl(usedBudget08,0) usedBudget08,nvl(execbudget08,0)-nvl(usedBudget08,0) remBudget08, 'Y' finishflag08,
+        nvl(execbudget09,0) execbudget09,nvl(usedBudget09,0) usedBudget09,nvl(execbudget09,0)-nvl(usedBudget09,0) remBudget09, 'Y' finishflag09,
+		nvl(bquarter03,0) bquarter03, nvl(uquarter03,0) uquarter03,nvl(bquarter03,0)- nvl(uquarter03,0) rquarter03,
+        nvl(execbudget10,0) execbudget10,nvl(usedBudget10,0) usedBudget10,nvl(execbudget10,0)-nvl(usedBudget10,0) remBudget10, 'Y' finishflag10,
+        nvl(execbudget11,0) execbudget11,nvl(usedBudget11,0) usedBudget11,nvl(execbudget11,0)-nvl(usedBudget11,0) remBudget11, 'Y' finishflag11,
+        nvl(execbudget12,0) execbudget12,nvl(usedBudget12,0) usedBudget12,nvl(execbudget12,0)-nvl(usedBudget12,0) remBudget12, 'Y' finishflag12,
+		nvl(bquarter04,0) bquarter04, nvl(uquarter04,0) uquarter04,nvl(bquarter04,0)- nvl(uquarter04,0) rquarter04,
+		'20051220' createdt, '' lastupdtm, '' lastupempid
+from
+(
+        select     		a.yyyy,a.budgetOrg,a.acctcd,
+                        (select chkvalue from budgetCheck where chkkey = 'BC' and acctcd like '5%0' and acctcd=a.acctcd) chkvalue,
+						sum(execbudget03) execbudget03,sum(execbudget04) execbudget04, sum(execbudget05) execbudget05,
+                        sum(execbudget03)+sum(execbudget04)+sum(execbudget05) bquarter01,
+                        sum(execbudget06) execbudget06,sum(execbudget07) execbudget07, sum(execbudget08) execbudget08,
+                        sum(execbudget03)+sum(execbudget04)+sum(execbudget05)+sum(execbudget06)+sum(execbudget07)+sum(execbudget08) bquarter02,
+                		sum(execbudget09) execbudget09,sum(execbudget10) execbudget10, sum(execbudget11) execbudget11,
+                        sum(execbudget03)+sum(execbudget04)+sum(execbudget05)+sum(execbudget06)+sum(execbudget07)+sum(execbudget08)
+						 +sum(execbudget09)+sum(execbudget10)+sum(execbudget11) bquarter03,
+                        sum(execbudget12) execbudget12,sum(execbudget01) execbudget01, sum(execbudget02) execbudget02,
+                        sum(execbudget03)+sum(execbudget04)+sum(execbudget05)+sum(execbudget06)+sum(execbudget07)+sum(execbudget08)
+						 +sum(execbudget09)+sum(execbudget10)+sum(execbudget11)+sum(execbudget12)+sum(execbudget01)+sum(execbudget02) bquarter04
+	from
+	(
+                select a.yyyy,a.mm,a.budgetOrg,a.acctcd,
+					   0 execbudget01, 0 execbudget02,
+                        decode(MM,'03',execbudget) execbudget03,decode(MM,'04',execbudget) execbudget04,
+                        decode(MM,'05',execbudget) execbudget05,decode(MM,'06',execbudget) execbudget06,
+                        decode(MM,'07',execbudget) execbudget07,decode(MM,'08',execbudget) execbudget08,
+                        decode(MM,'09',execbudget) execbudget09,decode(MM,'10',execbudget) execbudget10,
+                        decode(MM,'11',execbudget) execbudget11,decode(MM,'12',execbudget) execbudget12
+                from budgetmain a
+				where a.yyyy= [YYYY]  and a.budgetOrg = [ORG_NO]					
+				union all
+				select [YYYY],a.mm,a.budgetOrg,a.acctcd,
+                        decode(MM,'01',execbudget) execbudget01,decode(MM,'02',execbudget) execbudget02,
+						0 execbudget03, 0 execbudget04,
+						0 execbudget05, 0 execbudget06,
+						0 execbudget07, 0 execbudget08,
+						0 execbudget09, 0 execbudget10,
+                        0 execbudget11, 0 execbudget12
+                from budgetmain a
+				where a.yyyy= TO_CHAR(TO_NUMBER([YYYY])+1)  and a.budgetOrg = [ORG_NO]			        
+	) a
+	group by a.yyyy, a.budgetOrg,a.acctcd
+) a,
+(
+        select yyyy,budgetOrg,c.acctcd,         
+			   nvl(sum(usedBudget03),0) usedBudget03,nvl(sum(usedBudget04),0) usedBudget04,nvl(sum(usedBudget05),0) usedBudget05,
+               nvl(sum(usedBudget03),0)+nvl(sum(usedBudget04),0)+nvl(sum(usedBudget05),0) uquarter01,
+               nvl(sum(usedBudget06),0) usedBudget06,nvl(sum(usedBudget07),0) usedBudget07,nvl(sum(usedBudget08),0) usedBudget08,
+               nvl(sum(usedBudget03),0)+nvl(sum(usedBudget04),0)+nvl(sum(usedBudget05),0)
+									 	 +nvl(sum(usedBudget06),0)+nvl(sum(usedBudget07),0)+nvl(sum(usedBudget08),0) uquarter02,
+               nvl(sum(usedBudget09),0) usedBudget09,nvl(sum(usedBudget10),0) usedBudget10,nvl(sum(usedBudget11),0) usedBudget11,
+               nvl(sum(usedBudget03),0)+nvl(sum(usedBudget04),0)+nvl(sum(usedBudget05),0)
+												+nvl(sum(usedBudget06),0)+nvl(sum(usedBudget07),0)+nvl(sum(usedBudget08),0)
+												+nvl(sum(usedBudget09),0)+nvl(sum(usedBudget10),0)+nvl(sum(usedBudget11),0) uquarter03,
+               nvl(sum(usedBudget12),0) usedBudget12,nvl(sum(usedBudget01),0) usedBudget01,nvl(sum(usedBudget02),0) usedBudget02,
+               nvl(sum(usedBudget03),0)+nvl(sum(usedBudget04),0)+nvl(sum(usedBudget05),0)
+												+nvl(sum(usedBudget06),0)+nvl(sum(usedBudget07),0)+nvl(sum(usedBudget08),0)
+												+nvl(sum(usedBudget09),0)+nvl(sum(usedBudget10),0)+nvl(sum(usedBudget11),0)
+												+nvl(sum(usedBudget12),0)+nvl(sum(usedBudget01),0)+nvl(sum(usedBudget02),0) uquarter04
+	from
+	(
+	        select a.yyyy,a.budgetOrg,a.acctcd,
+	               decode(a.mm,'01',usedBudget) usedBudget01,decode(a.mm,'02',usedBudget) usedBudget02,decode(a.mm,'03',usedBudget) usedBudget03,
+	               decode(a.mm,'04',usedBudget) usedBudget04,decode(a.mm,'05',usedBudget) usedBudget05,decode(a.mm,'06',usedBudget) usedBudget06,
+	               decode(a.mm,'07',usedBudget) usedBudget07,decode(a.mm,'08',usedBudget) usedBudget08,decode(a.mm,'09',usedBudget) usedBudget09,
+	               decode(a.mm,'10',usedBudget) usedBudget10,decode(a.mm,'11',usedBudget) usedBudget11,decode(a.mm,'12',usedBudget) usedBudget12
+	        from
+	        (
+                        select [ORG_NO] budgetOrg,substr(a.docno,2,4) yyyy,substr(a.docno,6,2) mm,
+                               --b.acctcd acctcd,
+                               --sum(b.amount) usedBudget
+                               a.accthcd acctcd,
+                               sum(a.totamt) usedBudget
+                        from acctrpthd a
+                        where  a.DELFLAG = 'N'
+                        and a.status not in ('DA0','DX0','DW0','DX1','DY1','DZ0')
+                        and a.accthcd IN ( SELECT DISTINCT(ACCTCD) FROM BUDGETMAIN WHERE YYYY= [YYYY] AND BUDGETORG=[ORG_NO] )
+						AND A.DOCTYPE = 'B'
+						AND a.USEORGCD = [ORG_NO] 
+                        and A.EVENTDT BETWEEN [YYYY]||'0301' AND TO_CHAR(TO_NUMBER([YYYY])+1)||'0301'
+                        group by substr(a.docno,2,4),substr(a.docno,6,2),useorgcd,a.accthcd
+	        ) a
+	)  c
+	group by yyyy,budgetOrg,acctcd
+) b
+where a.yyyy= b.yyyy(+)
+and a.budgetOrg = b.budgetOrg(+)
+and a.acctcd =b.acctcd(+)
+order by a.acctcd
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="execBudgetTeamList"   value-count="2"
+   url="집행예산" >  
+   <sql-content>
+   <![CDATA[
+	SELECT  a.YYYY, SUBSTR(a.orgcd,1,2)||'00' orgCd, a.ACCTCD, TO_ACCTNAME(a.ACCTCD) ACCTNAME,
+	SUM(a.EXECBUDGET01) EXECBUDGET01, SUM(a.REMBUDGET01) REMBUDGET01, SUM(a.USEDBUDGET01) USEDBUDGET01,
+	SUM(a.EXECBUDGET02) EXECBUDGET02, SUM(a.REMBUDGET02) REMBUDGET02, SUM(a.USEDBUDGET02) USEDBUDGET02,
+	SUM(a.EXECBUDGET03) EXECBUDGET03, SUM(a.REMBUDGET03) REMBUDGET03, SUM(a.USEDBUDGET03) USEDBUDGET03,
+	SUM(a.EXECBUDGET04) EXECBUDGET04, SUM(a.REMBUDGET04) REMBUDGET04, SUM(a.USEDBUDGET04) USEDBUDGET04,
+	SUM(a.EXECBUDGET05) EXECBUDGET05, SUM(a.REMBUDGET05) REMBUDGET05, SUM(a.USEDBUDGET05) USEDBUDGET05,
+	SUM(a.EXECBUDGET06) EXECBUDGET06, SUM(a.REMBUDGET06) REMBUDGET06, SUM(a.USEDBUDGET06) USEDBUDGET06,
+	SUM(a.EXECBUDGET07) EXECBUDGET07, SUM(a.REMBUDGET07) REMBUDGET07, SUM(a.USEDBUDGET07) USEDBUDGET07,
+	SUM(a.EXECBUDGET08) EXECBUDGET08, SUM(a.REMBUDGET08) REMBUDGET08, SUM(a.USEDBUDGET08) USEDBUDGET08,
+	SUM(a.EXECBUDGET09) EXECBUDGET09, SUM(a.REMBUDGET09) REMBUDGET09, SUM(a.USEDBUDGET09) USEDBUDGET09,
+	SUM(a.EXECBUDGET10) EXECBUDGET10, SUM(a.REMBUDGET10) REMBUDGET10, SUM(a.USEDBUDGET10) USEDBUDGET10,
+	SUM(a.EXECBUDGET11) EXECBUDGET11, SUM(a.REMBUDGET11) REMBUDGET11, SUM(a.USEDBUDGET11) USEDBUDGET11,
+	SUM(a.EXECBUDGET12) EXECBUDGET12, SUM(a.REMBUDGET12) REMBUDGET12, SUM(a.USEDBUDGET12) USEDBUDGET12,
+	CREATEDT, TO_ORGCDNAME(SUBSTR(a.orgcd,1,2)||'00') orgName
+	FROM  MASM_INHAUH.BUDGETVIEW a
+	Where a.YYYY = ?
+	  and SUBSTR(a.orgcd,1,2) = ?
+	GROUP by YYYY, SUBSTR(a.orgcd,1,2)||'00', ACCTCD, CREATEDT
+	Order by 3	
+	]]>
+	</sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="createBudgetTable"   value-count="0"   url="예산 테이블 생성" >  
+   <sql-content>
+   <![CDATA[
+				begin CREATE_BUDGET_TEMP([orgCd],[yyyy]); end; 
+	]]>
+	</sql-content>
+   </sql-mapping>
+</sql>

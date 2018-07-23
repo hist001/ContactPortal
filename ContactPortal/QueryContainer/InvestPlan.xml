@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="I_001"   value-count="2"
+   url="투자계획 등록" >  
+   <sql-content>
+   <![CDATA[
+		select * from ivPlan where yPlanCd=? and dyPlanCd=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I_002"   value-count="3"
+   url="투자계획 개별 조건" >  
+   <sql-content>
+   <![CDATA[
+		where yPlanCd=? and dyPlanCd=? and ivCd=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I_003"   value-count="0"
+   url="투자계획 key 검색" >  
+   <sql-content>
+   <![CDATA[
+		select nvl(max(ivCd),to_char(sysdate,'yyyymmdd')||'0000')+1 ivCd from ivPlan where  substr(ivCd,1,8)= to_char(sysdate,'yyyymmdd')
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="I_004"   value-count="3"
+   url="투자계획 종합검색" >  
+   <sql-content>
+   <![CDATA[
+	select 
+	yplancd||dyplancd||ivname||ivnote||ivreason||priority key,
+	yplancd,dyplancd,dyplanName,ivname,ivnote,ivreason,priority,
+	sum(amt_01) amt_01,
+	sum(amt_02) amt_02,
+	sum(amt_03) amt_03,
+	sum(amt_04) amt_04,
+	sum(amt_05) amt_05,
+	sum(amt_06) amt_06,
+	sum(amt_07) amt_07,
+	sum(amt_08) amt_08,
+	sum(amt_09) amt_09,
+	sum(amt_10) amt_10,
+	sum(amt_11) amt_11,
+	sum(amt_12) amt_12,
+	sum(amt_01)+
+	sum(amt_02)+
+	sum(amt_03)+
+	sum(amt_04)+
+	sum(amt_05)+
+	sum(amt_06)+
+	sum(amt_07)+
+	sum(amt_08)+
+	sum(amt_09)+
+	sum(amt_10)+
+	sum(amt_11)+
+	sum(amt_12) tot
+	from 
+	(
+	select a.yplancd, a.dyplancd,dyplanName,ivname,ivnote,ivreason,priority,
+		case when month = 1 then
+		amt
+		else
+		0
+		end amt_01,
+		case when month = 2 then
+		amt
+		else
+		0
+		end amt_02,
+		case when month = 3 then
+		amt
+		else
+		0
+		end amt_03,
+		case when month = 4 then
+		amt
+		else
+		0
+		end amt_04,
+		case when month = 5 then
+		amt
+		else
+		0
+		end amt_05,
+		case when month = 6 then
+		amt
+		else
+		0
+		end amt_06,
+		case when month = 7 then
+		amt
+		else
+		0
+		end amt_07,
+		case when month = 8 then
+		amt
+		else
+		0
+		end amt_08,
+		case when month = 9 then
+		amt
+		else
+		0
+		end amt_09,
+		case when month = 10 then
+		amt
+		else
+		0
+		end amt_10,
+		case when month = 11 then
+		amt
+		else
+		0
+		end amt_11,
+		case when month = 12 then
+		amt
+		else
+		0
+		end amt_12
+	   from 
+	   (
+			select yplancd,dyplancd,ivname,ivnote,ivreason,priority,to_number(substr(ivfirstdt,5,6)) month,amt from ivPlan
+					where yPlanCd=?
+					and dyPlanCd in
+					(
+						select dyplancd from detailYearPlan
+						where ORGCD in 
+						(
+								SELECT ORGCD 
+								FROM ORG A
+								WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))								
+								START WITH A.ORGCD = ?						
+								CONNECT BY PRIOR TO_CHAR(A.ORG_NO) = A.HIGHORGCD						
+						)
+						?
+					)
+		)a, detailYearPlan b
+		where a.dyplancd=b.dyplancd
+		and a.yplancd=b.yplancd
+	)group by yplancd,dyplancd,dyPlanName,ivname,ivnote,ivreason,priority
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+</sql>
+
+

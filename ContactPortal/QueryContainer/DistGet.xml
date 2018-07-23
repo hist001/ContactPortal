@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="DistList"   value-count="0"
+   url="지급품의 제비율 LIST" >  
+   <sql-content>
+   <![CDATA[
+SELECT   a.DISTNO, a.NOTE, a.USEORGCD, SUBSTR(a.CREATEDT,1,4) || '-'||SUBSTR(a.CREATEDT,5,2)||'-'||SUBSTR(a.CREATEDT,7,2) CREATEDT, 
+a.LASTUPEMPID, a.LASTUPDTM, a.crEmpId, TO_EMPKNAME(a.crEmpId) crEmpName, TO_EMPGradeName(a.crEmpId) crEmpGrade, lastDt,
+ (Select nvl(Count(*),0) FROM MASM_INHAUH.DISTDINFO b WHERE a. DISTNO = b. DISTNO ) recCnt
+ FROM  MASM_INHAUH.DISTHINFO a
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="GetDist"   value-count="1"
+   url="지급품의 조회" >  
+   <sql-content>
+   <![CDATA[
+SELECT a.DISTNO, a.NOTE, a.USEORGCD, TO_ORGNOCD(a.USEORGCD) USEORGUSERCD, TO_ORGNONAME(a.USEORGCD) USEORGNAME,
+	   SUBSTR(a.CREATEDT,1,4) || '-'||SUBSTR(a.CREATEDT,5,2)||'-'||SUBSTR(a.CREATEDT,7,2) CREATEDT, 
+	   a.LASTUPEMPID, 
+	   TO_CHAR(a.LASTUPDTM, 'YYYY-MM-DD HH24:mi:ss') LASTUPDTM, a.crEmpId, TO_EMPKNAME(a.crEmpId) crEmpName, 
+	   TO_EMPGradeName(a.crEmpId) crEmpGrade,  lastDt,
+ 	   (Select nvl(Count(*),0) FROM MASM_INHAUH.DISTDINFO b WHERE a. DISTNO = b. DISTNO ) recCnt,
+ 	   b.DISTNO, b.SN, b.ACCTCD, TO_ACCTNAME(b.ACCTCD) ACCTNAME, 
+	   b.ORGCD, TO_ORGNOCD(b.ORGCD) ORGUSERCD, TO_ORGNONAME(b.ORGCD) ORGNAME, b.CDTYPE, 
+ 	   b.JOBNO, b.DISTRATE, 
+ 	   SUBSTR(b.CREDT,1,4) || '-'||SUBSTR(b.CREDT,5,2)||'-'||SUBSTR(b.CREDT,7,2) CREDT, b.UPEMPID, TO_EMPKNAME(b.UPEMPID) UPEMPNAME, 
+ 	   TO_CHAR(b.UPDTM, 'YYYY-MM-DD HH24:mi:ss') UPDTM, b.MEMO,
+ 	   DECODE(TO_PJTNO_TOCODE(SUBSTR(b.JOBNO,1,5))||TO_ORGNOCD(SUBSTR(b.JOBNO,1,5)),NULL,JOBNO,TO_PJTNO_TOCODE(SUBSTR(b.JOBNO,1,5))||TO_ORGNOCD(SUBSTR(b.JOBNO,1,5))) JOBUSERNO, --사용자코드 추가
+ 	   GET_JOBNAME(SUBSTR(b.JOBNO,1,5))||TO_PJTNAME(SUBSTR(b.JOBNO,1,5))||TO_ORGNONAME(SUBSTR(b.JOBNO,1,5)) JOBNAME --코드명 가져오기 
+FROM MASM_INHAUH.DISTHINFO a, MASM_INHAUH.DISTDINFO b
+WHERE a.DISTNO = b.DISTNO(+)
+  AND a.DISTNO = ?
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DistHDocUpt"   value-count="1"
+   url="지급 품의 Head 정보 수정" >  
+   <sql-content>
+   <![CDATA[
+Where DISTNO = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DistDDocUpt"   value-count="2"
+   url="지급 품의 detail 정보 수정" >  
+   <sql-content>
+   <![CDATA[
+Where DISTNO = ? AND SN = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DistHDocDel"   value-count="1"
+   url="지급 품의 제비율 Head 정보 수정" >  
+   <sql-content>
+   <![CDATA[
+Delete from DistHInfo
+Where DISTNO = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="DistDDocDel"   value-count="1"
+   url="지급 품의 제비율 detail 정보 수정" >  
+   <sql-content>
+   <![CDATA[
+Delete from DistDInfo
+Where DISTNO = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="SearchDist"   value-count="1"
+   url="지급 품의 제비율 정보읽기" >  
+   <sql-content>
+   <![CDATA[
+SELECT a.DISTNO, a.NOTE, a.USEORGCD, SUBSTR(a.CREATEDT,1,4) || '-'||SUBSTR(a.CREATEDT,5,2)||'-'||SUBSTR(a.CREATEDT,7,2) CREATEDT, 
+a.LASTUPEMPID, TO_CHAR(a.LASTUPDTM, 'YYYY-MM-DD HH24:mi:ss') LASTUPDTM, a.crEmpId, TO_EMPKNAME(a.crEmpId) crEmpName, 
+TO_EMPGradeName(a.crEmpId) crEmpGrade,  lastDt,
+ (Select nvl(Count(*),0) FROM MASM_INHAUH.DISTDINFO b WHERE a. DISTNO = b. DISTNO ) recCnt,
+ b.DISTNO, b.SN, b.ACCTCD, TO_ACCTNAME(b.ACCTCD) ACCTNAME, b.ORGCD, TO_ORGNONAME(b.ORGCD) ORGNAME, b.CDTYPE, 
+ b.JOBNO, b.DISTRATE, 
+ SUBSTR(b.CREDT,1,4) || '-'||SUBSTR(b.CREDT,5,2)||'-'||SUBSTR(b.CREDT,7,2) CREDT, b.UPEMPID, TO_EMPKNAME(b.UPEMPID) UPEMPNAME, 
+ TO_CHAR(b.UPDTM, 'YYYY-MM-DD HH24:mi:ss') UPDTM, b.MEMO,
+ 	to_orgnoCD(b.orgCD)orgUserCd,
+ 	DECODE(TO_PJTNO_TOCODE(SUBSTR(b.JOBNO,1,5))||TO_ORGNOCD(SUBSTR(b.JOBNO,1,5)),NULL,JOBNO,TO_PJTNO_TOCODE(SUBSTR(b.JOBNO,1,5))||TO_ORGNOCD(SUBSTR(b.JOBNO,1,5))) JOBUSERNO, --사용자코드 추가
+ 	GET_JOBNAME(SUBSTR(b.JOBNO,1,5))||TO_PJTNAME(SUBSTR(b.JOBNO,1,5))||TO_ORGNONAME(SUBSTR(b.JOBNO,1,5)) JOBNAME --코드명 가져오기 
+ FROM MASM_INHAUH.DISTHINFO a, MASM_INHAUH.DISTDINFO b
+WHERE a.DISTNO = b.DISTNO(+)
+AND a.LASTDT >= ?
+ORDER BY 1 DESC, TO_NUMBER(b.SN)
+	]]>
+	</sql-content>
+   </sql-mapping>
+</sql>

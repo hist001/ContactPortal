@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+
+	<sql-mapping  id="S_001"   value-count="1" url="프로젝트" >  
+	<sql-content>
+	<![CDATA[
+		select 
+				a.PJT_NO, PJTCD, PJTNAME, PJTDIV, PJTTYPE, PJTSTATUS, 
+				APPRSTATUS, ORDERCORPCD,to_bizacqname(ordercorpcd) orderCorpName, 
+				PJTORG_NO ,to_orgNoName(pjtOrg_no) pjtOrgName, 
+				to_char(PJTUPDATEDTM,'yyyy-mm-dd') pjtUpdateDtm, 
+				PJTDETAIL, PJTSTARTDT, PJTENDDT, PMEMPID, to_empkname(pmEmpId) pmEmpName, 
+				CREMPID, to_empkname(crEmpId) crEmpName,
+				to_char(CREATEDTM,'yyyy-mm-dd') createdtm, CONTAMT, CONTSTARTDT, CONTENDDT,
+				PLANWORKMH, ISTASK,
+				CURPRCS, ISOUTBIZ, PLANTYPE, RSLTDT, BUSINESSTYPE,B.EXCUTETYPE, 
+				RSLT, SUCCESSFACTOR, FAILFACTOR, CANCELFACTOR, PQ, TP, RECVORDERVIEW, 
+				EXCUTECAPA, SUCCESSCORPCD,to_bizacqname(SUCCESSCORPCD) SUCCESSCORPName,
+				 STRATEGY, ISSUE, PSMEMO, CTMEMO, FRMEMO, 
+				PROPOSALSTARTDT, PROPOSALENDDT, SALEDT, CONTDT, TENDERNOTICEDT,
+				TENDERSENDDT, PROPOSALEXPDT, TENDERDT, ANNOUNCEDT, INSERVAMT, 
+				OUTSERVAMT, B.GOODSAMT, B.QUOTAPERCENT, TECHWEIGHT, PRICEWEIGHT, 
+				PROPOSEAMT, EXPDIRECTCOST, TECHSCORE, TECHRANK, PRICESCORE, 
+				PRICERANK, PROPOSALAMT, WORKCOST, WORKMH, PROPOSALEXPFLAG,
+				expContAmt,
+				C.PJT_NO AS DEVPJT_NO,
+				TO_PJTNO_TOCODE(C.PJT_NO) AS DEVPJTCD,
+				TO_PJTNAME(C.PJT_NO) AS DEVPJTNAME
+		from project a, businesspjt b,devpjt c 
+		where b.pjt_no=? 
+		and a.pjt_no=b.pjt_no
+		AND A.PJT_NO=C.BUSINESSPJT_NO(+)
+	]]>
+	</sql-content>
+	</sql-mapping>	
+		
+	<sql-mapping  id="S_002"   value-count="1" url="프로젝트 관련 업체 조회" >  
+	<sql-content>
+	<![CDATA[
+				select 
+				*	
+				from businessPjtCorp  where pjt_no=?   order by  corp_no desc
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_003"   value-count="2" url="프로젝트" >  
+	<sql-content>
+	<![CDATA[
+				where pjt_no=? and corp_no=?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="S_004"   value-count="1" url="프로젝트" >  
+	<sql-content>
+	<![CDATA[
+	
+	 SELECT
+	                A.PJTDIV,
+	                A.PJTTYPE,
+	                A.PJT_NO,
+	                A.PJTCD,
+	                A.PJTNAME,
+	                A.PJTORG_NO,
+	                A.PMEMPID,
+	                TO_EMPKNAME(A.PMEMPID) AS PmEMPNAME,
+	                TO_ORGCDNAME(A.PJTORG_NO) AS PJTORGNAME,
+	                A.CONTAMT,
+	                A.pjtStatus,
+	                A.apprStatus,
+	                B.RECVORDERVIEW,
+	                B.BUSINESSTYPE,
+	                B.CURPRCS,
+	                B.SALEDT,
+	                B.TENDERSENDDT,
+	                B.TENDERDT,
+	                B.RSLT,
+	                A.PJTSTARTDT	                
+	  FROM PROJECT A, BUSINESSPJT B
+	  WHERE A.PJT_NO=B.PJT_NO
+	  ?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_005"   value-count="1" url="프로젝트" >  
+	<sql-content>
+	<![CDATA[	
+	select 
+	PJT_NO, PJTCD, PJTNAME, PJTDIV, PJTTYPE, PJTSTATUS, 
+	APPRSTATUS, ORDERCORPCD,to_bizacqname(ordercorpcd) orderCorpName, PJTORG_NO ,to_orgNoName(pjtOrg_no) pjtOrgName, to_char(PJTUPDATEDTM,'yyyy-mm-dd') pjtUpdateDtm, 
+	PJTDETAIL, PJTSTARTDT, PJTENDDT, PMEMPID, to_empkname(pmEmpId) pmEmpName, CREMPID, to_empkname(crEmpId) crEmpName,
+	to_char(CREATEDTM,'yyyy-mm-dd') createdtm, CONTAMT, CONTSTARTDT, CONTENDDT,
+	PLANWORKMH, ISTASK
+	from PROJECT a
+	 where PMEMPID in (
+	        select distinct empid
+	        from approval a
+	        where useflag = 'Y' and level=1
+	        connect by a.highempid = prior a.empid
+	        start with a.highempid in (SELECT B.EMPID
+										FROM EMPALL A, EMPALL B
+										WHERE A.EMPID = ?
+										AND A.SYSEMPID =B.SYSEMPID))
+	 and A.PJTTYPE = 'B'
+	 and A.APPRSTATUS = 'WEO'
+	 and A.PJTSTATUS IN ('PGO','REG','REP')
+	 order by a.PJT_NO desc	
+ 	]]>
+	</sql-content>
+	</sql-mapping>
+	
+		
+	<sql-mapping  id="S_006"   value-count="0" url="사업계획-수주 프로젝트 - 리스트 조회" >  
+	<sql-content>
+	<![CDATA[		
+		SELECT 	  B.PJT_NO,
+				  B.PJTCD,
+				  	(SELECT REPLACE(CODENAME,'부문','')
+                     FROM COMCODE
+                     WHERE HIGHCODE='100002745'
+                     AND CODE=B.PJTDIV) 
+                  AS PJTDIV,
+				  B.PJTTYPE,
+				  B.PJTNAME,
+				  B.PMEMPID,
+				  TO_EMPKNAME(B.PMEMPID) AS PMEMPNAME,
+                  (SELECT CODENAME 
+	                  FROM COMCODE 
+	                  WHERE HIGHCODE='CD_SEQ-20081023-001' 
+	                  AND CODE=B.APPRSTATUS) AS APPRSTATUS,
+				  NVL(SERV_AMT,0) AS OUTSERVAMT,
+				  NVL(GOODS_AMT,0) AS GOODSAMT,
+				  NVL(SERV_AMT,0)+NVL(GOODS_AMT,0) AS EXPCONTAMT
+		FROM (SELECT PJT_NO,SUM(SERV_AMT) AS SERV_AMT,SUM(GOODS_AMT) AS GOODS_AMT
+			 FROM
+			 	( SELECT
+				    		  A.PJT_NO,
+						      CASE WHEN A.ACCTCD ='41011' THEN
+						      SUM(A.AMT)
+						      ELSE
+						      0
+						      END SERV_AMT,
+						      CASE WHEN A.ACCTCD ='41021' THEN
+						      SUM(A.AMT)
+						      ELSE
+						      0
+						      END GOODS_AMT
+				    FROM PJTCOSTDETAIL A,
+				          PROJECT B
+				    WHERE YEAR=S_YEAR:
+				    AND ACCTCD LIKE '4%'
+				    AND COSTTYPE='T'
+				    AND A.PJT_NO=B.PJT_NO
+				    AND PJTTYPE='Y'				   
+				    GROUP BY A.PJT_NO,A.ACCTCD
+				)
+				GROUP BY PJT_NO) A ,
+				PROJECT B
+		WHERE A.PJT_NO=B.PJT_NO
+		AND PJTNAME LIKE S_PJTNAME:||'%'
+		AND PJTDIV LIKE S_PJTDIV:||'%'
+		AND APPRSTATUS LIKE S_APPRSTATUS:||'%'		
+		ORDER BY PJTCD 		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_007"   value-count="11" url="프로젝트" >  
+	<sql-content>
+	<![CDATA[
+	
+	 SELECT
+	                A.PJTDIV,
+	                A.PJTTYPE,
+	                A.PJT_NO,
+	                A.PJTCD,
+	                A.PJTNAME,
+	                A.PJTORG_NO,
+	                A.PMEMPID,
+	                TO_EMPKNAME(A.PMEMPID) AS PmEMPNAME,
+	                TO_ORGCDNAME(A.PJTORG_NO) AS PJTORGNAME,
+	                A.CONTAMT,
+	                A.pjtStatus,
+	                A.apprStatus,
+	                B.RECVORDERVIEW,
+	                B.BUSINESSTYPE,
+	                B.CURPRCS,
+	                B.SALEDT,
+	                B.TENDERSENDDT,
+	                B.TENDERDT,
+	                B.RSLT,
+	                A.PJTSTARTDT	                
+	  FROM PROJECT A, BUSINESSPJT B
+	  WHERE A.PJT_NO=B.PJT_NO
+	  and pjtType in ('B')
+	  and (UPPER(pjtName) like UPPER('%'||?||'%') OR  ? IS NULL )
+	  and (pjtDiv like ?||'%' OR  ? IS NULL )
+	  and (pjtStatus like ?||'%' OR  ? IS NULL )
+	  and (curPrcs like ?||'%' OR  ? IS NULL )
+	  and (TO_EMPKNAME(PMEMPID) like ?||'%' OR  ? IS NULL )
+	  and A.PJTCD like '%'||?||'%'
+	  ORDER BY PJTCD DESC
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_008"   value-count="0" url="사업계획-수주 프로젝트 엑셀DOWN" >  
+	<sql-content>
+	<![CDATA[		
+	SELECT *
+	FROM
+	(	
+	SELECT A.PJT_NO,
+			A.PJTCD,
+			A.PJTNAME,
+			C.CODENAME AS PJTDIV,
+			NVL(DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0) AS CONTRACTAMT,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),01,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_01,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),02,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_02,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),03,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_03,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),04,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_04,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),05,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_05,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),06,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_06,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),07,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_07,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),08,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_08,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),09,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_09,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),10,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_10,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),11,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_11,
+			NVL(DECODE(SUBSTR(CONTSTARTDT,5,2),12,DECODE(C.CODENAME,'물품',GOODSAMT,OUTSERVAMT),0),0) AS AMT_12,
+			TO_ORGNOCD(A.PJTORG_NO) AS ORGCD,
+			TO_ORGNONAME(A.PJTORG_NO) AS PJTORGNAME,
+			TO_EMPKNAME(A.PMEMPID) AS EMPNAME,
+	 		TO_BIZCD(A.ORDERCORPCD) AS BIZACQCD,
+			TO_BIZACQNAME(ORDERCORPCD) AS ORDERCORPNAME,
+			(SELECT BIZNAME FROM PJTBIZ C, BIZ D WHERE C.BIZTYPECD=1 AND C.PJT_NO=A.PJT_NO AND C.BIZCD=D.BIZCD) AS BIZCD1,
+			(SELECT BIZNAME FROM PJTBIZ C, BIZ D WHERE C.BIZTYPECD=2 AND C.PJT_NO=A.PJT_NO AND C.BIZCD=D.BIZCD) AS BIZCD2,
+			(SELECT BIZNAME FROM PJTBIZ C, BIZ D WHERE C.BIZTYPECD=3 AND C.PJT_NO=A.PJT_NO AND C.BIZCD=D.BIZCD) AS BIZCD3,
+			GET_CODENAME('PJT_OUTBIZ',ISOUTBIZ) AS ISOUTBIZ,
+			CONTSTARTDT,
+			CONTENDDT ,
+			GET_CODENAME('PJT_RECVORDERVIEW',RECVORDERVIEW) AS RECVORDERVIEW,
+	        GET_CODENAME('SI_CULEV',EXCUTECAPA) AS EXCUTECAPA
+	FROM PROJECT   A,
+		  BUSINESSPJT B,
+		(SELECT CODENAME FROM COMCODE
+		WHERE HIGHCODE='100002706'
+		AND CODE LIKE '4%'
+		) C		  
+	WHERE  A.PJTCD LIKE 'Y_'||SUBSTR(S_YEAR:,3,2)||'%'
+	AND    A.PJT_NO=B.PJT_NO
+	ORDER BY PJTCD)
+--	WHERE CONTRACTAMT<>0
+
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+

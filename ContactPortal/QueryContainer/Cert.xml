@@ -1,0 +1,677 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping id="CT_001" value-count="0" url="제증명서 발급 조회">
+		<sql-content>
+			<![CDATA[
+		SELECT 	A.*, 
+				GET_CODENAME_N(REPRT_CD,'CT_DIV')  AS REPORT_NM, 
+				DECODE(B.ISSUE_EMPID,'발급제외',B.ISSUE_EMPID,GET_CODENAME_N(STATUS_CD,'CT_STATUS')) AS STATUS_NM,
+		       	C.EMPKNAME AS ISSUE_EMPNM, D.EMPKNAME AS TARGET_EMPNM,
+		       	REPLACE(SUBSTR(B.DOCNO,7,20),'-','-'||GET_CODENAME('CT_ISTYPE',B.CERT_DIV)) 
+		       	AS DOCNO
+		  FROM (SELECT A.APP_NO AS APP_NO,
+		                   B.ISSUE_NO    AS ISSUE_NO,
+		                   B.EMPID       AS TARGET_EMPID,
+		                   DECODE(B.CERT_DIV,'','-',B.CERT_DIV)    AS REPRT_CD,
+		                   A.APP_DT      AS APP_DT,
+		                   D.EMPKNAME    AS APP_EMPNM,
+		                   A.EMPID       AS APP_EMPID,
+		                   B.ISSUE_DT    AS ISSUE_DT,
+		                   B.ISSUE_EMPID AS ISSUE_EMPID,
+		                       DECODE(LENGTH(ISSUE_DT),8,'DDX',E.STATUS) AS STATUS_CD, SUBSTR(F.CDDS,1,1) CDDS
+		                  FROM  BBDBO.CERT_APP A, BBDBO.CERT_DETAIL B,
+		                        EMPALL D ,
+		                        (SELECT CONF_NO, STATUS FROM CONFER WHERE CONFTYPE = 'CERT') E
+		                      , (SELECT B.CODE CODE,B.CDDS CDDS
+								   FROM COMCODE A ,
+				                        COMCODE B
+				                  WHERE A.CODE='CT_DIV'
+				                    AND   A.CODE_NO=B.HIGHCODE)F
+		                  WHERE A.APP_NO = B.APP_NO (+)
+		                    AND A.APP_NO = E.CONF_NO
+		                    AND A.EMPID = D.EMPID
+		                    AND B.CERT_DIV = F.CODE (+)
+				            AND A.APP_DT BETWEEN REPLACE([S_STARTDT],'-','')
+				                             AND REPLACE([S_ENDDT],'-','')
+						    AND ((D.EMPKNAME LIKE [APP_EMPNAME]||'%' OR [APP_EMPNAME] IS NULL)
+						      OR (A.EMPID LIKE [APP_EMPID]||'%' OR [APP_EMPID] IS NULL ))) A, 
+			     BBDBO.CERT_DETAIL B, EMPALL C, EMPALL D
+		
+		WHERE A.ISSUE_NO = B.ISSUE_NO (+)
+		 AND B.ISSUE_EMPID = C.EMPID (+)
+		 AND B.EMPID = D.EMPID (+)
+		 AND A.REPRT_CD LIKE [CT_DIV]||'%'
+		 AND((D.EMPKNAME LIKE [TARGET_EMPNAME]||'%' OR [TARGET_EMPNAME] IS NULL)
+		  OR (B.EMPID LIKE [TARGET_EMPID]||'%' OR [TARGET_EMPID] IS NULL ))
+		 AND STATUS_CD LIKE  [CT_STATUS]||'%' 
+		 ORDER BY   A.APP_NO DESC ,TARGET_EMPID,CERT_DIV
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="CT_002" value-count="0" url="제증명 발급 처리">
+		<sql-content>
+		
+			<![CDATA[
+	
+		
+		UPDATE BBDBO.CERT_DETAIL
+           SET ISSUE_DT = TO_CHAR(SYSDATE,'yyyymmdd'),
+               ISSUE_EMPID = [ISSUE_EMPID],
+		       DOCNO = GET_SEQ('CT_'||GET_CODENAME('CT_ISTYPE',CERT_DIV),'YYYY','0000'),
+		       MODIFYDT=SYSDATE
+		 WHERE ISSUE_NO    = [ISSUE_NO]
+		
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="CT_003" value-count="0" url="제증명 발급 완료 처리">
+		<sql-content>
+			<![CDATA[
+			
+		UPDATE CONFER A  SET
+		 STATUS = (SELECT DECODE(CNT-OK_CNT,0,'CTX',A.STATUS)
+		   FROM ( SELECT * FROM  BBDBO.CERT_DETAIL) A,
+		        (SELECT APP_NO , COUNT(*) CNT , SUM(DECODE(ISSUE_DT,'',0,1)) OK_CNT FROM BBDBO.CERT_DETAIL GROUP BY APP_NO )B
+		   WHERE A.APP_NO = B.APP_NO
+		   AND A.ISSUE_NO = [ISSUE_NO])
+		 WHERE A.CONF_NO   = [APP_NO]
+		 
+		
+						 
+				
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+		<sql-mapping id="CT_004" value-count="0" url="제증명 발급 상태 처리1">
+		<sql-content>
+		
+			<![CDATA[
+		
+		UPDATE BBDBO.CERT_DETAIL
+           SET ISSUE_DT = '',
+               ISSUE_EMPID = '',
+               MODIFYDT=SYSDATE
+		 WHERE ISSUE_NO    = [ISSUE_NO]
+		
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="CT_005" value-count="0" url="제증명 발급 상태 처리2">
+		<sql-content>
+			<![CDATA[
+			
+		UPDATE CONFER A  SET
+		 STATUS = 'DGX' 
+		 WHERE A.CONF_NO = [APP_NO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="CT_006" value-count="0" url="제증명 발급 제외처리">
+		<sql-content>
+			<![CDATA[
+			
+		UPDATE BBDBO.CERT_DETAIL
+           SET ISSUE_DT = TO_CHAR(SYSDATE,'yyyymmdd'),
+               ISSUE_EMPID = '발급제외',
+               MODIFYDT=SYSDATE
+		 WHERE ISSUE_NO    = [ISSUE_NO]
+	]]>
+		</sql-content>
+	</sql-mapping>
+	
+	
+	<sql-mapping  id="CT_100"   value-count="0" url="제증명서 리스트" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 	CODE AS CT_NO,
+				CODENAME AS CT_NAME	,
+				SUBSTR(CDDS,1,1) AS BFLAG	
+		FROM COMCODE 
+		WHERE HIGHCODE=(SELECT CODE_NO FROM COMCODE WHERE CODE='CT_DIV')
+		ORDER BY IDX
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="CT_101"   value-count="0" url="제증명서 발급 신청조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT * FROM BBDBO.CERT_APP
+		WHERE APP_NO = 'CT_2009-10601'
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="CT_102"   value-count="0" url="발령이력 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT A.*, 
+		     CASE WHEN SAVED_BASIC <> 0  THEN
+                  CASE WHEN SAVED_CHK IS NOT NULL THEN 'D' ELSE 'N' END
+                       ELSE DECODE(ROWNUM,1,'D',COUNT(BA30_BRSJ) OVER(),'D','N') END AS DFLAG
+	  FROM (
+			SELECT  TO_EMPKNAME([APP_EMPID]) AS EMPKNAME,
+					[CERT_DIV] AS CERT_DIV,
+					BA30_BRSJ,
+					BA30_BRBSCD,
+					BA30_BRNO,
+					BA30_SBN,
+	                NVL((SELECT MAX(EBR_NOTE)
+	                      FROM BBDBO.CERT_CAREER B
+	                      WHERE A.BA30_BRSJ       =  BR_AREA
+	                      AND A.BA30_BRBSCD   =  BR_ORG
+	                      AND A.BA30_BRNO     = BR_NO
+	                      AND A.BA30_DATE     = BR_DT
+	                      AND A.BA30_SBN          = EMPID
+	                      AND B.APP_NO =[APP_NO]
+	                      AND B.APP_EMPID=[APP_EMPID]  
+	                      AND B.CERT_DIV=[CERT_DIV])
+	                		,
+	                        (SELECT TRIM(BZ01_CDLNM) FROM BBDBO.TBBZ01
+	                        WHERE BZ01_CDGB = 'GZ01'
+	                        AND BZ01_CODE =BA30_GBN))
+	                AS  BA30_GBN,
+	                NVL((SELECT MAX( EBR_GRADE)
+	                      FROM BBDBO.CERT_CAREER B
+	                      WHERE A.BA30_BRSJ       =  BR_AREA
+	                      AND A.BA30_BRBSCD   =  BR_ORG
+	                      AND A.BA30_BRNO     = BR_NO
+	                      AND A.BA30_DATE     = BR_DT
+	                      AND A.BA30_SBN          = EMPID
+	                      AND B.APP_NO =[APP_NO]
+	                      AND B.APP_EMPID=[APP_EMPID]                       
+	                      AND CERT_DIV=[CERT_DIV])
+	                		,
+	                      NVL(BA30_JKGP_NM,'-'))
+	                AS BA30_JKGP_NM,
+	                NVL((SELECT MAX( EBR_ORGNAME)
+	                      FROM BBDBO.CERT_CAREER B
+	                      WHERE A.BA30_BRSJ       =  BR_AREA
+	                      AND A.BA30_BRBSCD   =  BR_ORG
+	                      AND A.BA30_BRNO     = BR_NO
+	                      AND A.BA30_DATE     = BR_DT
+	                      AND A.BA30_SBN          = EMPID
+	                      AND B.APP_NO =[APP_NO]
+	                      AND B.APP_EMPID=[APP_EMPID]                      
+	                      AND CERT_DIV=[CERT_DIV])
+	                		,
+	                        BA30_BS_NM)
+	                AS BA30_BS_NM,
+	                NVL((SELECT MAX( EBR_DATE)
+	                      FROM BBDBO.CERT_CAREER B
+	                      WHERE A.BA30_BRSJ       =  BR_AREA
+	                      AND A.BA30_BRBSCD   =  BR_ORG
+	                      AND A.BA30_BRNO     = BR_NO
+	                      AND A.BA30_DATE     = BR_DT
+	                      AND A.BA30_SBN          = EMPID
+	                      AND B.APP_NO =[APP_NO]
+	                      AND B.APP_EMPID=[APP_EMPID]                      
+	                      AND CERT_DIV=[CERT_DIV])
+	                		,
+	                        BA30_DATE)
+	                AS BA30_DATE,	                
+					 (SELECT COUNT(*) CNT
+					    FROM BBDBO.CERT_CAREER B
+					   WHERE 1=1
+					     AND B.APP_NO =[APP_NO]  
+					     AND CERT_DIV=[CERT_DIV]) AS SAVED_BASIC,
+					(SELECT DISTINCT EMPID
+					   FROM BBDBO.CERT_CAREER B
+					  WHERE 1=1
+					    AND A.BA30_BRSJ       =  BR_AREA
+					    AND A.BA30_BRBSCD   =  BR_ORG
+					    AND A.BA30_BRNO     = BR_NO
+					    AND A.BA30_DATE     = BR_DT
+					    AND A.BA30_SBN          = EMPID
+					    AND B.APP_NO =[APP_NO]
+					    AND B.APP_EMPID=[APP_EMPID]     
+					    AND CERT_DIV=[CERT_DIV]) AS SAVED_CHK,
+	      				BA30_BRSJ AS BR_AREA,
+						BA30_BRBSCD AS BR_ORG,
+						BA30_BRNO AS BR_NO,
+						BA30_DATE AS BR_DT,
+						BA30_SBN AS EMPID								
+			FROM (SELECT * FROM BBDBO.TBBA30
+				WHERE BA30_SBN IN (
+									SELECT B.EMPID FROM EMPALL A, EMPALL B
+	           						WHERE A.EMPID =[APP_EMPID]
+	           						AND A.SYSEMPID=B.SYSEMPID			
+									)
+				ORDER BY BA30_DATE,BA30_BRNO)   A ) A
+									
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="CT_104"   value-count="0" url="신규 신청 조회" >  
+	<sql-content>
+	<![CDATA[
+	    SELECT  GET_SEQ('CERT') AS CT_TEMP_NO,
+	    		BA01_SBN AS EMPID,
+			    TO_CHAR(TO_DATE(BA01_ISDT,'YYYYMMDD'),'YYYY-MM-DD') AS START_DT,
+	            FLOOR(MONTHS_BETWEEN(NVL(TO_DATE(BA01_TJ_DATE,'YYYYMMDD'),SYSDATE),TO_DATE(BA01_GRDT,'YYYYMMDD'))/12) ||'년 '||
+    	        FLOOR(MOD(MONTHS_BETWEEN(NVL(TO_DATE(BA01_TJ_DATE,'YYYYMMDD'),SYSDATE),TO_DATE(BA01_GRDT,'YYYYMMDD')),12))||'개월' AS GM_YM
+	    FROM 	BBDBO.TBBA01
+	    WHERE  BA01_SBN=[S_EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+   <sql-mapping  id="CT_105"  value-count="0" url="제증명 신청현황 리스트" >  
+   <sql-content>
+   <![CDATA[
+		SELECT *
+		FROM
+		(	   
+			SELECT CONF_NO,CONFCD,CONFTITLE,
+				   CONFTYPE, GET_CODENAME('FA_CONF',CONFTYPE) CONFTYPENAME,
+				   CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME,
+				   STATUS, GET_CODENAME('ST',STATUS) STATUSNAME,
+				   TO_CHAR(CRDTM,'YYYY-MM-DD') CREATEDT,
+				   TO_ORGNONAME(ORGCD) ORGNAME
+			FROM CONFER A, EMPALL B
+			WHERE A.CREMPID = B.EMPID 
+			AND CONFTYPE LIKE 'CT%' 
+			AND CONFDELFLAG = 'N' 
+		)
+		WHERE CONFTYPE LIKE CONFTYPE:||'%'
+		AND STATUS LIKE STATUS:||'%'
+		AND CREMPID LIKE CREMPID:||'%'
+		AND CREATEDT BETWEEN DECODE( STRDT:,'','00000000', STRDT:)
+        AND DECODE( ENDDT:,'','99999999', ENDDT:)
+        ORDER BY STATUS
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="CT_106"  value-count="0" url="제증명 신청 등록" >  
+   <sql-content>
+   <![CDATA[
+		INSERT INTO BBDBO.CERT_APP (	APP_NO, 
+										APP_DT, 
+										EMPID, 
+										USE_TYPE, 
+										SUBMIT_TO, 
+										NOTE, 
+										STATUS, 
+										CREATEDT, 
+										MODIFYDT)
+		VALUES(
+				[APP_NO], 
+				TO_CHAR(SYSDATE,'YYYYMMDD'), 
+				[EMPID], 
+				[USE_TYPE], 
+				[SUBMIT_TO], 
+				[NOTE], 
+				[STATUS], 
+				SYSDATE, 
+				''
+		)
+  	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="CT_107"  value-count="0" url="제증명 신청 수정" >  
+   <sql-content>
+   <![CDATA[
+		UPDATE BBDBO.CERT_APP SET 
+		USE_TYPE=[USE_TYPE],
+		SUBMIT_TO=[SUBMIT_TO] ,
+		NOTE=[NOTE], 
+		STATUS=[STATUS],
+		MODIFYDT=SYSDATE
+		WHERE APP_NO=[APP_NO]
+  	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="CT_108"  value-count="0" url="제증명 신청 삭제" >  
+   <sql-content>
+   <![CDATA[
+		DELETE FROM BBDBO.CERT_APP 	
+		WHERE APP_NO=[APP_NO]
+  	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="CT_109"  value-count="0" url="CONFER 등록" >  
+   <sql-content>
+   <![CDATA[
+	INSERT INTO CONFER(CONF_NO,
+						CONFTYPE,
+						STATUS,
+						CREMPID,
+						USREMPID,
+						REFCONFTYPE,
+						CRDTM,
+						CONFTITLE,
+						STATUSDESC,
+						STATUSDTM
+						) 
+		   			VALUES( 
+		   			    [APP_NO], 
+		   			    'CERT',
+		   			    [STATUS],
+		   			    [EMPID],
+		   				[EMPID],
+		                'CERT',
+		                SYSDATE,
+		                '제증명 발급 신청',
+		                [NOTE],
+		                SYSDATE
+		   			)
+
+  	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="CT_110"  value-count="0" url="CONFER 수정" >  
+   <sql-content>
+   <![CDATA[
+		UPDATE CONFER
+		SET STATUS =[STATUS],
+			   UPTDTM=SYSDATE,
+			   UPTEMPID=[EMPID] 
+		WHERE CONF_NO = [APP_NO]		 
+  	]]>
+	</sql-content>
+   </sql-mapping>   
+   <sql-mapping  id="CT_111"  value-count="0" url="CONFER 삭제" >  
+   <sql-content>
+   <![CDATA[
+--		DELETE FROM CONFER
+--		WHERE CONF_NO=[APP_NO]
+  	]]>
+	</sql-content>
+   </sql-mapping>   
+
+	<sql-mapping  id="CT_112"   value-count="0" url="신청 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT 
+			CODE_NO
+			,CODE_CD
+			,CODE_NAME
+			,IDX
+			,BFLAG
+			,CERT_DIV
+			,CT_NAME
+			,NVL(CERT_CNT,0) AS CERT_CNT 
+			,APP_NO
+			,APP_DT
+			,EMPID
+			,USE_TYPE
+			,SUBMIT_TO
+			,NOTE
+			,START_DT
+			,GM_YM,
+			STATUS
+	FROM
+			(SELECT  B.CODE AS CODE_NO,
+			               B.CODE AS CODE_CD,
+			               B.CODENAME AS CODE_NAME,
+			               B.IDX,
+			                           SUBSTR(B.CDDS,1,1) AS BFLAG
+			FROM COMCODE A,COMCODE B
+			WHERE A.CODE_NO=B.HIGHCODE
+			AND   A.CODE = 'CT_DIV'
+			ORDER BY B.IDX) A ,
+			(
+			SELECT
+			       CERT_DIV,
+			          GET_CODENAME('CT_DIV',CERT_DIV)
+			       AS CT_NAME,
+			          COUNT(GET_CODENAME_N(C.CERT_DIV,'CT_DIV')) 
+			       AS CERT_CNT
+			FROM    BBDBO.CERT_APP A,
+					CONFER B,
+					BBDBO.CERT_DETAIL C,
+					BBDBO.TBBA01 D
+			WHERE  A.APP_NO=B.CONF_NO
+			AND    A.APP_NO=C.APP_NO(+)
+			AND    A.EMPID=BA01_SBN
+			AND    C.EMPID=[S_EMPID]
+			AND    B.CONF_NO=[S_CONF_NO]
+			GROUP BY A.APP_NO,APP_DT,A.EMPID, USE_TYPE,
+					SUBMIT_TO,NOTE,C.CERT_DIV,BA01_ISDT--,ISSUE_NO
+			) B,
+			(SELECT
+			       A.APP_NO,
+			       A.APP_DT,
+			       A.EMPID,
+			       A.USE_TYPE,
+			       A.SUBMIT_TO,
+			       A.NOTE,
+			               TO_CHAR(TO_DATE(BA01_ISDT,'YYYYMMDD'),'YYYY-MM-DD')
+			       AS START_DT,
+			          FLOOR(MONTHS_BETWEEN(SYSDATE,TO_DATE(BA01_ISDT,'YYYYMMDD'))/12) 
+			               ||'년'||
+			          FLOOR(MOD(MONTHS_BETWEEN(SYSDATE,TO_DATE(BA01_ISDT,'YYYYMMDD')),12))
+			               ||'개월'
+				   AS GM_YM,
+                   MAX(B.STATUS) AS STATUS
+			FROM    BBDBO.CERT_APP A,
+					CONFER B,
+					BBDBO.TBBA01 D
+			WHERE  A.APP_NO=B.CONF_NO
+			AND    A.EMPID=BA01_SBN
+			AND    B.CONF_NO=[S_CONF_NO]
+			GROUP BY A.APP_NO,APP_DT,A.EMPID, USE_TYPE,SUBMIT_TO,NOTE,BA01_ISDT
+			) C
+	WHERE A.CODE_CD=B.CERT_DIV(+)
+	ORDER BY A.IDX
+
+	]]>
+	</sql-content>
+	</sql-mapping>   
+
+   <sql-mapping  id="CT_113"  value-count="0" url="CERT_DETAIL 등록" >  
+   <sql-content>
+   <![CDATA[
+	INSERT INTO BBDBO.CERT_DETAIL(
+							APP_NO, 
+							ISSUE_NO, 
+							CERT_DIV, 
+							EMPID, 
+							ISSUE_DT, 
+							ISSUE_EMPID, 
+							CREATEDT, 
+							MODIFYDT, 
+							CREMPID
+						) 
+	SELECT 
+			APP_NO,
+			GET_SEQ('CT','YYYYMM')AS ISSUE_NO,
+            CERT_DIV,
+            EMPID,
+            ISSUE_DT,
+            ISSUE_EMPID,
+            CREATEDT,
+            MODIFYDT,
+            CREMPID
+		
+	FROM
+	  (SELECT  DISTINCT
+					APP_NO,
+                   ISSUE_NO,
+                   CERT_DIV,
+                   EMPID,
+                   ISSUE_DT,
+                   ISSUE_EMPID,
+                   CREATEDT,
+                   MODIFYDT,
+                   CREMPID
+       FROM
+           (SELECT SUBSTR(SDATA,ST,LEN) AS EMPID
+           FROM(
+               SELECT ROWNUM AS SN , A.*,
+                               DECODE(SN,1,ST_T-ST+1,
+                               TCNT,ST_0-1,LENGTH) AS  LEN
+               FROM (
+                               SELECT  SDATA,
+                               SN,
+                               INSTR(SDATA,',',-1,SN)+1 AS ST,
+                               INSTR(SDATA,',',1,1)  AS ST_0,
+                               LENGTH(SDATA) AS ST_T,
+                               DECODE(SN,1,'',INSTR(SDATA,',',-1,SN-1)
+                               -INSTR(SDATA,',',-1,SN)-1)  AS LENGTH,
+                               LENGTH(SDATA) - LENGTH(
+                               REPLACE(SDATA,',',''))+1 AS TCNT
+                               FROM
+                                   (SELECT [EMPID]||','||[ADD_EMPID] 
+                                   			AS SDATA FROM DUAL) A,
+                                   (SELECT ROWNUM AS SN
+                                   FROM DAILYREPORT WHERE ROWNUM<101 )
+                               WHERE SN <= LENGTH(SDATA) -
+                               LENGTH( REPLACE(SDATA,',',''))+1
+                               ) A
+                       )WHERE LEN<>0) G
+                       ,(SELECT
+				[APP_NO] APP_NO,
+                               '' ISSUE_NO,
+                               [CERT_DIV] CERT_DIV,
+                               '' ISSUE_DT,
+                               '' ISSUE_EMPID,
+                               SYSDATE CREATEDT,
+                               '' MODIFYDT,
+                               [EMPID] CREMPID
+                        FROM DUAL)
+		)                                                 
+								   	
+  	]]>
+	</sql-content>
+   </sql-mapping>   	
+   <sql-mapping  id="CT_114"  value-count="0" url="CERT_DETAIL 삭제" >  
+   <sql-content>
+   <![CDATA[
+	DELETE FROM  BBDBO.CERT_DETAIL
+	WHERE APP_NO=[APP_NO] 
+  	]]>
+	</sql-content>
+   </sql-mapping>   	
+   <sql-mapping  id="CT_115"  value-count="0" url="CERT_CAREER 삭제" >  
+   <sql-content>
+   <![CDATA[
+	DELETE FROM  BBDBO.CERT_CAREER
+	WHERE APP_NO=[APP_NO] 
+	AND   APP_EMPID=[APP_EMPID]
+	AND   CERT_DIV=[CERT_DIV]
+  	]]>
+	</sql-content>
+   </sql-mapping>   	
+
+   <sql-mapping  id="CT_116"  value-count="0" url="CERT_CAREER 등록(DEFAULT)" >  
+   <sql-content>
+   <![CDATA[
+   
+	INSERT INTO BBDBO.CERT_CAREER   
+	SELECT APP_NO,
+		   EMPID,
+		   BA30_BRSJ,
+	       BA30_BRBSCD,
+		   BA30_BRNO,
+		   BA30_DATE,
+		   BA30_SBN,
+		   '' BR_NOTE,
+		   '' BR_GRADE,
+		   '' BR_ORGNAME,
+		   CERT_DIV,
+		   '' BR_DATE
+  FROM ( SELECT A.*
+		   FROM (SELECT APP_NO, CERT_DIV, EMPID
+			       FROM BBDBO.cert_detail
+				  WHERE APP_NO = [APP_NO]
+				  GROUP BY APP_NO, CERT_DIV, EMPID) A,
+		        BBDBO.CERT_CAREER B
+	  	  WHERE A.APP_NO = B.APP_NO (+)
+		    AND A.CERT_DIV = B.CERT_DIV (+)
+		    AND A.EMPID = B.APP_EMPID (+)
+		    AND A.APP_NO = [APP_NO]
+		    AND A.CERT_DIV = [CERT_DIV]
+		    AND B.APP_NO IS NULL )A,
+		( SELECT *
+		    FROM (SELECT DECODE(ROWNUM,1,'D',COUNT(BA30_BRSJ) OVER(),'D','N') GBN , A.*, [EMPID] SBN
+		            FROM (SELECT *
+						    FROM BBDBO.TBBA30 A
+						   WHERE BA30_SBN IN ( SELECT B.EMPID
+										         FROM EMPALL A, EMPALL B
+							                    WHERE A.EMPID =[EMPID]
+							                      AND A.SYSEMPID=B.SYSEMPID )
+						  ORDER BY BA30_DATE,BA30_BRNO ) A )
+			 WHERE GBN = 'D') B
+   WHERE A.EMPID = B.SBN 			 
+
+				
+	]]>
+	</sql-content>
+   </sql-mapping>   	
+   
+   <sql-mapping  id="CT_117"  value-count="0" url="CERT_CAREER 등록" >  
+   <sql-content>
+   <![CDATA[
+		INSERT INTO BBDBO.CERT_CAREER
+		VALUES(	[APP_NO], 
+				[APP_EMPID], 
+				[BR_AREA], 
+				[BR_ORG], 
+				[BR_NO], 
+				[BR_DT], 
+				[EMPID],
+				[BR_NOTE],
+				[BR_GRADE],
+				[BR_ORGNAME],
+				[CERT_DIV],
+				[BR_DATE]
+				)
+				
+	]]>
+	</sql-content>
+   </sql-mapping>   	
+	<sql-mapping  id="CT_118"   value-count="0" url="신청 수정조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT MAX(B.STATUS) AS STATUS,
+           A.APP_NO,
+           C.ISSUE_NO,
+           A.APP_DT,
+           A.EMPID,
+           A.USE_TYPE,
+           A.SUBMIT_TO,
+           A.NOTE,
+           CERT_DIV,
+                    GET_CODENAME('CT_DIV',CERT_DIV)
+           AS CT_NAME,
+                   COUNT(GET_CODENAME_N(C.CERT_DIV,'CT_DIV'))
+           AS CERT_CNT,
+                   TO_CHAR(TO_DATE(BA01_ISDT,'YYYYMMDD'),'YYYY-MM-DD')
+           AS START_DT,
+                   FLOOR(MONTHS_BETWEEN(SYSDATE,TO_DATE(BA01_ISDT,'YYYYMMDD'))/12) ||'년'||
+                   FLOOR(MOD(MONTHS_BETWEEN(SYSDATE,TO_DATE(BA01_ISDT,'YYYYMMDD')),12))||'개월'
+                AS GM_YM
+         FROM    BBDBO.CERT_APP A,
+                     CONFER B,
+                     BBDBO.CERT_DETAIL C,
+                     BBDBO.TBBA01 D
+         WHERE  A.APP_NO=B.CONF_NO
+         AND    A.APP_NO=C.APP_NO(+)
+         AND    A.EMPID=BA01_SBN
+         AND    B.CONF_NO=[CONF_NO]
+         GROUP BY A.APP_NO,APP_DT,A.EMPID, USE_TYPE,SUBMIT_TO,NOTE,C.CERT_DIV,BA01_ISDT,C.ISSUE_NO
+	]]>
+	</sql-content>
+	</sql-mapping>   
+   
+	<sql-mapping  id="CT_119"   value-count="0" url="추가 신청자 조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT DISTINCT TO_EMPKNAME(EMPID)||'('||EMPID||')' AS ADD_EMPID,
+				EMPID
+		FROM BBDBO.CERT_DETAIL
+		WHERE APP_NO LIKE [S_CONF_NO]
+		AND EMPID<>[S_EMPID]
+	]]>
+	</sql-content>
+	</sql-mapping>   
+      
+   
+</sql>
+

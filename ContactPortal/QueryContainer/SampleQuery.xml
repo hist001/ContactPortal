@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+
+	<sql-mapping  id="U_001"   value-count="0" url="User 조회" >
+	<sql-content>
+	<![CDATA[
+		select * 
+		from emp
+		where EMPNO like [EMPNO]||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="U_002"   value-count="5" url="User 삽입" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO EMP(EMPNO, ENAME, JOB, MGR, HIREDATE, DEPTNO) VALUES (?, ?, ?,'',TO_DATE(?,'YYYY-MM-DD'), ?) 
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+

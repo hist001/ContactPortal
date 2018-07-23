@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping id="SCH" value-count="0" url="발령정보 조회" >
+	<sql-content>
+	<![CDATA[
+    SELECT C_CODE,
+           EMP_ID,
+           DISP_NO,
+           DISP_DT,
+           DISP_DIV,
+           GET_CODENAME('PA02', DISP_DIV) AS DISP_DIV_NM,
+           DISP_NAME,
+           EMP_DIV,
+           GET_CODENAME('SY01', EMP_DIV) AS EMP_DIV_NM,
+           ORG_CD,
+           TO_ORGNONAME(ORG_CD) AS ORG_NM,
+           JOB_POSITION,
+           GET_CODENAME('SY05', JOB_POSITION) AS JOB_POSITION_NM,
+           JOB_GRADE, 
+           GET_CODENAME('SY03', JOB_GRADE) AS JOB_GRADE_NM,
+           JOB_KIND, 
+           GET_CODENAME('SY100', JOB_KIND) AS JOB_KIND_NM,
+           JOB_DUTY, 
+           GET_CODENAME('SY101', JOB_DUTY) AS JOB_DUTY_NM,
+           JOB_ASSIGN,
+           GET_CODENAME('SY102', JOB_ASSIGN) AS JOB_ASSIGN_NM,
+           CON_ORG_CD,
+           TO_ORGNONAME(CON_ORG_CD) AS CON_ORG_NM,
+           CON_JOB_POSITION,
+           GET_CODENAME('SY05', CON_JOB_POSITION) AS CON_JOB_POSITION_NM,
+           CON_JOB_KIND,
+           GET_CODENAME('SY100', CON_JOB_KIND) AS CON_JOB_KIND_NM,
+           CON_JOB_DUTY,
+           GET_CODENAME('SY101', CON_JOB_DUTY) AS CON_JOB_DUTY_NM,
+           CON_JOB_ASSIGN,
+           GET_CODENAME('SY102', CON_JOB_ASSIGN) AS CON_JOB_ASSIGN_NM,
+           INSIDE_DIAP_ORG_CD,
+           TO_ORGNONAME(INSIDE_DIAP_ORG_CD) AS INSIDE_DIAP_ORG_NM,
+           OUTSIDE_DIAP_ORG_CD,
+           TO_ORGNONAME(OUTSIDE_DIAP_ORG_CD) AS OUTSIDE_DIAP_ORG_NM,
+           END_DUE_DT,
+           NOTE
+      FROM HTPA06
+     WHERE C_CODE = [S_C_CODE]
+       AND EMP_ID = [S_EMP_ID]
+     ORDER BY TO_NUMBER(DISP_NO)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="INSERT" value-count="0" url="발령정보 추가" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO HTPA06 (C_CODE, 
+						   EMP_ID, 
+						   DISP_NO, 
+						   DISP_DT, 
+						   DISP_DIV, 
+						   DISP_NAME, 
+						   EMP_DIV, 
+						   ORG_CD,
+						   JOB_POSITION, 
+						   JOB_GRADE,
+						   JOB_KIND,
+						   JOB_DUTY, 
+						   JOB_ASSIGN, 
+						   CON_ORG_CD, 
+						   CON_JOB_POSITION, 
+						   CON_JOB_KIND, 
+						   CON_JOB_DUTY, 
+						   CON_JOB_ASSIGN, 
+						   INSIDE_DIAP_ORG_CD, 
+						   OUTSIDE_DIAP_ORG_CD, 
+						   END_DUE_DT, 
+						   NOTE, 
+						   REG_ID, 
+						   REG_DT, 
+						   UPD_ID, 
+						   UPD_DT) 
+		VALUES(
+				 [C_CODE],
+				 [EMP_ID],
+				 TO_CHAR(SYSDATE,'YYYY')||LPAD((SELECT NVL(MAX(SUBSTR(DISP_NO,5)), 0) + 1
+								             FROM HTPA06
+								            WHERE C_CODE = [C_CODE]
+								              AND SUBSTR(DISP_DT,0,4) = TO_CHAR(SYSDATE,'YYYY')), 3, 0),
+				 REPLACE(TRIM([DISP_DT]),'-',''),
+				 [DISP_DIV],
+				 [DISP_NAME],
+				 [EMP_DIV],
+				 [ORG_CD],
+				 [JOB_POSITION],
+				 [JOB_GRADE],
+				 [JOB_KIND],
+				 [JOB_DUTY],
+				 [JOB_ASSIGN],
+				 [CON_ORG_CD],
+				 [CON_JOB_POSITION],
+				 [CON_JOB_KIND],
+				 [CON_JOB_DUTY],
+				 [CON_JOB_ASSIGN],
+				 [INSIDE_DIAP_ORG_CD],
+				 [OUTSIDE_DIAP_ORG_CD],
+				 REPLACE(TRIM([END_DUE_DT]),'-',''),
+				 [NOTE],
+				 [REG_ID],
+				 SYSDATE,
+				 [UPD_ID],
+				 SYSDATE )
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="UPDATE" value-count="0" url="발령정보 수정" >
+	<sql-content>
+	<![CDATA[
+	    UPDATE HTPA06
+	       SET DISP_DT             = NVL(REPLACE(TRIM([DISP_DT]),'-',''), ''),
+	           DISP_DIV            = [DISP_DIV],
+	           DISP_NAME           = [DISP_NAME],
+	           EMP_DIV             = [EMP_DIV],
+	           ORG_CD              = [ORG_CD],
+	           JOB_POSITION        = [JOB_POSITION],
+	           JOB_GRADE           = [JOB_GRADE],
+	           JOB_KIND            = [JOB_KIND],
+	           JOB_DUTY            = [JOB_DUTY],
+	           JOB_ASSIGN          = [JOB_ASSIGN],
+	           CON_ORG_CD          = [CON_ORG_CD],
+	           CON_JOB_POSITION    = [CON_JOB_POSITION],
+	           CON_JOB_KIND        = [CON_JOB_KIND],
+	           CON_JOB_DUTY        = [CON_JOB_DUTY],
+	           CON_JOB_ASSIGN      = [CON_JOB_ASSIGN],
+	           INSIDE_DIAP_ORG_CD  = [INSIDE_DIAP_ORG_CD],
+	           OUTSIDE_DIAP_ORG_CD = [OUTSIDE_DIAP_ORG_CD],
+	           END_DUE_DT          = NVL(REPLACE(TRIM([END_DUE_DT]),'-',''), ''),
+	           NOTE                = [NOTE],
+	           UPD_ID              = [UPD_ID],
+	           UPD_DT              = SYSDATE
+	     WHERE C_CODE              = [C_CODE]
+	       AND EMP_ID              = [EMP_ID]
+	       AND DISP_NO             = [DISP_NO]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="DELETE" value-count="0" url="발령정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA06
+     WHERE C_CODE  = [C_CODE]
+       AND EMP_ID  = [EMP_ID]
+       AND DISP_NO = [DISP_NO]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+	

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="HTPA02_001"   value-count="0" url="신사정보조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT C_CODE, EMP_ID, HEIGHT, WEIGHT, BLOOD_TYPE, COLOR_BLIND, EYE_SIGHT_L, EYE_SIGHT_R, BIRTH_PLACE, 
+		ORIGIN, HANDICAP, HANDICAP_GD, HANDICAP_CAT, HANDICAP_REGNO, BIRTH_DT, LUNAR_DIV, MARITAL_STS, 
+		WEDDING_ANNIV, RENTAL_OWN, HOBBY, RELIGION, WORK_RESPONSIBILITY, WORK_RESPONSIBILITY_E, 
+		EMG_CONTACT, MILT_HIST, NOTE, VETERAN_NUM, VETERAN_REL, VETERAN_HIRE, VETERAN_CAT, REG_ID, REG_DT, UPD_ID, UPD_DT, GENDER  
+		FROM HTPA02 
+		WHERE C_CODE = [C_CODE] 
+		AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="HTPA02_002"   value-count="0" url="신상정보등록" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO HISTOJT.HTPA02 (
+		   C_CODE, EMP_ID, HEIGHT, 
+		   WEIGHT, BLOOD_TYPE, COLOR_BLIND, 
+		   EYE_SIGHT_L, EYE_SIGHT_R, BIRTH_PLACE, 
+		   ORIGIN, HANDICAP, HANDICAP_GD, 
+		   HANDICAP_CAT, HANDICAP_REGNO, BIRTH_DT, 
+		   LUNAR_DIV, MARITAL_STS, WEDDING_ANNIV, 
+		   RENTAL_OWN, HOBBY, RELIGION, 
+		   WORK_RESPONSIBILITY, WORK_RESPONSIBILITY_E, EMG_CONTACT, 
+		   MILT_HIST, NOTE, VETERAN_NUM, 
+		   VETERAN_REL, VETERAN_HIRE, VETERAN_CAT, 
+		   REG_ID, REG_DT, UPD_ID, 
+		   UPD_DT) 
+		VALUES ([C_CODE],
+			[EMP_ID],
+			[HEIGHT],
+			[WEIGHT],
+			[BLOOD_TYPE],
+			[COLOR_BLIND],
+			[EYE_SIGHT_L],
+			[EYE_SIGHT_R],
+			[BIRTH_PLACE],
+			[ORIGIN],
+			[HANDICAP],
+			[HANDICAP_GD],
+			[HANDICAP_CAT],
+			[HANDICAP_REGNO],
+			REPLACE(TRIM([BIRTH_DT]),'-',''),
+			[LUNAR_DIV],
+			[MARITAL_STS],
+			REPLACE(TRIM([WEDDING_ANNIV]),'-',''),
+			[RENTAL_OWN],
+			[HOBBY],
+			[RELIGION],
+			[WORK_RESPONSIBILITY],
+			[WORK_RESPONSIBILITY_E],
+			[EMG_CONTACT],
+			[MILT_HIST],
+			[NOTE],
+			[VETERAN_NUM],
+			[VETERAN_REL],
+			[VETERAN_HIRE],
+			[VETERAN_CAT],
+			[REG_ID],
+			SYSDATE,
+			[UPD_ID],
+			SYSDATE)
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="HTPA02_003"   value-count="0" url="신사정보수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE HTPA02
+		SET    C_CODE                = [C_CODE],
+		       EMP_ID                = [EMP_ID],
+		       HEIGHT                = [HEIGHT],
+		       WEIGHT                = [WEIGHT],
+		       BLOOD_TYPE            = [BLOOD_TYPE],
+		       COLOR_BLIND           = [COLOR_BLIND],
+		       EYE_SIGHT_L           = [EYE_SIGHT_L],
+		       EYE_SIGHT_R           = [EYE_SIGHT_R],
+		       BIRTH_PLACE           = [BIRTH_PLACE],
+		       ORIGIN                = [ORIGIN],
+		       HANDICAP              = [HANDICAP],
+		       HANDICAP_GD           = [HANDICAP_GD],
+		       HANDICAP_CAT          = [HANDICAP_CAT],
+		       HANDICAP_REGNO        = [HANDICAP_REGNO],
+		       BIRTH_DT              = NVL(REPLACE(TRIM([BIRTH_DT]),'-',''), ''),
+		       LUNAR_DIV             = [LUNAR_DIV],
+		       MARITAL_STS           = [MARITAL_STS],
+		       WEDDING_ANNIV         = NVL(REPLACE(TRIM([WEDDING_ANNIV]),'-',''), ''),
+		       RENTAL_OWN            = [RENTAL_OWN],
+		       HOBBY                 = [HOBBY],
+		       RELIGION              = [RELIGION],
+		       WORK_RESPONSIBILITY   = [WORK_RESPONSIBILITY],
+		       WORK_RESPONSIBILITY_E = [WORK_RESPONSIBILITY_E],
+		       EMG_CONTACT           = [EMG_CONTACT],
+		       MILT_HIST             = [MILT_HIST],
+		       NOTE                  = [NOTE],
+		       VETERAN_NUM           = [VETERAN_NUM],
+		       VETERAN_REL           = [VETERAN_REL],
+		       VETERAN_HIRE          = [VETERAN_HIRE],
+		       VETERAN_CAT           = [VETERAN_CAT],
+		       UPD_ID                = [UPD_ID],
+		       UPD_DT                = SYSDATE
+		WHERE  C_CODE                = [C_CODE]
+		AND    EMP_ID                = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="HTPA02_004"   value-count="0" url="신사정보삭제" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM HTPA02 
+		WHERE  C_CODE = [C_CODE]
+		AND    EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>

@@ -1,0 +1,653 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="H_001"   value-count="2"
+   url="인력계획 조회" >  
+   <sql-content>
+   <![CDATA[
+	select * from hrView where yplanCd=? and dyplancd=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_002"   value-count="5"
+   url="인력계획 등록" >  
+   <sql-content>
+   <![CDATA[
+	INSERT INTO HRPLAN(YPLANCD,DYPLANCD,EMPTYPE,HRPLANDT,HRCOUNT,HRNOTE)
+	select ?,?,egrade,ym,cnt,' ' from 
+	(
+		select sum(cnt) cnt, egrade,orgcd from (
+		select distinct count(egrade) over(partition by egrade order by 1) cnt ,
+		a.egrade,b.orgcd from empall a,org b
+		where
+		b.orgcd=?				
+		and a.orgCd=b.orgCd
+		union all
+		select 0, cd,? from cocode 
+		where cdtype='EA' and cd in ('AB','AC','AD','AE','AF','B0')			
+		)group by egrade,orgcd
+	) a,
+	(select ?||trim(to_char(sn,'00')) ym from months where sn<13 )c
+	order by cnt
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_003"   value-count="5"
+   url="인력계획 인원 수정" >  
+   <sql-content>
+   <![CDATA[
+	update hrPlan set hrcount=? where yPlanCd=? and dyPlanCd=? and empType=? and hrplandt=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_004"   value-count="5"
+   url="인력계획 note 수정" >  
+   <sql-content>
+   <![CDATA[
+	update hrPlan set hrnote=? where yPlanCd=? and dyPlanCd=? and empType=? and hrplandt=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_005"   value-count="2"
+   url="인력계획삭제" >  
+   <sql-content>
+   <![CDATA[
+	delete from hrPlan where yPlanCd=?
+	and dyPlanCd=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_006"   value-count="2"
+   url="비용그룹 인력조회" >  
+   <sql-content>
+   <![CDATA[
+	select ? dyplanCd,b.cd empType,b.cdname empTypeName, 
+	nvl(sum(amt_01),0) amt_01, 
+	nvl(sum(amt_02),0) amt_02, 
+	nvl(sum(amt_03),0) amt_03, 
+	nvl(sum(amt_04),0) amt_04, 
+	nvl(sum(amt_05),0) amt_05, 
+	nvl(sum(amt_06),0) amt_06, 
+	nvl(sum(amt_07),0) amt_07, 
+	nvl(sum(amt_08),0) amt_08, 
+	nvl(sum(amt_09),0) amt_09, 
+	nvl(sum(amt_10),0) amt_10, 
+	nvl(sum(amt_11),0) amt_11, 
+	nvl(sum(amt_12),0) amt_12
+	from 
+	( 
+		select orgcd, egrade emptype , 
+		case when sn='01' then 
+		   cnt 
+		end amt_01, 
+		case when sn='02' then 
+		   cnt 
+		end amt_02, 
+		case when sn='03' then 
+		   cnt 
+		end amt_03, 
+		case when sn='04' then 
+		   cnt 
+		end amt_04, 
+		case when sn='05' then 
+		   cnt 
+		end amt_05, 
+		case when sn='06' then 
+		   cnt 
+		end amt_06, 
+		case when sn='07' then 
+		   cnt 
+		end amt_07, 
+		case when sn='08' then 
+		   cnt 
+		end amt_08, 
+		case when sn='09' then 
+		   cnt 
+		end amt_09, 
+		case when sn='10' then 
+		   cnt 
+		end amt_10, 
+		case when sn='11' then 
+		   cnt 
+		end amt_11, 
+		case when sn='12' then 
+		   cnt 
+		end amt_12 
+		 from 
+		(
+			select a.*,b.* from 
+			(
+				select distinct count(egrade) over(partition by egrade order by 1) cnt ,a.egrade,b.orgcd from empall a,org b
+				where b.orgcd=?
+				and a.orgCd=b.orgCd
+			) a,
+			(select sn from months where sn<13)b
+		)
+	) a, 
+	(	select cd,cdname from cocode a
+		where cdtype='EA' and cd in ('AB','AC','AD','AE','AF','B0')
+	) b 
+	where a.emptype(+)=b.cd 
+	group by orgcd,b.cd,b.cdname
+	order by cd
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_007"   value-count="26"
+   url="견적원가중 인력계획" >  
+   <sql-content>
+   <![CDATA[
+	select a.* ,
+	sum(amt_01+amt_02+amt_03+amt_04+amt_05+amt_06+amt_07+amt_08+amt_09+amt_10+amt_11+amt_12) over(partition by OBJNO,empType order by OBJNO) tot
+	from (
+		select ? OBJNO,B.cd empType,B.cdname empTypeName,
+		case when startdt<=?01 and enddt>=?01 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_01,
+		case when startdt<=?02 and enddt>=?02 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_02,
+		case when startdt<=?03 and enddt>=?03 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_03,
+		case when startdt<=?04 and enddt>=?04 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_04,
+		case when startdt<=?05 and enddt>=?05 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_05,
+		case when startdt<=?06 and enddt>=?06 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_06,
+		case when startdt<=?07 and enddt>=?07 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_07,
+		case when startdt<=?08 and enddt>=?08 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_08,
+		case when startdt<=?09 and enddt>=?09 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_09,
+		case when startdt<=?10 and enddt>=?10 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_10,
+		case when startdt<=?11 and enddt>=?11 then
+			NVL(amt,0)
+		else
+			0
+		end
+		AMT_11,
+		case when startdt<=?12 and enddt>=?12 then
+			NVL(amt,0)
+		else
+			0
+		end 
+		AMT_12
+		from
+		(	
+		select grade,
+		trunc(sum(manmth)/(months_between(to_date(enddt,'yyyymm'),to_date(startdt,'yyyymm'))+1) ,1) amt,		
+		enddt,startdt from (	
+		select 
+		case when grade in ('AB','AC','AD','AE','AF') then
+		grade
+		else
+		'B0'
+		end 		
+		grade,
+		manmth,
+		substr(b.plenddt,1,6) enddt,substr(b.plstartdt,1,6) startdt 
+		from hrinput a, prod b
+		where a.prodtype='P' 
+		and a.prodno=?
+		and   b.prodtype=a.prodtype
+		and   b.prodno  =a.prodno
+		)group by grade,enddt,startdt		
+		)a,
+		(select cd ,cdname from cocode  where cdtype='EA' and cd in ('AB','AC','AD','AE','AF','B0') ) b 
+		where 
+		a.grade(+)=b.cd
+		order by cd
+	)a
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_008"   value-count="9"
+   url="all-(조직추가) 등록" >  
+   <sql-content>
+   <![CDATA[
+		insert into hrAllPlan(hrSeq,yPlanCd,dyPlanCd,empType,hrNo,startDt,endDt,hrCount,hrNote)
+		values(?,?,?,?,?,?,?,?,?)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_009"   value-count="6"
+   url="all-(조직추가) 수정" >  
+   <sql-content>
+   <![CDATA[
+		update hrAllPlan set startDt=?,
+		endDt=?,hrCount=?,hrNote=?,hrNo=?
+		where hrSeq=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_010"   value-count="1"
+   url="all-(조직추가) 삭제" >  
+   <sql-content>
+   <![CDATA[
+        delete from hrAllPlan where  hrSeq=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_011"   value-count="2"
+   url="all-(조직추가) 검색" >  
+   <sql-content>
+   <![CDATA[
+		select hrSeq,yPlanCd,dyPlanCd,hrNo,empType,startDt,endDt,hrCount,nvl(hrNote,' ') hrNote
+		from hrAllPlan where yPlanCd=? and dyPlanCd=? and hrNo>0
+		order by empType,hrNo
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_012"   value-count="0"
+   url="인력All -  key 검색" >  
+   <sql-content>
+   <![CDATA[
+		select nvl(max(hrSeq),to_char(sysdate,'yyyymmdd')||'0000')+1 hrSeq from hrAllPlan where  substr(hrSeq,1,8)= to_char(sysdate,'yyyymmdd')
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_013"   value-count="2"
+   url="인력All -  초기인원 검색" >  
+   <sql-content>
+   <![CDATA[
+		select yplancd,dyplancd,
+		sum(amt_00) amt_00,
+		sum(amt_01) amt_01,
+		sum(amt_02) amt_02,
+		sum(amt_03) amt_03,
+		sum(amt_04) amt_04,
+		sum(amt_05) amt_05,
+		sum(amt_06) amt_06,
+		sum(amt_01)+
+		sum(amt_02)+
+		sum(amt_03)+
+		sum(amt_04)+
+		sum(amt_05)+
+		sum(amt_06) TOT,
+		' ' amt_07
+		FROM 
+		(
+		select yplancd,dyplancd,
+		case when emptype='AA' then
+		hrcount
+		else
+		0
+		end amt_00,
+		case when emptype='AB' then
+		hrcount
+		else
+		0
+		end amt_01,
+		case when emptype='AC' then
+		hrcount
+		else
+		0
+		end amt_02,
+		case when emptype='AD' then
+		hrcount
+		else
+		0
+		end amt_03,
+		case when emptype='AE' then
+		hrcount
+		else
+		0
+		end amt_04,
+		case when emptype='AF' then
+		hrcount
+		else
+		0
+		end amt_05,
+		case when emptype='B0' then
+		hrcount
+		else
+		0
+		end amt_06
+		from hrallPlan where hrno>=0 and yplancd=? and dyplancd=?
+		)GROUP BY YPLANCD,DYPLANCD 
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_014"   value-count="2"
+   url="인력All - 월별 조회" >  
+   <sql-content>
+   <![CDATA[
+	select * from hrView where yplanCd=? and dyplancd=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_015$"   value-count="5"
+   url="부문별 인력 조회" >  
+   <sql-content>
+   <![CDATA[
+select a.*,b.dyPlanName,b.YEARPLANTYPE,
+       nvl(ab_df,0)ab_df,
+       nvl(ac_df,0)ac_df,
+	   nvl(ad_df,0)ad_df,
+	   nvl(ae_df,0)ae_df,
+	   nvl(af_df,0)af_df,
+	   nvl(aTot_df,0)aTot_df,
+	   nvl(b0_df,0)b0_df,
+	   nvl(tot_df,0) tot_df
+from (
+	select yplancd,dyplancd,
+	sum(ab) ab,
+	sum(ac) ac,
+	sum(ad) ad,
+	sum(ae) ae,
+	sum(af) af,
+	sum(ab)+
+	sum(ac)+
+	sum(ad)+
+	sum(ae)+
+	sum(af) aTot,		
+	sum(b0) b0,
+	sum(ab)+
+	sum(ac)+
+	sum(ad)+
+	sum(ae)+
+	sum(af)+		
+	sum(b0) Tot				
+	from (
+	select yplancd,dyplancd,
+	case when empType='AB' then
+	mm
+	else
+	0
+	end ab,
+	case when empType='AC' then
+	mm
+	else
+	0
+	end ac,
+	case when empType='AD' then
+	mm
+	else
+	0
+	end ad,
+	case when empType='AE' then
+	mm
+	else
+	0
+	end ae,
+	case when empType='AF' then
+	mm
+	else
+	0
+	end af,
+	case when empType='B0' then
+	mm
+	else
+	0
+	end b0
+	from (		
+	select yplancd,dyplancd,emptype,round(sum(mm)/12) mm from (
+	select yplancd,dyplancd,emptype,tot mm from hrview where yPlanCd= ?
+	UNION ALL
+	select yplancd,dyplancd,emptype,hrcount mm from hrplan 
+	)
+	where yplancd = ?
+	group by yplancd, dyplancd,emptype
+	)	
+	)group by yplancd,dyplancd
+	)a,
+	orgCntView c,
+	detailYearPlan b,
+	(
+	select yplancd,dyplancd, orgcd, dyplanname,yearPlanType from detailYearPlan where not dyplancd like 'P%'
+	union all
+	select a.yplancd,a.dyplancd, a.orgcd, a.dyplanname,a.yearPlanType from 
+	(select yplancd,dyplancd, orgcd, dyplanname,yearPlanType from detailYearPlan where  dyplancd like 'P%')a,
+	(select distinct prodtype||prodno prodno from costdesc where costtype='T' and prodtype='P')b
+	where a.dyPlancd=b.prodno	
+	) d
+	where 
+	d.yPlanCd= ?
+	and
+	b.yPlanCd= ?
+	and
+	b.orgCd in 
+	(
+                SELECT ORGCD
+                FROM ORG A
+				WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+				AND ORG_NO IS NOT NULL
+				START WITH ORGCD = ?
+				CONNECT BY PRIOR TO_CHAR(ORG_NO) = HIGHORGCD 						
+	)
+	and b.dyplancd=a.dyplancd
+	and d.dyplancd(+)=a.dyPlanCd
+    and to_orgnocd(c.orgCd(+))=d.orgCd
+    order by a.dyplancd
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="H_015"   value-count="6"
+   url="부문별 인력 조회" >  
+   <sql-content>
+   <![CDATA[
+   		select  * from 	
+   		(
+        SELECT   A.ORGCD,
+			    A.YPLANCD,
+			    A.DYPLANCD,
+			    A.DYPLANNAME,
+			     '' EMPTYPE,
+				TO_CHAR(A.AMT_01,'9,990.0') AS AMT_01,
+				TO_CHAR(A.AMT_02,'9,990.0') AS AMT_02,
+				TO_CHAR(A.AMT_03,'9,990.0') AS AMT_03,
+				TO_CHAR(A.AMT_04,'9,990.0') AS AMT_04,
+				TO_CHAR(A.AMT_05,'9,990.0') AS AMT_05,
+				TO_CHAR(A.AMT_06,'9,990.0') AS AMT_06,
+				TO_CHAR(A.AMT_07,'9,990.0') AS AMT_07,
+				TO_CHAR(A.AMT_08,'9,990.0') AS AMT_08,
+				TO_CHAR(A.AMT_09,'9,990.0') AS AMT_09,
+				TO_CHAR(A.AMT_10,'9,990.0') AS AMT_10,
+				TO_CHAR(A.AMT_11,'9,990.0') AS AMT_11,
+				TO_CHAR(A.AMT_12,'9,990.0') AS AMT_12,
+				TO_CHAR(A.TOT,'9,990.0')    AS TOT,
+                 TO_CHAR(NVL((SELECT TOT_DF
+                         FROM orgCntView D, ORG E
+                         WHERE D.ORGCD=E.ORG_NO
+                         AND E.ORGCD=A.ORGCD),0),'9,990.0')
+                 AS PRV_TOT,
+                 TO_CHAR(A.AMT_12 - NVL((SELECT TOT_DF
+                         FROM orgCntView D, ORG E
+                         WHERE D.ORGCD=E.ORG_NO
+                         AND E.ORGCD=A.ORGCD),0) ,'9,990.0')
+                 AS  ID_TOT
+        FROM
+        (
+        SELECT  		DYPLANCD AS ORGCD,MAX(YPLANCD) AS YPLANCD,DYPLANCD,
+                        TO_ORGCDNAME_N(DYPLANCD, MAX(YPLANCD)) AS DYPLANNAME,
+                        SUM(AMT_01) AS AMT_01,
+                        SUM(AMT_02) AS AMT_02,
+                        SUM(AMT_03) AS AMT_03,
+                        SUM(AMT_04) AS AMT_04,
+                        SUM(AMT_05) AS AMT_05,
+                        SUM(AMT_06) AS AMT_06,
+                        SUM(AMT_07) AS AMT_07,
+                        SUM(AMT_08) AS AMT_08,
+                        SUM(AMT_09) AS AMT_09,
+                        SUM(AMT_10) AS AMT_10,
+                        SUM(AMT_11) AS AMT_11,
+                        SUM(AMT_12) AS AMT_12,
+                        SUM(TOT) AS TOT
+        FROM HRVIEW
+        WHERE YPLANCD  = ?
+        AND LENGTH(DYPLANCD)=4
+        GROUP BY DYPLANCD
+
+        UNION
+
+        SELECT          MAX(ORGCD) AS ORG,MAX(YPLANCD) AS YPLANCD,DYPLANCD,DYPLANNAME,
+                        SUM(AMT_01) AS AMT_01,
+                        SUM(AMT_02) AS AMT_02,
+                        SUM(AMT_03) AS AMT_03,
+                        SUM(AMT_04) AS AMT_04,
+                        SUM(AMT_05) AS AMT_05,
+                        SUM(AMT_06) AS AMT_06,
+                        SUM(AMT_07) AS AMT_07,
+                        SUM(AMT_08) AS AMT_08,
+                        SUM(AMT_09) AS AMT_09,
+                        SUM(AMT_10) AS AMT_10,
+                        SUM(AMT_11) AS AMT_11,
+                        SUM(AMT_12) AS AMT_12,
+                        SUM(TOT) AS TOT
+
+        FROM HRVIEW A
+        WHERE YPLANCD  = ?
+        AND LENGTH(DYPLANCD)>4
+        GROUP BY DYPLANCD,DYPLANNAME
+        ) A
+        WHERE ORGCD IN (SELECT ORGCD
+                        FROM ORG A
+                        WHERE ORG_NO IN (SELECT ORG_NO 
+                            FROM ORGHISTORY 
+                            WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+                        AND ORG_NO IS NOT NULL
+                        START WITH ORGCD = ?
+                        CONNECT BY PRIOR TO_CHAR(ORG_NO) = HIGHORGCD)
+		UNION
+		
+		       	select * from
+       ( SELECT    A.ORGCD,
+                 MAX(A.YPLANCD) AS YPLANCD,
+                 A.DYPLANCD,
+                 NVL((select CDNAME from cocode A
+                      where A.cdtype='EA' and cd = EMPTYPE),'합계')  AS DYPLANNAME,
+                 EMPTYPE AS EMPTYPE,
+                 TO_CHAR(SUM(A.AMT_01),'9,990.0') AS AMT_01,
+                 TO_CHAR(SUM(A.AMT_02),'9,990.0') AS AMT_02,
+                 TO_CHAR(SUM(A.AMT_03),'9,990.0') AS AMT_03,
+                 TO_CHAR(SUM(A.AMT_04),'9,990.0') AS AMT_04,
+                 TO_CHAR(SUM(A.AMT_05),'9,990.0') AS AMT_05,
+                 TO_CHAR(SUM(A.AMT_06),'9,990.0') AS AMT_06,
+                 TO_CHAR(SUM(A.AMT_07),'9,990.0') AS AMT_07,
+                 TO_CHAR(SUM(A.AMT_08),'9,990.0') AS AMT_08,
+                 TO_CHAR(SUM(A.AMT_09),'9,990.0') AS AMT_09,
+                 TO_CHAR(SUM(A.AMT_10),'9,990.0') AS AMT_10,
+                 TO_CHAR(SUM(A.AMT_11),'9,990.0') AS AMT_11,
+                 TO_CHAR(SUM(A.AMT_12),'9,990.0') AS AMT_12,
+                 TO_CHAR(SUM(A.TOT),'9,990.0')    AS TOT,
+      		 	 TO_CHAR(NVL((SELECT TOT_DF
+				              FROM orgCntView D, ORG E
+				              WHERE D.ORGCD=E.ORG_NO
+				              AND E.ORGCD=A.ORGCD),0),'9,990.0')
+			     AS PRV_TOT,
+      			 TO_CHAR(SUM(A.AMT_12) - NVL((SELECT TOT_DF
+							              FROM orgCntView D, ORG E
+							              WHERE D.ORGCD=E.ORG_NO
+							              AND E.ORGCD=A.ORGCD),0) ,'9,990.0')
+ 		         AS  ID_TOT
+        FROM
+        (
+			SELECT  DYPLANCD AS ORGCD,
+					MAX(YPLANCD) AS YPLANCD,
+					DYPLANCD,
+			        TO_ORGCDNAME_N(DYPLANCD, MAX(YPLANCD)) AS DYPLANNAME,
+			        EMPTYPE,
+			        SUM(AMT_01) AS AMT_01,
+			        SUM(AMT_02) AS AMT_02,
+			        SUM(AMT_03) AS AMT_03,
+			        SUM(AMT_04) AS AMT_04,
+			        SUM(AMT_05) AS AMT_05,
+			        SUM(AMT_06) AS AMT_06,
+			        SUM(AMT_07) AS AMT_07,
+			        SUM(AMT_08) AS AMT_08,
+			        SUM(AMT_09) AS AMT_09,
+			        SUM(AMT_10) AS AMT_10,
+			        SUM(AMT_11) AS AMT_11,
+			        SUM(AMT_12) AS AMT_12,
+			        SUM(TOT) AS TOT
+			FROM HRVIEW
+			WHERE YPLANCD  = ?
+			AND LENGTH(DYPLANCD)=4
+			GROUP BY DYPLANCD,EMPTYPE
+
+        UNION
+
+            SELECT  MAX(ORGCD) AS ORG,
+			MAX(YPLANCD) AS YPLANCD,
+			DYPLANCD,
+			DYPLANNAME,
+			EMPTYPE,
+			SUM(AMT_01) AS AMT_01,
+			SUM(AMT_02) AS AMT_02,
+			SUM(AMT_03) AS AMT_03,
+			SUM(AMT_04) AS AMT_04,
+			SUM(AMT_05) AS AMT_05,
+			SUM(AMT_06) AS AMT_06,
+			SUM(AMT_07) AS AMT_07,
+			SUM(AMT_08) AS AMT_08,
+			SUM(AMT_09) AS AMT_09,
+			SUM(AMT_10) AS AMT_10,
+			SUM(AMT_11) AS AMT_11,
+			SUM(AMT_12) AS AMT_12,
+			SUM(TOT) AS TOT
+
+	FROM HRVIEW A
+	WHERE YPLANCD  = ?
+	AND LENGTH(DYPLANCD)>4
+	GROUP BY DYPLANCD,DYPLANNAME,EMPTYPE
+        ) A
+        WHERE ORGCD IN (SELECT ORGCD
+                        FROM ORG A
+                        WHERE ORG_NO IN (SELECT ORG_NO
+                            FROM ORGHISTORY
+                            WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+                        AND ORG_NO IS NOT NULL
+                        START WITH ORGCD = ?
+                        CONNECT BY PRIOR TO_CHAR(ORG_NO) = HIGHORGCD)
+		GROUP BY ROLLUP(EMPTYPE,ORGCD,DYPLANCD) 
+        ORDER BY ORGCD,DYPLANCD,EMPTYPE
+        )where orgcd is null
+		)                        
+		ORDER BY DYPLANCD,EMPTYPE
+	]]>
+	</sql-content>
+   </sql-mapping>
+</sql>
+
+

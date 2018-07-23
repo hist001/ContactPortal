@@ -1,0 +1,943 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="S_001"   value-count="2" url="프로젝트 where" >  
+	<sql-content>
+	<![CDATA[
+				where pjt_no=? ?
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="S_002"   value-count="1" url="공정 where" >  
+	<sql-content>
+	<![CDATA[
+				and prcsCd=?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_003"   value-count="2" url="첨부파일" >  
+	<sql-content>
+	<![CDATA[
+				and pjtFiles_no=?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_004"   value-count="1" url="프로젝트 - 인원" >  
+	<sql-content>
+	<![CDATA[
+				and pjtEmp_no=?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_005"   value-count="4" url="공정 삭제 (mh 없는 경우)" >  
+	<sql-content>
+	<![CDATA[				
+				delete from pjtprcs 
+				where pjt_no=? 
+				and prcscd=
+				(
+					select
+					case when sumMm=0 then
+					  ?
+					else
+					  'false'
+					end delFlag   
+					 from 
+					(
+						select nvl(sum(hh*60+mm),0) sumMm from dailyreportdetail 
+						where actflag='D' and prcsno=? and jobno=?
+					)
+				)				
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_006"   value-count="2" url="삭제" >  
+	<sql-content>
+	<![CDATA[
+				delete from ? ?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_007"   value-count="1" url="ENV where" >  
+	<sql-content>
+	<![CDATA[
+				and pjtEnvModelCd=? 
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_008"   value-count="1" url="Biz where" >  
+	<sql-content>
+	<![CDATA[
+				and bizTypeCd=?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_009"   value-count="2" url="프로젝트-공정-인원 where" >  
+	<sql-content>
+	<![CDATA[
+				and prcsCd=? and pjtEmp_no=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+		<!--프로젝트 관련 조회-->
+	<sql-mapping  id="S_010"   value-count="1" url="프로젝트-인원" >  
+	<sql-content>
+	<![CDATA[
+				select * from pjtEmp where pjt_no=?  order by  pjtEmp_no desc
+	]]>
+	</sql-content>
+	</sql-mapping>
+		
+	<sql-mapping  id="S_011"   value-count="1" url="프로젝트-공정:공정-인원" >  
+	<sql-content>	
+	<![CDATA[
+			 select a.prcscd,to_prcsName(a.prcscd) prcsName,a.pjt_no, a.highPrcsCd, a.prcsStartDt,a.prcsEndDt,a.pjtPrcsDetail,
+			        b.pjtEmp_no,to_pjtEmpname(a.pjt_no,b.pjtEmp_no) pjtEmp_Name,to_pjtJob(a.pjt_no,b.pjtEmp_no) pjtEmp_job,
+			        b.prcsInStartDt, b.prcsInEndDt
+					from pjtprcs a,pjtPrcsEmp b		
+					where a.pjt_no=? 
+					and b.pjt_no(+)=a.pjt_no 
+					and b.prcscd(+)=a.PRCSCD	
+					order by prcscd 
+	]]>
+	</sql-content>	
+	</sql-mapping>		
+
+	<sql-mapping  id="S_012"   value-count="1" url="프로젝트-파일" >  
+	<sql-content>	
+	<![CDATA[
+				select * from pjtFiles where pjt_no=?  order by  pjtFiles_no asc
+	]]>
+	</sql-content>	
+	</sql-mapping>		
+
+	<sql-mapping  id="S_013"   value-count="1" url="프로젝트-사업유형" >  
+	<sql-content>	
+	<![CDATA[
+				select BIZCD, BIZTYPECD, PJT_NO ,to_bizname(bizCD) bizName from pjtBiz where pjt_no=?
+	]]>
+	</sql-content>	
+	</sql-mapping>		
+
+	<sql-mapping  id="S_014"   value-count="1" url="프로젝트-환경" >  
+	<sql-content>	
+	<![CDATA[
+				select * from pjtEnv where pjt_no=?
+	]]>
+	</sql-content>	
+	</sql-mapping>		
+	<sql-mapping  id="S_015"   value-count="1" url="프로젝트-환경" >  
+	<sql-content>	
+	<![CDATA[
+			SELECT 
+			PJT_NO, PJTCD, PJTNAME, PJTDIV, PJTTYPE, 
+			PJTSTATUS, APPRSTATUS, ORDERCORPCD, PJTORG_NO, 
+			PJTUPDATEDTM, PJTDETAIL, PJTSTARTDT, 
+			PJTENDDT, PMEMPID,TO_EMPKNAME(PMEMPID) PMEMPNAME, CREMPID, CREATEDTM, 
+			CONTAMT, CONTSTARTDT, 
+			CONTENDDT, PLANWORKMH, ISTASK,
+			case when (select count(pjt_no) from pjtcostdetail 
+						 where amt > 0 and costtype='T' and pjt_no like a.pjt_no) > 0 then 'Y'
+					else 'N'
+			end as wrFlag
+			from (select /*+INDEX_DESC(Project idx_pjtcd)*/ * from  project) a ?
+	]]>
+	</sql-content>	
+	</sql-mapping>		
+	<sql-mapping  id="S_016"   value-count="0" url="프로젝트-표준공정 조회" >  
+	<sql-content>	
+	<![CDATA[
+			 select 
+			 a.prcsCd,a.prcsName,
+			 a.highPrcsCd,
+			 level 
+			 from 
+			 (			 
+				 select  '9999' prcsCd,
+				         '0000' highPrcsCd,
+						 '프로젝트 공정' prcsName 
+	             from dual					 
+			     union all
+				 select prcsModelCd prcsCd,
+				        '9999' highPrcsCd,
+						prcsModelName prcsName
+				 from prcsModel				
+				 union all
+				 select a.prcscd,
+				       a.PRCSMODELCD highPrcsCD,
+					   b.prcsname 
+				 from prcsmodelprcs a, prcs b
+				 where a.prcscd=b.prcscd		
+				 and length(a.prcscd)=3	
+			) a
+			START WITH prcsCD = '9999'
+			CONNECT BY PRIOR prcsCD = HIGHprcsCD
+			 ORDER SIBLINGS BY prcsCD	]]>
+	</sql-content>	
+	</sql-mapping>		
+	<sql-mapping  id="S_017"   value-count="0" url="프로젝트명 조회" >  
+	<sql-content>	
+	<![CDATA[
+		select pjtName from project 
+		where pjtstatus in ('PGO','REG','REP')
+		order by pjtName
+		]]>
+	</sql-content>	
+	</sql-mapping>		
+	<sql-mapping  id="S_018"   value-count="2" url="프로젝트 계정 조회" >  
+	<sql-content>	
+	<![CDATA[
+			select a.acctcd,acctname,accttype,b.PJTCOSTDESC 
+				from 
+				(
+				select nvl(get_acctGd(usracctcd),usracctcd) acctcd,b.usrAcctType accttype,b.usrAcctName acctname,usrIndex idx from 
+				 UsrAcctDef a,
+				 UsrAcctDefDetail b 
+				 where a.usrType=?
+				 and b.usrType=a.usrType
+				) a,pjtCost b
+				where b.pjt_no(+)=?
+				and b.acctCd(+)=a.acctcd
+				and b.COSTTYPE(+)='T'
+				order by idx
+		]]>
+	</sql-content>	
+	</sql-mapping>		
+	<sql-mapping  id="S_019"   value-count="1" url="프로젝트 원가 계획 조회" >  
+	<sql-content>	
+	<![CDATA[
+		select 
+		        pjt_no,costtype,year,month,
+		        sum(amt_01) amt_01,
+		        sum(amt_02) amt_02,
+		        sum(amt_03) amt_03,
+		        sum(amt_04) amt_04,
+		        sum(amt_05) amt_05,
+		        sum(amt_06) amt_06,
+		        sum(amt_07) amt_07,
+		        sum(amt_08) amt_08,                        
+		        sum(amt_09) amt_09,
+		        sum(amt_10) amt_10,
+		        sum(amt_11) amt_11,
+		        sum(amt_12) amt_12,                        
+		        sum(amt_13) amt_13,
+		        sum(amt_14) amt_14,
+		        sum(amt_15) amt_15,
+		        sum(amt_16) amt_16,                        
+		        sum(amt_17) amt_17,
+		        sum(amt_18) amt_18,
+		        sum(amt_19) amt_19,
+		        sum(amt_20) amt_20,                        
+		        sum(amt_21) amt_21,
+		        sum(amt_22) amt_22,
+		        sum(amt_23) amt_23,
+		        sum(amt_24) amt_24,                        
+		        sum(amt_25) amt_25,
+		        sum(amt_26) amt_26,
+		        sum(amt_27) amt_27,
+		        sum(amt_28) amt_28,
+				sum(amt_29) amt_29,
+		        sum(amt_30) amt_30,
+		        sum(amt_31) amt_31,
+		        sum(amt_32) amt_32,
+		        sum(amt_33) amt_33,
+		        sum(amt_34) amt_34,
+		        sum(amt_35) amt_35,
+		        sum(amt_36) amt_36,																												                          
+				sum(amt_37) amt_37,																												                          
+				sum(amt_38) amt_38																											                          				
+		        from                         
+		        (
+		                select 
+		                        pjt_no,costtype,acctcd,year,month,
+		                        case when stdCd='4101' then
+		                        amt 
+		                        end amt_01,								
+		                        case when stdCd='4102' then
+		                        amt 
+		                        end amt_02,
+					            0 amt_03,
+		                        case when stdCd='5001' then
+		                        amt 
+		                        end amt_04,
+		                        case when stdCd='5002' then
+		                        amt
+		                        end amt_05,
+		                        case when stdCd='5003' then
+		                        amt
+		                        end amt_06,
+		                        case when stdCd='5004' then
+		                        amt
+		                        end amt_07,
+		                        case when stdCd='5005' then
+		                        amt
+		                        end amt_08,
+		                        case when stdCd='5006' then
+		                        amt
+		                        end amt_09,
+		                        case when stdCd='5007' then
+		                        amt
+		                        end amt_10,
+		                        case when stdCd='5008' then
+		                        amt
+		                        end amt_11,
+		                        case when stdCd='5009' then
+		                        amt
+		                        end amt_12,
+		                        case when stdCd='5010' then
+		                        amt
+		                        end amt_13,
+		                        case when stdCd='5011' then
+		                        amt
+		                        end amt_14,
+		                        case when stdCd='5012' then
+		                        amt
+		                        end amt_15,
+		                        case when stdCd='5013' then
+		                        amt
+		                        end amt_16,
+		                        case when stdCd='5014' then
+		                        amt
+		                        end amt_17,
+		                        case when stdCd='5015' then
+		                        amt
+		                        end amt_18,
+		                        case when stdCd='5016' then
+		                        amt
+		                        end amt_19,
+		                        case when stdCd='5017' then
+		                        amt
+		                        end amt_20,
+		                        case when stdCd='5018' then
+		                        amt
+		                        end amt_21,
+		                        case when stdCd='5019' then
+		                        amt
+		                        end amt_22,
+		                        case when stdCd='5020' then
+		                        amt
+		                        end amt_23,
+		                        case when stdCd='5021' then
+		                        amt
+		                        end amt_24,
+		                        case when stdCd='5022' then
+		                        amt
+		                        end amt_25,
+		                        case when stdCd='5023' then
+		                        amt
+		                        end amt_26,
+		                        case when stdCd='5024' then
+		                        amt
+		                        end amt_27,
+		                        case when stdCd='5025' then
+		                        amt
+		                        end amt_28,
+		                        case when stdCd='5026' then
+		                        amt
+		                        end amt_29,
+		                        case when stdCd='5029' then
+		                        amt
+		                        end amt_30,								
+		                        case when stdCd='5099' then
+		                        amt
+		                        end amt_31,
+		                        case when stdCd='9031' then
+		                        amt
+		                        end amt_32,
+		                        0 amt_33,								
+		                        0 amt_34,																
+		                        case when stdCd='9200' then
+		                        amt
+		                        end amt_35,								
+		                        case when stdCd='9300' then
+		                        amt
+		                        end amt_36,
+		                        0 amt_37,								
+		                        0 amt_38																																
+		                from 
+		                (
+		                         select a.pjt_no,a.costtype,acctcd, substr(acctcd,0,4) stdCd,year,month, amt 
+		                         from pjtCostDetail a, project b 
+		                         where b.pjt_no=?
+		                         and a.pjt_no=b.pjt_no
+		                         and a.costtype='T'
+		                ) a
+		        ) a
+		        group by pjt_no,costtype,year,month
+		]]>
+	</sql-content>	
+	</sql-mapping>		
+	<sql-mapping  id="S_020"   value-count="3" url="프로젝트 - 원가계획상세 조건" >  
+	<sql-content>
+	<![CDATA[
+				and year=? and month=? and acctcd=?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_021"   value-count="2" url="프로젝트 - 원가계획상세 조건" >  
+	<sql-content>
+	<![CDATA[
+				and year=? and month=? 
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_022"   value-count="1" url="프로젝트 - 원가계획 조건" >  
+	<sql-content>
+	<![CDATA[
+				and acctcd=?
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_023"   value-count="0" url="프로젝트 - 계정조회" >  
+	<sql-content>
+	<![CDATA[
+				select * from tmpPjtAcct	
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="S_024"   value-count="1" url="프로젝트 - 계정조회(합계포함)" >  
+	<sql-content>
+	<![CDATA[
+		 select b.usrAcctCd acctcd,b.usrAcctType accttype,b.usrAcctName acctname,nvl(get_acctGd(b.usracctcd),b.usracctcd) RealAcctCd from 
+		 UsrAcctDef a,
+		 UsrAcctDefDetail b 
+		 where a.usrType=?
+		 and b.usrType=a.usrType
+		 order by usrIndex
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_999"   value-count="0" url="프로젝트 - 계정조회(합계포함)" >  
+	<sql-content>
+	<![CDATA[
+		 select sysdate from dual
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_025"   value-count="1" url="프로젝트 원가 계획 조회" >  
+	<sql-content>	
+	<![CDATA[
+		select
+		        pjt_no,costtype,year,month,
+				nvl(sum(amt_01),0) amt_01,
+		        sum(amt_02) amt_02,
+		        sum(amt_03) amt_03,
+		        sum(amt_04) amt_04,
+		        sum(amt_05) amt_05,
+		        sum(amt_06) amt_06,
+		        sum(amt_07) amt_07,
+		        sum(amt_08) amt_08,
+		        sum(amt_09) amt_09,
+		        sum(amt_10) amt_10,
+		        sum(amt_11) amt_11,
+		        sum(amt_12) amt_12,
+		        sum(amt_13) amt_13,
+		        sum(amt_14) amt_14,
+		        sum(amt_15) amt_15,
+		        sum(amt_16) amt_16,
+		        sum(amt_17) amt_17,
+		        sum(amt_18) amt_18,
+		        sum(amt_19) amt_19,
+		        sum(amt_20) amt_20,
+		        sum(amt_21) amt_21,
+		        sum(amt_22) amt_22,
+		        sum(amt_23) amt_23,
+		        sum(amt_24) amt_24,
+		        sum(amt_25) amt_25,
+		        sum(amt_26) amt_26,
+		        sum(amt_27) amt_27,
+		        sum(amt_28) amt_28,
+		        sum(amt_29) amt_29,
+		        sum(amt_30) amt_30,
+		        sum(amt_31) amt_31,
+		        sum(amt_32) amt_32,
+		        sum(amt_33) amt_33,
+		        sum(amt_34) amt_34,
+		        sum(amt_35) amt_35,
+		        sum(amt_36) amt_36,
+		        sum(amt_37) amt_37,
+		        sum(amt_38) amt_38,
+		        sum(amt_39) amt_39
+		        from
+		        (
+		                select
+		                        pjt_no,costtype,acctcd,year,month,
+								case when stdCd='8000' then
+		                        amt
+		                        end amt_01,
+		                        case when stdCd='4101' then
+		                        amt
+		                        end amt_02,
+		                        case when stdCd='4102' then
+		                        amt
+		                        end amt_03,
+		                        0 amt_04,
+		                        case when stdCd='5001' then
+		                        amt
+		                        end amt_05,
+		                        case when stdCd='5002' then
+		                        amt
+		                        end amt_06,
+		                        case when stdCd='5003' then
+		                        amt
+		                        end amt_07,
+		                        case when stdCd='5004' then
+		                        amt
+		                        end amt_08,
+		                        case when stdCd='5005' then
+		                        amt
+		                        end amt_09,
+		                        case when stdCd='5006' then
+		                        amt
+		                        end amt_10,
+		                        case when stdCd='5007' then
+		                        amt
+		                        end amt_11,
+		                        case when stdCd='5008' then
+		                        amt
+		                        end amt_12,
+		                        case when stdCd='5009' then
+		                        amt
+		                        end amt_13,
+		                        case when stdCd='5010' then
+		                        amt
+		                        end amt_14,
+		                        case when stdCd='5011' then
+		                        amt
+		                        end amt_15,
+		                        case when stdCd='5012' then
+		                        amt
+		                        end amt_16,
+		                        case when stdCd='5013' then
+		                        amt
+		                        end amt_17,
+		                        case when stdCd='5014' then
+		                        amt
+		                        end amt_18,
+		                        case when stdCd='5015' then
+		                        amt
+		                        end amt_19,
+		                        case when stdCd='5016' then
+		                        amt
+		                        end amt_20,
+		                        case when stdCd='5017' then
+		                        amt
+		                        end amt_21,
+		                        case when stdCd='5018' then
+		                        amt
+		                        end amt_22,
+		                        case when stdCd='5019' then
+		                        amt
+		                        end amt_23,
+		                        case when stdCd='5020' then
+		                        amt
+		                        end amt_24,
+		                        case when stdCd='5021' then
+		                        amt
+		                        end amt_25,
+		                        case when stdCd='5022' then
+		                        amt
+		                        end amt_26,
+		                        case when stdCd='5023' then
+		                        amt
+		                        end amt_27,
+		                        case when stdCd='5024' then
+		                        amt
+		                        end amt_28,
+		                        case when stdCd='5025' then
+		                        amt
+		                        end amt_29,
+		                        case when stdCd='5026' then
+		                        amt
+		                        end amt_30,
+		                        case when stdCd='5029' then
+		                        amt
+		                        end amt_31,
+		                        case when stdCd='5099' then
+		                        amt
+		                        end amt_32,
+		                        case when stdCd='9031' then
+		                        amt
+		                        end amt_33,
+		                        0 amt_34,
+		
+		                        0 amt_35,
+		                        case when stdCd='9200' then
+		                        amt
+		                        end amt_36,
+		                        case when stdCd='9300' then
+		                        amt
+		                        end amt_37,
+		                        0 amt_38,
+		                        0 amt_39
+		                from
+		                (
+		                         select a.pjt_no,a.costtype,acctcd, substr(acctcd,0,4) stdCd,year,month, nvl(amt,0) amt
+		                         from pjtCostDetail a, project b
+		                         where b.pjt_no= ?
+		                         and a.pjt_no=b.pjt_no
+		                         and a.costtype='S'
+		                ) a
+		        ) a
+		group by pjt_no,costtype,year,month
+
+		]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="S_027"   value-count="4" url="프로젝트 - 원가계획상세 조건" >  
+	<sql-content>
+	<![CDATA[
+				and year=? and month=? and acctcd=? and costtype=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_028"   value-count="3" url="프로젝트 - 원가계획상세 조건" >  
+	<sql-content>
+	<![CDATA[
+				and year=? and month=? and costtype=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_029"   value-count="1" url="프로젝트-환경" >  
+	<sql-content>	
+	<![CDATA[
+				select 
+				PJT_NO, PJTCD, PJTNAME, PJTDIV, PJTTYPE, 
+				PJTSTATUS, APPRSTATUS, ORDERCORPCD, PJTORG_NO, 
+				PJTUPDATEDTM, PJTDETAIL, PJTSTARTDT, 
+				PJTENDDT, PMEMPID,TO_EMPKNAME(PMEMPID) PMEMPNAME, CREMPID, CREATEDTM, 
+				CONTAMT, CONTSTARTDT, 
+				CONTENDDT, PLANWORKMH, ISTASK,
+		       to_char(MONTHS_BETWEEN(
+			   ROUND(TO_DATE(nvl(decode(PjtEndDt, '$','99991231','0000','99991231','0','99991231','0000$','99991231',pjtEndDt),'99991231')),'MONTH'),
+			   ROUND(TO_DATE(nvl(decode(pjtStartDt, '$','99991231','0000','99991231','0','99991231','0000$','99991231',pjtStartDt),'99991231')),'MONTH')
+			   )) MONTHS
+				from project ?
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="S_030"   value-count="7" url="프로젝트-계획실적조회" >  
+	<sql-content>	
+	<![CDATA[
+select a.pjt_no, a.acctcd,  minYear pjtStartDt, maxYear pjtEndDt, substr(c.maxYear,1,4) maxYear, substr(c.minYear,1,4) minYear,
+        decode(a.acctcd, '41011','용역','41021','물품','10001','투입MM',to_acctname(substr(a.acctcd,1,4)||0)) acctKName,
+        year, sum(maxSum) smSum,totSum, totSum-sum(maxSum) as resSum,
+		nvl(sum(mon_00),-9999) mon_00,
+        nvl(sum(mon_01),-9999) mon_01,
+        nvl(sum(mon_02),-9999) mon_02,
+        nvl(sum(mon_03),-9999) mon_03,
+        nvl(sum(mon_04),-9999) mon_04,
+        nvl(sum(mon_05),-9999) mon_05,
+        nvl(sum(mon_06),-9999) mon_06,
+        nvl(sum(mon_07),-9999) mon_07,
+        nvl(sum(mon_08),-9999) mon_08,
+        nvl(sum(mon_09),-9999) mon_09,
+        nvl(sum(mon_10),-9999) mon_10,
+        nvl(sum(mon_11),-9999) mon_11,
+        nvl(sum(mon_12),-9999) mon_12
+from
+(
+     select a.pjt_No,year, month,a.acctcd, year||month pjtDt, sum(amt) maxSum,
+     decode(month,'00',max(amt)) as mon_00,
+     decode(month,'01',max(amt)) as mon_01,
+     decode(month,'02',max(amt)) as mon_02,
+     decode(month,'03',max(amt)) as mon_03,
+     decode(month,'04',max(amt)) as mon_04,
+     decode(month,'05',max(amt)) as mon_05,
+     decode(month,'06',max(amt)) as mon_06,
+     decode(month,'07',max(amt)) as mon_07,
+     decode(month,'08',max(amt)) as mon_08,
+     decode(month,'09',max(amt)) as mon_09,
+     decode(month,'10',max(amt)) as mon_10,
+     decode(month,'11',max(amt)) as mon_11,
+     decode(month,'12',max(amt)) as mon_12
+     from pjtcostdetail a
+     where a.pjt_no= ?
+     and a.year= ?
+     and a.costtype= ?
+     group by a.pjt_no, year,month, a.acctcd
+) a,
+(
+select * from UsrAcctDefDetail where usrtype <> 'MISPJT'
+) b,
+(
+select max(year||month) maxYear, min(year||month) minYear
+from pjtcostdetail a
+where pjt_No = ?
+and costtype = ?
+AND month !='00'
+) c,
+(
+     select a.pjt_No, a.acctcd, sum(amt) totSum
+     from pjtcostdetail a
+     where a.pjt_no= ?
+     and a.costtype= ?
+     group by a.pjt_no, a.acctcd
+) d
+where a.acctcd = b.usracctcd(+)
+and a.pjt_no = d.pjt_no
+and a.acctcd = d.acctcd
+and length(a.acctcd)>=5
+group by a.pjt_no, a.acctcd, b.usracctname, year, d.totSum, maxYear, minYear
+	]]>
+	</sql-content>	
+	</sql-mapping>
+   <sql-mapping  id="S_031"   value-count="4"
+   url="원가계획실적 초기화" >  
+   <sql-content>
+   <![CDATA[
+	insert into pjtcostdetail
+	(
+		select 	? pjt_no, 
+				? costType, nvl(get_acctGd(usrAcctcd),usrAcctCd) AcctCd,
+			   	? year, 
+			   	? month, 0 amt, 
+			   	'' pjtCostDetailDesc
+			   	
+		from usrAcctDefDetail
+		where usrtype = 'devPjt'
+		and usrAcctCd not in '00000' 
+		--or usrAcctCd in '50301'
+	)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="S_032"   value-count="4"
+   url="원가계획실적 삭제" >  
+   <sql-content>
+   <![CDATA[
+	delete from pjtcostdetail
+	where pjt_No = ?
+	and costtype = ?
+	and year = ?
+	and month = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+	<sql-mapping  id="S_033"   value-count="8" url="프로젝트-계획실적조회" >  
+	<sql-content>	
+	<![CDATA[
+select a.pjt_no, a.acctcd,  minYear pjtStartDt, maxYear pjtEndDt, substr(c.maxYear,1,4) maxYear, substr(c.minYear,1,4) minYear,
+        decode(a.acctcd, '41011','용역','41021','물품','10001','투입MM',to_acctname(substr(a.acctcd,1,4)||0)) acctKName,
+        year, sum(maxSum) smSum,totSum, totSum-sum(maxSum) as resSum,
+		nvl(sum(mon_00),-9999) mon_00,
+        nvl(sum(mon_01),-9999) mon_01,
+        nvl(sum(mon_02),-9999) mon_02,
+        nvl(sum(mon_03),-9999) mon_03,
+        nvl(sum(mon_04),-9999) mon_04,
+        nvl(sum(mon_05),-9999) mon_05,
+        nvl(sum(mon_06),-9999) mon_06,
+        nvl(sum(mon_07),-9999) mon_07,
+        nvl(sum(mon_08),-9999) mon_08,
+        nvl(sum(mon_09),-9999) mon_09,
+        nvl(sum(mon_10),-9999) mon_10,
+        nvl(sum(mon_11),-9999) mon_11,
+        nvl(sum(mon_12),-9999) mon_12
+from
+(
+     select a.pjt_No,year, month,a.acctcd, year||month pjtDt, sum(amt) maxSum,
+     decode(month,'00',max(amt)) as mon_00,
+     decode(month,'01',max(amt)) as mon_01,
+     decode(month,'02',max(amt)) as mon_02,
+     decode(month,'03',max(amt)) as mon_03,
+     decode(month,'04',max(amt)) as mon_04,
+     decode(month,'05',max(amt)) as mon_05,
+     decode(month,'06',max(amt)) as mon_06,
+     decode(month,'07',max(amt)) as mon_07,
+     decode(month,'08',max(amt)) as mon_08,
+     decode(month,'09',max(amt)) as mon_09,
+     decode(month,'10',max(amt)) as mon_10,
+     decode(month,'11',max(amt)) as mon_11,
+     decode(month,'12',max(amt)) as mon_12
+     from pjtcostdetail a
+     where a.pjt_no= ?
+     and a.year= (select min(year) from pjtcostdetail where pjt_no = ? and costtype= ? )
+     and a.costtype= ?
+     group by a.pjt_no, year,month, a.acctcd
+) a,
+(
+select * from UsrAcctDefDetail where usrtype <> 'MISPJT'
+) b,
+(
+select max(year||month) maxYear, min(year||month) minYear
+from pjtcostdetail a
+where pjt_No = ?
+and costtype = ?
+AND month !='00'
+) c,
+(
+     select a.pjt_No, a.acctcd, sum(amt) totSum
+     from pjtcostdetail a
+     where a.pjt_no= ?
+     and a.costtype= ?
+     group by a.pjt_no, a.acctcd
+) d
+where a.acctcd = b.usracctcd(+)
+and a.pjt_no = d.pjt_no
+and a.acctcd = d.acctcd
+and length(a.acctcd)>=5
+group by a.pjt_no, a.acctcd, b.usracctname, year, d.totSum, maxYear, minYear
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	<sql-mapping  id="S_034"   value-count="5" url="프로젝트-환경" >  
+	<sql-content>	
+	<![CDATA[
+            SELECT
+	                 A.PJT_NO,
+	                 PJTCD,
+	                 PJTNAME,
+	                 PJTDIV,
+	                 PJTTYPE,
+	                 PJTSTATUS,
+	                 APPRSTATUS,
+	                 ORDERCORPCD,
+	                 PJTORG_NO,
+	                 PJTUPDATEDTM,
+	                 PJTDETAIL,
+	                 PJTSTARTDT,
+	                 PJTENDDT,
+	                 PMEMPID,
+					 (SELECT EMPKNAME FROM EMPALL WHERE EMPID=PMEMPID) PMEMPNAME,
+	                 CREMPID,
+	                 CREATEDTM,
+	                 CONTAMT,
+	                 CONTSTARTDT,
+	                 NVL((SELECT 'Y' FROM PJTCOSTDETAIL B
+                        WHERE  COSTTYPE LIKE 'T'
+						AND   AMT!=0
+						AND B.PJT_NO LIKE A.PJT_NO
+						AND ROWNUM=1),'N')  AS WRFLAG,
+	                 CONTENDDT,
+	                 PLANWORKMH,
+	                 ISTASK ,
+	                 NVL((SELECT MAX(CONF_NO)
+	                    FROM CONFER
+	                    WHERE REFCONF_NO LIKE C.SALECONFER_NO),A.PJT_NO)
+	                 AS SALECONF_NO
+		FROM PROJECT A ,		  
+		      SALEPJT C
+		WHERE PJTTYPE IN ('P','R','S','SV','T')
+		AND UPPER(PJTNAME) LIKE UPPER('%'||?||'%')
+		AND PJTDIV LIKE ?||'%'
+		AND PJTSTATUS LIKE ?||'%'
+		AND A.PJTCD LIKE '%'||?||'%'
+		AND TO_EMPKNAME(PMEMPID) LIKE ?||'%'
+		AND A.PJT_NO = C.PJT_NO(+)
+	]]>
+	</sql-content>	
+	</sql-mapping>
+   <sql-mapping  id="S_035"   value-count="3"
+   url="원가계획실적 초기화" >  
+   <sql-content>
+   <![CDATA[
+	insert into pjtcostdetail
+	(
+		select 	project_sn.currval pjt_no, 
+				? costType, nvl(get_acctGd(usrAcctcd),usrAcctCd) AcctCd,
+			   	? year, 
+			   	? month, 0 amt, 
+			   	'' pjtCostDetailDesc
+			   	
+		from usrAcctDefDetail
+		where usrtype = 'devPjt'
+		and usrAcctCd not in '00000' 
+		--or usrAcctCd in '50301'
+	)
+	]]>
+	</sql-content>
+   </sql-mapping>
+      <sql-mapping  id="S_036" value-count="2" url="DW 테이블에 원가변경값 반영" >  
+   <sql-content>
+   <![CDATA[
+	call GATHER_PJTCOSTDETAIL_1 (?,?)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="S_037" value-count="2" url="BusinessPJT 종료" >  
+   <sql-content>
+   <![CDATA[
+	UPDATE PROJECT
+	SET PJTSTATUS = ?
+	WHERE PJT_NO = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   	
+	<sql-mapping  id="S_038"   value-count="0" url="프로젝트-파일" >  
+	<sql-content>	
+	<![CDATA[
+			   select PJT_NO,PRCSCD,PJTFILES_NO,DOCTYPE,DIR,
+			   FILEORIGINNAME,FILESYSTEMNAME,
+			   DELFLAG,CREMPID,CREATEDTM,
+			   SUBSTR(FILESYSTEMNAME,1,34) PIID,SUBSTR(FILESYSTEMNAME,36,35) FIID
+			   FROM PJTFILES
+			   where pjt_no= rpjt_no:  order by  pjtFiles_no asc
+	]]>
+	</sql-content>	
+	</sql-mapping>
+	
+	<sql-mapping  id="S_039"   value-count="0" url="프로젝트조회-수행" >  
+	<sql-content>	
+	<![CDATA[
+		SELECT * 
+		FROM
+			(SELECT
+				PJTORG_NO AS ORG_NO,
+					(SELECT ORGCD
+					FROM ORG
+					WHERE ORG_NO=PJTORG_NO)
+				AS ORGCD,
+					(SELECT ORGNAME
+					FROM ORG
+					WHERE ORG_NO=PJTORG_NO)
+				AS ORGNAME,
+				PJTCD,
+				PJTNAME,
+					(SELECT BIZACQACCTCD
+					FROM BIZACQCORP
+					WHERE BIZACQCD = ORDERCORPCD)
+				AS BIZCD,
+					(SELECT BIZACQNAME
+					FROM BIZACQCORP
+					WHERE BIZACQCD = ORDERCORPCD)
+				AS BIZNAME,
+				CONTAMT,
+				CONTSTARTDT,
+				CONTENDDT,
+				PMEMPID,
+				PMEMPID AS PM_EMPID,
+					(SELECT EMPKNAME
+					FROM EMPALL
+					WHERE EMPID=PMEMPID)
+				AS PM_EMPKNAME,
+				    (SELECT B.CODENAME
+				    FROM COMCODE A,
+				          COMCODE B
+				    WHERE A.CODE_NO=B.HIGHCODE
+				    AND   A.CODE = 'PJT_STATUS'
+				    AND   B.CODE=pjtstatus) 
+				AS STATUS_NM,
+					(SELECT B.CODE
+				    FROM COMCODE A,
+				          COMCODE B
+				    WHERE A.CODE_NO=B.HIGHCODE
+				    AND   A.CODE = 'PJT_STATUS'
+				    AND   B.CODE=pjtstatus) 
+				AS STATUS				
+			FROM PROJECT  A
+			WHERE PJTTYPE IN ('P','R','S','SV','T')
+			AND PJTNAME LIKE '%'||[S_PJTNAME]||'%'
+			AND PJTDIV LIKE [S_DIV]||'%'
+			AND PJTTYPE LIKE [S_TYPE]||'%'
+			AND PJTSTATUS LIKE [S_STATUS]||'%'
+			AND A.PJTCD LIKE '%'||[S_PJTCD]||'%'
+			)
+		WHERE PM_EMPKNAME LIKE [S_PM_NAME]||'%'
+		ORDER BY PJTCD DESC
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql>
+

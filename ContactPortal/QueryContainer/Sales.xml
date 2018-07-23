@@ -1,0 +1,1528 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="S_001"   value-count="0" url="등록가능한 제품번호 검색" >  
+	<sql-content>
+	<![CDATA[
+		select /*+INDEX_DESC(PROD XPKPROD)*/ prodno from prod where prodtype='P' and rownum=1
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="S_002"   value-count="2" url="수주제품 검색" >  
+	<sql-content>
+	<![CDATA[
+		select 
+		 a.prodNo,a.prodType,prodName,salesEmpId,to_empkname(salesEmpId) salesEmpName,salesOrgCd,
+		 to_orgcdname(salesOrgCd) salesOrgName,curPrcs,
+		 bizNo,to_bizname(bizno) bizName,isOutBiz,excuteCapa,recvOrderView,excuteType,workMh,
+		 workCost,salesPlanType,salesProdType,confirmStatus,rslt,contStartDt,contEndDt,
+		 successFactor,failFactor,cancelFactor,stdPrcsType,pq,tp,
+		 mainClientCd,to_bizacqName(mainClientCd) mainClientName,
+		 successCorpCd,to_bizacqName(successCorpCd) successCorpName,
+		 to_char(createDtm,'yyyy-mm-dd hh24:mi:ss') as createDtm,curConfirmDtm,rsltDt,expProdStartDt,expProdEndDt,
+		 proposalStartDt,proposalEndDt,salesDesc,strategy,issue,psMemo,ctMemo,frMemo,
+		 expContAmt,
+		 inservAmt,outservAmt,goodsAmt,quotaPercent,techWeight,priceWeight,proposeAmt,
+		 proposePercent,proposalCost,expDirectCost,techScore,techRank,priceScore,priceRank,totScore,
+		 successScore,contAmt,        
+		 salesStartDt,rfpPostDt,proPoseDt,bidDt,expAnnounceDt,rfpExplanDt,expContDt,
+		 nvl(planAmt,0) planAmt,nvl(actionAmt,0) actionAmt
+		from 
+		sales a,
+		salesreldateview b,
+		salesrelnumview c,
+		detailSalesSumView d 
+		where a.prodtype=?
+		and a.prodno=?
+		and a.prodtype=b.prodtype(+)
+		and a.prodno=b.prodno(+)
+		and a.prodtype=c.prodtype(+)
+		and a.prodno=c.prodno(+)
+		and a.prodtype=d.prodtype(+)
+		and a.prodno=d.prodno(+)
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_003"   value-count="2" url="파일정보 조회" >  
+	<sql-content>
+	<![CDATA[
+		select * from salesFiles 
+		where prodType=?
+		and prodNo=?		 
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_004"   value-count="3" url="관련업체 조회" >  
+	<sql-content>
+	<![CDATA[
+		select * from salesRelCorp 
+		where prodType=?
+		and prodno=?
+		and corpType=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_005"   value-count="2" url="제안요원 조회" >  
+	<sql-content>
+	<![CDATA[	
+		select a.*,to_empkname(a.empid) empName from salesRelMan a
+		where prodType=?
+		and prodno=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_006"   value-count="4" url="수정 조건1" >  
+	<sql-content>
+	<![CDATA[	
+		where prodType=?
+		and prodno=?
+		and ?=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_007"   value-count="2" url="수정 조건2" >  
+	<sql-content>
+	<![CDATA[	
+		where prodType=?
+		and prodno=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_008"   value-count="3" url="삭제 조건1" >  
+	<sql-content>
+	<![CDATA[	
+	    delete from ?
+		where prodType=?
+		and prodno=?
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="S_009"   value-count="3" url="월별영업정보조회" >  
+	<sql-content>
+	<![CDATA[	
+	    select * from detailSales
+		where prodType=?
+		and prodno=?
+		and detailSalesType=?
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_010"   value-count="2" url="로그정보조회" >  
+	<sql-content>
+	<![CDATA[	
+		select to_char(a.upddtm,'yyyy-mm-dd hh24:mi:ss') upddtm, a.updempid ,to_empkname(a.updempid) updempName ,to_dtok(a.colename) COLKNAME,a.colename, a.before, a.after 
+		from salesupdlog a 
+		where prodType=?
+		and   prodNo=?		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_011"   value-count="0" url="계정별보조장 조회" >  
+	<sql-content>
+	<![CDATA[	
+		SELECT
+				SEQ,
+				GJCD,
+				GJCDNAME,
+				DECODE(JYO,'[누계]','','[월계]','','[전기이월]','',HGIL) AS HGIL,
+				JPNO,
+				BSCD,
+				CUSTNAME,
+				JYO,
+				nvl(CAMT,0) as CAMT,
+				nvl(DAMT,0) as DAMT,
+				DECODE(JYO,'[누계]',CAMT-DAMT,'[월계]','',SUBSUM_AMT) AS SUBSUM_AMT,
+				CRNAME
+		
+		FROM
+		(SELECT
+		      SEQ,
+		      GJCD,
+		      GJCDNAME,
+		      HGIL,
+		      JPNO,
+		      BSCD,
+		      CUSTNAME,
+		      JYO,
+		      CAMT,
+		      DAMT,
+		    0 AS SUBSUM_AMT,
+		      CRNAME
+		FROM
+		(        SELECT  ROWNUM SEQ,
+				 GJCD,
+				 GJCDNAME,
+				 HGIL,
+				 JPNO,
+				 BSCD,
+				 CUSTNAME,
+				 JYO,
+				 CDGB,
+				 CAMT,
+				 DAMT,
+				 CRNAME
+		FROM
+		(
+		SELECT  AA12_GJCD AS GJCD,
+				AA12_GJCD||' : '|| ( select tbaz01.AZ01_GJNM
+									 from tbaz01
+									 where az01_gjcd =AA12_GJCD) AS GJCDNAME,
+				AA12_HGIL AS HGIL,
+				AA12_JPNO AS JPNO,
+				AA12_BSCD ||'  '||  (SELECT BG01_BSNM FROM bbdbo.TBBG01
+									WHERE BG01_BSCD=AA12_BSCD) AS BSCD,
+				AA12_CUST_CD||'  '|| AA12_CUST_NM AS CUSTNAME,
+				AA12_JYO AS  JYO,
+				AA12_CDGB AS CDGB,
+				DECODE(AA12_CDGB,'C', AA12_AMT) AS CAMT,
+				DECODE(AA12_CDGB,'D', AA12_AMT) AS DAMT,
+		 	    BA01_SM_KOR   AS  CRNAME
+		FROM TBAA12@TO_INHAUH,
+			 TBAA11@TO_INHAUH,
+			 TBAZ01@TO_INHAUH,
+			 BBDBO.TBBA01
+		WHERE AA11_HGIL BETWEEN REPLACE(FR_YYMM:,'-','') AND  REPLACE(TO_YYMM:,'-','')
+		AND  AZ01_GJCD = AA12_GJCD
+		AND  AZ01_INYN = 'Y'
+		AND   AA12_GJCD BETWEEN FRACCT: AND TOACCT:
+		AND AA12_JPNO = AA11_JPNO
+		AND AA11_STAT = 'H'
+		AND AA11_JSBN = BA01_SBN(+)
+		
+		UNION ALL
+		
+		SELECT
+				AA03_GJCD 	AS GJCD,
+				'' 			AS GJCDNAME,
+				AA03_HGYM 	AS HGIL,
+				'' 			AS JPNO,
+				'' 			AS BSCD,
+				'' 			AS CUSTNAME,
+				'[전기이월]' 	AS JYO,
+				''          AS CDGB,
+				NVL(AA03_CAMT,0) CAMT,
+				NVL(AA03_DAMT,0) DAMT,
+				''
+		FROM ACCTN.TBAA03
+		WHERE AA03_HGYM = SUBSTR(FR_YYMM:,1,4)||'00'
+		AND   AA03_GJCD BETWEEN FRACCT: AND TOACCT:
+		ORDER BY GJCD,HGIL
+		)
+		) E
+		
+		UNION ALL
+		
+		(SELECT
+			  0 AS SEQ,
+		      AA12_GJCD AS GJCD,
+		      '' AS GJCDNAME,
+		      SUBSTR(AA12_HGIL,1,6)||'98' AS HGIL,
+		      '' AS JPNO,
+		      '' AS BSCD,
+		      '' AS CUSTNAME,
+		      '[월계]' AS JYO,
+		      SUM(CAMT) CAMT,
+		      SUM(DAMT)DAMT,
+		      0 AS SUBSUM,
+		      '' AS CRNAME
+		FROM (SELECT A.*,
+			   DECODE(AA12_CDGB,'C', AA12_AMT) AS CAMT,
+			   DECODE(AA12_CDGB,'D', AA12_AMT) AS DAMT
+			 FROM TBAA12@TO_INHAUH A) B ,
+			 TBAA11@TO_INHAUH,
+			 TBAZ01@TO_INHAUH,
+			 BBDBO.TBBA01
+		WHERE AA11_HGIL BETWEEN REPLACE(FR_YYMM:,'-','') AND  REPLACE(TO_YYMM:,'-','')
+		AND  AZ01_GJCD = B.AA12_GJCD
+		AND  AZ01_INYN = 'Y'
+		AND   B.AA12_GJCD BETWEEN FRACCT: AND TOACCT:
+		AND B.AA12_JPNO = AA11_JPNO
+		AND AA11_STAT = 'H'
+		AND AA11_JSBN = BA01_SBN(+)
+		GROUP BY SUBSTR(B.AA12_HGIL,1,6),B.AA12_GJCD
+		)
+		 UNION ALL
+		(SELECT  DISTINCT
+			    0 AS SEQ,
+		   		AA12_GJCD AS GJCD,
+		   		'' AS GJCDNAME,
+				SUBSTR(AA12_HGIL,1,6)||'99' AS HGIL,
+				'' AS JPNO,
+				'' AS BSCD,
+				'' AS CUSTNAME,
+				'[누계]' AS JYO,
+		 	    (SELECT SUM(AA03_CAMT)
+				 FROM ACCTN.TBAA03
+				 WHERE  AA03_GJCD=AA12_GJCD
+				 AND    AA03_HGYM BETWEEN SUBSTR(FR_YYMM:,1,4)||'00' AND AA12_HGIL
+				 ) AS CAMT,
+				 (SELECT SUM(AA03_DAMT)
+				 FROM ACCTN.TBAA03
+				 WHERE  AA03_GJCD=AA12_GJCD
+				 AND    AA03_HGYM BETWEEN SUBSTR(FR_YYMM:,1,4)||'00' AND AA12_HGIL
+				 ) AS DAMT,
+				 0 AS SUBSUM_AMT,
+		 	    '' CRNAME
+		FROM (SELECT A.*,
+			   DECODE(AA12_CDGB,'C', AA12_AMT) AS CAMT,
+			   DECODE(AA12_CDGB,'D', AA12_AMT) AS DAMT
+			 FROM TBAA12@TO_INHAUH A) B ,
+			 TBAA11@TO_INHAUH,
+			 TBAZ01@TO_INHAUH,
+			 BBDBO.TBBA01
+		WHERE AA11_HGIL BETWEEN REPLACE(FR_YYMM:,'-','') AND  REPLACE(TO_YYMM:,'-','')
+		AND  AZ01_GJCD = B.AA12_GJCD
+		AND  AZ01_INYN = 'Y'
+		AND   B.AA12_GJCD BETWEEN FRACCT: AND TOACCT:
+		AND B.AA12_JPNO = AA11_JPNO
+		AND AA11_STAT = 'H'
+		AND AA11_JSBN = BA01_SBN(+)
+		GROUP BY B.AA12_HGIL,B.AA12_GJCD
+		)
+		ORDER BY 2,4,1  )
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="S_012"   value-count="0" url="계정별보조장 조회_월계/누계 제외" >  
+	<sql-content>
+	<![CDATA[	
+		SELECT
+				SEQ,
+				GJCD,
+				GJCDNAME,
+				DECODE(JYO,'[누계]','','[월계]','','[전기이월]','',HGIL) AS HGIL,
+				JPNO,
+				BSCD,
+				CUSTNAME,
+				JYO,
+				nvl(CAMT,0) as CAMT,
+				nvl(DAMT,0) as DAMT,
+				DECODE(JYO,'[누계]',CAMT-DAMT,'[월계]','',SUBSUM_AMT) AS SUBSUM_AMT,
+				CRNAME
+		
+		FROM
+		(SELECT
+		      SEQ,
+		      GJCD,
+		      GJCDNAME,
+		      HGIL,
+		      JPNO,
+		      BSCD,
+		      CUSTNAME,
+		      JYO,
+		      CAMT,
+		      DAMT,
+		    0 AS SUBSUM_AMT,
+		      CRNAME
+		FROM
+		(        SELECT  ROWNUM SEQ,
+				 GJCD,
+				 GJCDNAME,
+				 HGIL,
+				 JPNO,
+				 BSCD,
+				 CUSTNAME,
+				 JYO,
+				 CDGB,
+				 CAMT,
+				 DAMT,
+				 CRNAME
+		FROM
+		(
+		SELECT  AA12_GJCD AS GJCD,
+				AA12_GJCD||' : '|| ( select tbaz01.AZ01_GJNM
+									 from tbaz01
+									 where az01_gjcd =AA12_GJCD) AS GJCDNAME,
+				AA12_HGIL AS HGIL,
+				AA12_JPNO AS JPNO,
+				AA12_BSCD ||'  '||  (SELECT BG01_BSNM FROM bbdbo.TBBG01
+									WHERE BG01_BSCD=AA12_BSCD) AS BSCD,
+				AA12_CUST_CD||'  '|| AA12_CUST_NM AS CUSTNAME,
+				AA12_JYO AS  JYO,
+				AA12_CDGB AS CDGB,
+				DECODE(AA12_CDGB,'C', AA12_AMT) AS CAMT,
+				DECODE(AA12_CDGB,'D', AA12_AMT) AS DAMT,
+		 	    BA01_SM_KOR   AS  CRNAME
+		FROM TBAA12@TO_INHAUH,
+			 TBAA11@TO_INHAUH,
+			 TBAZ01@TO_INHAUH,
+			 BBDBO.TBBA01
+		WHERE AA11_HGIL BETWEEN REPLACE(FR_YYMM:,'-','') AND  REPLACE(TO_YYMM:,'-','')
+		AND  AZ01_GJCD = AA12_GJCD
+		AND  AZ01_INYN = 'Y'
+		AND   AA12_GJCD BETWEEN FRACCT: AND TOACCT:
+		AND AA12_JPNO = AA11_JPNO
+		AND AA11_STAT = 'H'
+		AND AA11_JSBN = BA01_SBN(+)
+		
+		UNION ALL
+		
+		SELECT
+				AA03_GJCD 	AS GJCD,
+                AA03_GJCD||' : '|| ( select tbaz01.AZ01_GJNM
+	                                 from tbaz01
+	                                 where az01_gjcd =AA03_GJCD) AS GJCDNAME,
+				AA03_HGYM 	AS HGIL,
+				'' 			AS JPNO,
+				'' 			AS BSCD,
+				'' 			AS CUSTNAME,
+				'[전기이월]' 	AS JYO,
+				''          AS CDGB,
+				NVL(AA03_CAMT,0) CAMT,
+				NVL(AA03_DAMT,0) DAMT,
+				''
+		FROM ACCTN.TBAA03
+		WHERE AA03_HGYM = SUBSTR(FR_YYMM:,1,4)||'00'
+		AND   AA03_GJCD BETWEEN FRACCT: AND TOACCT:
+		ORDER BY GJCD,HGIL
+		)
+		) E
+		
+		ORDER BY 2,4,1  )
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+		
+	<sql-mapping  id="salesPersonalBasicPlanInq"   value-count="1" url="영업정보 기본조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT A.PRODTYPE
+			   ,A.PRODNO
+			   ,A.PRODNAME
+			   ,A.SALESEMPID
+			   ,A.SALESPRODTYPE
+			   ,A.BIZNO
+			   ,TO_BIZNAME(A.BIZNO) BIZNAME
+			   ,TO_EMPKNAME(A.SALESEMPID) SALESEMPNAME
+			   ,A.SALESORGCD
+			   ,TO_ORGCDNAME(A.SALESORGCD) SALESORGNAME
+			   ,A.MAINCLIENTCD
+			   ,TO_BIZACQNAME(A.MAINCLIENTCD) MAINCLIENTNAME 
+			   ,A.RECVORDERVIEW
+			   ,A.CURPRCS
+			   ,A.CONFIRMSTATUS
+			   ,A.EXPCONTAMT
+			   ,B.APRVEMPID
+			   ,TO_EMPKNAME(B.APRVEMPID) APRVEMPNAME
+			   ,SUM(A.EXPCONTAMT)OVER() EXPCONTAMT_SUM
+		FROM SALES A, EMPALL B
+		WHERE A.RSLTDT = '99991231'		--현재진행중인 영업건
+		AND   A.SALESEMPID = ?
+		AND   A.SALESEMPID = B.EMPID
+		GROUP BY A.PRODTYPE
+			   ,A.PRODNO
+			   ,A.PRODNAME
+			   ,A.SALESEMPID
+			   ,A.SALESPRODTYPE
+			   ,A.SALESORGCD
+			   ,A.MAINCLIENTCD
+			   ,A.RECVORDERVIEW
+			   ,A.CURPRCS
+			   ,A.BIZNO
+			   ,A.CONFIRMSTATUS
+			   ,B.APRVEMPID
+			   ,A.EXPCONTAMT
+		ORDER BY A.BIZNO,A.PRODTYPE,A.PRODNO
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="salesGroupBasicPlanInq"   value-count="1" url="영업정보 기본조회" >  
+	<sql-content>
+	<![CDATA[
+		SELECT A.PRODTYPE
+			   ,A.PRODNO
+			   ,A.PRODNAME
+			   ,A.SALESEMPID
+			   ,A.SALESPRODTYPE
+			   ,A.BIZNO			   
+			   ,TO_BIZNAME(A.BIZNO) BIZNAME
+			   ,TO_EMPKNAME(A.SALESEMPID) SALESEMPNAME
+			   ,A.SALESORGCD
+			   ,TO_ORGCDNAME(A.SALESORGCD) SALESORGNAME
+			   ,A.MAINCLIENTCD
+			   ,TO_BIZACQNAME(A.MAINCLIENTCD) MAINCLIENTNAME 
+			   ,A.RECVORDERVIEW
+			   ,A.CURPRCS
+			   ,A.CONFIRMSTATUS
+			   ,A.EXPCONTAMT
+			   ,B.APRVEMPID
+			   ,TO_EMPKNAME(B.APRVEMPID) APRVEMPNAME
+			   ,SUM(A.EXPCONTAMT)OVER() EXPCONTAMT_SUM
+		FROM SALES A, EMPALL B
+		WHERE A.RSLTDT = '99991231'		--현재진행중인 영업건
+		AND   A.SALESEMPID IN (
+			  SELECT A.EMPID
+			  FROM EMPALL A
+			  WHERE A.WENDDT = '99991231'		--현재 근무중인 직원
+			  CONNECT BY A.APRVEMPID = PRIOR A.EMPID
+			  START WITH A.EMPID = ? --'09301353'	  
+		)
+		AND   A.SALESEMPID = B.EMPID
+		GROUP BY A.PRODTYPE
+			   ,A.PRODNO
+			   ,A.PRODNAME
+			   ,A.SALESEMPID
+			   ,A.SALESPRODTYPE
+			   ,A.SALESORGCD
+			   ,A.MAINCLIENTCD
+			   ,A.RECVORDERVIEW
+			   ,A.CURPRCS
+			   ,A.BIZNO
+			   ,A.CONFIRMSTATUS
+			   ,B.APRVEMPID
+			   ,A.EXPCONTAMT
+		ORDER BY A.BIZNO,A.PRODTYPE,A.PRODNO
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="salesPersonalYearPlanInq"   value-count="4" url="개별영엽현황" >  
+	<sql-content>
+	<![CDATA[
+	-- 연간사업계획조회쿼리
+	SELECT A.SALESPLANTYPE,
+	       A.RSLT,
+	       A.AMT_01,
+	       A.AMT_02,
+	       A.AMT_03,
+	       A.AMT_04,
+	       A.AMT_05,
+	       A.AMT_06,
+	       A.AMT_07,
+	       A.AMT_08,
+	       A.AMT_09,
+	       A.AMT_10,
+	       A.AMT_11,
+	       A.AMT_12
+	FROM ( 
+	       SELECT A.SALESPLANTYPE,
+	              DECODE(A.RSLT,'','SUMAMT',A.RSLT) RSLT,
+	              SUM(A.AMT_01) AMT_01,
+	              SUM(A.AMT_02) AMT_02,
+	              SUM(A.AMT_03) AMT_03,
+	              SUM(A.AMT_04) AMT_04,
+	              SUM(A.AMT_05) AMT_05,
+	              SUM(A.AMT_06) AMT_06,
+	              SUM(A.AMT_07) AMT_07,
+	              SUM(A.AMT_08) AMT_08,
+	              SUM(A.AMT_09) AMT_09,
+	              SUM(A.AMT_10) AMT_10,
+	              SUM(A.AMT_11) AMT_11,
+	              SUM(A.AMT_12) AMT_12
+	       FROM (
+	              SELECT A.SALESPLANTYPE,
+	                     DECODE(A.RSLT,'','WORKING',A.RSLT) RSLT,
+	                     SUM(A.AMT_01) AMT_01,
+	                     SUM(A.AMT_02) AMT_02,
+	                     SUM(A.AMT_03) AMT_03,
+	                     SUM(A.AMT_04) AMT_04,
+	                     SUM(A.AMT_05) AMT_05,
+	                     SUM(A.AMT_06) AMT_06,
+	                     SUM(A.AMT_07) AMT_07,
+	                     SUM(A.AMT_08) AMT_08,
+	                     SUM(A.AMT_09) AMT_09,
+	                     SUM(A.AMT_10) AMT_10,
+	                     SUM(A.AMT_11) AMT_11,
+	                     SUM(A.AMT_12) AMT_12
+	              FROM (			   
+	              	   SELECT A.PRODTYPE,
+	                            A.PRODNO,
+	                            A.PRODNAME,
+	                            A.SALESPLANTYPE,
+	                            A.RSLT,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'01',A.EXPCONTAMT,0),0)) AMT_01,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'02',A.EXPCONTAMT,0),0)) AMT_02,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'03',A.EXPCONTAMT,0),0)) AMT_03,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'04',A.EXPCONTAMT,0),0)) AMT_04,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'05',A.EXPCONTAMT,0),0)) AMT_05,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'06',A.EXPCONTAMT,0),0)) AMT_06,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'07',A.EXPCONTAMT,0),0)) AMT_07,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'08',A.EXPCONTAMT,0),0)) AMT_08,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'09',A.EXPCONTAMT,0),0)) AMT_09,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'10',A.EXPCONTAMT,0),0)) AMT_10,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'11',A.EXPCONTAMT,0),0)) AMT_11,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'12',A.EXPCONTAMT,0),0)) AMT_12
+	                     FROM (	   
+	                            SELECT A.PRODTYPE,
+	                                   A.PRODNO,
+	                                   A.PRODNAME,
+	                                   A.SALESPLANTYPE,
+	                                   DECODE(A.RSLT,'SUCCESS',A.RSLT,'') RSLT,
+	                                   A.EXPCONTAMT,
+	                                   SUBSTR(B.SALESRELDATEDT,5,2) MONTH
+	                            FROM SALES A, SALESRELDATE B
+	                            WHERE B.DATETYPE = 'CONTDT'
+	                            AND   A.PRODTYPE = B.PRODTYPE
+	                            AND   A.PRODNO = B.PRODNO
+	                            AND   A.SALESPRODTYPE = 'PJT'
+	                            AND   B.SALESRELDATEDT LIKE ?||'%'
+	                            AND   A.SALESEMPID = ?			  
+	                     ) A,(
+	                            SELECT SUBSTR(YYYYMM,5,2) MONTH
+	                            FROM MONTHS
+	                            WHERE YYYYMM LIKE '2003%'
+	                     ) B
+	                     GROUP BY A.PRODTYPE,
+	                              A.PRODNO,
+	                              A.PRODNAME,
+	                              A.SALESPLANTYPE,
+	                              A.RSLT		
+	                     ORDER BY SALESPLANTYPE DESC
+	              ) A
+	              GROUP BY A.SALESPLANTYPE,A.RSLT
+	              UNION ALL
+	              SELECT A.SALESPLANTYPE,
+	                     DECODE(A.DETAILSALESTYPE,'ACTION','SUCCESS','WORKING') RSLT,
+	                     SUM(DECODE(A.MONTH,'01',A.AMT,0)) AMT_01,
+	                     SUM(DECODE(A.MONTH,'02',A.AMT,0)) AMT_02,
+	                     SUM(DECODE(A.MONTH,'03',A.AMT,0)) AMT_03,
+	                     SUM(DECODE(A.MONTH,'04',A.AMT,0)) AMT_04,
+	                     SUM(DECODE(A.MONTH,'05',A.AMT,0)) AMT_05,
+	                     SUM(DECODE(A.MONTH,'06',A.AMT,0)) AMT_06,
+	                     SUM(DECODE(A.MONTH,'07',A.AMT,0)) AMT_07,
+	                     SUM(DECODE(A.MONTH,'08',A.AMT,0)) AMT_08,
+	                     SUM(DECODE(A.MONTH,'09',A.AMT,0)) AMT_09,
+	                     SUM(DECODE(A.MONTH,'10',A.AMT,0)) AMT_10,
+	                     SUM(DECODE(A.MONTH,'11',A.AMT,0)) AMT_11,
+	                     SUM(DECODE(A.MONTH,'12',A.AMT,0)) AMT_12
+	              FROM (					  
+	                     SELECT A.PRODTYPE,
+	                            A.PRODNO,
+	                            A.SALESPLANTYPE,
+	                            SUM(B.AMT) AMT,
+	                            B.DETAILSALESTYPE,
+	                            SUBSTR(B.DETAILSALESDT,5,2) MONTH
+	                     FROM SALES A, DETAILSALES B
+	                     WHERE A.PRODTYPE = B.PRODTYPE
+	                     AND   A.PRODNO = B.PRODNO
+	                     AND   B.DETAILSALESDT LIKE ?||'%'
+	                     AND   A.SALESEMPID = ?
+	                     GROUP BY A.PRODTYPE,
+	                              A.PRODNO,
+	                              A.SALESPLANTYPE,
+	                              B.DETAILSALESTYPE,
+	                              SUBSTR(B.DETAILSALESDT,5,2)	
+	              ) A
+	              GROUP BY A.SALESPLANTYPE,
+	                       A.DETAILSALESTYPE							
+	              UNION ALL	   
+	              --값이 없는 경우 DEFAULT 0 값처리를 위한 처리
+	              SELECT 'PLAN' SALESPLANTYPE, 'WORKING' RSLT, 0 AMT_01, 0 AMT_02, 0 AMT_03, 0 AMT_04, 0 AMT_05, 0 AMT_06, 0 AMT_07, 0 AMT_08, 0 AMT_09, 0 AMT_10, 0 AMT_11, 0 AMT_12 FROM DUAL
+	              UNION ALL
+	              SELECT 'PLAN' SALESPLANTYPE, 'SUCCESS' RSLT, 0 AMT_01, 0 AMT_02, 0 AMT_03, 0 AMT_04, 0 AMT_05, 0 AMT_06, 0 AMT_07, 0 AMT_08, 0 AMT_09, 0 AMT_10, 0 AMT_11, 0 AMT_12 FROM DUAL
+	              UNION ALL
+	              SELECT 'NONPLAN' SALESPLANTYPE, 'WORKING' RSLT, 0 AMT_01, 0 AMT_02, 0 AMT_03, 0 AMT_04, 0 AMT_05, 0 AMT_06, 0 AMT_07, 0 AMT_08, 0 AMT_09, 0 AMT_10, 0 AMT_11, 0 AMT_12 FROM DUAL
+	              UNION ALL
+	              SELECT 'NONPLAN' SALESPLANTYPE, 'SUCCESS' RSLT, 0 AMT_01, 0 AMT_02, 0 AMT_03, 0 AMT_04, 0 AMT_05, 0 AMT_06, 0 AMT_07, 0 AMT_08, 0 AMT_09, 0 AMT_10, 0 AMT_11, 0 AMT_12 FROM DUAL	   
+	       ) A
+	       GROUP BY A.SALESPLANTYPE,
+	       	     ROLLUP(A.RSLT) 		 
+	       --		 ,ROLLUP(A.SALESPLANTYPE) 	
+	       ORDER BY A.SALESPLANTYPE DESC,
+	                A.RSLT DESC
+	) A
+	WHERE A.RSLT IN ('SUCCESS','SUMAMT')
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="salesGroupYearPlanInq"   value-count="4" url="그룹영엽현황" >  
+	<sql-content>
+	<![CDATA[
+-- 연간사업계획조회쿼리
+	SELECT A.SALESPLANTYPE,
+	       A.RSLT,
+	       A.AMT_01,
+	       A.AMT_02,
+	       A.AMT_03,
+	       A.AMT_04,
+	       A.AMT_05,
+	       A.AMT_06,
+	       A.AMT_07,
+	       A.AMT_08,
+	       A.AMT_09,
+	       A.AMT_10,
+	       A.AMT_11,
+	       A.AMT_12
+	FROM ( 
+	       SELECT A.SALESPLANTYPE,
+	              DECODE(A.RSLT,'','SUMAMT',A.RSLT) RSLT,
+	              SUM(A.AMT_01) AMT_01,
+	              SUM(A.AMT_02) AMT_02,
+	              SUM(A.AMT_03) AMT_03,
+	              SUM(A.AMT_04) AMT_04,
+	              SUM(A.AMT_05) AMT_05,
+	              SUM(A.AMT_06) AMT_06,
+	              SUM(A.AMT_07) AMT_07,
+	              SUM(A.AMT_08) AMT_08,
+	              SUM(A.AMT_09) AMT_09,
+	              SUM(A.AMT_10) AMT_10,
+	              SUM(A.AMT_11) AMT_11,
+	              SUM(A.AMT_12) AMT_12
+	       FROM (
+	              SELECT A.SALESPLANTYPE,
+	                     DECODE(A.RSLT,'','WORKING',A.RSLT) RSLT,
+	                     SUM(A.AMT_01) AMT_01,
+	                     SUM(A.AMT_02) AMT_02,
+	                     SUM(A.AMT_03) AMT_03,
+	                     SUM(A.AMT_04) AMT_04,
+	                     SUM(A.AMT_05) AMT_05,
+	                     SUM(A.AMT_06) AMT_06,
+	                     SUM(A.AMT_07) AMT_07,
+	                     SUM(A.AMT_08) AMT_08,
+	                     SUM(A.AMT_09) AMT_09,
+	                     SUM(A.AMT_10) AMT_10,
+	                     SUM(A.AMT_11) AMT_11,
+	                     SUM(A.AMT_12) AMT_12
+	              FROM (			   
+	              	   SELECT A.PRODTYPE,
+	                            A.PRODNO,
+	                            A.PRODNAME,
+	                            A.SALESPLANTYPE,
+	                            A.RSLT,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'01',A.EXPCONTAMT,0),0)) AMT_01,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'02',A.EXPCONTAMT,0),0)) AMT_02,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'03',A.EXPCONTAMT,0),0)) AMT_03,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'04',A.EXPCONTAMT,0),0)) AMT_04,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'05',A.EXPCONTAMT,0),0)) AMT_05,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'06',A.EXPCONTAMT,0),0)) AMT_06,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'07',A.EXPCONTAMT,0),0)) AMT_07,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'08',A.EXPCONTAMT,0),0)) AMT_08,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'09',A.EXPCONTAMT,0),0)) AMT_09,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'10',A.EXPCONTAMT,0),0)) AMT_10,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'11',A.EXPCONTAMT,0),0)) AMT_11,
+	                            SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'12',A.EXPCONTAMT,0),0)) AMT_12
+	                     FROM (	   
+	                            SELECT A.PRODTYPE,
+	                                   A.PRODNO,
+	                                   A.PRODNAME,
+	                                   A.SALESPLANTYPE,
+	                                   DECODE(A.RSLT,'SUCCESS',A.RSLT,'') RSLT,
+	                                   A.EXPCONTAMT,
+	                                   SUBSTR(B.SALESRELDATEDT,5,2) MONTH
+	                            FROM SALES A, SALESRELDATE B
+	                            WHERE B.DATETYPE = 'CONTDT'
+	                            AND   A.PRODTYPE = B.PRODTYPE
+	                            AND   A.PRODNO = B.PRODNO
+	                            AND   A.SALESPRODTYPE = 'PJT'
+	                            AND   B.SALESRELDATEDT LIKE ?||'%'
+	                            AND   A.SALESEMPID IN (
+	                                                   SELECT A.EMPID
+	                                                   FROM EMPALL A
+	                                                   WHERE A.WENDDT = '99991231'
+	                                                   CONNECT BY A.APRVEMPID = PRIOR A.EMPID
+	                                                   START WITH A.EMPID = ?
+	                            )			  
+	                     ) A,(
+	                            SELECT SUBSTR(YYYYMM,5,2) MONTH
+	                            FROM MONTHS
+	                            WHERE YYYYMM LIKE '2003%'
+	                     ) B
+	                     GROUP BY A.PRODTYPE,
+	                              A.PRODNO,
+	                              A.PRODNAME,
+	                              A.SALESPLANTYPE,
+	                              A.RSLT		
+	                     ORDER BY SALESPLANTYPE DESC
+	              ) A
+	              GROUP BY A.SALESPLANTYPE,A.RSLT
+	              UNION ALL
+	              SELECT A.SALESPLANTYPE,
+	                     DECODE(A.DETAILSALESTYPE,'ACTION','SUCCESS','WORKING') RSLT,
+	                     SUM(DECODE(A.MONTH,'01',A.AMT,0)) AMT_01,
+	                     SUM(DECODE(A.MONTH,'02',A.AMT,0)) AMT_02,
+	                     SUM(DECODE(A.MONTH,'03',A.AMT,0)) AMT_03,
+	                     SUM(DECODE(A.MONTH,'04',A.AMT,0)) AMT_04,
+	                     SUM(DECODE(A.MONTH,'05',A.AMT,0)) AMT_05,
+	                     SUM(DECODE(A.MONTH,'06',A.AMT,0)) AMT_06,
+	                     SUM(DECODE(A.MONTH,'07',A.AMT,0)) AMT_07,
+	                     SUM(DECODE(A.MONTH,'08',A.AMT,0)) AMT_08,
+	                     SUM(DECODE(A.MONTH,'09',A.AMT,0)) AMT_09,
+	                     SUM(DECODE(A.MONTH,'10',A.AMT,0)) AMT_10,
+	                     SUM(DECODE(A.MONTH,'11',A.AMT,0)) AMT_11,
+	                     SUM(DECODE(A.MONTH,'12',A.AMT,0)) AMT_12
+	              FROM (					  
+	                     SELECT A.PRODTYPE,
+	                            A.PRODNO,
+	                            A.SALESPLANTYPE,
+	                            SUM(B.AMT) AMT,
+	                            B.DETAILSALESTYPE,
+	                            SUBSTR(B.DETAILSALESDT,5,2) MONTH
+	                     FROM SALES A, DETAILSALES B
+	                     WHERE A.PRODTYPE = B.PRODTYPE
+	                     AND   A.PRODNO = B.PRODNO
+	                     AND   B.DETAILSALESDT LIKE ?||'%'
+	                     AND   A.SALESEMPID IN (
+	                                            SELECT A.EMPID
+	                                            FROM EMPALL A
+	                                            WHERE A.WENDDT = '99991231'
+	                                            CONNECT BY A.APRVEMPID = PRIOR A.EMPID
+	                                            START WITH A.EMPID = ?
+	                     )
+	                     GROUP BY A.PRODTYPE,
+	                              A.PRODNO,
+	                              A.SALESPLANTYPE,
+	                              B.DETAILSALESTYPE,
+	                              SUBSTR(B.DETAILSALESDT,5,2)	
+	              ) A
+	              GROUP BY A.SALESPLANTYPE,
+	                       A.DETAILSALESTYPE							
+	              UNION ALL	   
+	              --값이 없는 경우 DEFAULT 0 값처리를 위한 처리
+	              SELECT 'PLAN' SALESPLANTYPE, 'WORKING' RSLT, 0 AMT_01, 0 AMT_02, 0 AMT_03, 0 AMT_04, 0 AMT_05, 0 AMT_06, 0 AMT_07, 0 AMT_08, 0 AMT_09, 0 AMT_10, 0 AMT_11, 0 AMT_12 FROM DUAL
+	              UNION ALL
+	              SELECT 'PLAN' SALESPLANTYPE, 'SUCCESS' RSLT, 0 AMT_01, 0 AMT_02, 0 AMT_03, 0 AMT_04, 0 AMT_05, 0 AMT_06, 0 AMT_07, 0 AMT_08, 0 AMT_09, 0 AMT_10, 0 AMT_11, 0 AMT_12 FROM DUAL
+	              UNION ALL
+	              SELECT 'NONPLAN' SALESPLANTYPE, 'WORKING' RSLT, 0 AMT_01, 0 AMT_02, 0 AMT_03, 0 AMT_04, 0 AMT_05, 0 AMT_06, 0 AMT_07, 0 AMT_08, 0 AMT_09, 0 AMT_10, 0 AMT_11, 0 AMT_12 FROM DUAL
+	              UNION ALL
+	              SELECT 'NONPLAN' SALESPLANTYPE, 'SUCCESS' RSLT, 0 AMT_01, 0 AMT_02, 0 AMT_03, 0 AMT_04, 0 AMT_05, 0 AMT_06, 0 AMT_07, 0 AMT_08, 0 AMT_09, 0 AMT_10, 0 AMT_11, 0 AMT_12 FROM DUAL	   
+	       ) A
+	       GROUP BY A.SALESPLANTYPE,
+	       	     ROLLUP(A.RSLT) 		 
+	       --		 ,ROLLUP(A.SALESPLANTYPE) 	
+	       ORDER BY A.SALESPLANTYPE DESC,
+	                A.RSLT DESC
+	) A
+	WHERE A.RSLT IN ('SUCCESS','SUMAMT')
+		 	 
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="salesPersonalFailInq"   value-count="2" url="실주현황" >  
+	<sql-content>
+	<![CDATA[
+	SELECT A.RSLTDT,
+		   A.PRODTYPE,
+		   A.PRODNO,
+		   A.PRODNAME,
+		   A.MAINCLIENTCD,
+	   	   TO_BIZACQNAME(A.MAINCLIENTCD) MAINCLIENTNAME,
+		   A.EXPCONTAMT,
+		   A.FAILFACTOR,
+		   B.NUM,
+		   SUM(A.EXPCONTAMT)OVER() EXPCONTAMT_SUM,
+		   SUM(B.NUM)OVER() PROPOSEAMT_SUM	   	  
+	FROM SALES A, SALESRELNUM B
+	WHERE A.RSLT='FAIL'
+	AND   A.PRODTYPE = B.PRODTYPE(+)
+	AND   A.PRODNO = B.PRODNO(+)
+	AND   B.NUMTYPE(+) = 'PROPOSEAMT'
+	AND   A.SALESPRODTYPE = 'PJT'
+	AND   A.RSLTDT LIKE ?||'%'
+	AND   A.SALESEMPID = ?
+	ORDER BY RSLTDT DESC
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="salesDetailPlanInq"   value-count="4" url="세부현황" >  
+	<sql-content>
+	<![CDATA[
+	SELECT A.SALESPRODTYPE,
+		   A.PRODTYPE,
+		   A.PRODNO,
+		   A.PRODNAME,
+		   A.SALESEMPID,
+		   A.SALESORGCD,
+		   A.SALESORGNAME,
+		   A.SALESEMPNAME,
+		   A.SALESPLANTYPE,
+		   A.RSLT,
+		   A.CURPRCS,
+		   A.SALESRELDATEDT,
+		   A.EXPCONTAMT,
+		   A.MAINCLIENTCD,
+		   A.MAINCLIENTNAME,
+		   A.MEMO,
+		   A.AMT_01,
+	       A.AMT_02,
+		   A.AMT_03,
+		   A.AMT_04,
+		   A.AMT_05,
+		   A.AMT_06,
+		   A.AMT_07,
+		   A.AMT_08,
+		   A.AMT_09,
+		   A.AMT_10,
+		   A.AMT_11,
+		   A.AMT_12,
+		   SUM(A.EXPCONTAMT)OVER(PARTITION BY SALESORGCD) SUM_EXPCONTAMT,
+		   SUM(A.AMT_01)OVER(PARTITION BY SALESORGCD) SUM_AMT_01,
+		   SUM(A.AMT_02)OVER(PARTITION BY SALESORGCD) SUM_AMT_02,
+		   SUM(A.AMT_03)OVER(PARTITION BY SALESORGCD) SUM_AMT_03,
+		   SUM(A.AMT_04)OVER(PARTITION BY SALESORGCD) SUM_AMT_04,
+		   SUM(A.AMT_05)OVER(PARTITION BY SALESORGCD) SUM_AMT_05,
+		   SUM(A.AMT_06)OVER(PARTITION BY SALESORGCD) SUM_AMT_06,
+		   SUM(A.AMT_07)OVER(PARTITION BY SALESORGCD) SUM_AMT_07,
+		   SUM(A.AMT_08)OVER(PARTITION BY SALESORGCD) SUM_AMT_08,
+		   SUM(A.AMT_09)OVER(PARTITION BY SALESORGCD) SUM_AMT_09,
+		   SUM(A.AMT_10)OVER(PARTITION BY SALESORGCD) SUM_AMT_10,
+		   SUM(A.AMT_11)OVER(PARTITION BY SALESORGCD) SUM_AMT_11,
+		   SUM(A.AMT_12)OVER(PARTITION BY SALESORGCD) SUM_AMT_12
+	FROM (
+		SELECT 'PJT' SALESPRODTYPE,
+			   A.PRODTYPE,
+			   A.PRODNO,
+			   A.PRODNAME,
+			   A.SALESEMPID,
+			   A.SALESORGCD,
+			   TO_ORGCDNAME(A.SALESORGCD) SALESORGNAME,
+			   TO_EMPKNAME(A.SALESEMPID) SALESEMPNAME,
+			   A.SALESPLANTYPE,
+			   A.RSLT,
+			   A.CURPRCS,
+			   A.SALESRELDATEDT,
+			   A.EXPCONTAMT,
+			   A.MAINCLIENTCD,
+			   TO_BIZACQNAME(A.MAINCLIENTCD) MAINCLIENTNAME,
+			   A.MEMO,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'01',A.EXPCONTAMT,0),0)) AMT_01,
+		       SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'02',A.EXPCONTAMT,0),0)) AMT_02,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'03',A.EXPCONTAMT,0),0)) AMT_03,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'04',A.EXPCONTAMT,0),0)) AMT_04,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'05',A.EXPCONTAMT,0),0)) AMT_05,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'06',A.EXPCONTAMT,0),0)) AMT_06,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'07',A.EXPCONTAMT,0),0)) AMT_07,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'08',A.EXPCONTAMT,0),0)) AMT_08,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'09',A.EXPCONTAMT,0),0)) AMT_09,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'10',A.EXPCONTAMT,0),0)) AMT_10,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'11',A.EXPCONTAMT,0),0)) AMT_11,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'12',A.EXPCONTAMT,0),0)) AMT_12 	   
+		FROM (
+			SELECT A.PRODTYPE,
+				   A.PRODNO,
+				   A.PRODNAME,
+				   A.SALESEMPID,
+				   A.SALESORGCD,
+				   A.SALESPLANTYPE,
+				   A.RSLT,
+				   A.CURPRCS,
+				   A.EXPCONTAMT,
+				   B.SALESRELDATEDT,
+				   A.MAINCLIENTCD,
+				   A.SALESDESC MEMO,
+				   SUBSTR(B.SALESRELDATEDT,5,2) MONTH 
+			FROM SALES A, SALESRELDATE B
+			WHERE B.DATETYPE = 'CONTDT'
+			AND   A.PRODTYPE = B.PRODTYPE
+			AND   A.PRODNO = B.PRODNO
+			AND   B.SALESRELDATEDT LIKE ?||'%'
+			AND   A.SALESPRODTYPE = 'PJT'
+			AND   A.SALESEMPID IN (
+				  SELECT A.EMPID
+				  FROM EMPALL A
+				  WHERE A.WENDDT = '99991231'
+				  CONNECT BY A.APRVEMPID = PRIOR A.EMPID
+				  START WITH A.EMPID = ?
+			)
+		) A,(
+			SELECT SUBSTR(YYYYMM,5,2) MONTH 
+			FROM MONTHS
+			WHERE YYYYMM LIKE '2003%'
+		) B 
+		GROUP BY A.PRODTYPE,
+				 A.PRODNO,
+				 A.PRODNAME,
+				 A.SALESEMPID,
+				 A.SALESORGCD,
+				 A.SALESPLANTYPE,
+				 A.RSLT,
+				 A.CURPRCS,
+				 A.SALESRELDATEDT,
+				 A.EXPCONTAMT,
+				 A.SALESRELDATEDT,
+				 A.MAINCLIENTCD,
+				 A.MEMO
+		UNION ALL
+		SELECT 'SYSSALES' SALESPRODTYPE,
+			   A.PRODTYPE,
+			   A.PRODNO,
+			   A.PRODNAME,
+			   A.SALESEMPID,
+			   A.SALESORGCD,
+			   TO_ORGCDNAME(A.SALESORGCD) SALESORGNAME,		   
+			   TO_EMPKNAME(A.SALESEMPID) SALESEMPNAME,
+			   A.SALESPLANTYPE,
+			   A.RSLT,
+			   A.CURPRCS,
+			   '' SALESRELDATEDT,
+			   A.EXPCONTAMT,
+			   A.MAINCLIENTCD,
+			   TO_BIZACQNAME(A.MAINCLIENTCD) MAINCLIENTNAME,
+			   A.SALESDESC MEMO,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'01',A.AMT,0),0)) AMT_01,	   
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'02',A.AMT,0),0)) AMT_02,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'03',A.AMT,0),0)) AMT_03,	   
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'04',A.AMT,0),0)) AMT_04,	   
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'05',A.AMT,0),0)) AMT_05,	   
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'06',A.AMT,0),0)) AMT_06,	   
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'07',A.AMT,0),0)) AMT_07,	   
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'08',A.AMT,0),0)) AMT_08,	   
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'09',A.AMT,0),0)) AMT_09,	   
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'10',A.AMT,0),0)) AMT_10,	   
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'11',A.AMT,0),0)) AMT_11,
+			   SUM(DECODE(A.MONTH,B.MONTH,DECODE(A.MONTH,'12',A.AMT,0),0)) AMT_12	   	   
+		FROM (			                                  
+			SELECT A.PRODTYPE,
+				   A.PRODNO,
+				   A.PRODNAME,
+				   A.SALESEMPID,
+				   A.SALESPLANTYPE,
+				   A.SALESORGCD,
+				   A.EXPCONTAMT,
+				   A.RSLT,
+				   A.CURPRCS,
+				   SUBSTR(B.DETAILSALESDT,5,2) MONTH,
+				   B.AMT,
+				   A.MAINCLIENTCD,
+				   A.SALESDESC
+			FROM SALES A, DETAILSALES B
+			WHERE A.PRODTYPE = A.PRODTYPE
+			AND   A.PRODNO = B.PRODNO
+			AND   A.SALESPRODTYPE='SYSSALES'
+			AND   B.DETAILSALESTYPE='ACTION'
+			AND   B.DETAILSALESDT LIKE ?||'%'
+			AND   A.SALESEMPID IN (
+				  SELECT A.EMPID
+				  FROM EMPALL A
+				  WHERE A.WENDDT = '99991231'
+				  CONNECT BY A.APRVEMPID = PRIOR A.EMPID
+				  START WITH A.EMPID = ?
+			)
+		) A,(
+		  SELECT SUBSTR(YYYYMM,5,2) MONTH
+		  FROM MONTHS
+		  WHERE YYYYMM LIKE '2003%'
+		) B  	
+		GROUP BY A.PRODTYPE,
+			   A.PRODNO,
+			   A.PRODNAME,
+			   A.SALESEMPID,
+			   A.EXPCONTAMT,
+			   A.SALESORGCD,
+			   A.SALESPLANTYPE,
+			   A.RSLT,
+			   A.CURPRCS,
+			   A.MAINCLIENTCD,
+			   A.SALESDESC		   
+	) A
+	ORDER BY SALESORGNAME,PRODTYPE||PRODNO DESC
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="salesOrgPlanInq"   value-count="2" url="부문별현황" >  
+	<sql-content>
+	<![CDATA[
+	SELECT A.ORGCD,
+		   A.RSLT,
+		   SUM(A.AMT_01) AMT_01,
+		   SUM(A.AMT_02) AMT_02,
+		   SUM(A.AMT_03) AMT_03,
+		   SUM(A.AMT_04) AMT_04,
+		   SUM(A.AMT_05) AMT_05,
+		   SUM(A.AMT_06) AMT_06,
+		   SUM(A.AMT_07) AMT_07,
+		   SUM(A.AMT_08) AMT_08,
+		   SUM(A.AMT_09) AMT_09,
+		   SUM(A.AMT_10) AMT_10,
+		   SUM(A.AMT_11) AMT_11,
+		   SUM(A.AMT_12) AMT_12
+	FROM (	   
+	       SELECT A.ORGCD,
+	       	      A.RSLT,
+	       	      A.AMT_01,
+	       	      A.AMT_02,
+	       	      A.AMT_03,
+	       	      A.AMT_04,
+	       	      A.AMT_05,
+	       	      A.AMT_06,
+	       	      A.AMT_07,
+	       	      A.AMT_08,
+	       	      A.AMT_09,
+	       	      A.AMT_10,
+	       	      A.AMT_11,
+	       	      A.AMT_12
+	       FROM (	   
+		       	SELECT DECODE(A.ORGCD,'','TOT',A.ORGCD) ORGCD,
+		       	--       A.SALESPLANTYPE,
+		       		   DECODE(A.RSLT,'','SUMAMT',A.RSLT) RSLT,
+		       		   SUM(A.AMT_01) AMT_01,
+		       		   SUM(A.AMT_02) AMT_02,
+		       		   SUM(A.AMT_03) AMT_03,
+		       		   SUM(A.AMT_04) AMT_04,
+		       		   SUM(A.AMT_05) AMT_05,
+		       		   SUM(A.AMT_06) AMT_06,
+		       		   SUM(A.AMT_07) AMT_07,
+		       		   SUM(A.AMT_08) AMT_08,
+		       		   SUM(A.AMT_09) AMT_09,
+		       		   SUM(A.AMT_10) AMT_10,
+		       		   SUM(A.AMT_11) AMT_11,
+		       		   SUM(A.AMT_12) AMT_12
+		       	FROM (	   
+		       		SELECT A.ORGCD,
+		       		       --A.SALESPLANTYPE,
+		       		       DECODE(A.RSLT,'SUCCESS',A.RSLT,'NOTSUCCESS') RSLT,
+		       		       SUM(DECODE(A.MONTH,'01',A.EXPCONTAMT,0)) AMT_01,
+		       		       SUM(DECODE(A.MONTH,'02',A.EXPCONTAMT,0)) AMT_02,
+		       		       SUM(DECODE(A.MONTH,'03',A.EXPCONTAMT,0)) AMT_03,
+		       		       SUM(DECODE(A.MONTH,'04',A.EXPCONTAMT,0)) AMT_04,
+		       		       SUM(DECODE(A.MONTH,'05',A.EXPCONTAMT,0)) AMT_05,
+		       		       SUM(DECODE(A.MONTH,'06',A.EXPCONTAMT,0)) AMT_06,
+		       		       SUM(DECODE(A.MONTH,'07',A.EXPCONTAMT,0)) AMT_07,
+		       		       SUM(DECODE(A.MONTH,'08',A.EXPCONTAMT,0)) AMT_08,
+		       		       SUM(DECODE(A.MONTH,'09',A.EXPCONTAMT,0)) AMT_09,
+		       		       SUM(DECODE(A.MONTH,'10',A.EXPCONTAMT,0)) AMT_10,
+		       		       SUM(DECODE(A.MONTH,'11',A.EXPCONTAMT,0)) AMT_11,
+		       		       SUM(DECODE(A.MONTH,'12',A.EXPCONTAMT,0)) AMT_12
+		       		FROM ( 	
+		       		       SELECT A.ORGCD,
+		       		              A.SALESPLANTYPE,
+		       		              A.RSLT,
+		       		              A.MONTH,
+		       		              SUM(A.EXPCONTAMT) EXPCONTAMT
+		       		       FROM (		
+		       		              SELECT A.SALESPLANTYPE,
+		       		                     DECODE(A.RSLT,'','WORKING',A.RSLT) RSLT,
+		       		                     A.EXPCONTAMT,
+		       		                     A.ISOUTBIZ,
+		       		                     SUBSTR(B.SALESRELDATEDT,5,2) MONTH,
+		       		                     (CASE
+		       		                           WHEN SUBSTR(A.SALESORGCD,1,2)='CA' THEN 'GIS'
+		       		                           WHEN SUBSTR(A.SALESORGCD,1,2)='CB' THEN 'GIS'
+		       		                           WHEN SUBSTR(A.SALESORGCD,1,2)='CC' THEN 'GIS'
+		       		                           WHEN SUBSTR(A.SALESORGCD,1,2)='CD' AND ISOUTBIZ IS NULL THEN 'SI기타'
+		       		                           WHEN SUBSTR(A.SALESORGCD,1,2)='CE' AND ISOUTBIZ IS NULL THEN 'SI기타'
+		       		                           WHEN SUBSTR(A.SALESORGCD,1,2)='CD' AND ISOUTBIZ='A' THEN 'SI대외'
+		       		                           WHEN SUBSTR(A.SALESORGCD,1,2)='CE' AND ISOUTBIZ='A' THEN 'SI대외'
+		       		                           WHEN SUBSTR(A.SALESORGCD,1,2)='CD' AND ISOUTBIZ='B' THEN 'SI대내'
+		       		                           WHEN SUBSTR(A.SALESORGCD,1,2)='CE' AND ISOUTBIZ='B' THEN 'SI대내'
+		       		                           ELSE '기타'
+		       		                      END) ORGCD
+		       		              FROM SALES A, SALESRELDATE B
+		       		              WHERE B.DATETYPE = 'CONTDT'
+		       		              AND   A.PRODTYPE = B.PRODTYPE
+		       		              AND   A.PRODNO = B.PRODNO
+		       		              AND   A.SALESPRODTYPE = 'PJT'
+		       		              AND   B.SALESRELDATEDT LIKE ?||'%'
+		       		       ) A
+		       		       GROUP BY A.ORGCD,
+		       		                A.SALESPLANTYPE,
+		       		                A.RSLT,
+		       		                A.MONTH				
+		       		) A
+		       		GROUP BY A.ORGCD,
+		       		         --A.SALESPLANTYPE,
+		       		         DECODE(A.RSLT,'SUCCESS',A.RSLT,'NOTSUCCESS')		 
+		       	) A 
+		       	GROUP BY ROLLUP(A.ORGCD),
+		       		     ROLLUP(A.RSLT)
+	       ) A  
+	       WHERE A.RSLT IN ('SUCCESS','SUMAMT')
+	       UNION ALL	   
+	       SELECT A.ORGCD,
+	       	   A.RSLT,
+	       	   A.AMT_01,
+	       	   A.AMT_02,
+	       	   A.AMT_03,
+	       	   A.AMT_04,
+	       	   A.AMT_05,
+	       	   A.AMT_06,
+	       	   A.AMT_07,
+	       	   A.AMT_08,
+	       	   A.AMT_09,
+	       	   A.AMT_10,
+	       	   A.AMT_11,
+	       	   A.AMT_12
+	       FROM (	   
+		       SELECT DECODE(A.ORGCD,'','TOT',A.ORGCD) ORGCD,
+		       	   DECODE(A.RSLT,'','SUMAMT',A.RSLT) RSLT,
+		       	   SUM(A.AMT_01) AMT_01,
+		       	   SUM(A.AMT_02) AMT_02,
+		       	   SUM(A.AMT_03) AMT_03,
+		       	   SUM(A.AMT_04) AMT_04,
+		       	   SUM(A.AMT_05) AMT_05,
+		       	   SUM(A.AMT_06) AMT_06,
+		       	   SUM(A.AMT_07) AMT_07,
+		       	   SUM(A.AMT_08) AMT_08,
+		       	   SUM(A.AMT_09) AMT_09,
+		       	   SUM(A.AMT_10) AMT_10,
+		       	   SUM(A.AMT_11) AMT_11,
+		       	   SUM(A.AMT_12) AMT_12
+		       FROM (	   
+			       SELECT A.ORGCD,
+			       	   A.RSLT,
+			       	   SUM(DECODE(A.MONTH,'01',A.AMT,0)) AMT_01,
+			       	   SUM(DECODE(A.MONTH,'02',A.AMT,0)) AMT_02,
+			       	   SUM(DECODE(A.MONTH,'03',A.AMT,0)) AMT_03,
+			       	   SUM(DECODE(A.MONTH,'04',A.AMT,0)) AMT_04,
+			       	   SUM(DECODE(A.MONTH,'05',A.AMT,0)) AMT_05,
+			       	   SUM(DECODE(A.MONTH,'06',A.AMT,0)) AMT_06,
+			       	   SUM(DECODE(A.MONTH,'07',A.AMT,0)) AMT_07,
+			       	   SUM(DECODE(A.MONTH,'08',A.AMT,0)) AMT_08,
+			       	   SUM(DECODE(A.MONTH,'09',A.AMT,0)) AMT_09,
+			       	   SUM(DECODE(A.MONTH,'10',A.AMT,0)) AMT_10,
+			       	   SUM(DECODE(A.MONTH,'11',A.AMT,0)) AMT_11,
+			       	   SUM(DECODE(A.MONTH,'12',A.AMT,0)) AMT_12
+			       FROM (
+				       	SELECT A.ORGCD,
+				       		   A.RSLT,
+				       		   A.MONTH,
+				       		   SUM(A.AMT) AMT
+				       	FROM (
+				       	       SELECT (CASE
+				       	                   WHEN SUBSTR(A.SALESORGCD,1,2)='CA' THEN 'GIS'
+				       	                   WHEN SUBSTR(A.SALESORGCD,1,2)='CB' THEN 'GIS'
+				       	                   WHEN SUBSTR(A.SALESORGCD,1,2)='CC' THEN 'GIS'
+				       	                   WHEN SUBSTR(A.SALESORGCD,1,2)='CD' AND ISOUTBIZ IS NULL THEN 'SI기타'
+				       	                   WHEN SUBSTR(A.SALESORGCD,1,2)='CE' AND ISOUTBIZ IS NULL THEN 'SI기타'
+				       	                   WHEN SUBSTR(A.SALESORGCD,1,2)='CD' AND ISOUTBIZ='A' THEN 'SI대외'
+				       	                   WHEN SUBSTR(A.SALESORGCD,1,2)='CE' AND ISOUTBIZ='A' THEN 'SI대외'
+				       	                   WHEN SUBSTR(A.SALESORGCD,1,2)='CD' AND ISOUTBIZ='B' THEN 'SI대내'
+				       	                   WHEN SUBSTR(A.SALESORGCD,1,2)='CE' AND ISOUTBIZ='B' THEN 'SI대내'
+				       	                   ELSE '기타'
+				       	              END) ORGCD,
+				       		          --A.PRODTYPE,
+				       	              --A.PRODNO,
+				       	              --A.SALESPLANTYPE,
+				       	              B.AMT,
+				       	              DECODE(B.DETAILSALESTYPE,'ACTION','SUCCESS','NOTSUCCESS') RSLT,
+				       	              SUBSTR(B.DETAILSALESDT,5,2) MONTH
+				       	       FROM SALES A, DETAILSALES B
+				       	       WHERE A.PRODTYPE = B.PRODTYPE
+				       	       AND   A.PRODNO = B.PRODNO
+				       		   AND   A.SALESPRODTYPE = 'SYSSALES'
+				       	       AND   B.DETAILSALESDT LIKE ?||'%'
+				       	) A
+				       	GROUP BY A.ORGCD,
+				       	         A.RSLT,
+				       	         A.MONTH	
+			       ) A
+			       GROUP BY A.ORGCD,
+			                A.RSLT		    
+		       ) A
+		       GROUP BY ROLLUP(A.ORGCD),
+		       	     ROLLUP(A.RSLT)
+	       ) A
+	       WHERE A.RSLT IN ('SUCCESS','SUMAMT')
+	       --DEFAULT 값 셋팅을 위한 처리
+		   UNION ALL		   
+		   SELECT 'GIS' ORGCD,'SUMAMT' RSLT,0 AMT_01,0 AMT_02,0 AMT_03,0 AMT_04,0 AMT_05,0 AMT_06,0 AMT_07,0 AMT_08,0 AMT_09,0 AMT_10,0 AMT_11,0 AMT_12 FROM DUAL
+		   UNION ALL
+		   SELECT 'GIS' ORGCD,'SUCCESS' RSLT,0 AMT_01,0 AMT_02,0 AMT_03,0 AMT_04,0 AMT_05,0 AMT_06,0 AMT_07,0 AMT_08,0 AMT_09,0 AMT_10,0 AMT_11,0 AMT_12 FROM DUAL
+		   UNION ALL
+		   SELECT 'SI대내' ORGCD,'SUMAMT' RSLT,0 AMT_01,0 AMT_02,0 AMT_03,0 AMT_04,0 AMT_05,0 AMT_06,0 AMT_07,0 AMT_08,0 AMT_09,0 AMT_10,0 AMT_11,0 AMT_12 FROM DUAL
+		   UNION ALL
+		   SELECT 'SI대내' ORGCD,'SUCCESS' RSLT,0 AMT_01,0 AMT_02,0 AMT_03,0 AMT_04,0 AMT_05,0 AMT_06,0 AMT_07,0 AMT_08,0 AMT_09,0 AMT_10,0 AMT_11,0 AMT_12 FROM DUAL
+		   UNION ALL
+		   SELECT 'SI대외' ORGCD,'SUMAMT' RSLT,0 AMT_01,0 AMT_02,0 AMT_03,0 AMT_04,0 AMT_05,0 AMT_06,0 AMT_07,0 AMT_08,0 AMT_09,0 AMT_10,0 AMT_11,0 AMT_12 FROM DUAL
+		   UNION ALL
+		   SELECT 'SI대외' ORGCD,'SUCCESS' RSLT,0 AMT_01,0 AMT_02,0 AMT_03,0 AMT_04,0 AMT_05,0 AMT_06,0 AMT_07,0 AMT_08,0 AMT_09,0 AMT_10,0 AMT_11,0 AMT_12 FROM DUAL
+	) A
+	GROUP BY A.ORGCD,
+		  	 A.RSLT
+	ORDER BY A.ORGCD,A.RSLT	DESC			
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="salesCurrentMonthSuccessInq"   value-count="1" url="당월수주현황" >  
+	<sql-content>
+	<![CDATA[
+	SELECT A.PRODTYPE,
+		   A.PRODNO,
+		   A.MAINCLIENTCD,
+		   TO_BIZACQNAME(A.MAINCLIENTCD) MAINCLIENTNAME,
+		   A.PRODNAME,
+		   A.EXPCONTAMT,
+		   (CASE
+		   		WHEN SUBSTR(A.SALESORGCD,1,2)='CA' THEN 'GIS'
+				WHEN SUBSTR(A.SALESORGCD,1,2)='CB' THEN 'GIS'
+				WHEN SUBSTR(A.SALESORGCD,1,2)='CC' THEN 'GIS'
+				WHEN SUBSTR(A.SALESORGCD,1,2)='CD' AND ISOUTBIZ IS NULL THEN 'SI기타'
+				WHEN SUBSTR(A.SALESORGCD,1,2)='CE' AND ISOUTBIZ IS NULL THEN 'SI기타'
+				WHEN SUBSTR(A.SALESORGCD,1,2)='CD' AND ISOUTBIZ='A' THEN 'SI대외'
+				WHEN SUBSTR(A.SALESORGCD,1,2)='CE' AND ISOUTBIZ='A' THEN 'SI대외'
+				WHEN SUBSTR(A.SALESORGCD,1,2)='CD' AND ISOUTBIZ='B' THEN 'SI대내'
+				WHEN SUBSTR(A.SALESORGCD,1,2)='CE' AND ISOUTBIZ='B' THEN 'SI대내'
+				ELSE 'ETC'
+			END) SALESORGCD	
+	FROM SALES A
+	WHERE A.RSLT = 'SUCCESS'
+	AND   A.RSLTDT LIKE ?||'%'
+	AND   A.SALESPRODTYPE='PJT' 
+	ORDER BY SALESORGCD
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="salesNoteInq"   value-count="1" url="개인 영업노트 조회" >  
+	<sql-content>
+	<![CDATA[
+		select 	personnalsalesnotes_seq, 
+				salesempid,
+				to_empkname(salesempid) salesEmpName, 
+				prodname, 
+				mainclientcd,
+				to_bizacqname(mainclientcd) mainclientname,
+				expcontamt, 
+				salesnote
+		from personnalsalesnotes 
+		where salesempid = ?
+		order by personnalsalesnotes_seq desc
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+   <sql-mapping  id="insertSalesNote"   value-count="5"  url="개인 영업노트 신규입력" >  
+   <sql-content>
+   <![CDATA[
+           insert into personnalsalesnotes(personnalsalesnotes_seq, salesempid, prodname, mainclientcd, expcontamt, salesnote)
+           values((select nvl(max(personnalsalesnotes_seq),0) + 1 from personnalsalesnotes )
+					   ,?  ,?  ,?  ,replace(?,',','') ,?)
+	]]>
+	</sql-content>
+    </sql-mapping>
+    
+	<sql-mapping  id="deleteSalseNote"   value-count="1" url="개인영업노트 삭제" >  
+	<sql-content>
+	<![CDATA[	
+	    delete from personnalsalesnotes
+		where personnalsalesnotes_seq = ?
+	]]>
+	</sql-content>
+	</sql-mapping>	  
+	
+	<sql-mapping  id="salesTrafficExpApproList"   value-count="3" url="교통비결제 신청 대상리스트 조회" >  
+	<sql-content>
+	<![CDATA[	
+			SELECT  A.REPORTDT,
+					A.CHAGNAME,
+					TRANSTYPE,
+					TRANSTYPEDETAIL,
+					TRANSCOST,
+					A.SN,
+					SUM(TRANSCOST) over() TRANSCOST_SUM
+			FROM(
+				SELECT A.REPORTDT,
+					   A.REEMPID,
+					   A.SN,
+					   A.BIZACQCD,
+					   A.STARTTM,
+					   A.ENDTM,
+					   A.CARSELKM,
+					   A.CARETCKM,
+					   -- 1.CARETC,2.BUS,3.SUBWAY,4.TAXI,5.CAR
+			 		(CASE
+			 		   		WHEN B.SN=1 THEN '자가용'
+			 				WHEN B.SN=2 THEN '대중교통'
+			 				WHEN B.SN=3 THEN '대중교통'
+			 				WHEN B.SN=4 THEN '대중교통'
+			 				WHEN B.SN=5 THEN '자가용'
+			 				ELSE ''
+			 		END) TRANSTYPE,
+			 		(CASE
+			 		   		WHEN B.SN=1 THEN '주차비&통행료'
+			 				WHEN B.SN=2 THEN '버스'
+			 				WHEN B.SN=3 THEN '지하철'
+			 				WHEN B.SN=4 THEN '택시'
+			 				WHEN B.SN=5 THEN '유류비'
+			 				ELSE ''
+			 		END) TRANSTYPEDETAIL,
+					   (CASE
+					   		WHEN B.SN=1 THEN A.CARETC
+							WHEN B.SN=2 THEN A.BUS
+							WHEN B.SN=3 THEN A.SUBWAY
+							WHEN B.SN=4 THEN A.TAXI
+							WHEN B.SN=5 THEN A.CAR
+							ELSE 0
+					   END) TRANSCOST,
+					   A.CHAGNAME,
+					   A.LOC,
+					   A.STATUS
+				FROM (
+					SELECT *
+					FROM(
+					SELECT  A.REPORTDT,
+							A.REEMPID,
+							A.SN,
+							A.BIZACQCD,
+							A.STARTTM,
+							A.ENDTM,
+							A.CARSELKM,
+							A.CARETCKM,
+							A.CARETC,
+							A.BUS,
+							A.SUBWAY,
+							A.TAXI,
+							A.CAR,
+							B.BIZACQNAME CHAGNAME,
+							B.BIZACQADDR LOC,
+							A.MAINNO,
+							C.STATUS
+					FROM TRANSEXPENSE A,ACCTRPTHD C ,BIZACQCORP B,DAILYREPORTDETAIL D, DAILYREPORT E
+					WHERE A.MAINNO = C.MAINNO(+)
+					AND A.REEMPID= ?
+					AND A.REPORTDT BETWEEN REPLACE( ? ,'-','') AND REPLACE( ? ,'-','')
+					AND A.BIZACQCD=B.BIZACQCD(+)
+						--추가부분 시작(승인/삭제)
+					AND A.REEMPID=E.REEMPID
+					AND A.REPORTDT=E.REPORTDT
+					AND E.STATUSFLAG IN ('WCO','WCD')
+						AND A.REPORTDT=D.REPORTDT(+)
+						AND A.REEMPID=D.REEMPID(+)
+						AND A.SN=D.SN(+)
+					AND D.DELFLAG='N'
+						--추가부분 끝(승인/삭제)
+					) A
+					WHERE (STATUS IN ( 'DX0','DW0') OR STATUS IS NULL)) A,
+				(SELECT SN
+				 FROM MONTHS
+				 WHERE SN <= 5
+				 ) B
+			) A
+			WHERE A.TRANSCOST > 0
+
+	]]>
+	</sql-content>
+	</sql-mapping>		
+
+	<sql-mapping  id="salesTrafficExpList"   value-count="3" url="교통비결제 처리 문서 조회" >  
+	<sql-content>
+	<![CDATA[	
+	 		SELECT 	A.REPORTDT,
+					A.CHAGNAME,
+					A.USENAME,
+					A.TRANSTYPE,
+					A.TRANSTYPEDETAIL,
+					A.TRANSCOST,
+					SUM(A.TRANSCOST) OVER() TRANSCOST_SUM
+			FROM (
+			SELECT A.REPORTDT,
+				   A.REEMPID,
+				   A.SN,
+				   A.BIZACQCD,
+				   (CASE
+				 			WHEN B.SN=1 THEN '자가용'
+							WHEN B.SN=2 THEN '대중교통'
+							WHEN B.SN=3 THEN '대중교통'
+							WHEN B.SN=4 THEN '대중교통'
+							WHEN B.SN=5 THEN '자가용'
+							ELSE ''
+				   END) TRANSTYPE,
+			 		(CASE
+			 		   		WHEN B.SN=1 THEN '주차비&통행료'
+			 				WHEN B.SN=2 THEN '버스'
+			 				WHEN B.SN=3 THEN '지하철'
+			 				WHEN B.SN=4 THEN '택시'
+			 				WHEN B.SN=5 THEN '유류비(서울 ' || A.CARSELKM || 'km 수도권 '|| A.CARETCKM || 'km)'
+			 				ELSE ''
+			 		END) TRANSTYPEDETAIL,
+				   (CASE
+					   		WHEN B.SN=1 THEN A.CARETC
+							WHEN B.SN=2 THEN A.BUS
+							WHEN B.SN=3 THEN A.SUBWAY
+							WHEN B.SN=4 THEN A.TAXI
+							WHEN B.SN=5 THEN A.CAR
+							ELSE 0
+				   END) TRANSCOST,
+				   A.STATUS,
+				   A.CHAGNAME,
+				   A.LOC,
+				   A.CARSELKM,
+				   A.CARETCKM,
+				   A.USENAME
+			FROM (
+				SELECT A.REPORTDT,
+					   A.REEMPID,
+					   A.SN,
+					   A.BIZACQCD,
+					   A.CARETC,
+					   A.BUS,
+					   A.SUBWAY,
+					   A.TAXI,
+					   A.CAR,
+					   D.STATUS,
+					   B.BIZACQNAME CHAGNAME,
+					   B.BIZACQADDR LOC,
+					   C.CARSELKM,
+					   C.CARETCKM,
+					   (CASE
+					   		 WHEN D.STATUS='DA0' THEN '발송'
+					   		 WHEN D.STATUS='DB0' THEN '작성완료'
+							 WHEN D.STATUS='DC4' THEN '승인'
+							 WHEN D.STATUS='CXX' THEN '반려'
+							 WHEN D.STATUS='DX0' THEN '부결'
+							 WHEN D.STATUS='DE0' THEN '재무접수'
+							 WHEN D.STATUS='DW0' THEN '재무부결'
+							 WHEN D.STATUS='ZXX' THEN '재발송'
+							 ELSE ' '
+					   END) USENAME
+				FROM TRANSEXPENSE A,BIZACQCORP B,TRANSDETAIL C,ACCTRPTHD D
+				WHERE A.REEMPID= ?
+				AND A.REPORTDT >= REPLACE(?,'-','')
+				AND A.REPORTDT <= REPLACE(?,'-','')
+				AND A.BIZACQCD=B.BIZACQCD(+)
+				AND C.REEMPID=A.REEMPID
+				AND C.REPORTDT=A.REPORTDT
+				AND C.SN =A.SN
+				AND A.MAINNO=D.MAINNO
+--				AND D.STATUS IN  ('CXX','ZXX','DA0','DB0','DC0','DD0','DD1','DE0')
+			) A, (
+				SELECT SN
+				FROM MONTHS
+				WHERE SN <= 5
+			) B
+			) A
+			WHERE A.TRANSCOST > 0
+			ORDER BY A.REPORTDT
+
+
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="TransExpenseUpdate"   value-count="4" url="교통비결제 처리 결제 등록" >  
+	<sql-content>
+	<![CDATA[	
+	         
+	    UPDATE TRANSEXPENSE SET MAINNO = ?
+		WHERE REPORTDT||REEMPID||SN IN (SELECT KEYCOL
+				FROM(
+						SELECT  A.REPORTDT||A.REEMPID||A.SN AS KEYCOL,
+								C.STATUS
+						FROM TRANSEXPENSE A,ACCTRPTHD C ,BIZACQCORP B,DAILYREPORTDETAIL D, DAILYREPORT E
+						WHERE A.MAINNO = C.MAINNO(+)
+						AND A.REEMPID= ?
+						AND A.REPORTDT BETWEEN REPLACE( ? ,'-','') AND REPLACE( ? ,'-','')
+						AND A.BIZACQCD=B.BIZACQCD(+)
+						AND A.REEMPID=E.REEMPID
+						AND A.REPORTDT=E.REPORTDT
+						AND E.STATUSFLAG IN ('WCO','WCD')
+							AND A.REPORTDT=D.REPORTDT(+)
+							AND A.REEMPID=D.REEMPID(+)
+							AND A.SN=D.SN(+)
+						AND D.DELFLAG='N'
+						) A
+				WHERE (STATUS IN ( 'DX0','DW0') OR STATUS IS NULL))
+
+	]]>
+	</sql-content>
+	</sql-mapping>		
+</sql>
+

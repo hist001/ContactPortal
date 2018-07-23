@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping id="HTPA10_001" value-count="0" url="평가정보조회">
+		<sql-content>
+	<![CDATA[
+		SELECT C_CODE, EMP_ID, SEQ, CATEGORY, GET_CODENAME('SY110', CATEGORY) AS CATEGORY_NM, EVAL_YR, 
+		EVAL_SCR, EVAL_GD, NOTE, REG_DT, REG_ID, UPD_DT, UPD_ID
+		FROM HTPA10 
+		WHERE C_CODE= [C_CODE]
+		AND EMP_ID=[EMP_ID]
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="HTPA10_002" value-count="0" url="평가정보등록">
+		<sql-content>
+	<![CDATA[
+		INSERT INTO HTPA10 (
+  			 C_CODE, EMP_ID, SEQ, 
+   			 CATEGORY, EVAL_YR, EVAL_SCR, 
+  			 EVAL_GD, NOTE, REG_DT, 
+ 		     REG_ID, UPD_DT, UPD_ID) 
+		VALUES ( [C_CODE],
+			 [EMP_ID],
+			 (SELECT NVL(MAX(TO_NUMBER(SEQ)),0)+1
+					    FROM HTPA10
+					   WHERE C_CODE = [C_CODE]
+					     AND EMP_ID = [EMP_ID]),
+			 [CATEGORY],
+			 [EVAL_YR],
+			 [EVAL_SCR],
+			 [EVAL_GD],
+			 [NOTE],
+			 SYSDATE,
+			 [REG_ID],
+			 SYSDATE,
+			 [UPD_ID] )
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="HTPA10_003" value-count="0" url="평가정보수정">
+		<sql-content>
+	<![CDATA[
+			UPDATE HTPA10
+			SET    C_CODE   = [C_CODE],
+			       EMP_ID   = [EMP_ID],
+			       SEQ      = [SEQ],
+			       CATEGORY = [CATEGORY],
+			       EVAL_YR  = [EVAL_YR],
+			       EVAL_SCR = [EVAL_SCR],
+			       EVAL_GD  = [EVAL_GD],
+			       NOTE     = [NOTE],
+			       UPD_DT   = SYSDATE,
+			       UPD_ID   = [UPD_ID]
+			WHERE  C_CODE   = [C_CODE]
+			AND    EMP_ID   = [EMP_ID]
+			AND    SEQ      = [SEQ]
+
+	]]>
+		</sql-content>
+	</sql-mapping>
+
+	<sql-mapping id="HTPA10_004" value-count="0" url="평가정보삭제">
+		<sql-content>
+	<![CDATA[
+		DELETE FROM HTPA10
+		WHERE  C_CODE = [C_CODE]
+		AND    EMP_ID = [EMP_ID]
+		AND    SEQ    = [SEQ]
+	]]>
+		</sql-content>
+	</sql-mapping>
+</sql>

@@ -1,0 +1,685 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping id="J_001"  value-count="3"		url="주문서 내용 가져오기">
+		<sql-content>
+			<![CDATA[
+				select  confType||a.conf_no||'-'||? odcCd,
+						confType||
+							   (
+						select to_char(sysdate,'YYYYMMDD')||Lpad(to_char(to_number(nvl(substr(max(odcCd),12,3),'0'))+1),3,'0') odcCd 
+						from itemordercfm where substr(odcCd,4,8) = to_char(sysdate,'YYYYMMDD')
+							   ) odcCd2,
+						a.conf_no,b.deliverCorpName,b.DELIVERCORPADDR,
+					   d.it_no,d.obj_no,d.it_div,
+					   substr(b.deliverDt,1,4)||'-'||substr(b.deliverDt,5,2)||'-'||substr(b.deliverDt,7,2) deliverDt,
+					   d.it_name,d.it_std,d.it_cnt,d.it_price,d.it_amt,c.SBC_SVC,
+					   d.BUY_CORPCD RECCD,  TO_BIZACQNAME(d.BUY_CORPCD) RECNAME,
+					   CONFTYPE,it_div
+				from confer a, saleconfer b, salebuyconfer c,
+					 item d
+				where a.conf_no = c.conf_no
+				and b.conf_no = c.scConf_no
+				and c.conf_no = d.obj_no
+				and a.conf_no = ?
+				and d.buy_CorpCd = ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_002"  value-count="2"		url="주문서 확인">
+		<sql-content>
+			<![CDATA[
+				update ITEMORDER
+				set odc_iscfm = ?, cfmdtm=sysdate
+				where odc_no = ?		
+			]]>
+		</sql-content>
+   </sql-mapping>
+      <sql-mapping id="J_003"  value-count="4"		url="주문서 확인">
+		<sql-content>
+			<![CDATA[
+				insert into ItemOrderCfm
+				(
+					select to_number(nvl(max(odc_no),0))+1,
+							?,'','',?,?,?
+					from itemordercfm
+				)	
+			]]>
+		</sql-content>
+   </sql-mapping>
+ 	<sql-mapping id="J_004"  value-count="3"		url="주문서 내용 가져오기">
+		<sql-content>
+			<![CDATA[
+					select confType||c.conf_no||'-'||? odcCd,
+						   confType||
+					      (
+					                   select to_char(sysdate,'YYYYMMDD')||Lpad(to_char(to_number(nvl(substr(max(odcCd),12,3),'0'))+1),3,'0') odcCd
+					                   from itemorder where substr(odcCd,4,8) = to_char(sysdate,'YYYYMMDD')
+					      ) odcCd2,
+						  c.conf_no, a.buy_corpCd, TO_BIZACQNAME(a.BUY_CORPCD),
+					      b.deliverCorpAddr,b.deliverCorpName,
+						  substr(b.deliverDt,1,4)||'-'||substr(b.deliverDt,5,2)||'-'||substr(b.deliverDt,7,2) deliverDt,
+						  e.bc_CONTENTS,a.obj_no,
+						  a.BUY_CORPCD BUY_CORPCD,  TO_BIZACQNAME(a.BUY_CORPCD) RECNAME,
+					      a.it_name,a.it_std,a.it_cnt,a.it_price,a.it_amt,it_div
+					from item a,
+						 itemdelivery b,
+						 confer c,
+						 buyconfer e
+					where a.obj_no = b.obj_no
+					and a.it_div=b.id_div
+					and c.conf_no = a.obj_no
+					and c.CONFTYPE = a.it_div
+					and e.conf_no = c.conf_no
+					and a.obj_no = ?
+					and a.buy_CorpCd = ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_006"  value-count="4"		url="주문서 생성">
+		<sql-content>
+			<![CDATA[
+				insert into ItemOrder
+				(
+					select to_number(nvl(max(odc_no),0))+1,
+							?,?,?,?,'','',?
+					from itemorder
+				)	
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_007"  value-count="2"		url="지급품의서 생성을 위한 품의서의 Head 검색">
+		<sql-content>
+			<![CDATA[
+			SELECT  distinct c.buy_CorpCd,fiid,piid,conftitle,
+			        (select BIZACQACCTCD from bizacqcorp where bizacqcd=c.buy_CorpCd) BIZACQACCTCD,
+					(select bizacqname from bizacqcorp where bizacqcd =c.buy_CorpCd) BIZACQNAME,
+					(select bizceoname from bizacqcorp where bizacqcd =c.buy_CorpCd) BIZCEONAME,
+					(select substr(bizregno,1,3)||'-'||substr(bizregno,4,2)||'-'||substr(bizregno,6,5) from bizacqcorp where bizacqcd=c.buy_CorpCd) BIZACQREGNO,
+					'XX' BILLTYPE,			
+										case b.isVat when 'Y' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000-(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/110*1000,'999999999999')
+																						when 2 then
+        																					 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)-(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/110,'999999999999')
+                                                                        end
+                                                     when 'N' then
+                                                                        case b.unitType when 1 then
+                															 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd),'999999999999')
+                                                                        end
+                                        end SUPPLYAMT,
+                                        case b.isVat when 'Y' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/110*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/110,'999999999999')
+                                                                        end
+                                                     when 'N' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100,'999999999999')
+                                                                        end
+                                        end TAXAMT,
+                                        case b.isVat when 'Y' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd),'999999999999')
+                                                                        end
+                                                     when 'N' then
+                                                                    	case b.unitType when 1 then
+  																			 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000+(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)+(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100,'999999999999')
+                                                                        end
+                                        end TOTAMT,
+                                        case b.isVat when 'Y' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd),'999999999999')
+                                                                        end
+                                                                 when 'N' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000+(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)+(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100,'999999999999')
+                                                                        end
+                                        end REALAMT,
+					bc_contents DETAIL,		
+			        a.CONF_NO CONF_NO, a.CONFTYPE
+			FROM
+			        CONFER A,
+			        BUYCONFER B,
+			        ITEM C
+			WHERE A.CONF_NO = B.CONF_NO
+			AND A.CONFDELFLAG = 'N'
+			AND A.CONF_NO = C.OBJ_NO
+			AND A.CONF_NO = ?
+			AND C.BUY_CORPCD = ?	
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_008"  value-count="2"		url="지급품의서 생성을 위한 품의서의 Sub 검색">
+		<sql-content>
+			<![CDATA[
+			SELECT  '50011' ACCTCD,
+					TO_ACCTNAME('50011') ACCTNAME,
+					case b.isVat when 'Y' then
+	                                        case b.unitType when 1 then
+	                                                IT_AMT * 1000 - IT_AMT*10/110*1000
+	                                                       when 2 then
+	                                                IT_AMT - IT_AMT*10/110
+	                                        end 
+												     when 'N' then
+											case b.unitType when 1 then
+	                                                IT_AMT * 1000
+	                                                       when 2 then
+	                                                IT_AMT
+	                                        end 	 
+					end AMOUNT,
+					C.IT_NAME,C.IT_STD,IT_CNT,
+					a.conf_no OBJ_NO,
+				    C.IT_DIV,IT_NO,'S' as certifType
+			FROM
+				CONFER A,
+				BUYCONFER B,
+				ITEM C
+			WHERE A.CONF_NO = B.CONF_NO
+			AND A.CONFDELFLAG = 'N'
+			AND A.CONF_NO = C.OBJ_NO
+			-- and it_status = 'ECA'
+			AND A.CONF_NO = ?
+			AND C.BUY_CORPCD = ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_009"  value-count="1"		url="수입품의서 생성을 위한 품의서의 Head 검색">
+		<sql-content>
+			<![CDATA[
+			select   distinct B.salecorpcd,
+					(select BIZACQACCTCD from bizacqcorp where bizacqcd=B.salecorpcd) BIZACQACCTCD,
+					(select bizacqname from bizacqcorp where bizacqcd =B.salecorpcd) BIZACQNAME,
+					(select bizceoname from bizacqcorp where bizacqcd =B.salecorpcd) BIZCEONAME,
+					(select substr(bizregno,1,3)||'-'||substr(bizregno,4,2)||'-'||substr(bizregno,6,5) from bizacqcorp where bizacqcd=B.salecorpcd) BIZACQREGNO,
+					
+					'1A' BILLTYPE,
+					
+										case b.isVat when 'Y' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000-(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/110*1000,'999999999999')
+																						when 2 then
+        																					 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)-(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/110,'999999999999')
+                                                                        end
+                                                     when 'N' then
+                                                                        case b.unitType when 1 then
+                															 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd),'999999999999')
+                                                                        end
+                                        end SUPPLYAMT,
+                                        case b.isVat when 'Y' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/110*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/110,'999999999999')
+                                                                        end
+                                                     when 'N' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100,'999999999999')
+                                                                        end
+                                        end TAXAMT,
+                                        case b.isVat when 'Y' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR((SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd),'999999999999')
+                                                                        end
+                                                     when 'N' then
+                                                                    	case b.unitType when 1 then
+  																			 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000+(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)+(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100,'999999999999')
+                                                                        end
+                                        end TOTAMT,
+                                        case b.isVat when 'Y' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd),'999999999999')
+                                                                        end
+                                                                 when 'N' then
+                                                                        case b.unitType when 1 then
+  																			 				 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)*1000+(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100*1000,'999999999999')
+        																				when 2 then
+                																			 TO_CHAR(SUM(c.IT_AMT) OVER(partition by buy_CorpCd)+(SUM(c.IT_AMT) OVER(partition by buy_CorpCd))*10/100,'999999999999')
+                                                                        end
+                                        end REALAMT,
+					sc_contents DETAIL,			
+			        a.CONF_NO CONF_NO, a.CONFTYPE
+			from CONFER A,
+			     SALECONFER B,
+			     ITEM C
+			where a.conf_no = b.conf_no
+			AND A.CONFDELFLAG = 'N'
+			AND A.CONF_NO = C.OBJ_NO
+			and B.CONF_NO = ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_010"  value-count="1"		url="수입품의서 생성을 위한 품의서의 Sub 검색">
+		<sql-content>
+			<![CDATA[
+			SELECT  '41021' ACCTCD,
+					TO_ACCTNAME('41021') ACCTNAME,					    
+					case b.isVat when 'Y' then
+	                                        case b.unitType when 1 then
+	                                                IT_AMT * 1000 - IT_AMT*10/110*1000
+	                                                       when 2 then
+	                                                IT_AMT - IT_AMT*10/110
+	                                        end 
+												     when 'N' then
+											case b.unitType when 1 then
+	                                                IT_AMT * 1000
+	                                                       when 2 then
+	                                                IT_AMT
+	                                        end 	 
+										end AMOUNT,
+					C.IT_NAME,C.IT_STD,IT_CNT,
+					(select conf_no from confer where  status not in ('DA0','DB0') AND CONFDELFLAG = 'N' and refconf_no = a.conf_no) certifNo,
+					OBJ_NO,
+				    C.IT_DIV,IT_NO
+			FROM
+				CONFER A,
+				SALECONFER B,
+				ITEM C
+			WHERE A.CONF_NO = B.CONF_NO
+			AND A.CONFDELFLAG = 'N'
+			AND A.CONF_NO = C.OBJ_NO
+			-- and it_status = 'ECA'
+			AND A.CONF_NO = ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_011"  value-count="9"		url="주문정보생성">
+		<sql-content>
+			<![CDATA[
+			INSERT INTO ITEMORDER
+			(
+			 ODC_NO,
+			 ODCCD,CONF_NO,ODC_SVC,ODC_DEFREP,ODC_CORPCD,
+			 ODC_DESC,ODC_PERSON,ODC_PERTEL
+			)
+			VALUES
+			(
+			 ?,?,?,
+			 ?,?,?,
+			 ?,?,?
+			 )
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_012"  value-count="6"		url="주문정보수정">
+		<sql-content>
+			<![CDATA[
+			UPDATE ITEMORDER
+			SET		ODC_SVC = ?,ODC_DEFREP=?,ODC_CORPCD = ?
+			WHERE ODC_NO=?
+			AND	  ODCCD = ?
+			AND   CONF_NO = ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_013"  value-count="9"		url="납품처정보 생성">
+		<sql-content>
+			<![CDATA[
+			INSERT INTO ITEMDELIVERY
+			(
+			 OBJ_NO,ID_DIV,
+			 DELIVERCORPNAME,
+			 DELIVERCORPADDR,
+			 DELIVERCORPTEL,
+			 DELIVERCORPFAX,
+			 DELIVERCORPPERS,
+			 DELIVERDT,
+			 DELIVERCORPEMAIL
+			)
+			VALUES
+			(
+			 ?,?,?,?,?,?,?,?,?
+			)
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_014"  value-count="8"		url="납품처정보 수정">
+		<sql-content>
+			<![CDATA[
+			UPDATE ITEMDELIVERY
+			SET 
+				DELIVERCORPNAME = ?,
+				DELIVERCORPADDR = ?,
+				DELIVERCORPTEL = ?,
+				DELIVERCORPFAX = ?,
+				DELIVERCORPPERS = ?,
+				DELIVERDT = ?
+			WHERE OBJ_NO = ?
+			AND	 ID_DIV = ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_015"  value-count="1"		url="주문서 조회">
+		<sql-content>
+			<![CDATA[
+			SELECT A.ODCCD, A.CONF_NO, A.ODC_CORPCD,TO_BIZACQNAME(A.ODC_CORPCD) RECNAME,
+				   C.deliverCorpAddr,C.deliverCorpName,
+				   SUBSTR(C.deliverDt,1,4)||'-'||SUBSTR(C.deliverDt,5,2)||'-'||SUBSTR(C.deliverDt,7,2) DELIVERDT,
+				   A.ODC_SVC bc_CONTENTS, B.OBJ_NO,
+			       B.it_name,B.it_std,B.it_cnt,B.it_price,B.it_amt,B.it_div,
+			       A.ODC_DEFREP,A.ODC_NO,A.ODC_CORPCD
+			FROM ITEMORDER A,
+				 ITEM B,
+				 ITEMDELIVERY C
+			WHERE A.CONF_NO = B.OBJ_NO
+			AND   A.ODC_CORPCD = B.BUY_CORPCD
+			AND	  A.CONF_NO = C.OBJ_NO
+			AND a.ODC_NO= ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_016"  value-count="2"		url="주문서 조회">
+		<sql-content>
+			<![CDATA[
+			update confer
+			set uptdtm = sysdate,
+				status = 'EBA'
+			where conf_no =
+			(
+				select a.conf_no
+				from
+				(
+				select count(distinct buy_corpcd) cCnt, a.conf_no from confer a, item b
+				where a.conf_no = b.obj_No
+				and a.conf_no = ?
+				group by a.conf_No
+				) a,
+				(
+				select count(distinct odc_corpcd) oCnt from itemorder
+				where odc_isCfm = 'Y'
+				and  conf_no = ?
+				) b
+				where a.cCnt= b.oCnt
+			)
+
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping id="J_017"  value-count="1"		url="주문서 리스트 조회">
+		<sql-content>
+			<![CDATA[
+				SELECT A.CONF_NO, A.ODC_NO, ODC_CORPCD, TO_BIZACQNAME(ODC_CORPCD) ODC_CORPNAME, 
+						B.DELIVERCORPNAME,B.DELIVERCORPPERS, B.DELIVERCORPEMAIL,
+					   CASE D.UNITTYPE WHEN 1 
+										  THEN (SELECT SUM(IT_AMT)*1000 FROM ITEM C WHERE A.CONF_NO = C.OBJ_NO AND BUY_CORPCD = A.ODC_CORPCD)
+                                       WHEN 2 THEN (SELECT SUM(IT_AMT) FROM ITEM C WHERE A.CONF_NO = C.OBJ_NO AND BUY_CORPCD = A.ODC_CORPCD)
+                       END AMT,	 
+					   B.DELIVERDT, 
+					   TO_CHAR(A.ODCCRDTM, 'YYYYMMDD') ODCCRDTM,
+					   CASE WHEN ODC_ISCFM='Y' THEN
+					         '수락'
+							WHEN ODC_ISCFM='N' THEN
+					         '거절'
+							ELSE '미정'					 
+					   END ODC_ISCFMNAME,
+					   ODC_ISCFM,
+					   TO_CHAR(CFMDTM,'YYYYMMDD') CFMDTM
+				FROM ITEMORDER A, ITEMDELIVERY B, BUYCONFER D
+				WHERE A.ODC_NO = B.OBJ_NO
+				AND A.CONF_NO = D.CONF_NO
+				AND A.CONF_NO = ?	
+				ORDER BY ODC_NO	
+				]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_018"  value-count="1"		url="문서 리스트 조회">
+		<sql-content>
+			<![CDATA[
+				SELECT A.DOCNO, A.MAINNO, MTITLE TITLE, A.DOCTYPE,
+		   			   CASE WHEN A.DOCTYPE = 'A' THEN
+					         '수입품의'
+					        WHEN A.DOCTYPE = 'B' THEN
+						     '지급품의'
+						    END DOCTYPENAME,			
+					   CASE WHEN B.AA01_JPNO IS NOT NULL THEN
+					   			 CASE WHEN A.DOCTYPE = 'A' THEN
+								         'EEA'
+								      WHEN A.DOCTYPE = 'B' THEN
+									     'EDA'
+									  END 
+						   	ELSE A.STATUS
+					   END STATUS,
+					   CASE WHEN B.AA01_JPNO IS NOT NULL THEN
+					   			 CASE WHEN A.DOCTYPE = 'A' THEN
+								         '수입완료'
+								      WHEN A.DOCTYPE = 'B' THEN
+									     '지급완료'
+									  END 
+						   	ELSE (SELECT CDNAME FROM COCODE  WHERE CDTYPE IN ('SB','ST') AND CD = A.STATUS)
+					   END STATUSNAME,				   
+					   TO_EMPKNAME(CREMPID) CREMPNAME, CREMPID,SUPPLYAMT AMT,
+					   TO_CHAR(CREATEDTM,'YYYYMMDD') CREATEDTM
+				FROM ACCTRPTHD A,TBAA01@TO_INHAUH B
+				WHERE A.CONF_NO = ?
+				AND B.AA01_JPNO(+)  = A.DOCNO
+				]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_019"  value-count="2"		url="주문서 생성시  Head정보">
+		<sql-content>
+			<![CDATA[
+			SELECT DISTINCT
+			(
+			   	select A.CONF_NO||Lpad(to_char(to_number(nvl(substr(max(odc_no),12,3),'0'))+1),3,'0')
+				from itemorder
+				where conf_no =A.CONF_NO
+			) ODC_NO,
+			(
+			   CONFTYPE||
+			   (
+				 	select A.CONF_NO||Lpad(to_char(to_number(nvl(substr(max(odc_no),12,3),'0'))+1),3,'0')
+					from itemorder
+					where conf_no =A.CONF_NO
+			   )||'-'||C.BUY_CORPCD
+			) ODCCD,
+			C.BUY_CORPCD ODC_CORPCD, TO_BIZACQNAME(C.BUY_CORPCD) ODC_COPRNAME,
+			DELIVERCORPNAME,DELIVERCORPADDR,DELIVERCORPTEL,DELIVERCORPFAX,DELIVERCORPPERS,DELIVERDT,
+			A.CONF_NO,DELIVERCORPEMAIL, A.CONFTITLE ODC_SVC,
+			A.CONFTYPE ID_DIV, A.CONF_NO OBJ_NO, TO_EMPKNAME(A.CREMPID) ODC_PERSON,
+			TO_CDNAME('CDT',D.UNITTYPE) UNITTYPE_NAME, TO_CDNAME('IV',D.ISVAT) ISVAT_NAME
+			FROM CONFER A,
+				 ITEMDELIVERY B,
+				 ITEM C,
+				 BUYCONFER D
+			WHERE A.CONF_NO = B.OBJ_NO 
+			AND A.CONF_NO = C.OBJ_NO
+			AND A.CONF_NO = D.CONF_NO
+			AND C.BUY_CORPCD = ?
+			AND A.CONF_NO = ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_020"  value-count="2"		url="주문서 생성시  ITEM정보">
+		<sql-content>
+			<![CDATA[
+			SELECT IT_DIV,IT_NO,IT_NAME,IT_STD,
+					CASE b.UNITTYPE WHEN 1 THEN
+					                    TO_CHAR((SUM(A.IT_PRICE) OVER(partition by IT_NO))*1000,'999999999999')
+									WHEN 2 THEN
+										TO_CHAR((SUM(A.IT_PRICE) OVER(partition by IT_NO)),'999999999999')
+					END IT_PRICE,	  
+				   IT_CNT,
+				    CASE b.UNITTYPE WHEN 1 THEN
+					                    TO_CHAR((SUM(A.IT_AMT) OVER(partition by IT_NO))*1000,'999999999999')
+									WHEN 2 THEN
+										TO_CHAR((SUM(A.IT_AMT) OVER(partition by IT_NO)),'999999999999')
+					END IT_AMT,
+				   IT_TYPE,B.UNITTYPE,B.ISVAT 
+			FROM ITEM A, BUYCONFER B
+			WHERE A.OBJ_NO = B.CONF_NO 
+			AND BUY_CORPCD = ?
+			AND OBJ_NO = ?
+			]]>
+		</sql-content>
+   </sql-mapping>
+    <sql-mapping id="J_021"  value-count="1"		url="주문서 조회시  Head정보">
+		<sql-content>
+			<![CDATA[
+			SELECT TO_CHAR(ODCCRDTM,'YYYY-MM-DD') ODCCRDTM,
+					ODC_NO, ODCCD,A.CONF_NO,ODC_SVC,ODC_DEFREP,A.ODC_CORPCD,TO_BIZACQNAME(A.ODC_CORPCD) ODC_COPRNAME,
+				   OBJ_NO,ID_DIV,
+				   DELIVERCORPNAME,DELIVERCORPADDR,DELIVERCORPTEL,DELIVERCORPFAX,DELIVERCORPPERS,SUBSTR(DELIVERDT,1,4)||'-'||SUBSTR(DELIVERDT,5,2)||'-'||SUBSTR(DELIVERDT,7,2) DELIVERDT,
+				   DELIVERCORPEMAIL,
+				   ODC_DESC,
+				   ODC_PERSON, ODC_PERTEL,
+				   TO_CDNAME('CDT',C.UNITTYPE) UNITTYPE_NAME, TO_CDNAME('IV',C.ISVAT) ISVAT_NAME
+			FROM ITEMORDER A,ITEMDELIVERY B, BUYCONFER C
+			WHERE A.ODC_NO = B.OBJ_NO
+			AND A.CONF_NO = C.CONF_NO
+			AND B.ID_DIV = 'ORRE'
+			AND A.ODC_NO =?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping id="J_022"  value-count="1"		url="주문서 조회시  ITEM정보">
+		<sql-content>
+			<![CDATA[
+			SELECT IT_DIV,B.OBJ_NO,IT_NO,IVIT_NO,BUY_CORPCD,IT_NAME,IT_STD,
+				   CASE D.UNITTYPE WHEN 1 THEN
+					                    TO_CHAR((SUM(B.IT_PRICE) OVER(partition by IT_NO))*1000,'999999999999')
+									WHEN 2 THEN
+										TO_CHAR((SUM(B.IT_PRICE) OVER(partition by IT_NO)),'999999999999')
+					END IT_PRICE,	  
+				   IT_CNT,
+				    CASE D.UNITTYPE WHEN 1 THEN
+					                    TO_CHAR((SUM(B.IT_AMT) OVER(partition by IT_NO))*1000,'999999999999')
+									WHEN 2 THEN
+										TO_CHAR((SUM(B.IT_AMT) OVER(partition by IT_NO)),'999999999999')
+					END IT_AMT,
+				   IT_TYPE
+            FROM ITEMORDER A,
+                 ITEM B, BUYCONFER D
+            WHERE A.CONF_NO = B.OBJ_NO
+            AND A.ODC_CORPCD = B.BUY_CORPCD
+			AND A.CONF_NO = D.CONF_NO
+			AND A.ODC_NO =?
+			]]>
+		</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="J_023"   value-count="1" url="첨부파일 검색" >  
+	<sql-content>
+	<![CDATA[
+		select * from com_files where obj_no = ?	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="J_024"   value-count="1" url="INVOICE 생성 HEAD" >  
+	<sql-content>
+	<![CDATA[
+		SELECT DISTINCT
+		(
+		   	select A.CONF_NO||Lpad(to_char(to_number(nvl(substr(max(odc_no),12,3),'0'))+1),3,'0')
+			from itemorder
+			where conf_no =A.CONF_NO
+		) ODC_NO,
+		(
+		   CONFTYPE||
+		   (
+			 	select A.CONF_NO||Lpad(to_char(to_number(nvl(substr(max(odc_no),12,3),'0'))+1),3,'0')
+				from itemorder
+				where conf_no =A.CONF_NO
+		   )||'-'||C.BUY_CORPCD
+		) ODCCD,
+		C.BUY_CORPCD ODC_CORPCD, TO_BIZACQNAME(C.BUY_CORPCD) ODC_COPRNAME,
+		DELIVERCORPNAME,DELIVERCORPADDR,DELIVERCORPTEL,DELIVERCORPFAX,DELIVERCORPPERS,DELIVERDT,
+		A.CONF_NO,DELIVERCORPEMAIL,D.SC_SVC,
+		A.CONFTYPE ID_DIV, A.CONF_NO OBJ_NO,
+		TO_CDNAME('IV',ISVAT) ISVAT_NAME,
+		TO_CDNAME('CDT',UNITTYPE) UNITTYPE_NAME
+		FROM CONFER A,
+			 ITEMDELIVERY B,
+			 ITEM C,
+			 SALECONFER D
+		WHERE A.CONF_NO = B.OBJ_NO 
+		AND A.CONF_NO = C.OBJ_NO
+		AND A.CONF_NO = D.CONF_NO
+		AND A.CONF_NO = ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="J_025"   value-count="1" url="INVOICE 생성 DETAIL" >  
+	<sql-content>
+	<![CDATA[
+		SELECT IT_DIV,IT_NO,IT_NAME,IT_STD,
+				CASE b.UNITTYPE WHEN 1 THEN
+				                    TO_CHAR((SUM(A.IT_PRICE) OVER(partition by IT_NO))*1000,'999999999999')
+								WHEN 2 THEN
+									TO_CHAR((SUM(A.IT_PRICE) OVER(partition by IT_NO)),'999999999999')
+				END IT_PRICE,	  
+			   IT_CNT,
+			    CASE b.UNITTYPE WHEN 1 THEN
+				                    TO_CHAR((SUM(A.IT_AMT) OVER(partition by IT_NO))*1000,'999999999999')
+								WHEN 2 THEN
+									TO_CHAR((SUM(A.IT_AMT) OVER(partition by IT_NO)),'999999999999')
+				END IT_AMT,
+			   IT_TYPE,B.UNITTYPE,B.ISVAT 
+		FROM ITEM A, SALECONFER B
+		WHERE A.OBJ_NO = B.CONF_NO 
+		AND B.CONF_NO = ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="J_026"   value-count="3" url="주문서 발송 LOG" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO CONFERHISTORY
+		(CONF_NO, CONFHIST_NO,UPDTM,UPEMPID,COLUMNNAME,BEFORE,AFTER)
+		VALUES
+		(
+			?,
+			(SELECT NVL(MAX(CONFHIST_NO),0)+1 FROM CONFERHISTORY),
+			SYSDATE,
+			?,
+			'STATUS',
+			'',
+			?
+		)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="J_027"   value-count="3" url="주문서 발송 LOG" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO CONFERHISTORY
+		(
+			select a.conf_no, (SELECT NVL(MAX(CONFHIST_NO),0)+1 FROM CONFERHISTORY),SYSDATE, 'SYSTEM','STATUS','',	?
+			from
+			(
+			select count(distinct buy_corpcd) cCnt, a.conf_no from confer a, item b
+			where a.conf_no = b.obj_No
+			and a.conf_no = ?
+			group by a.conf_No
+			) a,
+			(
+			select count(distinct odc_corpcd) oCnt from itemorder
+			where odc_isCfm = 'Y'
+			and  conf_no = ?
+			) b
+			where a.cCnt= b.oCnt
+		)
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql>

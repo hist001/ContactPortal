@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping id="INSA_SCH" value-count="0" url="인사기본사항 조회" >
+	<sql-content>
+	<![CDATA[
+    SELECT EMP_ID,
+           EMP_KNAME,
+           SSN,
+           SUBSTR(SSN, 0, 6) AS SSN1,
+           SUBSTR(SSN, 7, 7) AS SSN2,
+           JOB_ASSIGN,
+           ORG_CD,
+           TO_ORGNONAME(ORG_CD) AS ORG_NM,
+           PHONE_NUM,
+           JOB_POSITION,
+           JOIN_DT,
+           C_CODE,
+           GET_CODENAME('C_CODE', C_CODE) AS C_CODE_NM,
+           M_PHONE_NUM,
+           JOB_KIND,
+           GROUP_JOIN_DT,
+           WORK_STS,
+           TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(JOIN_DT))/12, 0) ||'년'||
+           TRUNC(MOD(MONTHS_BETWEEN(SYSDATE, TO_DATE(JOIN_DT)), 12), 0)||'개월' AS JOIN_YEAR_CNT,
+           TRUNC(MONTHS_BETWEEN(SYSDATE, TO_DATE(GROUP_JOIN_DT))/12, 0) ||'년'||
+           TRUNC(MOD(MONTHS_BETWEEN(SYSDATE, TO_DATE(GROUP_JOIN_DT)), 12), 0)||'개월' AS GROUP_JOIN_YEAR_CNT,
+           JOB_DUTY,
+           JOIN_DIV,
+           WORK_PLACE,
+           JOB_GRADE
+      FROM HTPA01
+     WHERE C_CODE = [S_C_CODE]
+       AND EMP_ID = [S_EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="INSA_INSERT" value-count="0" url="인사기본사항 추가" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO HTPA01 (C_CODE, 
+							EMP_ID, 
+							EMP_KNAME, 
+   							SSN, 
+   							ORG_CD, 
+   							PHONE_NUM, 
+   							M_PHONE_NUM,
+   							JOIN_DT, 
+   							GROUP_JOIN_DT, 
+   							JOIN_DIV, 
+   							WORK_STS, 
+   							WORK_PLACE, 
+   							JOB_ASSIGN, 
+   							JOB_POSITION,
+   							JOB_KIND, 
+   							JOB_DUTY, 
+   							JOB_GRADE,
+   							REG_ID, 
+   							REG_DT, 
+   							UPD_ID, 
+   							UPD_DT) 
+		VALUES(
+				 [C_CODE],
+				 [EMP_ID],
+                 [EMP_KNAME],
+                 [SSN1]||[SSN2],
+                 [ORG_CD],
+                 [PHONE_NUM],
+                 [M_PHONE_NUM],
+                 NVL(REPLACE(TRIM([JOIN_DT]),'-',''),''),
+                 NVL(REPLACE(TRIM([GROUP_JOIN_DT]),'-',''),''),
+                 [JOIN_DIV],
+                 [WORK_STS],
+                 [WORK_PLACE],
+                 [JOB_ASSIGN],
+                 [JOB_POSITION],
+                 [JOB_KIND],
+                 [JOB_DUTY],
+                 [JOB_GRADE],
+                 [REG_ID],
+                 SYSDATE,
+                 [UPD_ID],
+                 SYSDATE )
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="INSA_UPDATE" value-count="0" url="인사기본사항 수정" >
+	<sql-content>
+	<![CDATA[
+	    UPDATE HTPA01
+	       SET EMP_KNAME              = [EMP_KNAME],
+		       SSN                    = [SSN1]||[SSN2],
+		       ORG_CD                 = [ORG_CD],
+		       PHONE_NUM              = [PHONE_NUM],
+		       M_PHONE_NUM            = [M_PHONE_NUM],
+		       JOIN_DT                = NVL(REPLACE(TRIM([JOIN_DT]),'-',''), ''),
+		       GROUP_JOIN_DT          = NVL(REPLACE(TRIM([GROUP_JOIN_DT]),'-',''), ''),
+		       JOIN_DIV               = [JOIN_DIV],
+		       WORK_STS               = [WORK_STS],
+		       WORK_PLACE             = [WORK_PLACE],
+		       JOB_ASSIGN             = [JOB_ASSIGN],
+		       JOB_POSITION           = [JOB_POSITION],
+		       JOB_KIND               = [JOB_KIND],
+		       JOB_DUTY               = [JOB_DUTY],
+		       JOB_GRADE              = [JOB_GRADE],
+		       UPD_ID                 = [UPD_ID],
+		       UPD_DT                 = SYSDATE
+		 WHERE C_CODE                 = [C_CODE]
+		   AND EMP_ID                 = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="INSA_DELETE" value-count="0" url="인사기본사항 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA01
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="BASIC_SCH" value-count="0" url="기본탭 조회" >
+	<sql-content>
+	<![CDATA[
+    SELECT A.EMP_ID,
+           A.EMP_CNAME,
+           A.EMP_ENAME,
+           B.BIRTH_DT,
+           B.LUNAR_DIV,
+           A.JOIN_DT,
+           A.PROB_END_DT,
+           B.GENDER,
+           A.NATIONALITY,
+           A.GROUP_JOIN_DT,
+           A.STS_MODI_DT,
+           A.REGI_MOVE_YN,
+           A.JOIN_DIV,
+           A.EXECUTIVE_DT,
+           A.PREV_EMP_ID,
+           A.REFER_EMP_ID,
+           A.CONTRACT_ST_DT,
+           A.CONTRACT_END_DT,
+           A.CURR_JOB_ST_DT,
+           A.CURR_JOB_END_DT,
+           B.MARITAL_STS,
+           B.WEDDING_ANNIV,
+           A.RETIRE_REASON,
+           A.FINAL_ASSGIN_DT,
+           B.BIRTH_PLACE,
+           A.RETIRE_DIV,
+           A.FINAL_MOVE_DT,
+           A.LEAVE_CNT_DT,
+           B.ORIGIN,
+           A.SICK_LEAVE_ST_DT,
+           A.SICK_LEAVE_END_DT,
+           A.MATERNITY_LEAVE_ST_DT,
+           A.MATERNITY_LEAVE_END_DT,
+           A.BABY_LEAVE_ST_DT,
+           A.BABY_LEAVE_END_DT,
+           A.LEAVE_ST_DT,
+           A.LEAVE_END_DT,
+           A.RETIRE_DT,
+           A.RETIRE_CNT_DT,
+           A.HR_STS,
+           A.RECOMMENDER,
+           A.RECOMMENDER_REL,
+           A.UPD_ID,
+           A.UPD_DT
+      FROM HTPA01 A,
+           HTPA02 B
+     WHERE A.C_CODE = B.C_CODE(+)
+       AND A.EMP_ID = B.EMP_ID(+)
+       AND A.C_CODE = [S_C_CODE]
+       AND A.EMP_ID = [S_EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="BASIC_UPDATE" value-count="0" url="기본탭 수정" >
+	<sql-content>
+	<![CDATA[
+	    UPDATE HTPA01
+	       SET EMP_CNAME              = [EMP_CNAME],
+		       EMP_ENAME              = [EMP_ENAME],
+		       JOIN_DT                = NVL(REPLACE(TRIM([JOIN_DT]),'-',''), ''),
+		       GROUP_JOIN_DT          = NVL(REPLACE(TRIM([GROUP_JOIN_DT]),'-',''), ''),
+		       PROB_END_DT            = NVL(REPLACE(TRIM([PROB_END_DT]),'-',''), ''),
+		       STS_MODI_DT            = NVL(REPLACE(TRIM([STS_MODI_DT]),'-',''), ''),
+		       EXECUTIVE_DT           = NVL(REPLACE(TRIM([EXECUTIVE_DT]),'-',''), ''),
+		       JOIN_DIV               = [JOIN_DIV],
+		       NATIONALITY            = [NATIONALITY],
+		       REGI_MOVE_YN           = [REGI_MOVE_YN],
+		       PREV_EMP_ID            = [PREV_EMP_ID],
+		       REFER_EMP_ID           = [REFER_EMP_ID],
+		       CONTRACT_ST_DT         = NVL(REPLACE(TRIM([CONTRACT_ST_DT]),'-',''), ''),
+		       CONTRACT_END_DT        = NVL(REPLACE(TRIM([CONTRACT_END_DT]),'-',''), ''),
+		       CURR_JOB_ST_DT         = NVL(REPLACE(TRIM([CURR_JOB_ST_DT]),'-',''), ''),
+		       CURR_JOB_END_DT        = NVL(REPLACE(TRIM([CURR_JOB_END_DT]),'-',''), ''),
+		       LEAVE_CNT_DT           = NVL(REPLACE(TRIM([LEAVE_CNT_DT]),'-',''), ''),
+		       RETIRE_REASON          = [RETIRE_REASON],
+		       FINAL_ASSGIN_DT        = NVL(REPLACE(TRIM([FINAL_ASSGIN_DT]),'-',''), ''),
+		       RETIRE_DIV             = [RETIRE_DIV],
+		       FINAL_MOVE_DT          = NVL(REPLACE(TRIM([FINAL_MOVE_DT]),'-',''), ''),
+		       SICK_LEAVE_ST_DT       = NVL(REPLACE(TRIM([SICK_LEAVE_ST_DT]),'-',''), ''),
+		       SICK_LEAVE_END_DT      = NVL(REPLACE(TRIM([SICK_LEAVE_END_DT]),'-',''), ''),
+		       MATERNITY_LEAVE_ST_DT  = NVL(REPLACE(TRIM([MATERNITY_LEAVE_ST_DT]),'-',''), ''),
+		       MATERNITY_LEAVE_END_DT = NVL(REPLACE(TRIM([MATERNITY_LEAVE_END_DT]),'-',''), ''),
+		       BABY_LEAVE_ST_DT       = NVL(REPLACE(TRIM([BABY_LEAVE_ST_DT]),'-',''), ''),
+		       BABY_LEAVE_END_DT      = NVL(REPLACE(TRIM([BABY_LEAVE_END_DT]),'-',''), ''),
+		       LEAVE_ST_DT            = NVL(REPLACE(TRIM([LEAVE_ST_DT]),'-',''), ''),
+		       LEAVE_END_DT           = NVL(REPLACE(TRIM([LEAVE_END_DT]),'-',''), ''),
+		       RETIRE_DT              = NVL(REPLACE(TRIM([RETIRE_DT]),'-',''), ''),
+		       RETIRE_CNT_DT          = NVL(REPLACE(TRIM([RETIRE_CNT_DT]),'-',''), ''),
+		       HR_STS                 = [HR_STS],
+		       RECOMMENDER            = [RECOMMENDER],
+		       RECOMMENDER_REL        = [RECOMMENDER_REL],
+		       UPD_ID                 = [UPD_ID],
+		       UPD_DT                 = SYSDATE
+		 WHERE C_CODE                 = [C_CODE]
+		   AND EMP_ID                 = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="DETAIL_INSERT" value-count="0" url="신상정보 등록" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO HTPA02 (C_CODE, 
+							EMP_ID,
+							COLOR_BLIND,
+							HANDICAP,
+							LUNAR_DIV,
+							MARITAL_STS,
+   							REG_ID, 
+   							REG_DT, 
+   							UPD_ID, 
+   							UPD_DT) 
+		VALUES(
+				 [C_CODE],
+				 [EMP_ID],
+                 '1',
+                 '1',
+                 '1',
+                 '1',
+                 [REG_ID],
+                 SYSDATE,
+                 [UPD_ID],
+                 SYSDATE )
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="DETAIL_UPDATE" value-count="0" url="신상정보 수정" >
+	<sql-content>
+	<![CDATA[
+	    UPDATE HTPA02
+	       SET BIRTH_DT    = NVL(REPLACE(TRIM([BIRTH_DT]),'-',''), ''),
+		       LUNAR_DIV   = [LUNAR_DIV],
+		       GENDER      = [GENDER],
+		       BIRTH_PLACE = [BIRTH_PLACE],
+		       ORIGIN      = [ORIGIN],
+		       UPD_ID      = [UPD_ID],
+		       UPD_DT      = SYSDATE
+		 WHERE C_CODE      = [C_CODE]
+		   AND EMP_ID      = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="DETAIL_DELETE" value-count="0" url="신상정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA02
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="ADDR_DELETE" value-count="0" url="주소정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA03
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="SCHOOL_DELETE" value-count="0" url="학력정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA04
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="FAMILY_DELETE" value-count="0" url="가족정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA05
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="DISP_DELETE" value-count="0" url="발령정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA06
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="CAREER_DELETE" value-count="0" url="경력정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA07
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="LANG_DELETE" value-count="0" url="어학정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA08
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="QUAL_DELETE" value-count="0" url="자격정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA09
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="EVAL_DELETE" value-count="0" url="평가정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA10
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="RWD_DELETE" value-count="0" url="포상정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA11
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="DIS_DELETE" value-count="0" url="징계정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA12
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="ARMY_DELETE" value-count="0" url="병역정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA13
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="PP_DELETE" value-count="0" url="여권정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA14
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="VISA_DELETE" value-count="0" url="비자정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA15
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="ETC_DELETE" value-count="0" url="기타정보 삭제" >
+	<sql-content>
+	<![CDATA[
+    DELETE FROM HTPA16
+     WHERE C_CODE = [C_CODE]
+       AND EMP_ID = [EMP_ID]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+	

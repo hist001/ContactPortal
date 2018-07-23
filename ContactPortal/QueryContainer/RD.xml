@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="euc-kr"?>
+
+<sql>
+
+   <sql-mapping  id="RD_001"   value-count="0"   url="RD 파일정보 조회" >  
+   <sql-content>
+   <![CDATA[
+ 
+SELECT FILESYSTEMNAME
+FROM COM_FILES
+WHERE UI_NO='RD'
+AND ROWNUM=1
+AND OBJ_NO = DESTYYYYMM:
+AND DELFLAG !='Y'
+ORDER BY CREATEDTM DESC
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+  
+   <sql-mapping  id="RD_002"   value-count="0"   url="최근 RD 작성년월 가져오기" >  
+   <sql-content>
+   <![CDATA[
+ 
+SELECT MAX(YYYYMM) YYYYMM
+FROM DS_BIZMH
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+           
+ </sql>
+

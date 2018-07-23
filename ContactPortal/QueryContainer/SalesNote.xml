@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="salesNoteInq"   value-count="0" url="개인 영업노트 조회" >  
+	<sql-content>
+	<![CDATA[
+		select 	personnalsalesnotes_seq, 
+				salesempid, 
+				prodname, 
+				mainclientcd, 
+				expcontamt, 
+				salesnote
+		from personnalsalesnotes 
+		where salesempid = ?
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql>
+

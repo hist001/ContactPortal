@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="F_001"   value-count="0" url="가계부 조회" >  
+	<sql-content>
+	<![CDATA[
+      SELECT 
+            FAMT_NO,  	
+		    TO_CHAR(YMD,'YYYYMMDD') AS YMD,
+		    SUBSTR(TO_CHAR(YMD,'DAY'),1,1) AS DAY, 
+			PAY_GB, 
+			CORP, 
+			NVL(C_AMT,0) AS C_AMT, 
+			NVL(S_AMT,0) AS S_AMT, 
+			NOTE, 
+			ACCTCD, 
+			USERID, 
+			T_USERID, 
+			USE_GB,
+           SUM(C_AMT) OVER() AS TC_AMT,
+		   SUM(S_AMT) OVER() AS TS_AMT			
+      FROM FAMT	
+	  WHERE TO_CHAR(YMD,'YYYYMMDD') BETWEEN  REPLACE([S_STARTDT],'-','') AND REPLACE([S_ENDDT],'-','')
+	  AND PAY_GB LIKE [S_PAY_GB]||'%'
+	  AND CORP LIKE [S_CORP]||'%'
+	  AND ACCTCD LIKE [S_ACCTCD]||'%'
+	  AND (NOTE LIKE [S_NOTE]||'%' OR [S_NOTE] IS NULL) 
+	  AND (USERID LIKE [S_USERID]||'%' OR [S_USERID] IS NULL)
+	  AND (T_USERID LIKE [S_T_USERID]||'%' OR [S_T_USERID] IS NULL)
+	  ORDER BY YMD desc, PAY_GB, CORP      
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="F_002"   value-count="0" url="가계부 상세조회" >  
+	<sql-content>
+	<![CDATA[
+      SELECT   	
+      		FAMT_NO,  	
+		    TO_CHAR(YMD,'YYYYMMDD') AS YMD,
+		    SUBSTR(TO_CHAR(YMD,'DAY'),1,1) AS DAY, 
+			PAY_GB, 
+			CORP, 
+			C_AMT, 
+			S_AMT, 
+			NOTE, 
+			ACCTCD, 
+			USERID, 
+			T_USERID, 
+			USE_GB
+      FROM FAMT	
+	  WHERE FAMT_NO =[FAMT_NO]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="F_003"   value-count="0" url="가계부 수정" >  
+	<sql-content>
+	<![CDATA[
+	      UPDATE FAMT SET
+			YMD=	REPLACE([YMD],'-',''),
+			PAY_GB=[PAY_GB],
+			CORP=[CORP],
+			C_AMT=NVL(REPLACE([C_AMT],',',''),0),
+			S_AMT=NVL(REPLACE([S_AMT],',',''),0),
+			NOTE=[NOTE],
+			ACCTCD=[ACCTCD],
+			USERID=[USERID],
+			T_USERID=[T_USERID],
+			USE_GB=[USE_GB]
+	      WHERE FAMT_NO =[FAMT_NO]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="F_004"   value-count="0" url="가계부 삭제" >  
+	<sql-content>
+	<![CDATA[
+      DELETE  FROM FAMT	
+	  WHERE FAMT_NO =[FAMT_NO]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="F_005"   value-count="0" url="가계부 등록" >  
+	<sql-content>
+	<![CDATA[
+     	INSERT INTO FAMT (
+		     		FAMT_NO,
+		     		YMD, 
+					PAY_GB, 
+					CORP, 
+					C_AMT, 
+					S_AMT, 
+					NOTE, 
+					ACCTCD, 
+					USERID, 
+					T_USERID, 
+					USE_GB)
+     	VALUES(	
+     				GET_SEQ('FAMT','YYYYMMDD','0000'),
+			     	REPLACE([YMD],'-',''), 
+					[PAY_GB], 
+					[CORP], 
+					NVL(REPLACE([C_AMT],',',''),0),
+					NVL(REPLACE([S_AMT],',',''),0),
+					[NOTE], 
+					[ACCTCD], 
+					[USERID], 
+					[T_USERID], 
+					[USE_GB]
+					)
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql>

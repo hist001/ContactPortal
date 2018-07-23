@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+
+	<sql-mapping  id="U_001"   value-count="0" url="User 조회" >
+	<sql-content>
+	<![CDATA[
+	
+
+		select a.empid,a.empnm,a.orgcd,a.tel,a.email,a.startdt,a.enddt,a.grade
+			  ,b.orgname
+			  ,c.codename as comname
+
+                                         
+		from com_user a
+			 ,org b
+			 ,(select b.codename,b.code
+			  from comcode a,comcode b
+			  where a.code_no = b.highcode
+			  and a.code='SR_CORP') c
+
+
+
+		where a.orgcd = b.org_no
+		and a.corpcd = c.code
+
+
+		AND  STARTDT BETWEEN REPLACE([S_FR_DT],'-','') AND REPLACE([S_TO_DT],'-','')
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="U_002"   value-count="0" url="User 개별조회" >
+	<sql-content>
+	<![CDATA[
+	
+		SELECT
+				EMPID
+				,corpcd
+				,a.orgcd
+				,EMPNM
+				,TEL
+				,EMAIL
+				,NOTE
+				,STARTDT
+				,ENDDT
+				,orgname
+				,a.grade
+				,emp_no
+				,(select b.code
+                                from com_user a, comcode b
+                                where a.grade = b.codename
+                                and b.highcode = 'CD-20160718-012'
+                                and a.empid=[EMPID]) as grcode
+		FROM com_user a, org c
+		WHERE a.orgcd=c.org_no
+		AND EMPID = [EMPID]
+
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="U_003"   value-count="0" url="User 수정" >
+	<sql-content>
+	<![CDATA[
+
+		UPDATE COM_USER SET
+		EMPNM=[EMPNM]
+		,ORGCD=[ORGCD]
+		,TEL=[TEL]
+		,EMAIL=[EMAIL]
+		,NOTE=[NOTE]
+		,CORPCD=[CORPCD]
+		,STARTDT=[STARTDT]
+		,ENDDT=[ENDDT]
+		,GRADE=[text_grade]
+		WHERE EMPID =[EMPID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="U_004"   value-count="0" url="User 삭제" >
+	<sql-content>
+	<![CDATA[
+	
+		delete from com_user
+		where EMPID = [EMPID]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="U_005"   value-count="0" url="User 등록" >
+	<sql-content>
+	<![CDATA[
+	
+		INSERT INTO com_user (
+				EMPID
+				,EMPNM
+				,CORPCD
+				,TEL
+				,EMAIL
+				,NOTE
+				,ORGCD
+				,STARTDT
+				,ENDDT
+				,GRADE
+				,EMP_NO
+				)
+		VALUES(		
+				[EMPID]
+				,[EMPNM]
+				,[CORPCD]
+				,[TEL]
+				,[EMAIL]
+				,[NOTE]
+				,[ORGCD]
+				,[STARTDT]
+				,[ENDDT]
+				,[text_grade]
+				,GET_SEQ('USR')
+				)
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="U_006"   value-count="0" url="User empid만조회" >
+	<sql-content>
+	<![CDATA[
+	
+		select empid from com_user
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+	<sql-mapping  id="U_007"   value-count="0" url="직급 이름으로 조회" >
+	<sql-content>
+	<![CDATA[
+	
+		select b.codename as grname,b.code
+	    from comcode a,comcode b
+		where a.code_no = b.highcode
+		and a.code='SR_GRADE'
+
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+
+	
+</sql>
+

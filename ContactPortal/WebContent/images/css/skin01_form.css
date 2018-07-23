@@ -1,0 +1,132 @@
+<!--
+select, textarea {font-family:굴림,arial; border:1x solid black; font-size:9pt;border-color:#d0d0d0;vertical-align : middle; text-decoration: none}
+input {font-family:굴림; font-size:9pt; height:19px; border-width:1;border-style:solid;border-color:#d0d0d0;vertical-align : middle; text-decoration: none;}
+
+TD {font-size:9pt;}
+.table1 {background:#63AEE7;}
+.td1 {background:#DFEFFF;text-align:center;}
+.td2 {background:#FFFFFF;}
+.td3 {background:#DFEFFF;}
+.td9 {background:#FFFFFF;line-height:150%;text-align:center}                        /*전순배 추가 제안관리 때문에*/
+.td4 {background:#FFFFFF;text-align:center;} /*2004-04-15 김인희추가 */
+
+.treetitle {font-family:굴림; font-size:9pt;color:#00451C;}
+
+/*읽기 모드에서 본문보여질때 사용*/
+.namoforread {background:#DFEFFF;}
+
+a:link {font-family:굴림,arial; line-height: 13pt; font-weight:500; color:#000000; font-size:9pt; text-decoration: none} 
+a:visited {font-family:굴림,arial; line-height: 13pt; font-weight:500; color:#000000; font-size:9pt; text-decoration: none} 
+a:hover {font-family:굴림,arial; line-height: 13pt; font -weight:500; font-size: 9pt; color:#8080ff; text-decoration:none}
+a:active {font-family:굴림,arial; line-height: 13pt; font-weight:500; color:#000000; font-size:9pt; text-decoration: none} 
+/*양식내 문서 위치표시*/
+/*.loctitle {background:#F6E5B4;}*/
+.loctitle {background:#EAEBEB;}
+
+
+/* 트리에서 사용되는부분 */
+/*.leftnavi {background:#104D29;}*/
+/*.leftnavi1 {background:#EAEDE4;} */
+
+.leftnavi {background:#0072BB;}
+.leftnavi1 {background:#DFEFFF;}
+
+/*양식내 버튼 관련 */
+.base {border-style:solid; border-width:1; border-color:#B4DFFF #B4DFFF #B4DFFF #B4DFFF; line-height:13pt; color:#0072BB; background:#B4DFFF; text-align:center; padding:0 5 0 5}
+.onbase {border-style:solid; border-width:1; border-color:#D0E2EF; line-height:13pt; color:black; text-align:center; padding:0 5 0 5}
+.on {border-style:solid; border-width:1; border-color:#0072BB #0072BB #0072BB #0072BB; line-height:13pt; color:#FFFFFF; background:#0072BB; text-align:center; padding:0 5 0 5}
+.down {border-style:solid; border-width:1; border-color:#B4DFFF #B4DFFF #B4DFFF #B4DFFF; line-height:13pt; color:#0072BB; background:#B4DFFF; text-align:center; padding:0 5 0 5}
+
+.newtd {font:굴림,arial; font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none; background:#C4D6AF;border-style:solid; border-color:#598527 #598527 #598527 #598527; border-width:0 0 1 0}
+.buttona {font-family:굴림; font-size:9pt; height:20px; border-width:1; border-style:ridge; border-color:#d0d0d0; background-color:#dfdfdf;}
+
+.radiocheck {font-family:굴림; font-size:9pt;}
+
+.commentContent {
+	border-style:solid; 
+	border-color:#7386B5 #7386B5 #7386B5 #7386B5; 
+	border-width:0 0 1 0;
+}
+
+BODY {background:#FFFFFF;line-height:15pt;scrollbar-face-color:#ffffff;scrollbar-shadow-color:#8D8D8D; scrollbar-highlight-color:#8D8D8D;scrollbar-3dlight-color:#E4EFF5;scrollbar-darkshadow-color:#FFFFFF;scrollbar-track-color:#FFFFFF;scrollbar-arrow-color:#8D8D8D;}
+P {font-size:9pt; font-family: 굴림;line-height:160%; margin-top:0; margin-bottom:0;}
+
+/* 첨부 checkbox가 예쁘게 보이도록 */
+input.Attach{
+	background: transparent;
+	border: none;
+}
+
+/*전인혜추가(Khelper.nsf)*/
+.tron {background:#DFEFFF;}
+.trout {background:#EFF7E7;}
+.trout2 {background:#ffffff;}
+.base2 {border-style:solid; border-width:1; border-color:#E3EEF5 #E3EEF5 #E3EEF5 #E3EEF5; line-height:13pt; color:black; background:#D0E2EF; text-align:center; padding:0 5 0 5}
+.viewContent {text-align:left;cursor:hand;border-style:solid; border-color:#598527 #598527 #598527 #598527; border-width:0 0 0 0}
+.khtitle2 {font-family:굴림; font-size:9pt;color:#82A061;}
+.khtitle {font-family:굴림; font-size:10pt;font-weight:800;color:#82A061;}
+
+
+/*전인혜추가(appro.nsf)*/
+.tdC {background:#FFFFFF;text-align:center;}
+.tdR {background:#FFFFFF;text-align:right;}
+.tableA {background:background:#E4EFF5;}
+/* 이동복 추가 */
+.rdocContent {cursor:hand;}
+
+.trskin2 {font:bold 굴림,arial; font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none; background:#DEEBC3;border-style:solid; border-color:#A2B577 #A2B577 #A2B577 #A2B577; border-width:1 1 1 1}
+
+
+/* 메일에서 사용(지연추가) */
+.mailbase {
+	border-style:solid; 
+	border-width:0; 
+	border-color:#ffffff; 
+	line-height:13pt; 
+	color:black; 
+	background:#BCDAE8; 
+	text-align:center
+}
+
+.mailon {
+	border-style:solid; 
+	border-width:0; 
+	border-color:#ffffff; 
+	line-height:13pt; 
+	color:black; 
+	background:#ffffff; 
+	text-align:center
+}
+
+.QuickAddressbar {background:#DFEFFF;text-align:center;}
+
+
+/* 의견 관련 CSS 동복 추가 */
+.cmntTB {
+	table-layout: fixed;
+	border-style:solid; 
+	border-width:1 0 0 0; 
+	border-color:#63AEE7;
+
+}
+
+.cmntTR {
+	line-height:15pt;
+}
+
+.cmntTH {
+	vertical-align:top;
+	width:120;
+	border-style:solid; 
+	border-width:0 0 1 0; 
+	border-color:#63AEE7;
+}
+
+.cmntTD {
+	vertical-align:top;
+	border-style:solid; 
+	border-width:0 0 1 0; 
+	border-color:#63AEE7;
+}
+
+-->

@@ -1,0 +1,1168 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="B_001"   value-count="8"
+   url="목표원가 획득" >  
+   <sql-content>
+   <![CDATA[
+SELECT PRODNO OBJNO,ACCTCD,count(1) over(partition by prodno order by prodno) regAcctCd,to_ACCTNAME(ACCTCD) ACCTNAME,
+amt_01,amt_02,amt_03,amt_04,amt_05,amt_06,amt_07,amt_08,amt_09,amt_10,amt_11,amt_12,
+sum(amt_01+amt_02+amt_03+amt_04+amt_05+amt_06+amt_07+amt_08+amt_09+amt_10+amt_11+amt_12) over(partition by prodno order by prodno) tot
+From (
+	SELECT PRODNO, substr(acctcd,1,4)||'0' ACCTCD,
+	SUM(AMT_01) AMT_01,SUM(AMT_02) AMT_02,SUM(AMT_03) AMT_03,SUM(AMT_04) AMT_04,SUM(AMT_05) AMT_05,SUM(AMT_06) AMT_06,
+	SUM(AMT_07) AMT_07,SUM(AMT_08) AMT_08,SUM(AMT_09) AMT_09,SUM(AMT_10) AMT_10,SUM(AMT_11) AMT_11,SUM(AMT_12) AMT_12
+	FROM (
+		SELECT 
+		PRODNO,
+		acctcd,		
+		case when substr(ym,5,2)='01' then
+		amt
+		end amt_01,
+		case when substr(ym,5,2)='02' then
+		amt
+		end amt_02,
+		case when substr(ym,5,2)='03' then
+		amt
+		end amt_03,
+		case when substr(ym,5,2)='04' then
+		amt
+		end amt_04,
+		case when substr(ym,5,2)='05' then
+		amt
+		end amt_05,
+		case when substr(ym,5,2)='06' then
+		amt
+		end amt_06,
+		case when substr(ym,5,2)='07' then
+		amt
+		end amt_07,
+		case when substr(ym,5,2)='08' then
+		amt
+		end amt_08,
+		case when substr(ym,5,2)='09' then
+		amt
+		end amt_09,
+		case when substr(ym,5,2)='10' then
+		amt
+		end amt_10,
+		case when substr(ym,5,2)='11' then
+		amt
+		end amt_11,
+		case when substr(ym,5,2)='12' then
+		amt
+		end amt_12
+		FROM (
+			SELECT ? PRODNO,YM,B.acctcd,NVL(amt,0) AMT FROM (
+			select costym,substr(acctcd,1,4)||'1' acctcd,amt from CostItem a           
+					where    version =
+					   (     select /*+INDEX_DESC(COSTDESC XPKCOSTDESC)*/ VERSION FROM COSTDESC
+							 where prodno = a.prodno 
+							 and prodtype = a.prodType  
+						     and costtype = a.costType   
+						     --and apstatus = 'WCO'  
+						     and rownum = 1
+						)
+					and a.prodNo = ?  
+					and a.prodType='P'  
+					and costType='T'  
+					and costYm like ?||'%'
+					order by costym,acctcd
+			) A,
+			(select * from 
+				(select acctcd from accttb where acctcd like '5%' and acctcd not like '%0') a,
+				(SELECT ?||TRIM(to_char(sn,'00')) ym from months where sn <13)b
+			)B
+			WHERE 
+			A.ACCTCD(+)=B.ACCTCD
+			AND
+			A.COSTYM(+)=B.YM
+			ORDER BY B.ACCTCD,YM
+		)
+	)
+	GROUP BY PRODNO,substr(acctcd,1,4)||'0'
+)
+union all
+SELECT PRODNO OBJNO,ACCTCD,0 regAcctCd,ACCTKNAME ACCTNAME,
+amt_01,amt_02,amt_03,amt_04,amt_05,amt_06,amt_07,amt_08,amt_09,amt_10,amt_11,amt_12,
+sum(amt_01+amt_02+amt_03+amt_04+amt_05+amt_06+amt_07+amt_08+amt_09+amt_10+amt_11+amt_12) over(partition by prodno order by prodno) tot
+From (
+	SELECT PRODNO,ACCTCD,ACCTKNAME,
+	SUM(AMT_01) AMT_01,SUM(AMT_02) AMT_02,SUM(AMT_03) AMT_03,SUM(AMT_04) AMT_04,SUM(AMT_05) AMT_05,SUM(AMT_06) AMT_06,
+	SUM(AMT_07) AMT_07,SUM(AMT_08) AMT_08,SUM(AMT_09) AMT_09,SUM(AMT_10) AMT_10,SUM(AMT_11) AMT_11,SUM(AMT_12) AMT_12
+	FROM (
+		SELECT 
+		PRODNO,
+		acctcd,
+		acctkname,
+		case when substr(ym,5,2)='01' then
+		amt
+		end amt_01,
+		case when substr(ym,5,2)='02' then
+		amt
+		end amt_02,
+		case when substr(ym,5,2)='03' then
+		amt
+		end amt_03,
+		case when substr(ym,5,2)='04' then
+		amt
+		end amt_04,
+		case when substr(ym,5,2)='05' then
+		amt
+		end amt_05,
+		case when substr(ym,5,2)='06' then
+		amt
+		end amt_06,
+		case when substr(ym,5,2)='07' then
+		amt
+		end amt_07,
+		case when substr(ym,5,2)='08' then
+		amt
+		end amt_08,
+		case when substr(ym,5,2)='09' then
+		amt
+		end amt_09,
+		case when substr(ym,5,2)='10' then
+		amt
+		end amt_10,
+		case when substr(ym,5,2)='11' then
+		amt
+		end amt_11,
+		case when substr(ym,5,2)='12' then
+		amt
+		end amt_12
+		FROM (
+			SELECT ? PRODNO,YM,B.acctcd,B.ACCTKNAME,NVL(amt,0) AMT FROM (
+			select costym,substr(acctcd,1,4)||'1' acctcd,amt from CostItem a           
+					where    version =
+					   (     select /*+INDEX_DESC(COSTDESC XPKCOSTDESC)*/ VERSION FROM COSTDESC
+							 where prodno = a.prodno 
+							 and prodtype = a.prodType  
+						     and costtype = a.costType   
+						     --and apstatus = 'WCO'  
+						     and rownum = 1
+						)
+					and a.prodNo = ?  
+					and a.prodType='P'  
+					and costType='T'  
+					and costYm like ?||'%'
+					order by costym,acctcd
+			) A,
+			(select * from 
+				(select acctcd,acctkname from accttb where acctcd like '5%' and acctcd not like '%0') a,
+				(SELECT ?||TRIM(to_char(sn,'00')) ym from months where sn <13)b
+			)B
+			WHERE 
+			A.ACCTCD(+)=B.ACCTCD
+			AND
+			A.COSTYM(+)=B.YM
+			ORDER BY B.ACCTCD,YM
+		)
+	)
+	GROUP BY PRODNO,ACCTCD,ACCTKNAME
+)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_002"   value-count="52"
+   url="견적원가 획득" >  
+   <sql-content>
+   <![CDATA[
+select a.* ,
+sum(amt_01+amt_02+amt_03+amt_04+amt_05+amt_06+amt_07+amt_08+amt_09+amt_10+amt_11+amt_12) over(partition by OBJNO,acctcd order by OBJNO) tot
+from (
+	select ? OBJNO,B.acctcd acctcd,count(1) over(partition by 1 order by 1) regAcctCd,B.ACCTKNAME ACCTNAME,
+	case when startdt<=?01 and enddt>=?01 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_01,
+	case when startdt<=?02 and enddt>=?02 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_02,
+	case when startdt<=?03 and enddt>=?03 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_03,
+	case when startdt<=?04 and enddt>=?04 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_04,
+	case when startdt<=?05 and enddt>=?05 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_05,
+	case when startdt<=?06 and enddt>=?06 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_06,
+	case when startdt<=?07 and enddt>=?07 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_07,
+	case when startdt<=?08 and enddt>=?08 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_08,
+	case when startdt<=?09 and enddt>=?09 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_09,
+	case when startdt<=?10 and enddt>=?10 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_10,
+	case when startdt<=?11 and enddt>=?11 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_11,
+	case when startdt<=?12 and enddt>=?12 then
+		NVL(amt,0)
+	else
+		0
+	end 
+	AMT_12
+	from
+	(
+		select prodno,prodtype,costtype,costym,
+		case when a.acctcd='91300' then
+			 case when sn='1' then
+			 '50020'
+			 when sn='2' then
+			 '50030'
+			 when sn='3' then
+			 '50060'
+			 end	 
+		else 
+		a.acctcd
+		end acctcd,
+		case when a.acctcd='91300' then
+			 case when sn='1' then
+			 trunc(amt*0.567)
+			 when sn='2' then
+			 trunc(amt*0.355)
+			 when sn='3' then
+			 trunc(amt*0.078)
+			 end	 
+		else
+		amt 
+		end amt
+		,enddt,startdt from 
+		 (
+			select a.prodno,a.prodtype,costtype,costym,acctcd,
+			trunc(amt/(months_between(to_date(substr(b.plenddt,1,6),'yyyymm'),to_date(substr(b.plstartdt,1,6),'yyyymm'))+1)) amt,
+			substr(b.plenddt,1,6) enddt,substr(b.plstartdt,1,6) startdt
+			from CostItem a,prod b           
+					where    version =
+					   (     select /*+INDEX_DESC(COSTDESC XPKCOSTDESC)*/ VERSION FROM COSTDESC
+							 where prodno = a.prodno 
+							 and prodtype = a.prodType  
+							 and costtype = a.costType   
+							 --and apstatus = 'WCO'  
+							 and rownum = 1
+					   )
+					and a.prodNo = ?
+					and a.prodType='P'  
+					and costType='E'  
+					and b.prodno=a.prodNo
+					and b.prodtype=a.prodType			
+		  )a,										     			
+		  (select sn,'91300' acctcd from months where sn<4 ) b
+		  where  a.acctcd=b.acctcd(+)
+	)a,
+	(select acctcd,acctkname from accttb where acctcd like '5%%%0' ) b
+	where a.acctcd(+)= b.acctcd
+	order by acctcd
+)a
+union all
+select a.* ,
+sum(amt_01+amt_02+amt_03+amt_04+amt_05+amt_06+amt_07+amt_08+amt_09+amt_10+amt_11+amt_12) over(partition by OBJNO,acctcd order by OBJNO) tot
+from (
+	select ? OBJNO,B.acctcd acctcd,0 regAcctCd,B.ACCTKNAME ACCTNAME,
+	case when startdt<=?01 and enddt>=?01 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_01,
+	case when startdt<=?02 and enddt>=?02 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_02,
+	case when startdt<=?03 and enddt>=?03 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_03,
+	case when startdt<=?04 and enddt>=?04 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_04,
+	case when startdt<=?05 and enddt>=?05 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_05,
+	case when startdt<=?06 and enddt>=?06 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_06,
+	case when startdt<=?07 and enddt>=?07 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_07,
+	case when startdt<=?08 and enddt>=?08 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_08,
+	case when startdt<=?09 and enddt>=?09 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_09,
+	case when startdt<=?10 and enddt>=?10 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_10,
+	case when startdt<=?11 and enddt>=?11 then
+		NVL(amt,0)
+	else
+		0
+	end
+	AMT_11,
+	case when startdt<=?12 and enddt>=?12 then
+		NVL(amt,0)
+	else
+		0
+	end 
+	AMT_12
+	from
+	(
+		select prodno,prodtype,costtype,costym,
+		case when a.acctcd='91301' then
+			 case when sn='1' then
+			 '50021'
+			 when sn='2' then
+			 '50031'
+			 when sn='3' then
+			 '50061'
+			 end	 
+		else 
+		a.acctcd
+		end acctcd,
+		case when a.acctcd='91301' then
+			 case when sn='1' then
+			 trunc(amt*0.567)
+			 when sn='2' then
+			 trunc(amt*0.355)
+			 when sn='3' then
+			 trunc(amt*0.078)
+			 end	 
+		else
+		amt 
+		end amt
+		,enddt,startdt from 
+		 (
+			select a.prodno,a.prodtype,costtype,costym,substr(acctcd,1,4)||'1' acctcd,
+			trunc(amt/(months_between(to_date(substr(b.plenddt,1,6),'yyyymm'),to_date(substr(b.plstartdt,1,6),'yyyymm'))+1)) amt,
+			substr(b.plenddt,1,6) enddt,substr(b.plstartdt,1,6) startdt
+			from CostItem a,prod b           
+					where    version =
+					   (     select /*+INDEX_DESC(COSTDESC XPKCOSTDESC)*/ VERSION FROM COSTDESC
+							 where prodno = a.prodno 
+							 and prodtype = a.prodType  
+							 and costtype = a.costType   
+							 --and apstatus = 'WCO'  
+							 and rownum = 1
+					   )
+					and a.prodNo = ?
+					and a.prodType='P'  
+					and costType='E'  
+					and b.prodno=a.prodNo
+					and b.prodtype=a.prodType			
+		  )a,										     			
+		  (select sn,'91301' acctcd from months where sn<4 ) b
+		  where  a.acctcd=b.acctcd(+)
+	)a,
+	(select acctcd,acctkname from accttb where acctcd like '5%' and acctcd not like '%0') b
+	where a.acctcd(+)= b.acctcd
+	order by acctcd
+)a
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_003"   value-count="12"
+   url="실제원가 획득(그룹)" >  
+   <sql-content>
+   <![CDATA[
+SELECT ORGCD OBJNO,count(1) over(partition by orgcd order by orgcd) regAcctCd,ACCTCD,ACCTKNAME ACCTNAME,
+amt_01,amt_02,amt_03,amt_04,amt_05,amt_06,amt_07,amt_08,amt_09,amt_10,amt_11,amt_12,
+sum(amt_01+amt_02+amt_03+amt_04+amt_05+amt_06+amt_07+amt_08+amt_09+amt_10+amt_11+amt_12) over(partition by ORGCD order by ORGCD) tot
+From (
+	SELECT ORGCD,ACCTCD,ACCTKNAME,
+	SUM(AMT_01) AMT_01,SUM(AMT_02) AMT_02,SUM(AMT_03) AMT_03,SUM(AMT_04) AMT_04,SUM(AMT_05) AMT_05,SUM(AMT_06) AMT_06,
+	SUM(AMT_07) AMT_07,SUM(AMT_08) AMT_08,SUM(AMT_09) AMT_09,SUM(AMT_10) AMT_10,SUM(AMT_11) AMT_11,SUM(AMT_12) AMT_12
+	FROM (
+		SELECT 
+		orgcd,
+		acctcd,
+		acctkname,
+		case when substr(ym,5,2)='01' then
+		amt
+		end amt_01,
+		case when substr(ym,5,2)='02' then
+		amt
+		end amt_02,
+		case when substr(ym,5,2)='03' then
+		amt
+		end amt_03,
+		case when substr(ym,5,2)='04' then
+		amt
+		end amt_04,
+		case when substr(ym,5,2)='05' then
+		amt
+		end amt_05,
+		case when substr(ym,5,2)='06' then
+		amt
+		end amt_06,
+		case when substr(ym,5,2)='07' then
+		amt
+		end amt_07,
+		case when substr(ym,5,2)='08' then
+		amt
+		end amt_08,
+		case when substr(ym,5,2)='09' then
+		amt
+		end amt_09,
+		case when substr(ym,5,2)='10' then
+		amt
+		end amt_10,
+		case when substr(ym,5,2)='11' then
+		amt
+		end amt_11,
+		case when substr(ym,5,2)='12' then
+		amt
+		end amt_12
+		FROM (
+			select ? orgcd,b.ym, b.acctcd,b.acctkname,nvl(trunc(A.amt),0) amt
+			 from 
+			(
+			select ym,SUBSTR(acctcd,1,4)||'0' acctcd,sum(amt) amt from realCostInfo where orgcd=? and ym like ?||'%'
+			and acctcd not in (select distinct acctcd from acctstdcost)
+			group by ym,acctcd
+			union all
+			select ym, SUBSTR(acctcd,1,4)||'0' acctcd, sum(amt) amt from 
+			(
+				select ym,acctcd,cnt*value amt from 
+				(
+					select distinct count(egrade) over(partition by egrade order by 1) cnt ,
+					a.egrade,b.orgcd from empall a,org b
+					where
+					b.orgcd=?
+					and a.orgCd=b.orgCd
+				) a,(select acctcd,type,value from acctstdcost)b,
+				(select ?||trim(to_char(sn,'00')) ym from months where sn<13)c
+				where b.type=a.EGRADE
+			)
+			group by ym, acctcd
+
+			 )A,
+			(select * from 
+				(select acctcd,acctkname from accttb where acctcd like '5%%%0') a,
+				(SELECT ?||TRIM(to_char(sn,'00')) ym from months where sn <13)b
+			 )B
+			where  a.acctcd (+)= b.acctcd
+			and    a.ym(+) = b.ym
+		)
+	)group by ORGCD,ACCTCD,ACCTKNAME
+)
+UNION ALL
+SELECT ORGCD,to_number(ACCTCD),ACCTCD,ACCTKNAME,
+amt_01,amt_02,amt_03,amt_04,amt_05,amt_06,amt_07,amt_08,amt_09,amt_10,amt_11,amt_12,
+sum(amt_01+amt_02+amt_03+amt_04+amt_05+amt_06+amt_07+amt_08+amt_09+amt_10+amt_11+amt_12) over(partition by ORGCD order by ORGCD) tot
+From (
+	SELECT ORGCD,ACCTCD,ACCTKNAME,
+	SUM(AMT_01) AMT_01,SUM(AMT_02) AMT_02,SUM(AMT_03) AMT_03,SUM(AMT_04) AMT_04,SUM(AMT_05) AMT_05,SUM(AMT_06) AMT_06,
+	SUM(AMT_07) AMT_07,SUM(AMT_08) AMT_08,SUM(AMT_09) AMT_09,SUM(AMT_10) AMT_10,SUM(AMT_11) AMT_11,SUM(AMT_12) AMT_12
+	FROM (
+		SELECT 
+		orgcd,
+		acctcd,
+		acctkname,
+		case when substr(ym,5,2)='01' then
+		amt
+		end amt_01,
+		case when substr(ym,5,2)='02' then
+		amt
+		end amt_02,
+		case when substr(ym,5,2)='03' then
+		amt
+		end amt_03,
+		case when substr(ym,5,2)='04' then
+		amt
+		end amt_04,
+		case when substr(ym,5,2)='05' then
+		amt
+		end amt_05,
+		case when substr(ym,5,2)='06' then
+		amt
+		end amt_06,
+		case when substr(ym,5,2)='07' then
+		amt
+		end amt_07,
+		case when substr(ym,5,2)='08' then
+		amt
+		end amt_08,
+		case when substr(ym,5,2)='09' then
+		amt
+		end amt_09,
+		case when substr(ym,5,2)='10' then
+		amt
+		end amt_10,
+		case when substr(ym,5,2)='11' then
+		amt
+		end amt_11,
+		case when substr(ym,5,2)='12' then
+		amt
+		end amt_12
+		FROM (
+			select ? orgcd,b.ym, b.acctcd,b.acctkname,nvl(trunc(A.amt),0) amt
+			 from 
+			(
+			select ym,acctcd,sum(amt) amt from realCostInfo where orgcd=? and ym like ?||'%'
+			and acctcd not in (select distinct acctcd from acctstdcost)
+			group by ym,acctcd
+			union all
+			select ym, acctcd, sum(amt) amt from 
+			(
+				select ym,acctcd,cnt*value amt from 
+				(
+					select distinct count(egrade) over(partition by egrade order by 1) cnt ,
+					a.egrade,b.orgcd from empall a,org b
+					where
+					b.orgcd=?
+					and a.orgCd=b.orgCd
+				) a,(select acctcd,type,value from acctstdcost)b,
+				(select ?||trim(to_char(sn,'00')) ym from months where sn<13)c
+				where b.type=a.EGRADE
+			)
+			group by ym, acctcd
+			 )A,
+			(select * from 
+				(select acctcd,acctkname from accttb where acctcd like '5%' and not acctcd like '%0') a,
+				(SELECT ?||TRIM(to_char(sn,'00')) ym from months where sn <13)b
+			 )B
+			where  a.acctcd(+)= b.acctcd
+			and    a.ym(+) = b.ym
+		)
+	)group by ORGCD,ACCTCD,ACCTKNAME
+)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_004"   value-count="9"
+   url="제품/그룹 예산 등록" >  
+   <sql-content>
+   <![CDATA[
+insert into DETAILYEARPLAN(yPlanCd,dyPlanCd,dyPlanStartDt,dyPlanEndDt,crEmpId,dyPlanStatus,
+               isDefect,dyPlanName,orgCd)
+               values(?,?,?,?,?,?,?,?,?)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_005"   value-count="17"
+   url="비용 등록" >  
+   <sql-content>
+   <![CDATA[
+insert into budgetPlan(yPlanCd,dyPlanCd,acctCd,isDefault,amt_01,amt_02,amt_03,amt_04,amt_05,
+           amt_06,amt_07,amt_08,amt_09,amt_10,amt_11,amt_12,budgetPlanNote)
+           values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_006"   value-count="2"
+   url="개별사업계획삭제" >  
+   <sql-content>
+   <![CDATA[
+	delete from detailYearPlan where yPlanCd=?
+	and dyPlanCd=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_007"   value-count="2"
+   url="비용계획삭제" >  
+   <sql-content>
+   <![CDATA[
+	delete from budgetPlan where yPlanCd=?
+	and dyPlanCd=? and isDefault='C' and acctCd like '5%'
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_008"   value-count="3"
+   url="개별사업계획 상태변경" >  
+   <sql-content>
+   <![CDATA[
+	update detailYearPlan set dyPlanStatus=?
+	where yPlanCd=?
+	and dyPlanCd=? 
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_009"   value-count="2"
+   url="개별사업계획 검색" >  
+   <sql-content>
+   <![CDATA[
+select yplancd,dyplancd,dyPlanName,dyplanstatus flag,nvl(
+(
+select tot from 
+	(
+	select jobno, tot from 
+		(select jobno,contAmt tot from orderAmtView ) a,
+		(
+		select dyplanCd from detailYearPlan
+		where not orgCd in
+			(
+				SELECT ORGCD 
+				FROM ORG A
+				WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+				CONNECT BY A.HIGHORGCD = PRIOR TO_CHAR(A.ORG_NO)
+				START WITH A.ORGCD = 'R025'						
+			)	
+		)b
+	where a.jobno=b.dyplancd
+	)
+where jobno=dyplancd
+),0) amt_01,sum(amt_02) amt_02,sum(amt_03) amt_03
+	from (
+		select yplancd,dyplancd, grpCd ,dyPlanName,dyplanstatus,
+		case when grpCd='A' then		
+			 tot
+        else
+		     0
+	    end amt_02,								 			  
+		case when grpCd='B' then		
+			 tot
+        else
+		     0
+	    end amt_03 			 																						 			  		
+		from  (
+			select
+			case when substr(acctcd,1,1)='5' then
+			'A'
+			else
+			'B'
+			end grpCd, a.tot,b.dyPlanName,b.dyplanstatus,b.yPlanCd,a.dyplanCd
+			from budgetview a,
+			detailYearPlan b
+			where isDefault='C' 
+			and a.yPlanCd=?
+			and a.dyPlanCd like '%'||?||'%'
+			and a.yPlanCd=b.yPlanCd
+			and a.dyPlanCd=b.dyPlanCd
+		 )a		 		 		
+	 )group by yplancd,dyplancd,dyPlanName,dyplanstatus
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_010"   value-count="8"
+   url="견적원가-상품 등록" >  
+   <sql-content>
+   <![CDATA[
+	insert into goodplan(yplancd,dyplancd,goodcd,goodname,gooddt,count,goodprice,goodsum,goodnote,acctcd)
+			 select ?,?,
+			 (select nvl(max(goodCd),to_char(sysdate,'yyyymmdd')||'0000') goodCd 
+			  from goodPlan 
+			  where  substr(goodCd,1,8)= to_char(sysdate,'yyyymmdd')
+			 ) + rownum goodCd,
+			  itemName goodname,nvl(substr(itemInputDt,1,6),'?01') gooddt,
+			  itemQuantity count,
+			  itemUnPrice goodprice ,
+			  itemQuantity * itemUnPrice goodsum,
+			  mercInputNote goodnote,
+			  case when mercType='HW' or mercType='NW' then
+			  '50011'
+			  else
+			  '50012'
+			  end acctcd
+			  from mercinput A, prod B
+			  where a.prodno=?
+			  and a.prodType='P'
+			  and b.prodno=a.prodno
+			  and '?01'<=nvl(substr(itemInputDt,1,6),'?01')
+			  and '?12'>=nvl(substr(itemInputDt,1,6),'?01')
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_011"   value-count="28"
+   url="견적원가-비용 등록" >  
+   <sql-content>
+   <![CDATA[
+insert into budgetPlan 
+        select 
+	? yplanCd, ? dyplanCd,
+	B.acctcd , 'C' isDefault,
+        case when startdt<=?01 and enddt>=?01 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_01,
+        case when startdt<=?02 and enddt>=?02 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_02,
+        case when startdt<=?03 and enddt>=?03 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_03,
+        case when startdt<=?04 and enddt>=?04 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_04,
+        case when startdt<=?05 and enddt>=?05 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_05,
+        case when startdt<=?06 and enddt>=?06 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_06,
+        case when startdt<=?07 and enddt>=?07 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_07,
+        case when startdt<=?08 and enddt>=?08 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_08,
+        case when startdt<=?09 and enddt>=?09 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_09,
+        case when startdt<=?10 and enddt>=?10 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_10,
+        case when startdt<=?11 and enddt>=?11 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_11,
+        case when startdt<=?12 and enddt>=?12 then
+                NVL(amt,0)
+        else
+                0
+        end
+        AMT_12,' ' budgetPlanNote,? crEmpid
+        from
+        (
+		select prodno,prodtype,costtype,costym,
+		case when a.acctcd='91301' then
+			 case when sn='1' then
+			 '50021'
+			 when sn='2' then
+			 '50031'
+			 when sn='3' then
+			 '50061'
+			 end	 
+		else 
+		a.acctcd
+		end acctcd,
+		case when a.acctcd='91301' then
+			 case when sn='1' then
+			 trunc(amt*0.567)
+			 when sn='2' then
+			 trunc(amt*0.355)
+			 when sn='3' then
+			 trunc(amt*0.078)
+			 end	 
+		else
+		amt 
+		end amt
+		,enddt,startdt from 
+		 (
+			select a.prodno,a.prodtype,costtype,costym,substr(acctcd,1,4)||'1' acctcd,
+			trunc(amt/(months_between(to_date(substr(b.plenddt,1,6),'yyyymm'),to_date(substr(b.plstartdt,1,6),'yyyymm'))+1)) amt,
+			substr(b.plenddt,1,6) enddt,substr(b.plstartdt,1,6) startdt
+			from CostItem a,prod b           
+					where    version =
+					   (     select /*+INDEX_DESC(COSTDESC XPKCOSTDESC)*/ VERSION FROM COSTDESC
+							 where prodno = a.prodno 
+							 and prodtype = a.prodType  
+							 and costtype = a.costType   
+							 --and apstatus = 'WCO'  
+							 and rownum = 1
+					   )
+					and a.prodNo = ?
+					and a.prodType='P'  
+					and costType='E'  
+					and b.prodno=a.prodNo
+					and b.prodtype=a.prodType			
+		  )a,										     			
+		  (select sn,'91301' acctcd from months where sn<4 ) b
+		  where  a.acctcd=b.acctcd(+)        
+		  )a,
+        (select acctcd,acctkname from accttb where acctcd like '5%' and acctcd 
+	not like '%0') b
+        where a.acctcd(+)= b.acctcd
+        order by acctcd
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_012"   value-count="39"
+   url="견적원가-인력 등록" >  
+   <sql-content>
+   <![CDATA[
+insert into hrPlan 
+select yplancd,dyplancd,emptype,hrplandt,sum(hrcount) hrcount , hrnote
+from (
+select ? yplancd,? dyplancd,emptype,
+		case when sn=1 then
+		'?01'
+		when sn=2 then
+		'?02'
+		when sn=3 then
+		'?03'
+		when sn=4 then
+		'?04'
+		when sn=5 then
+		'?05'
+		when sn=6 then
+		'?06'
+		when sn=7 then
+		'?07'
+		when sn=8 then
+		'?08'
+		when sn=9 then
+		'?09'
+		when sn=10 then
+		'?10'
+		when sn=11 then
+		'?11'
+		when sn=12 then
+		'?12'				
+		end hrplandt,
+		case when sn=1 then
+		amt_01
+		when sn=2 then
+		amt_02
+		when sn=3 then
+		amt_03
+		when sn=4 then
+		amt_04
+		when sn=5 then
+		amt_05
+		when sn=6 then
+		amt_06
+		when sn=7 then
+		amt_07
+		when sn=8 then
+		amt_08
+		when sn=9 then
+		amt_09
+		when sn=10 then
+		amt_10
+		when sn=11 then
+		amt_11
+		when sn=12 then
+		amt_12				
+		end hrcount,' 'hrnote				
+		from 
+		(
+                select B.cd empType,
+                case when startdt<=?01 and enddt>=?01 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_01,
+                case when startdt<=?02 and enddt>=?02 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_02,
+                case when startdt<=?03 and enddt>=?03 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_03,
+                case when startdt<=?04 and enddt>=?04 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_04,
+                case when startdt<=?05 and enddt>=?05 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_05,
+                case when startdt<=?06 and enddt>=?06 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_06,
+                case when startdt<=?07 and enddt>=?07 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_07,
+                case when startdt<=?08 and enddt>=?08 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_08,
+                case when startdt<=?09 and enddt>=?09 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_09,
+                case when startdt<=?10 and enddt>=?10 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_10,
+                case when startdt<=?11 and enddt>=?11 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_11,
+                case when startdt<=?12 and enddt>=?12 then
+                        NVL(amt,0)
+                else
+                        0
+                end
+                AMT_12
+                from
+                (
+					select grade,
+					trunc(sum(manmth)/(months_between(to_date(enddt,'yyyymm'),to_date(startdt,'yyyymm'))+1) ,1) amt,		
+					enddt,startdt from (	
+					select 
+					case when grade in ('AB','AC','AD','AE','AF') then
+					grade
+					else
+					'B0'
+					end 		
+					grade,
+					manmth,
+					substr(b.plenddt,1,6) enddt,substr(b.plstartdt,1,6) startdt 
+					from hrinput a, prod b
+					where a.prodtype='P' 
+					and a.prodno=?
+					and   b.prodtype=a.prodtype
+					and   b.prodno  =a.prodno
+					)group by grade,enddt,startdt		
+                )a,
+                (select cd ,cdname from cocode  where cdtype='EA' and cd in 
+		        ('AB','AC','AD','AE','AF','B0') ) b
+                where
+                a.grade(+)=b.cd
+                order by cd
+		) a,
+		(select sn from months where sn<13)b
+)
+group by yplancd,dyplancd,emptype,hrplandt, hrnote	
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="B_013"   value-count="5"
+   url="부문별 조회" >  
+   <sql-content>
+   <![CDATA[
+	select a.yPlanCd,a.dyPlanCd,dyPlanName,dyPlanStatus,
+	contAmt amt_01,cost amt_02, profit amt_03,profitLoss amt_04,
+	b.mm amt_05,c.investcost amt_06, yearPlanType from 
+	(
+	select yplancd,dyplancd,dyPlanName,dyplanstatus,
+			nvl(max(contAmt),0) as contAmt,
+	sum(cost) cost,sum(profit) profit ,sum(profit)-sum(cost) profitLoss,yearPlanType
+		from (
+			select yplancd,dyplancd, grpCd ,dyPlanName,dyplanstatus,yearPlanType,
+			case when grpCd='A' then		
+				 tot
+					else
+				 0
+				end cost,								 			  
+			case when grpCd='B' then		
+				 tot
+					else
+				 0
+				end profit 			 																						 			  		
+			from  (
+				select 
+				case when substr(acctcd,1,1)='5' then
+				'A'
+				else
+				'B'
+				end grpCd, 
+				amt_01+amt_02+amt_03+amt_04+amt_05+amt_06+amt_07+amt_08+amt_09+amt_10+amt_11+amt_12 tot,
+				b.dyPlanName,b.dyplanstatus,b.yPlanCd,b.dyplanCd,yearPlanType			
+				 from 
+				 budgetPlan a,
+				 detailYearPlan b
+				where a.isDefault='C' 
+				and b.yPlanCd=?
+				and b.orgCd in 
+				(
+						SELECT ORGCD 
+						FROM ORG A
+						WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+						START WITH A.ORGCD = ?						
+						CONNECT BY PRIOR TO_CHAR(A.ORG_NO)=A.HIGHORGCD 
+				)
+				and a.yPlanCd=b.yPlanCd
+				and a.dyPlanCd=b.dyPlanCd
+			 )a		 		 		
+		 ) a,new_orderAmtView b
+		 where b.jobno(+)=a.dyplancd
+		 group by yplancd,dyplancd,dyPlanName,dyplanstatus,yearPlanType
+	)a,
+	(
+		select yplancd,dyplancd,sum(mm) mm from (
+		select yplancd,dyplancd,tot mm from hrview
+		UNION ALL
+		select yplancd,dyplancd,hrcount mm from hrplan
+		)
+		where yPlanCd=?
+		group by yplancd, dyplancd
+	)b,
+	(
+		select b.dyplancd,sum(amt)
+								 investCost
+		   from ivPlan a, detailYearPlan b
+			where b.yPlanCd=?
+				and b.orgCd in 
+				(
+						SELECT ORGCD 
+						FROM ORG A
+						WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+						START WITH A.ORGCD = ?						
+						CONNECT BY PRIOR TO_CHAR(A.ORG_NO)=A.HIGHORGCD 				
+				)
+		and a.dyplancd=b.dyplancd
+		and a.yplancd=b.YPLANCD
+		group by b.dyplancd
+	)c
+	where a.dyplancd=b.dyplancd
+	and   a.dyplancd=c.dyplancd(+)				
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="B_014"   value-count="3"  url="임원인건비 등록" >  
+   <sql-content>
+   <![CDATA[
+	UPDATE BUDGETPLAN A SET
+				(A.AMT_01,
+					A.AMT_02,
+					A.AMT_03,
+					A.AMT_04,
+					A.AMT_05,
+					A.AMT_06,
+					A.AMT_07,
+					A.AMT_08,
+					A.AMT_09,
+					A.AMT_10,
+					A.AMT_11,
+					A.AMT_12,
+				 	CREMPID) =
+	  		(SELECT SUM(D.AMT_01),
+					SUM(D.AMT_02),
+					SUM(D.AMT_03),
+					SUM(D.AMT_04),
+					SUM(D.AMT_05),
+					SUM(D.AMT_06),
+					SUM(D.AMT_07),
+					SUM(D.AMT_08),
+					SUM(D.AMT_09),
+					SUM(D.AMT_10),
+					SUM(D.AMT_11),
+					SUM(D.AMT_12),
+			 ? AS CREMPID
+			FROM BUDGETPLAN D
+			WHERE D.YPLANCD =A.YPLANCD
+			AND   D.DYPLANCD=A.DYPLANCD
+			AND   D.ISDEFAULT IN ('F','C')
+			AND   D.ACCTCD=A.ACCTCD
+			 )
+	WHERE (A.YPLANCD,A.DYPLANCD,A.ACCTCD) IN
+											(SELECT YPLANCD,DYPLANCD,ACCTCD 
+											 FROM  BUDGETPLAN C
+											 WHERE C.YPLANCD =A.YPLANCD
+											 AND   C.DYPLANCD=A.DYPLANCD
+											 AND   C.ISDEFAULT='F')
+	AND A.YPLANCD =?
+	AND A.DYPLANCD=?
+	AND A.ISDEFAULT = 'C'
+	]]>
+	</sql-content>
+   </sql-mapping>   
+   
+</sql>
+

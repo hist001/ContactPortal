@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+	<sql-mapping  id="P_001"   value-count="1" url="장터리스트조회" >
+	<sql-content>
+	<![CDATA[
+	
+		SELECT 
+		FROM 
+			(SELECT
+			                PR_SN,
+			                TITLE,
+			                CREMPID,
+			                TO_EMPKNAME(CREMPID) AS EMPNM,
+			                to_char(CREATEDT,'YYYY-MM-DD') createdt,
+			                REC_CNT,
+			                VIEW_CNT
+			FROM PR_BD A 
+			where TITLE LIKE '%'||[S_TITLE]||'%'
+			)
+		WHERE (EMPNM LIKE  '%'||[S_EMPNM]||'%' OR EMPNM||[S_EMPNM] IS NULL)
+			
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="P_002"   value-count="1" url="공통코드 정보" >
+	<sql-content>
+	<![CDATA[
+
+		SELECT PR_SN,
+				TITLE,
+				CREATEDT,
+				NOTE,
+				CREMPID,
+				TO_EMPKNAME(CREMPID) AS EMPNM,
+				TO_EMPKNAME(PR_EMPID)||'('||PR_EMPID||')' AS PR_EMPID,
+				VIEW_CNT,
+                REC_CNT,
+                TO_EMPIMG(PR_EMPID) AS EMPIMG
+				
+				
+		FROM PR_BD A
+		WHERE PR_SN  = [PR_SN]
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="P_003"   value-count="1" url="랭크 정보" >
+	<sql-content>
+	<![CDATA[
+
+		select  	MON_P,
+		        EMPID, 
+				EMPKNAME,
+				ORGNM,
+				CDNM
+		from 
+		(select 
+				MON_P,
+				empid,
+				to_empkname(empid) as empkname,
+				TO_ORGNAME(empid) as orgnm,
+				TO_CDNAME('EA',EGRADE) as cdnm
+		 from  
+			 PR_POINT a,  
+			 empall b
+		 where a.crempid= b.empid
+		 order by MON_P desc
+		 )
+		 where rownum<=10
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+		<sql-mapping  id="P_004"   value-count="1" url="동아리 제안 등록" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO pr_bd(PR_SN,
+				TITLE,
+				NOTE,
+				CREMPID
+				)
+		VALUES( GET_SEQ('PSN'),
+				[TITLE],
+				[NOTE],
+				[CREMPID]
+				
+				)
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="P_005"   value-count="1" url="동아리 제안 수정" >
+	<sql-content>
+	<![CDATA[
+		UPDATE CLUB_P SET
+				TITLE=[TITLE]
+				,NOTE=[NOTE]
+				,CREATEDT=SYSDATE
+				,VIEW_CNT=VIEW_CNT+1
+		WHERE SN = [S_SN]
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="P_006"   value-count="1" url="동아리 제안 삭제" >
+	<sql-content>
+	<![CDATA[
+	
+		DELETE
+		FROM CLUB_P
+		WHERE SN = [S_SN]
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+</sql> 
+ 

@@ -1,0 +1,25 @@
+<!--
+select {font-family:verdana;border:1x solid black; background-color:#FFFFFF; font-size:8pt; vertical-align : top; text-decoration: none}
+a:link {font-family:굴림,arial; color:white; font-size:9pt; text-decoration: none}
+a:visited {font-family:굴림,arial; color:white; font-size:9pt; text-decoration: none}
+a:hover {font-family:굴림,arial; font-size: 9pt; color:white; text-decoration: none}
+a:active {font-family:굴림,arial; color: white; font-size:9pt; text-decoration: none}
+
+/* 탭 글짜 굵게 주고 탭이 눌려 질때와 안눌려 질때 */
+.scrolltext {font-size:9pt; color:#0000FF;}
+.inTab {font-size:9pt; color:#ffffff; font-weight: bold;position:relative;top:3px;}
+.inTabOn {font-size:9pt; color:white; font-weight: bold;position:relative;top:3px;}
+
+
+.buttona {font-family:굴림; font-size:9pt; height:20px; border-width:1; border-style:ridge; border-color:#d0d0d0; background-color:#dfdfdf;}
+
+/*헤더 프레임 아래라인 */
+.type2head {background:#578BCF;}
+
+/* 헤더 프레임에서 메뉴라인, bar*/
+.topheaderline {background:#12A6D6;}
+.headerbar {background:#4EA2EB;}
+.bottomheaderline {background:#0072BB;}
+
+-->
+

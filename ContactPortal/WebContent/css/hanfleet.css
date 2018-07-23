@@ -1,0 +1,318 @@
+@CHARSET "UTF-8";
+
+html,body {
+	height: 100%;
+}
+
+html {	/* for ie7 double scrollbar issue fix. */
+	overflow-y: scroll;
+	overflow-x: auto;
+}
+
+body {
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+/* 	overflow: auto; */
+/* 	IE6,7 dot hack 세로 스크롤바 제거 */
+/* 	.overflow-y: auto;		 */
+	background-color: #ffffff;
+}
+
+body.blue {
+	background-color: #FFFFFF;
+	
+}
+
+object:focus {
+	outline: none;
+}
+
+img {
+	border: none;
+	margin: 0;
+	padding: 0;
+}
+
+#flashContent {
+	display: none;
+}
+
+#hiddenFrame {
+	width: 0;
+	height: 0;
+	display: none;
+}
+
+.hanfleet_wrap {
+	width: 100%;
+	height: 100%;
+	background-color: #FFF;
+}
+
+.hanfleet_contents {
+	margin: 0 auto;
+	width: 1253px;
+	height: 100% !important; 
+	height: 850px;
+	min-height: 850px; 
+}
+
+.body_wrap {
+	border: 0px solid #192540;
+	margin: 20px;
+	height: 950px;
+	background-color: #FFFFFF;
+	border-radius: 20px;
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+}
+
+.body_wrapview {
+	border: 0px solid #192540;
+	margin: 20px;
+	height: 750px;
+	background-color: #FFFFFF;
+	border-radius: 20px;
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+}
+
+.body_wrapview2 {
+	border: 0px solid #192540;
+	margin: 20px;
+	height: 600px;
+	background-color: #FFFFFF;
+	border-radius: 20px;
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+}
+
+.body_wrap_low {
+	border: 0px solid #192540;
+	margin: 20px;
+	height: 600px;
+	background-color: #FFFFFF;
+	border-radius: 20px;
+	-moz-border-radius: 20px;
+	-webkit-border-radius: 20px;
+}
+
+.body_wrap * {
+	font-family: 'Malgun Gothic', Verdana, Arial, san-serif;
+	font-size: 13px;
+	color: #000000;
+}
+
+.body_wrap_low * {
+	font-family: 'Malgun Gothic', Verdana, Arial, san-serif;
+	font-size: 13px;
+	color: #000000;
+}
+
+.body_wrap h3 {
+	font-size: 18px;
+}
+
+.body_wrap_low h3 {
+	font-size: 18px;
+}
+
+.center_wrap_900_650 {
+	position: relative;
+	top: 250px;
+	left: 50%;
+	width: 1000px;
+	height: 650px;
+	margin-left: -500px;
+	margin-top: -230px;
+	overflow: auto;
+}
+
+.center_wrap_900_850 {
+	position: relative;
+	top: 250px;
+	left: 50%;
+	width: 1000px;
+	height: 750px;
+	margin-left: -500px;
+	margin-top: -230px;
+	overflow: auto;
+}
+
+.center_wrap_900_900 {
+	position: relative;
+	top: 250px;
+	left: 50%;
+	width: 1000px;
+	height: 850px;
+	margin-left: -500px;
+	margin-top: -230px;
+	overflow: auto;
+}
+
+.center_wrap_900_600 {
+	position: relative;
+	top: 250px;
+	left: 50%;
+	width: 1000px;
+	height: 300px;
+	margin-left: -500px;
+	margin-top: -230px;
+	overflow: auto;
+}
+
+.center_wrap_1000_600 {
+	position: relative;
+	top: 250px;
+	left: 50%;
+	width: 1000px;
+	height: 950px;
+	margin-left: -500px;
+	margin-top: -230px;
+	overflow: auto;
+}
+
+.center_wrap_1000_1000 {
+	position: relative;
+	top: 250px;
+	left: 50%;
+	width: 1000px;
+	height: 1100px;
+	margin-left: -500px;
+	margin-top: -230px;
+	overflow: auto;
+}
+
+.center_wrap_1000_800 {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 1000px;
+	height: 800px;
+	margin-left: -500px;
+	margin-top: -400px;
+	overflow: auto;
+}
+
+.center_wrap_900_300 {
+	position: relative;
+	top: 250px;
+	left: 50%;
+	width: 900px;
+	height: 300px;
+	margin-left: -450px;
+	margin-top: -230px;
+}
+
+/* 태그단위 속성지정용 클래스 */
+.tac {
+	text-align: center;
+}
+
+.tar {
+	text-align: right;
+}
+
+.tal {
+	text-align: left;
+}
+
+.bold {
+	font-weight: bold;
+}
+
+.clear {
+	clear: both;
+}
+
+/* HANFLEET_TABLE 스타일 : 그리드와 최대한 유사하게 */
+table.hanfleet_table {
+	width: 100%;
+	padding: 0;
+	border-spacing: 0px;
+	border: 0;
+	border-collapse: collapse;
+	background-color: #F7F7F7;
+}
+
+table.hanfleet_table th,
+table.hanfleet_table td {
+	padding: 5px 10px;
+	border-bottom: 1px solid #AAA; 
+	overflow: hidden;
+}
+
+table.hanfleet_table th {
+	background-color: #6E85A5;
+	color: #FFFFFF;
+	border: 1px solid #ccd5e4;
+}
+
+table.hanfleet_table td {
+	border: 1px solid #abb1bf;
+}
+
+table.hanfleet_table tr.odd {
+	background-color: #e8edf1;
+}
+
+table.hanfleet_table tr.even {
+	background-color: #FAFAFA;
+}
+
+/*
+ * odd 홀수행, event 짝수행, hover 선택행
+table.hanfleet_table tr:HOVER {
+	background-color: #7fcdfe;
+}
+ */
+
+  
+/* 한웨이 전자결재 인터페이용 CSS */
+table.DataColumn {
+	width:100%;
+	border-collapse:collapse;
+	margin-bottom: 8px;
+	border-top: 2px solid #ccc;
+	color: #000000;
+	font: 9pt AppleGothic, "굴림체", Tahoma, Verdana, Gulim, Arial;
+}
+
+th.thTitle, td.tdTitle {
+	font: 9pt AppleGothic, "굴림체", Tahoma, Verdana, Gulim, Arial;
+	font-weight: bold;
+	color: #000000;
+	background-color: #F5F5F5;
+	border: 1px solid #ccc;
+	height:18px;
+	padding: 2px 2px 2px 4px;
+	width:13%;
+}
+
+td.tdData {
+	color: #000000;
+	font: 9pt AppleGothic, "굴림체", Tahoma, Verdana, Gulim, Arial;
+	border: 1px solid #ccc;
+	height:18px;
+	padding: 1px 4px;
+	overflow-wrap: break-word;
+	word-wrap:break-word;
+	-ms-word-wrap:break-word;
+	white-space: pre-line;
+}
+
+td.tdTitle2 {
+	font: 9pt AppleGothic, "굴림체", Tahoma, Verdana, Gulim, Arial;
+	font-weight: bold;
+	color: #000000;
+	background-color: #F5F5F5;
+	border: 1px solid #ccc;
+	height:18px;
+	padding: 2px 2px 2px 4px;
+	width:10%;
+}
+
+
+

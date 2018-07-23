@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+	<sql-mapping  id="M_001"   value-count="0" url="Member 리스트 조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT 
+			   ID,
+			   NAME,
+			   PASSWORD,
+			   AGE,
+			   GENDER,
+			   EMAIL
+		FROM MEMBER
+		WHERE ID LIKE '%'||[S_ID]||'%'
+		AND NAME LIKE '%'||[S_NAME]||'%'
+	    AND PASSWORD LIKE '%'||[S_PASSWORD]||'%'
+		AND AGE LIKE '%'||[S_AGE]||'%'
+		AND GENDER LIKE '%'||[S_GENDER]||'%'
+		AND EMAIL LIKE '%'||[S_EMAIL]||'%'
+		ORDER BY ID
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	
+	<sql-mapping  id="C_001_1"   value-count="1" url="동아리 제안리스트 상세정보" >
+	<sql-content>
+	<![CDATA[
+	
+		SELECT SN,
+			   TITLE,
+			   NOTE,
+			   EMPID,
+			   TO_EMPKNAME(EMPID) AS EMPKNAME,
+			   CREATEDT
+		FROM CLUB_P
+		WHERE SN = [S_SN]
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="C_001_2"   value-count="1" url="동아리 제안 등록" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO club_p(SN,
+				TITLE,
+				NOTE,
+				EMPID,
+				CREATEDT,
+				VIEW_CNT)
+		VALUES( GET_SEQ('CSN'),
+				[TITLE],
+				[NOTE],
+				[EMPID],
+				SYSDATE,
+				0)
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="C_001_3"   value-count="1" url="동아리 제안 수정" >
+	<sql-content>
+	<![CDATA[
+		UPDATE CLUB_P SET
+				TITLE=[TITLE]
+				,NOTE=[NOTE]
+				,CREATEDT=SYSDATE
+				,VIEW_CNT=VIEW_CNT+1
+		WHERE SN = [S_SN]
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="C_001_4"   value-count="1" url="동아리 제안 삭제" >
+	<sql-content>
+	<![CDATA[
+	
+		DELETE
+		FROM CLUB_P
+		WHERE SN = [S_SN]
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="C_002"   value-count="1" url="동아리 제안리스트 상세정보" >
+	<sql-content>
+	<![CDATA[
+	
+   SELECT A.CLUB_SN,
+                           A.CLUB_NM,
+                           DECODE(M.EMPID,NULL,'N','Y') AS G_YN
+   FROM CLUB A, (SELECT * FROM CLUB_MEMBER M WHERE M.EMPID = [EMPID]) M
+   WHERE A.CLUB_NM  LIKE '%'||[CLUB_NM]||'%'
+                           AND A.CLUB_SN = M.CLUB_SN(+)
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="C_002_1"   value-count="1" url="동아리 제안리스트 상세정보" >
+	<sql-content>
+	<![CDATA[
+
+		SELECT CLUB_NM,
+					TO_EMPKNAME(CREMPID) AS CREMPID,
+					CLUB_AD
+		FROM CLUB
+		WHERE CLUB_NM  LIKE '%'||[CLUB_NM]||'%'
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="C_002_2"   value-count="1" url="동아리 제안리스트 상세정보" >
+	<sql-content>
+	<![CDATA[
+
+		SELECT C.CLUB_SN AS CLUB_SN,
+					TO_EMPKNAME(M.EMPID) AS ENAME,
+					M.EMPID AS EMPID 
+		FROM CLUB C, CLUB_MEMBER M
+		WHERE C.CLUB_SN=M.CLUB_SN AND C.CLUB_SN  LIKE '%'||[CLUB_SN]||'%' 
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="C_003"   value-count="1" url="회원 상세보기" >
+	<sql-content>
+	<![CDATA[
+
+		SELECT C.CLUB_SN AS CLUB_SN,
+					TO_EMPIMG(M.EMPID) EMPIMG,
+					M.EMPID AS EMPID,
+					TO_EMPKNAME(M.EMPID) AS EMPNM
+		FROM CLUB C, CLUB_MEMBER M
+		WHERE C.CLUB_SN = M.CLUB_SN AND M.CLUB_SN  LIKE '%'||[CLUB_SN]||'%'
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+

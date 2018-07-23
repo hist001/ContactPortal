@@ -1,0 +1,643 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+    <sql-mapping  id="PAYDOC_001"   value-count="0" url="지급품의서 저장" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO ACCTRPTHD
+		(
+			MAINNO, DOCNO
+			,DOCTYPE,PAYTYPE
+			,USEORGCD,USEORGNAME,MTITLE,EVENTDT
+			,STATUS,USEEMPID,PHONNO,BIZACQACCTCD
+			,BIZACQREGNO,DOMICILE,TOTAMT,SUPPLYAMT
+			,TAXAMT,REALAMT,DIFFAMT,PCARDYN
+			,BILLTYPE,DETAILTYPE,DETAIL,ADVANCECLASS
+			,SUPPLYAMTCLASS,RECIVEDT,OUTSOURCETYPE,CONTENTS1
+			,QUANTITY1,UNITCOST1,SUPPLYAMT1,TAXAMT1
+			,CONTENTS2,QUANTITY2,UNITCOST2,SUPPLYAMT2,TAXAMT2
+			,CONTENTS3,QUANTITY3,UNITCOST3,SUPPLYAMT3,TAXAMT3
+			,CONTENTS4,QUANTITY4,UNITCOST4,SUPPLYAMT4,TAXAMT4
+			,CREATEDTM,CREMPID,CRORGCD,ACCTEMPID,ACCTLOG
+			,PIID,FIID, DELFLAG, ACCTHCD, REQDT, TOTEXEAMT
+			,TOTBUDGET, TOTREMBUDGET, VATTYPE, ADVANCEAMT
+		)
+		VALUES
+		(
+			[MAINNO]
+			,[DOCNO]
+			,[DOCTYPE],[PAYTYPE]
+			,[USEORGCD]
+			,TO_ORGNONAME_N([USEORGCD],REPLACE([EVENTDT],'-',''))
+			,[MTITLE],REPLACE([EVENTDT],'-','')
+			,[STATUS],[USEEMPID],[PHONNO],[BIZACQACCTCD]
+			,[BIZACQREGNO],[DOMICILE],REPLACE([TOTAMT],',',''),REPLACE([SUPPLYAMT],',','')
+			,REPLACE([TAXAMT],',',''),REPLACE([REALAMT],',',''),[DIFFAMT],[PCARDYN]
+			,[BILLTYPE],[DETAILTYPE],[DETAIL],[ADVANCECLASS]
+			,[SUPPLYAMTCLASS],REPLACE([RECIVEDT],'-',''),[OUTSOURCETYPE]
+			,[CONTENTS1],[QUANTITY1],[UNITCOST1],[SUPPLYAMT1],[TAXAMT1]
+			,[CONTENTS2],[QUANTITY2],[UNITCOST2],[SUPPLYAMT2],[TAXAMT2]
+			,[CONTENTS3],[QUANTITY3],[UNITCOST3],[SUPPLYAMT3],[TAXAMT3]
+			,[CONTENTS4],[QUANTITY4],[UNITCOST4],[SUPPLYAMT4],[TAXAMT4]
+			,sysdate,[CREMPID],[CRORGCD],[ACCTEMPID],[ACCTLOG]
+			,[PIID],[FIID],[DELFLAG], [ACCTHCD], REPLACE([REQDT],'-',''), REPLACE([TOTEXEAMT],',','')
+			,REPLACE([TOTBUDGET],',','') ,REPLACE([TOTREMBUDGET],',',''), [VATTYPE], REPLACE([ADVANCEAMT],',','')
+		)
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_002"   value-count="0" url="지급품의서 발송" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO ACCTRPTHD
+		(
+			MAINNO, DOCNO
+			,DOCTYPE,PAYTYPE
+			,USEORGCD,USEORGNAME,MTITLE,EVENTDT
+			,STATUS,USEEMPID,PHONNO,BIZACQACCTCD
+			,BIZACQREGNO,DOMICILE,TOTAMT,SUPPLYAMT
+			,TAXAMT,REALAMT,DIFFAMT,PCARDYN
+			,BILLTYPE,DETAIL,ADVANCECLASS
+			,SUPPLYAMTCLASS,RECIVEDT,OUTSOURCETYPE,CONTENTS1
+			,QUANTITY1,UNITCOST1,SUPPLYAMT1,TAXAMT1
+			,CONTENTS2,QUANTITY2,UNITCOST2,SUPPLYAMT2,TAXAMT2
+			,CONTENTS3,QUANTITY3,UNITCOST3,SUPPLYAMT3,TAXAMT3
+			,CONTENTS4,QUANTITY4,UNITCOST4,SUPPLYAMT4,TAXAMT4
+			,CREATEDTM,CREMPID,CRORGCD,ACCTEMPID,ACCTLOG
+			,PIID,FIID, DELFLAG, ACCTHCD, REQDT, TOTEXEAMT
+			,TOTBUDGET, TOTREMBUDGET, VATTYPE, ADVANCEAMT
+		)
+		VALUES
+		(
+			MAINNO:
+			,(
+			   SELECT [DOCTYPE]||REPLACE([EVENTDT],'-','')||LPAD(TO_CHAR(TO_NUMBER(NVL(MAX(SUBSTR(DOCNO,10,3)),'0'))+1),3,'0')
+			   FROM ACCTRPTHD
+			   WHERE SUBSTR(DOCNO,1,9) =  [DOCTYPE]||REPLACE([EVENTDT],'-','')
+	   		)
+			,DOCTYPE:,PAYTYPE:
+			,USEORGCD:
+			,TO_ORGNONAME_N(USEORGCD:,REPLACE([EVENTDT],'-',''))
+			,MTITLE:,REPLACE(EVENTDT:,'-','')
+			,STATUS:,USEEMPID:,PHONNO:,BIZACQACCTCD:
+			,BIZACQREGNO:,DOMICILE:,REPLACE(TOTAMT:,',',''),REPLACE(SUPPLYAMT:,',','')
+			,REPLACE(TAXAMT:,',',''),REPLACE(REALAMT:,',',''),DIFFAMT:,PCARDYN:
+			,BILLTYPE:,DETAIL:,ADVANCECLASS:
+			,SUPPLYAMTCLASS:,REPLACE(RECIVEDT:,'-',''),OUTSOURCETYPE:
+			,CONTENTS1:,QUANTITY1:,UNITCOST1:,SUPPLYAMT1:,TAXAMT1:
+			,CONTENTS2:,QUANTITY2:,UNITCOST2:,SUPPLYAMT2:,TAXAMT2:
+			,CONTENTS3:,QUANTITY3:,UNITCOST3:,SUPPLYAMT3:,TAXAMT3:
+			,CONTENTS4:,QUANTITY4:,UNITCOST4:,SUPPLYAMT4:,TAXAMT4:
+			,sysdate,CREMPID:,CRORGCD:,ACCTEMPID:,ACCTLOG:
+			,PIID:,FIID:,DELFLAG:, ACCTHCD:, REPLACE(REQDT:,'-',''), REPLACE(TOTEXEAMT:,',','')
+			,REPLACE(TOTBUDGET:,',','') ,REPLACE(TOTREMBUDGET:,',',''), VATTYPE:, REPLACE(ADVANCEAMT:,',','')
+		)
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_003"   value-count="0" url="지급품의서 등록" >  
+	<sql-content>
+	<![CDATA[
+		INSERT INTO ACCTRPTSB
+		(
+			MAINNO,SN,ACCTCD
+			,JOBNO,ORGCD,CDTYPE
+			,AMOUNT,TITLE,CERTIFTYPE
+			,BUDGETAMT,BUDGETRATE,CERTIFNO
+			,CDAPPLNO,BUDGETUSEDAMT,OVERRATE
+			,OBJ_NO,IT_NO,PIID,FIID
+			,CERTIFTYPENAME,BIZNAME,BIZREGNO,CEONAME
+		)
+		VALUES
+		(
+			[MAINNO]
+			,[SN]
+			,[ACCTCD]
+			,[JOBNO]
+			,[ORGCD]
+			,[cdType]
+			,REPLACE([AMOUNT],',','')
+			,[TITLE]
+			,[CERTIFTYPE]
+			,[BUDGETAMT]
+			,[BUDGETRATE]
+			,[CERTIFNO]
+			,[CDAPPLNO]
+			,[BUDGETUSEDAMT]
+			,[OVERRATE]
+			,[OBJ_NO]
+			,[IT_NO]
+			,[PIID]
+			,[FIID]
+			,[CERTIFTYPENAME]
+			,[BIZNAME]
+			,[BIZREGNO]
+			,[CEONAME]
+		)
+		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+    <sql-mapping  id="PAYDOC_005"   value-count="0" url="문서 MainNO생성" >  
+	<sql-content>
+	<![CDATA[
+		SELECT REPLACE(GET_SEQ(DOCTYPE:||'S'),'-','') FROM DUAL
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_006"   value-count="0" url="HEAD보기" >  
+	<sql-content>
+	<![CDATA[
+		SELECT 
+					MAINNO, DOCNO
+					,DOCTYPE,PAYTYPE
+					,USEORGCD
+					,TO_ORGNOCD_N(USEORGCD,EVENTDT) USEORGUSERCD, USEORGNAME
+					,MTITLE
+					,ACCTHCD, TO_ACCTNAME(ACCTHCD) ACCTHNAME, TO_ACCTNAME(ACCTHCD) ACCTHCDNAME
+					,TO_CHAR(TO_DATE(EVENTDT,'YYYYMMDD'),'YYYY-MM-DD') EVENTDT
+					,STATUS,USEEMPID,TO_EMPKNAME(USEEMPID) USEEMPNAME
+					,PHONNO
+					,(SELECT AZ25_CUST_CD  FROM TBAZ25@TO_INHAUH WHERE  AZ25_CUST_CD = A.BIZACQACCTCD) BIZACQCD
+					,A.BIZACQACCTCD
+					,(SELECT AZ25_SANGHO  FROM TBAZ25@TO_INHAUH WHERE  AZ25_CUST_CD =  A.BIZACQACCTCD) BIZACQNAME 
+					,(SELECT AZ25_SANGHO  FROM TBAZ25@TO_INHAUH WHERE  AZ25_CUST_CD =  A.BIZACQACCTCD) BIZACQCDNAME
+					,(SELECT AZ25_DPJ_NM  FROM TBAZ25@TO_INHAUH WHERE  AZ25_CUST_CD =  A.BIZACQACCTCD) BIZCEONAME	
+					,A.BIZACQREGNO,DOMICILE
+					,DECODE(DOCTYPE,'B',GET_CODENAME('OI',DOMICILE),'A',GET_CODENAME('RB',DOMICILE)) DOMICILENAME
+					,TOTAMT,SUPPLYAMT
+					,TAXAMT,REALAMT,DIFFAMT,PCARDYN
+					,BILLTYPE, DETAILTYPE, GET_CODENAME('BYB',BILLTYPE) BILLTYPENAME
+					,DETAIL,ADVANCECLASS
+					,DECODE(ADVANCECLASS,'2','No','1','Yes') ADVANCECLASSNAME
+					,SUPPLYAMTCLASS,TO_CHAR(TO_DATE(RECIVEDT,'YYYYMMDD'),'YYYY-MM-DD') RECIVEDT
+					,OUTSOURCETYPE,CONTENTS1
+					,QUANTITY1,UNITCOST1,SUPPLYAMT1,TAXAMT1
+					,CONTENTS2,QUANTITY2,UNITCOST2,SUPPLYAMT2,TAXAMT2
+					,CONTENTS3,QUANTITY3,UNITCOST3,SUPPLYAMT3,TAXAMT3
+					,CONTENTS4,QUANTITY4,UNITCOST4,SUPPLYAMT4,TAXAMT4
+					,CREATEDTM,CREMPID,CRORGCD,ACCTEMPID,ACCTLOG
+					,PIID,FIID, DELFLAG, ACCTHCD
+					,TO_CHAR(TO_DATE(REQDT,'YYYYMMDD'),'YYYY-MM-DD') REQDT
+					,TOTEXEAMT, DECODE(TOTBUDGET,0,0,ROUND(((TOTEXEAMT)/TOTBUDGET)*100,2)) TOTBUDGETRATE
+					,TOTBUDGET, TOTREMBUDGET, VATTYPE
+					,(
+						SELECT  A.CODENAME
+						FROM COMCODE A
+							,COMCODE B
+							,COMCODE C
+						WHERE C.CODE_NO = B.HIGHCODE
+						AND	  B.CODE_NO = A.HIGHCODE
+						AND	  C.CODE = 'BY'||DOCTYPE
+						AND	  B.CODE = BILLTYPE
+						AND   A.CODE = VATTYPE										
+					) VATTYPENAME
+					,ADVANCEAMT		
+		FROM ACCTRPTHD A
+		WHERE A.MAINNO = [MAINNO]
+		--AND PIID=[PIID]
+		--AND FIID=[FIID]
+		AND A.MAINNO = [MAINNO]
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_007"   value-count="0" url="ITEM보기" >  
+	<sql-content>
+	<![CDATA[
+        SELECT
+                                A.MAINNO,SN
+								,ACCTCD, TO_ACCTNAME(ACCTCD) ACCTNAME
+								,ACCTCD||' '||TO_ACCTNAME(ACCTCD) ACCTCDNAME 
+                                ,JOBNO,ORGCD
+                                ,TO_ORGNOCD_N(ORGCD,(SELECT EVENTDT FROM ACCTRPTHD WHERE MAINNO = A.MAINNO)) ORGUSERCD
+                                ,TO_ORGNONAME_N(ORGCD, (SELECT EVENTDT FROM ACCTRPTHD WHERE MAINNO = A.MAINNO)) ORGNAME
+                                ,CDTYPE CDTYPE
+                                ,GET_CODENAME('ACCT_CD',cdType) CDTYPENAME
+                                ,AMOUNT,TITLE,CERTIFTYPE
+                                ,BUDGETAMT,BUDGETRATE,CERTIFNO
+                                ,CDAPPLNO,BUDGETUSEDAMT,OVERRATE
+                                ,OBJ_NO,IT_NO,A.PIID,A.FIID
+                                ,CERTIFTYPENAME,BIZNAME,BIZREGNO,CEONAME
+        FROM ACCTRPTSB A
+		--WHERE PIID=[PIID]
+		--AND FIID=[FIID]
+		WHERE A.MAINNO = [MAINNO]
+		AND DELFLAG='N'
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_008"   value-count="0" url="지급품의서 Head수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE ACCTRPTHD
+		SET
+		DOCNO		 = [DOCNO]                      
+		,DOCTYPE	 = [DOCTYPE]                    
+		,PAYTYPE	 = [PAYTYPE]                    
+		,USEORGCD	 = [USEORGCD]                   
+		,USEORGNAME	 = TO_ORGNONAME_N([USEORGCD],REPLACE([EVENTDT],'-',''))                 
+		,MTITLE		 = [MTITLE]                     
+		,EVENTDT	 = REPLACE([EVENTDT],'-','')    
+		,STATUS		 = [STATUS]                     
+		,USEEMPID	 = [USEEMPID]                   
+		,PHONNO		 = [PHONNO]                     
+		,BIZACQACCTCD	 = [BIZACQACCTCD]               
+		,BIZACQREGNO	 = [BIZACQREGNO]                
+		,DOMICILE	 = [DOMICILE]                   
+		,TOTAMT		 = REPLACE([TOTAMT],',','')     
+		,SUPPLYAMT	 = REPLACE([SUPPLYAMT],',','') 
+		,TAXAMT		 = REPLACE([TAXAMT],',','')    
+		,REALAMT	 = REPLACE([REALAMT],',','')   
+		,DIFFAMT	 = [DIFFAMT]                    
+		,PCARDYN	 = [PCARDYN]                    
+		,BILLTYPE	 = [BILLTYPE]  
+		,DETAILTYPE  = [DETAILTYPE]                 
+		,DETAIL		 = [DETAIL]                     
+		,ADVANCECLASS	 = [ADVANCECLASS]               
+		,SUPPLYAMTCLASS	 = [SUPPLYAMTCLASS]             
+		,RECIVEDT	 = REPLACE([RECIVEDT],'-','')  
+		,OUTSOURCETYPE	 = [OUTSOURCETYPE]              
+		,CONTENTS1	 = [CONTENTS1]                  
+		,QUANTITY1	 = [QUANTITY1]                  
+		,UNITCOST1	 = [UNITCOST1]                  
+		,SUPPLYAMT1	 = REPLACE([SUPPLYAMT1],',','')
+		,TAXAMT1	 = REPLACE([TAXAMT1],',','')   
+		,CONTENTS2	 = [CONTENTS2]                  
+		,QUANTITY2	 = [QUANTITY2]                  
+		,UNITCOST2	 = [UNITCOST2]                  
+		,SUPPLYAMT2	 = REPLACE([SUPPLYAMT2],',','')
+		,TAXAMT2	 = REPLACE([TAXAMT2],',','')   
+		,CONTENTS3	 = [CONTENTS3]                  
+		,QUANTITY3	 = REPLACE([QUANTITY3],',','') 
+		,UNITCOST3	 = [UNITCOST3]                  
+		,SUPPLYAMT3	 = REPLACE([SUPPLYAMT3],',','')
+		,TAXAMT3	 = REPLACE([TAXAMT3],',','')   
+		,CONTENTS4	 = [CONTENTS4]                  
+		,QUANTITY4	 = [QUANTITY4]                  
+		,UNITCOST4	 = [UNITCOST4]                  
+		,SUPPLYAMT4	 = REPLACE([SUPPLYAMT4],',','')
+		,TAXAMT4	 = REPLACE([TAXAMT4],',','')   
+		,ACCTEMPID	 = [ACCTEMPID]                  
+		,ACCTLOG	 = [ACCTLOG]                    
+		,PIID		 = [PIID]                       
+		,FIID		 = [FIID]                       
+		,DELFLAG	 = [DELFLAG]                    
+		,ACCTHCD	 = [ACCTHCD]                    
+		,REQDT		 = REPLACE([REQDT],'-','')      
+		,TOTEXEAMT	 = REPLACE([TOTEXEAMT],',','') 
+		,TOTBUDGET	 = REPLACE([TOTBUDGET],',','') 
+		,TOTREMBUDGET	 = REPLACE([TOTREMBUDGET],',','')
+		,VATTYPE	 = [VATTYPE]                    
+		,ADVANCEAMT	 = REPLACE([ADVANCEAMT],',','')
+		WHERE MAINNO = [MAINNO]		
+	]]>
+	</sql-content>
+	</sql-mapping>	
+    <sql-mapping  id="PAYDOC_009"   value-count="0" url="지급품의서 Item수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE 	ACCTRPTSB
+		SET 	ACCTCD=[ACCTCD], ORGCD=[ORGCD], cdType=[cdType]
+			,AMOUNT = REPLACE([AMOUNT],',','')
+			,TITLE = [TITLE]
+			,CERTIFTYPE = [CERTIFTYPE]
+			,BUDGETAMT = [BUDGETAMT]
+			,BUDGETRATE = [BUDGETRATE]
+			,CERTIFNO = [CERTIFNO]
+			,CDAPPLNO = [CDAPPLNO]
+			,BUDGETUSEDAMT = [BUDGETUSEDAMT]
+			,OVERRATE = [OVERRATE]
+			,OBJ_NO = [OBJ_NO]
+			,IT_NO = [IT_NO]
+			,PIID = [PIID]
+			,FIID = [FIID]
+			,CERTIFTYPENAME = [CERTIFTYPENAME]
+			,BIZNAME = [BIZNAME]
+			,BIZREGNO = [BIZREGNO]
+			,CEONAME = [CEONAME]
+		WHERE MAINNO = [MAINNO]
+		AND SN = [SN]
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_010"   value-count="0" url="지급품의서 Head수정_발송" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE ACCTRPTHD
+		SET
+		DOCNO		 = (
+						   SELECT [DOCTYPE]||REPLACE([EVENTDT],'-','')||LPAD(TO_CHAR(TO_NUMBER(NVL(MAX(SUBSTR(DOCNO,10,3)),'0'))+1),3,'0')
+						   FROM ACCTRPTHD
+						   WHERE SUBSTR(DOCNO,1,9) =  [DOCTYPE]||REPLACE([EVENTDT],'-','')
+				   		)                      
+		,DOCTYPE	 = [DOCTYPE]                    
+		,PAYTYPE	 = [PAYTYPE]                    
+		,USEORGCD	 = [USEORGCD]                   
+		,USEORGNAME	 = TO_ORGNONAME_N([USEORGCD],REPLACE([EVENTDT],'-',''))                 
+		,MTITLE		 = [MTITLE]                     
+		,EVENTDT	 = REPLACE([EVENTDT],'-','')    
+		,STATUS		 = [STATUS]                     
+		,USEEMPID	 = [USEEMPID]                   
+		,PHONNO		 = [PHONNO]                     
+		,BIZACQACCTCD	 = [BIZACQACCTCD]               
+		,BIZACQREGNO	 = [BIZACQREGNO]                
+		,DOMICILE	 = [DOMICILE]                   
+		,TOTAMT		 = REPLACE([TOTAMT],',','')     
+		,SUPPLYAMT	 = REPLACE([SUPPLYAMT],',','') 
+		,TAXAMT		 = REPLACE([TAXAMT],',','')    
+		,REALAMT	 = REPLACE([REALAMT],',','')   
+		,DIFFAMT	 = [DIFFAMT]                    
+		,PCARDYN	 = [PCARDYN]                    
+		,BILLTYPE	 = [BILLTYPE] 
+		,DETAILTYPE  = [DETAILTYPE]                 
+		,DETAIL		 = [DETAIL]                     
+		,ADVANCECLASS	 = [ADVANCECLASS]               
+		,SUPPLYAMTCLASS	 = [SUPPLYAMTCLASS]             
+		,RECIVEDT	 = REPLACE([RECIVEDT],'-','')  
+		,OUTSOURCETYPE	 = [OUTSOURCETYPE]              
+		,CONTENTS1	 = [CONTENTS1]                  
+		,QUANTITY1	 = [QUANTITY1]                  
+		,UNITCOST1	 = [UNITCOST1]                  
+		,SUPPLYAMT1	 = REPLACE([SUPPLYAMT1],',','')
+		,TAXAMT1	 = REPLACE([TAXAMT1],',','')   
+		,CONTENTS2	 = [CONTENTS2]                  
+		,QUANTITY2	 = [QUANTITY2]                  
+		,UNITCOST2	 = [UNITCOST2]                  
+		,SUPPLYAMT2	 = REPLACE([SUPPLYAMT2],',','')
+		,TAXAMT2	 = REPLACE([TAXAMT2],',','')   
+		,CONTENTS3	 = [CONTENTS3]                  
+		,QUANTITY3	 = REPLACE([QUANTITY3],',','') 
+		,UNITCOST3	 = [UNITCOST3]                  
+		,SUPPLYAMT3	 = REPLACE([SUPPLYAMT3],',','')
+		,TAXAMT3	 = REPLACE([TAXAMT3],',','')   
+		,CONTENTS4	 = [CONTENTS4]                  
+		,QUANTITY4	 = [QUANTITY4]                  
+		,UNITCOST4	 = [UNITCOST4]                  
+		,SUPPLYAMT4	 = REPLACE([SUPPLYAMT4],',','')
+		,TAXAMT4	 = REPLACE([TAXAMT4],',','')   
+		,ACCTEMPID	 = [ACCTEMPID]                  
+		,ACCTLOG	 = [ACCTLOG]                    
+		,PIID		 = [PIID]                       
+		,FIID		 = [FIID]                       
+		,DELFLAG	 = [DELFLAG]                    
+		,ACCTHCD	 = [ACCTHCD]                    
+		,REQDT		 = REPLACE([REQDT],'-','')      
+		,TOTEXEAMT	 = REPLACE([TOTEXEAMT],',','') 
+		,TOTBUDGET	 = REPLACE([TOTBUDGET],',','') 
+		,TOTREMBUDGET	 = REPLACE([TOTREMBUDGET],',','')
+		,VATTYPE	 = [VATTYPE]                    
+		,ADVANCEAMT	 = REPLACE([ADVANCEAMT],',','')
+		WHERE MAINNO = [MAINNO]		
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_011"   value-count="0" url="지급품의서 Head수정_발송" >  
+	<sql-content>
+	<![CDATA[
+	SELECT 	
+				A.MAINNO,
+        		A.DOCNO,
+        		TO_CHAR(A.CREATEDTM,'YYYY-MM-DD') CREATEDTM,
+                A.CRORGCD, TO_ORGNONAME_N(A.CRORGCD,TO_CHAR(A.CREATEDTM,'YYYYMM')) CRORGNAME,
+                A.CREMPID, TO_EMPKNAME(A.CREMPID) CREMPNAME,
+                TO_EMPGRADENAME(A.CREMPID) CRGRADENAME,
+                A.STATUS, 
+				GET_CODENAME('ST',A.STATUS) STATUSNAME, 
+				MTITLE ,
+                TO_ORGNOCD(A.CRORGCD) CRORGUSERCD,
+                DOCTYPE,
+                GET_CODENAME('DY',DOCTYPE) AS DOTTYPENAME,
+                PAYTYPE,
+				USEEMPID,TO_EMPKNAME(USEEMPID) USEEMPNAME,
+				USEORGCD,TO_ORGNONAME_N(A.USEORGCD,TO_CHAR(A.CREATEDTM,'YYYYMM')) USEORGNAME
+	FROM ACCTRPTHD a
+	WHERE CREATEDTM BETWEEN to_date([S_STARTDT],'YYYY-MM-DD') 
+				 	AND to_date([S_ENDDT],'YYYY-MM-DD')+1
+	AND A.STATUS IN ('DA0','DB0')
+	and a.STATUS  like [status]||'%'	
+	AND DOCTYPE LIKE [docType]||'%'
+	AND DELFLAG = 'N'
+	AND (A.USEORGCD LIKE DECODE(
+			 		 (
+						SELECT 1
+						FROM AUTH
+						WHERE EMPID = [EMPID]
+						AND (TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN AUTHSTARTDT AND AUTHENDDT)
+						AND AUTHTYPE IN ('admin','fiAdmin')
+						AND ROWNUM = 1									 
+					 )
+					 ,1,'%','***')||'%'
+	OR A.USEORGCD IN (SELECT ORG_NO FROM EMP_ORG
+					    WHERE USEFLAG = 'Y'
+						AND EMPID = [EMPID]))
+	AND A.CREMPID IN (SELECT EMPID FROM EMPALL
+					  WHERE EMPID LIKE [S_EMPID]||'%'
+					  OR EMPKNAME LIKE [S_EMPKNAME]||'%')								
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PAYDOC_012"   value-count="0" url="문서 번호 찾기" >  
+	<sql-content>
+	<![CDATA[
+		SELECT DOCNO FROM ACCTRPTHD WHERE MAINNO = [MAINNO]
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_013_BAK"   value-count="0" url="재무전표 HEAD보기" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			 AA11_JPNO AS MAINNO
+			,AA11_JPNO AS DOCNO
+			,SUBSTR(AA11_JPNO,1,1) AS PAYTYPE
+			,'ACCT' AS DOCTYPE
+			,AA11_JBSCD AS USEORGCD
+			,'' AS USEORGUSERCD
+			,TO_ORGCDNAME_N(AA11_JBSCD,TO_CHAR(SYSDATE,'YYYYMM')) AS USEORGNAME
+			,AA11_DPJYO AS MTITLE
+			,'' AS ACCTHCD
+			,'' AS ACCTHNAME
+			,'' AS ACCTHCDNAME
+			,AA11_HGIL AS EVENTDT
+			,AA11_STAT AS STATUS
+			,AA11_SSBN AS USEEMPID
+			,TO_EMPKNAME(AA11_SSBN) AS USEEMPNAME
+			,'' AS PHONNO
+			,AA11_CUST_CD AS BIZACQCD
+			,AZ25_CUST_CD AS BIZACQACCTCD
+			,AZ25_SANGHO AS BIZACQNAME
+			,AZ25_SANGHO AS BIZACQCDNAME
+			,AZ25_DPJ_NM AS BIZCEONAME
+			,AZ25_SUPJA_NO AS BIZACQREGNO
+			,'' AS DOMICILE
+			,'' AS DOMICILENAME
+			,AA11_AMT AS TOTAMT
+			,'' AS SUPPLYAMT
+			,'' AS TAXAMT
+			,'' AS REALAMT
+			,'' AS DIFFAMT
+			,'' AS PCARDYN
+			,'' AS BILLTYPE
+			,'' AS BILLTYPENAME
+			,'' AS DETAIL
+			,'' AS ADVANCECLASS
+			,'' AS ADVANCECLASSNAME
+			,'' AS SUPPLYAMTCLASS
+			,'' AS RECIVEDT
+			,'' AS OUTSOURCETYPE
+			,'' AS CONTENTS1
+			,'' AS QUANTITY1
+			,'' AS UNITCOST1
+			,'' AS SUPPLYAMT1
+			,'' AS TAXAMT1
+			,'' AS CONTENTS2
+			,'' AS QUANTITY2
+			,'' AS UNITCOST2
+			,'' AS SUPPLYAMT2
+			,'' AS TAXAMT2
+			,'' AS CONTENTS3
+			,'' AS QUANTITY3
+			,'' AS UNITCOST3
+			,'' AS SUPPLYAMT3
+			,'' AS TAXAMT3
+			,'' AS CONTENTS4
+			,'' AS QUANTITY4
+			,'' AS UNITCOST4
+			,'' AS SUPPLYAMT4
+			,'' AS TAXAMT4
+			,AA11_JSIL AS CREATEDTM
+			,AA11_JSBN AS CREMPID
+			,AA11_JBSCD AS CRORGCD
+			,'' AS ACCTEMPID
+			,'' AS ACCTLOG
+			,'' AS PIID
+			,'' AS FIID
+			,'N' AS DELFLAG
+			,'' AS ACCTHCD
+			,'' AS REQDT
+			,'' AS TOTEXEAMT
+			,'' AS TOTBUDGETRATE
+			,'' AS TOTBUDGET
+			,'' AS TOTREMBUDGET
+			,'' AS VATTYPE
+			,'' AS VATTYPENAME
+			,'' AS ADVANCEAMT
+
+	FROM TBAA11@TO_INHAUH A,
+			 TBAZ25@TO_INHAUH B
+	WHERE AA11_JPNO = [MAINNO]
+ 	AND   AA11_CUST_CD=AZ25_CUST_CD
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_014"   value-count="0" url="재무전표 ITEM보기" >  
+	<sql-content>
+	<![CDATA[
+        SELECT
+                                A.MAINNO,SN
+								,ACCTCD, TO_ACCTNAME(ACCTCD) ACCTNAME
+								,ACCTCD||' '||TO_ACCTNAME(ACCTCD) ACCTCDNAME 
+                                ,JOBNO,ORGCD
+                                ,TO_ORGNOCD_N(ORGCD,(SELECT EVENTDT FROM ACCTRPTHD WHERE MAINNO = A.MAINNO)) ORGUSERCD
+                                ,TO_ORGNONAME_N(ORGCD, (SELECT EVENTDT FROM ACCTRPTHD WHERE MAINNO = A.MAINNO)) ORGNAME
+                                ,CDTYPE CDTYPE
+                                ,GET_CODENAME('ACCT_CD',cdType) CDTYPENAME
+                                ,AMOUNT,TITLE,CERTIFTYPE
+                                ,BUDGETAMT,BUDGETRATE,CERTIFNO
+                                ,CDAPPLNO,BUDGETUSEDAMT,OVERRATE
+                                ,OBJ_NO,IT_NO,A.PIID,A.FIID
+        FROM ACCTRPTSB A
+		WHERE A.MAINNO = [MAINNO]
+		AND DELFLAG = 'N'
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_015"   value-count="0" url="전표 삭제" >  
+	<sql-content>
+	<![CDATA[
+        UPDATE ACCTRPTHD
+        SET DELFLAG = 'Y'
+        WHERE MAINNO = [MAINNO]
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_016"   value-count="0" url="권한유무 확인" >  
+	<sql-content>
+	<![CDATA[
+		SELECT Count(*) CNT
+		FROM AUTH
+		WHERE EMPID = [EMPID]
+		AND (TO_CHAR(SYSDATE,'YYYYMMDD') BETWEEN AUTHSTARTDT AND AUTHENDDT)
+		AND AUTHTYPE IN ('admin','fiAdmin')		
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_017"   value-count="0" url="전표 Head 수정 FI Admin" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE ACCTRPTHD
+		SET                                 
+		USEORGCD	 = [USEORGCD]                   
+		,USEORGNAME	 = TO_ORGNONAME_N([USEORGCD],REPLACE([EVENTDT],'-',''))                 
+		,MTITLE		 = [MTITLE]                     
+		,EVENTDT	 = REPLACE([EVENTDT],'-','')                       
+		,USEEMPID	 = [USEEMPID]                   
+		,PHONNO		 = [PHONNO]                     
+		,BIZACQACCTCD	 = [BIZACQACCTCD]               
+		,BIZACQREGNO	 = [BIZACQREGNO]                
+		,DOMICILE	 = [DOMICILE]                   
+		,TOTAMT		 = REPLACE([TOTAMT],',','')     
+		,SUPPLYAMT	 = REPLACE([SUPPLYAMT],',','') 
+		,TAXAMT		 = REPLACE([TAXAMT],',','')    
+		,REALAMT	 = REPLACE([REALAMT],',','')   
+		,DIFFAMT	 = [DIFFAMT]                    
+		,PCARDYN	 = [PCARDYN]                    
+		,BILLTYPE	 = [BILLTYPE]  
+		,DETAILTYPE  = [DETAILTYPE]                 
+		,DETAIL		 = [DETAIL]                     
+		,ADVANCECLASS	 = [ADVANCECLASS]               
+		,SUPPLYAMTCLASS	 = [SUPPLYAMTCLASS]             
+		,RECIVEDT	 = REPLACE([RECIVEDT],'-','')  
+		,OUTSOURCETYPE	 = [OUTSOURCETYPE]              
+		,CONTENTS1	 = [CONTENTS1]                  
+		,QUANTITY1	 = [QUANTITY1]                  
+		,UNITCOST1	 = [UNITCOST1]                  
+		,SUPPLYAMT1	 = REPLACE([SUPPLYAMT1],',','')
+		,TAXAMT1	 = REPLACE([TAXAMT1],',','')   
+		,CONTENTS2	 = [CONTENTS2]                  
+		,QUANTITY2	 = [QUANTITY2]                  
+		,UNITCOST2	 = [UNITCOST2]                  
+		,SUPPLYAMT2	 = REPLACE([SUPPLYAMT2],',','')
+		,TAXAMT2	 = REPLACE([TAXAMT2],',','')   
+		,CONTENTS3	 = [CONTENTS3]                  
+		,QUANTITY3	 = REPLACE([QUANTITY3],',','') 
+		,UNITCOST3	 = [UNITCOST3]                  
+		,SUPPLYAMT3	 = REPLACE([SUPPLYAMT3],',','')
+		,TAXAMT3	 = REPLACE([TAXAMT3],',','')   
+		,CONTENTS4	 = [CONTENTS4]                  
+		,QUANTITY4	 = [QUANTITY4]                  
+		,UNITCOST4	 = [UNITCOST4]                  
+		,SUPPLYAMT4	 = REPLACE([SUPPLYAMT4],',','')
+		,TAXAMT4	 = REPLACE([TAXAMT4],',','')   
+		,ACCTEMPID	 = [ACCTEMPID]                  
+		,ACCTLOG	 = [ACCTLOG]                                         
+		,DELFLAG	 = [DELFLAG]                    
+		,ACCTHCD	 = [ACCTHCD]                    
+		,REQDT		 = REPLACE([REQDT],'-','')      
+		,TOTEXEAMT	 = REPLACE([TOTEXEAMT],',','') 
+		,TOTBUDGET	 = REPLACE([TOTBUDGET],',','') 
+		,TOTREMBUDGET	 = REPLACE([TOTREMBUDGET],',','')
+		,VATTYPE	 = [VATTYPE]                    
+		,ADVANCEAMT	 = REPLACE([ADVANCEAMT],',','')
+		WHERE MAINNO = [MAINNO]		
+	]]>
+	</sql-content>
+	</sql-mapping>
+    <sql-mapping  id="PAYDOC_018"   value-count="0" url="전표 Item 삭제" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM ACCTRPTSB
+		WHERE MAINNO = [MAINNO] 
+	]]>
+	</sql-content>
+	</sql-mapping>		
+</sql>   

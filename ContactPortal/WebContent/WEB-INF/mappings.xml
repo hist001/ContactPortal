@@ -1,0 +1,3098 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<!-- 경고!!!: xml 태그 작성시 반드시 줄 맞출것, 안 맞추는 경우 지워버릴것 임 -->
+<!-- TAB 크기는 반드시 4로 통일할 것 -->
+<!-- 동일한 모듈내에서는 개행하지 말것  -->
+  
+<mappings>
+
+	<!-- ojt2 2014 2조! -->
+	<url-mapping url="OJT2_login.do"  >
+		<web-action-class>com.wms.OJT_2.web.action.OJT2_loginAction</web-action-class>
+	</url-mapping>  
+	
+	<url-mapping url="gulSave.do"  >        
+ 		<web-action-class>com.wms.OJT_02.web.action.boardSaveAction</web-action-class>
+ 	</url-mapping>
+ 	
+ 	<!-- 2017 OJT FA 2조 -->
+	
+	
+	
+	<!--  -->
+	<url-mapping url="FAQReq.do"  >
+		<web-action-class>com.wms.board.web.action.FAQReqAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="FAQSearch.do"  >        
+		<web-action-class>com.wms.board.web.action.FAQSearchAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="FAQUpdate.do"  >        
+		<web-action-class>com.wms.board.web.action.FAQUpdateAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="FAQDelete.do"  >        
+		<web-action-class>com.wms.board.web.action.FAQDeleteAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="FAQViewCnt.do"  >        
+		<web-action-class>com.wms.board.web.action.FAQViewCntAction</web-action-class>
+    </url-mapping>    
+	<url-mapping url="upload.do"  >        
+		<web-action-class>com.wms.upload.web.action.UploadAction</web-action-class>
+    </url-mapping>    
+	<url-mapping url="common.do"  >        
+		<web-action-class>com.wms.common.web.action.CommonAction</web-action-class>
+    </url-mapping>
+     
+    <!-- 통계자료 게시판 -->
+    <url-mapping url="statCreate.do"  >
+		<web-action-class>com.wms.board.web.action.StatCreateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="statList.do"  >
+		<web-action-class>com.wms.board.web.action.StatListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="statSelect.do"  >
+		<web-action-class>com.wms.board.web.action.StatSelectAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="statDelete.do"  >
+		<web-action-class>com.wms.board.web.action.StatDeleteAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="statUpdate.do"  >
+		<web-action-class>com.wms.board.web.action.StatUpdateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="statDownLoad.do"  >
+		<web-action-class>com.wms.board.web.action.StatDownLoadAction</web-action-class>
+	</url-mapping>
+    
+	<!-- DataSet DownLoad -->
+	<url-mapping url="dataSetDown.do"  >
+		<web-action-class>com.wms.board.web.action.DataSetDownAction</web-action-class>
+	</url-mapping>
+    
+	<!-- ClaimCollect-->
+    <url-mapping url="collectList.do"  >
+		<web-action-class>com.wms.collect.web.action.ClaimCollectListAction</web-action-class>
+	</url-mapping>
+   	<url-mapping url="collect.do"  >
+		<web-action-class>com.wms.collect.web.action.ClaimCollectAction</web-action-class>
+	</url-mapping>
+    <url-mapping url="selectClaimCollect.do"  >
+		<web-action-class>com.wms.collect.web.action.SelectClaimCollectAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="saveClaimCollect.do"  >
+		<web-action-class>com.wms.collect.web.action.SaveClaimCollectAction</web-action-class>
+	</url-mapping>
+	
+	<!--product-->
+	<url-mapping url="prodSearchEmp.do"  >
+		<web-action-class>com.wms.product.web.action.ProdSearchEmpAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="openCreateProdAction.do"  >
+		<web-action-class>com.wms.product.web.action.OpenCreateProdAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchProdEmpListAction.do"  >
+		<web-action-class>com.wms.product.web.action.SearchProdEmpListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="prodEmpAction.do"  >
+		<web-action-class>com.wms.product.web.action.ProdEmpAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectProdSessionAction.do"  >
+		<web-action-class>com.wms.product.web.action.SelectProdSessionAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="createProdAction.do"  >
+		<web-action-class>com.wms.product.web.action.CreateProdAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectProdAction.do"  >
+		<web-action-class>com.wms.product.web.action.SelectProdAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="updateProdAction.do"  >
+		<web-action-class>com.wms.product.web.action.UpdateProdAction</web-action-class>
+	</url-mapping>	
+
+	<!-- bizAcq-->
+	<url-mapping url="bizAcqSearch.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizAcctSearch.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcctSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizAcqDetailSearch.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqDetailSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizAcqSearchEmp.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqSearchEmpAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizAcqRegist.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqRegistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizAcqSearchRep.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqSearchRepAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizAcqSearchRepDetail.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqSearchRepDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizAcqUpdate.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqUpdateAction</web-action-class>
+	</url-mapping>
+    <url-mapping url="bizAcqUpdateChag.do"  >  
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqUpdateChagAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqDeleteEmp.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqDeleteEmpAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqUpdateEmp.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqUpdateEmpAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqSearchDetail.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqSearchDetailAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqDupSearch.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqDupSearchAction</web-action-class>
+    </url-mapping>    
+    <url-mapping url="bizAcqNewDupSearch.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqNewDupSearchAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqDetailRegist.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqDetailRegistAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqDetailUpdate.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqDetailUpdateAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqDelete.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqDeleteAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqCodeSearch.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqCodeSearchAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqCodeRegist.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqCodeRegistAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqCodeUpdate.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqCodeUpdateAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqCodeDelete.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqCodeDeleteAction</web-action-class>
+    </url-mapping>
+   <url-mapping url="bizAcqPsnSearch.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqPsnSearchAction</web-action-class>
+    </url-mapping>
+   <url-mapping url="bizAcqAllUpdate.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqAllUpdateAction</web-action-class>
+    </url-mapping>
+   <url-mapping url="bizAcqAllDelete.do"  >        
+    	<web-action-class>com.wms.bizAcq.web.action.BizAcqAllDeleteAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizAcqImgSearch.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqImgAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="bizAcqImgUpdate.do"  >
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqImgAction</web-action-class>
+	</url-mapping>
+    
+       <!-- 계정정의서-->
+   <url-mapping url="AcctList.do"  >                                  
+   <web-action-class>com.wms.account.web.action.AcctListAction</web-action-class>
+   </url-mapping>
+   <url-mapping url="AcctReqList.do"  >                               
+   <web-action-class>com.wms.account.web.action.AcctReqListAction</web-action-class>
+   </url-mapping>
+   <url-mapping url="AcctListDetailSearch.do"  >        
+   <web-action-class>com.wms.account.web.action.AcctListDetailSearchAction</web-action-class>
+   </url-mapping>
+	<url-mapping url="AcctListRecDetailSearch.do"  >        
+		<web-action-class>com.wms.account.web.action.AcctListRecDetailSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="AcctListDetailIncmSearch.do"  >        
+		<web-action-class>com.wms.account.web.action.AcctListDetailIncmSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="AcctDelete.do"  >        
+		<web-action-class>com.wms.account.web.action.AcctDeleteAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="AcctIncmCreate.do"  >        
+		<web-action-class>com.wms.account.web.action.AcctCreateIncmAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="AcctIncmUpdate.do"  >        
+		<web-action-class>com.wms.account.web.action.AcctUpdateIncmAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="AcctExpCreate.do"  >        
+		<web-action-class>com.wms.account.web.action.AcctCreateExpAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="AcctExpUpdate.do"  >        
+		<web-action-class>com.wms.account.web.action.AcctUpdateExpAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="AcctExpDelete.do"  >        
+		<web-action-class>com.wms.account.web.action.AcctDeleteExpAction</web-action-class>
+	</url-mapping>
+
+
+
+    <!--beforeCost
+	<url-mapping url="saveBeforeCost.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SaveBeforeCostAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="openCostView.do" >
+		<web-action-class>com.wms.beforeCost.web.action.OpenCostViewAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="updateMerc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.OpenCostViewAction</web-action-class>
+	</url-mapping>
+	-->
+
+	<!--beforeCost.MercCost-->
+	<url-mapping url="selectMercInfo.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SelectMercInfoAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="saveMercInfo.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SaveMercInfoAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="deleteMercInfo.do" >
+		<web-action-class>com.wms.beforeCost.web.action.DeleteMercInfoAction</web-action-class>
+	</url-mapping>
+
+	<!--beforeCost.ManCost-->
+	<url-mapping url="selectManInfo.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SelectManInfoAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="saveManInfo.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SaveManInfoAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="deleteManInfo.do" >
+		<web-action-class>com.wms.beforeCost.web.action.DeleteManInfoAction</web-action-class>
+	</url-mapping>
+
+
+	<!--beforeCost.Cost-->
+	<!--제품 및 매출정보 불러오기(모델,견적,계약)-->
+	<url-mapping url="allSearchProd.do" >
+		<web-action-class>com.wms.beforeCost.web.action.AllSearchProdAction</web-action-class>
+	</url-mapping>
+	<!--원가명세리스트 불러오기(모델,견적,계약,목표)-->
+	<url-mapping url="selectCostDescList.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SelectCostDescListAction</web-action-class>
+	</url-mapping>
+	<!--원가명세한건 불러오기(모델,견적,계약,목표)-->
+	<url-mapping url="selectCostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SelectCostDescAction</web-action-class>
+	</url-mapping>
+	<!--원가명세저장하기(모델,견적,계약)-->
+	<url-mapping url="saveCostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SaveCostDescAction</web-action-class>
+	</url-mapping>
+	<!--원가명세생성하기(모델,견적,계약)-->
+	<url-mapping url="createCostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.CreateCostDescAction</web-action-class>
+	</url-mapping>
+	<!--원가명세삭제하기(모델,견적,계약)-->
+	<url-mapping url="deleteCostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.DeleteCostDescAction</web-action-class>
+	</url-mapping>
+	<!--견적원가 작성시 견적모델 리스트 불러오기-->
+	<url-mapping url="searchCostDescModelList.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SearchCostDescModelListAction</web-action-class>
+	</url-mapping>
+	<!--목표원가 생성시 화면에서 날짜입력 받은 후 생성화면을 만들어 주기위해 사용하는 action-->
+	<url-mapping url="openCreateTCostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.OpenCreateTCostDescAction</web-action-class>
+	</url-mapping>
+	<!--목표원가 생성에서 데이터 입력후 저장하기-->
+	<url-mapping url="createTCostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.CreateTCostDescAction</web-action-class>
+	</url-mapping>
+	<!--목표원가에서 원가명세정보 변경후 저장하기-->
+	<url-mapping url="saveTCostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SaveTCostDescAction</web-action-class>
+	</url-mapping>
+	<!--목표원가에서 원가명세정보 + 원가항목정보 모두 삭제후 재등록하기-->
+	<url-mapping url="saveAllTCostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SaveAllTCostDescAction</web-action-class>
+	</url-mapping>
+	<!--목표원가에서 원가항목정보 변경후 저장하기-->
+	<url-mapping url="saveTCostItem.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SaveTCostItemAction</web-action-class>
+	</url-mapping>
+	<!--목표원가 한건 불러오기-->
+	<url-mapping url="selectTCostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SelectTCostDescAction</web-action-class>
+	</url-mapping>
+	<!--목표원가생성에서 견적원가 리스트 불러오기-->
+	<url-mapping url="searchCostDescEstimateList.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SearchCostDescEstimateListAction</web-action-class>
+	</url-mapping>
+	<!--목표원가생성에서 불러온 견적원가 리스트에서 한건 선택시 화면에 값을 1/n으로 뿌려줌-->
+	<url-mapping url="distributeECostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.DistributeECostDescAction</web-action-class>
+	</url-mapping>
+	<!--추정원가 리스트 데이터 불러오기-->
+	<url-mapping url="selectACostDescList.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SelectACostDescListAction</web-action-class>
+	</url-mapping>
+	<!--추정원가 한건 데이터 불러오기-->
+	<url-mapping url="selectACostDesc.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SelectACostDescAction</web-action-class>
+	</url-mapping>
+	<!--추정원가에서 세부내역(전표)불러오기-->
+	<url-mapping url="selectSlipDetailList.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SelectSlipDetailListAction</web-action-class>
+	</url-mapping>
+	<!--원가조회 리스트불러오기-->
+	<url-mapping url="selectCostDescListInq.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SelectCostDescListInqAction</web-action-class>
+	</url-mapping>
+	<!--실제원가에서 리스트불러오기-->
+	<url-mapping url="realCostSearch.do" >
+		<web-action-class>com.wms.realCost.web.action.RealCostSearchAction</web-action-class>
+	</url-mapping>
+	<!--세부문별 실제원가에서 리스트불러오기-->
+	<url-mapping url="realGrpSearch.do" >
+		<web-action-class>com.wms.realCost.web.action.RealGrpSearchAction</web-action-class>
+	</url-mapping>
+
+	<!--실제원가에서 세부내역(전표)불러오기-->
+	<url-mapping url="detailSrcSearch.do" >
+		<web-action-class>com.wms.realCost.web.action.DetailSrcSearchAction</web-action-class>
+	</url-mapping>
+	<!--실제원가에서 단순판매불러오기-->
+	<url-mapping url="realSaleProdSearch.do" >
+		<web-action-class>com.wms.realCost.web.action.RealSaleProdSearchAction</web-action-class>
+	</url-mapping>
+	<!--실제원가에서 사업Index불러오기-->
+	<url-mapping url="bizIndexSearch.do" >
+		<web-action-class>com.wms.realCost.web.action.BizIndexSearchAction</web-action-class>
+	</url-mapping>
+	<!--사업Index에서 실제원가 리스트불러오기-->
+	<url-mapping url="bizRealCostSearch.do" >
+	<web-action-class>com.wms.realCost.web.action.BizRealCostSearchAction</web-action-class>
+	</url-mapping>
+
+	<!--실제원가 실행하기-->
+	<url-mapping url="realCostExecute.do" >	<web-action-class>com.wms.realCost.web.action.RealCostExecuteAction</web-action-class>
+	</url-mapping>
+
+	<!--결재처리에 따른 상태변경-->
+	<url-mapping url="saveApprovalStatus.do" >
+		<web-action-class>com.wms.beforeCost.web.action.SaveApprovalStatusAction</web-action-class>
+	</url-mapping>
+
+	<!--조직관련처리-->
+	<!--조직LIST-->
+	<url-mapping url="searchOrgHisList.do" >
+		<web-action-class>com.wms.orgHis.web.action.SearchOrgHisListAction</web-action-class>
+	</url-mapping>
+	<!--조직한건 선택-->
+	<url-mapping url="selectOrgHis.do" >
+		<web-action-class>com.wms.orgHis.web.action.SelectOrgHisAction</web-action-class>
+	</url-mapping>
+	<!--조직정보 저장 선택-->
+	<url-mapping url="saveOrgHis.do" >
+		<web-action-class>com.wms.orgHis.web.action.SaveOrgHisAction</web-action-class>
+	</url-mapping>
+	<!--조직정보 삭제 선택-->
+	<url-mapping url="deleteOrgHis.do" >
+		<web-action-class>com.wms.orgHis.web.action.DeleteOrgHisAction</web-action-class>
+	</url-mapping>
+	<!--조직정보 생성 선택-->
+	<url-mapping url="createOrgHis.do" >
+		<web-action-class>com.wms.orgHis.web.action.CreateOrgHisAction</web-action-class>
+	</url-mapping>
+	
+	<!--Msg-->
+	<url-mapping url="finMsgList.do"  >        
+		<web-action-class>com.wms.issueMsg.web.action.FinMsgListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="reqMsgList.do"  >        
+		<web-action-class>com.wms.issueMsg.web.action.ReqMsgListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="resMsgList.do"  >        
+		<web-action-class>com.wms.issueMsg.web.action.ResMsgListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="msgRegist.do"  >        
+		<web-action-class>com.wms.issueMsg.web.action.MsgRegistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="resMsgRegist.do"  >        
+		<web-action-class>com.wms.issueMsg.web.action.ResMsgRegistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="finMsgRegist.do"  >        
+		<web-action-class>com.wms.issueMsg.web.action.FinMsgRegistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="empJobSearch.do"  >        
+		<web-action-class>com.wms.issueMsg.web.action.EmpJobSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchMsg.do"  >        
+		<web-action-class>com.wms.issueMsg.web.action.SearchMsgAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="msgUpdate.do"  >        
+		<web-action-class>com.wms.issueMsg.web.action.MsgUpdateAction</web-action-class>
+	</url-mapping>
+	
+	<!-- 제비율 -->
+	<!--  제비율 공통 등록 -->
+	<url-mapping url="AllRateCreate.do"  >			
+		<web-action-class>com.wms.proportion.web.action.AllRateCreateAction</web-action-class>
+   	</url-mapping>
+	<!--  제비율 공통 추가등록 -->
+	<url-mapping url="AllRateAddCreate.do"  >			
+		<web-action-class>com.wms.proportion.web.action.AllRateAddCreateAction</web-action-class>
+   	</url-mapping>
+	<!--  제비율 공통 수정 -->
+	<url-mapping url="AllRateUpdate.do"  >			
+		<web-action-class>com.wms.proportion.web.action.AllRateUpdateAction</web-action-class>
+   	</url-mapping>
+	<!--  제비율 공통 삭제 -->
+	<url-mapping url="AllRateDetailDelete.do"  >			
+		<web-action-class>com.wms.proportion.web.action.AllRateDetailDeleteAction</web-action-class>
+    </url-mapping>
+	<!--  제비율 전체 삭제 -->
+	<url-mapping url="AllRateAllDelete.do"  >			
+		<web-action-class>com.wms.proportion.web.action.AllRateAllDeleteAction</web-action-class>
+    </url-mapping>
+
+	<!-- 사내지표 List -->
+	<url-mapping url="AllRateList.do"  >			
+		<web-action-class>com.wms.proportion.web.action.AllRateListAction</web-action-class>
+    </url-mapping>
+    <!-- 사내지표 조회 -->
+    <url-mapping url="AllRateSearch.do"  >		
+    	<web-action-class>com.wms.proportion.web.action.AllRateSearchAction</web-action-class>
+    </url-mapping>
+    <!-- 사내지표 상세조회 -->
+    <url-mapping url="AllRateDetailSearch.do"  >		
+    	<web-action-class>com.wms.proportion.web.action.AllRateDetailSearchAction</web-action-class>
+    </url-mapping>
+    <!-- 사내지표 추가 -->
+   
+    <!-- 경제지표 List -->
+    <url-mapping url="AllRatioList.do"  >			
+    	<web-action-class>com.wms.proportion.web.action.AllRatioListAction</web-action-class>
+    </url-mapping>
+    <!-- 경제지표 상세조회 -->
+    <url-mapping url="AllRatioDetailSearch.do"  >    
+    	<web-action-class>com.wms.proportion.web.action.AllRatioDetailSearchAction</web-action-class>
+    </url-mapping>
+   
+   	<!--============ 수 정 조 정 분 ============-->
+    <url-mapping url="AllRateListDetailUpdate.do"  >			
+    	<web-action-class>com.wms.rate.web.action.AllRateListDetailUpdateAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="AllRateListDelete.do"  >			
+    	<web-action-class>com.wms.rate.web.action.AllRateListDeleteAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="AllRateListCreate.do"  >			
+    	<web-action-class>com.wms.rate.web.action.AllRateListCreateAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="AllRatioListDetailUpdate.do"  >                        
+    	<web-action-class>com.wms.ratio.web.action.AllRatioListDetailUpdateAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="AllRatioListDelete.do"  >                        
+    	<web-action-class>com.wms.ratio.web.action.AllRatioListDeleteAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="AllRatioListCreate.do"  >                        
+    	<web-action-class>com.wms.ratio.web.action.AllRatioListCreateAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="AllRatioSearch.do"  >                        
+    	<web-action-class>com.wms.ratio.web.action.AllRatioSearchAction</web-action-class>
+    </url-mapping>
+	<!-- ====================================== -->
+ 
+    <url-mapping url="bizFixAsstList.do"  >        
+    	<web-action-class>com.wms.fixAsst.web.action.FixAsstListAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizFixAsstRegist.do"  >        
+    	<web-action-class>com.wms.fixAsst.web.action.BizFixAsstRegistAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizFixAsstSearch.do"  >        
+    	<web-action-class>com.wms.fixAsst.web.action.BizFixAsstSearchAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="FixAsstSearch.do"  >        
+    	<web-action-class>com.wms.fixAsst.web.action.FixAsstSearchAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizFixAsstUpdate.do"  >        
+    	<web-action-class>com.wms.fixAsst.web.action.BizFixAsstUpdateAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizFixAsstDelete.do"  >        
+    	<web-action-class>com.wms.fixAsst.web.action.BizFixAsstDeleteAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizFixAsstErrList.do"  >        
+    	<web-action-class>com.wms.fixAsst.web.action.BizFixAsstErrListAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizFixAsstErrSearch.do"  >        
+    	<web-action-class>com.wms.fixAsst.web.action.BizFixAsstErrSearchAction</web-action-class>
+    </url-mapping>
+	<url-mapping url="orgMappingIdSearch.do" >
+		<web-action-class>com.wms.common.web.action.OrgMappingIdSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="orgMappingIdRegist.do" >
+		<web-action-class>com.wms.common.web.action.OrgMappingIdRegistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="orgMappingIdDelete.do" >
+		<web-action-class>com.wms.common.web.action.OrgMappingIdDeleteAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="dailyReportDelete.do" >
+		<web-action-class>com.wms.jobreport.web.action.DailyReportDeleteAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="dailyReportMDelete.do" >
+		<web-action-class>com.wms.jobreport.web.action.DailyReportMDeleteAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="dailyReportLogDelete.do">
+		<web-action-class>com.wms.dailyReport.web.action.DeleteDailyReportLogAction</web-action-class>
+	</url-mapping>		
+	<url-mapping url="prcsReportSearch.do" >
+		<web-action-class>com.wms.jobreport.web.action.PrcsReportSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="prcsReportExcelSearch.do" >
+		<web-action-class>com.wms.jobreport.web.action.PrcsReportExcelSearchAction</web-action-class>
+	</url-mapping>
+
+	<!--OPPT inquiry & Auth-->
+	<url-mapping url="monthlyRptList.do" >
+		<web-action-class>com.wms.oppt.web.action.MonthlyRptListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="currentOpptList.do" >
+		<web-action-class>com.wms.oppt.web.action.CurrentOpptListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="opptDataList.do" >
+		<web-action-class>com.wms.oppt.web.action.OpptDataListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="periodOpptList.do" >
+		<web-action-class>com.wms.oppt.web.action.PeriodOpptListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="opptCalendar.do" >
+		<web-action-class>com.wms.oppt.web.action.OpptCalendarAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="opptAuthList.do" >
+		<web-action-class>com.wms.oppt.web.action.OpptAuthListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="opptAuthReg.do" >
+		<web-action-class>com.wms.oppt.web.action.OpptAuthRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="opptAuthUpd.do" >
+		<web-action-class>com.wms.oppt.web.action.OpptAuthUpdAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="opptAuthDel.do" >
+		<web-action-class>com.wms.oppt.web.action.OpptAuthDelAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="opptAuthSel.do" >
+		<web-action-class>com.wms.oppt.web.action.OpptAuthSelAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="opptUpdLogList.do" >
+		<web-action-class>com.wms.oppt.web.action.OpptUpdLogListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="narrationInqList.do" >
+		<web-action-class>com.wms.oppt.web.action.NarrationInqListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relCorpInqList.do" >
+		<web-action-class>com.wms.oppt.web.action.RelCorpInqListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relReportList.do" >
+		<web-action-class>com.wms.oppt.web.action.RelReportListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relReportDetail.do" >
+		<web-action-class>com.wms.oppt.web.action.RelReportDetailAction</web-action-class>
+	</url-mapping>
+
+	<!--OPPT-->
+	<url-mapping url="saleActReg.do" >
+		<web-action-class>com.wms.oppt.web.action.SaleActRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="saleActUpdate.do" >
+		<web-action-class>com.wms.oppt.web.action.SaleActUpdateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="saleActConfirm.do" >
+		<web-action-class>com.wms.oppt.web.action.SaleActConfirmAction</web-action-class>
+	</url-mapping>
+
+	<url-mapping url="saleActSearch.do" >
+		<web-action-class>com.wms.oppt.web.action.SaleActSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="saleActDetail.do" >
+		<web-action-class>com.wms.oppt.web.action.SaleActDetailAction</web-action-class>
+	</url-mapping>
+
+	<!--Narration-->
+	<url-mapping url="narrationList.do" >
+		<web-action-class>com.wms.oppt.web.action.NarrationListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="narrationReg.do" >
+		<web-action-class>com.wms.oppt.web.action.NarrationRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="narrationDetailSearch.do" >
+		<web-action-class>com.wms.oppt.web.action.NarrationDetailSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="narrationDetailUpdate.do" >
+		<web-action-class>com.wms.oppt.web.action.NarrationDetailUpdateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="narrationCreate.do" >
+		<web-action-class>com.wms.oppt.web.action.NarrationCreateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="narrationDelete.do" >
+		<web-action-class>com.wms.oppt.web.action.NarrationDeleteAction</web-action-class>
+	</url-mapping>
+
+	<!--RelCorp-->
+	<url-mapping url="relCorpList.do" >
+		<web-action-class>com.wms.oppt.web.action.RelCorpListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relCorpReg.do" >
+		<web-action-class>com.wms.oppt.web.action.RelCorpRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relCorpDetailSearch.do" >
+		<web-action-class>com.wms.oppt.web.action.RelCorpDetailSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relCorpDetailUpdate.do" >
+		<web-action-class>com.wms.oppt.web.action.RelCorpDetailUpdateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relCorpCreate.do" >
+		<web-action-class>com.wms.oppt.web.action.RelCorpCreateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relCorpDelete.do" >
+		<web-action-class>com.wms.oppt.web.action.RelCorpDeleteAction</web-action-class>
+	</url-mapping>
+
+	<!--RelPerson-->
+	<url-mapping url="relPersonList.do" >
+		<web-action-class>com.wms.oppt.web.action.RelPersonListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relPersonReg.do" >
+		<web-action-class>com.wms.oppt.web.action.RelPersonRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relPersonDetailSearch.do" >
+		<web-action-class>com.wms.oppt.web.action.RelPersonDetailSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relPersonDetailUpdate.do" >
+		<web-action-class>com.wms.oppt.web.action.RelPersonDetailUpdateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relPersonCreate.do" >
+		<web-action-class>com.wms.oppt.web.action.RelPersonCreateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="relPersonDelete.do" >
+		<web-action-class>com.wms.oppt.web.action.RelPersonDeleteAction</web-action-class>
+	</url-mapping>
+
+    <url-mapping url="slipList.do"  >        
+    	<web-action-class>com.wms.dataCollect.web.action.SlipListAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="fixAsstCLTList.do"  >        
+    	<web-action-class>com.wms.dataCollect.web.action.FixAsstCLTListAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="laborCostList.do"  >        
+    	<web-action-class>com.wms.dataCollect.web.action.LaborCostListAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="dailyMhList.do"  >        
+    	<web-action-class>com.wms.dataCollect.web.action.DailyMHListAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="dataCollect.do"  >        
+    	<web-action-class>com.wms.dataCollect.web.action.DataCollectAction</web-action-class>
+    </url-mapping>
+    
+	<!--업무계획-->
+	<url-mapping url="jobPlanReg.do" >
+		<web-action-class>com.wms.jobPlan.web.action.JobPlanRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="jobPlanDel.do" >
+		<web-action-class>com.wms.jobPlan.web.action.JobPlanDelAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="jobPlanMDel.do" >
+		<web-action-class>com.wms.jobPlan.web.action.JobPlanMDelAction</web-action-class>
+	</url-mapping>	
+		
+	<!--원가진행률관리 제품정보 list 처리-->
+    <url-mapping url="prodList.do"  >        
+    	<web-action-class>com.wms.costProc.web.action.ProdListAction</web-action-class>
+    </url-mapping>
+	<!--원가진행률관리 제품정보 list 처리-->
+    <url-mapping url="getProd.do"  >        
+    	<web-action-class>com.wms.costProc.web.action.GetProdAction</web-action-class>
+    </url-mapping>
+	<!--원가진행률관리 제품 수정 처리부분-->
+    <url-mapping url="prodUpdate.do"  >        
+    	<web-action-class>com.wms.costProc.web.action.ProdUpdateAction</web-action-class>
+    </url-mapping>
+	<!--원가진행률관리 제품정보 list 처리-->
+    <url-mapping url="costProcCreate.do"  >        
+    	<web-action-class>com.wms.costProc.web.action.CostProcCreateAction</web-action-class>
+    </url-mapping>
+	<!--원가진행률 자료 List 처리 부분-->
+    <url-mapping url="costProcList.do"  >        
+    	<web-action-class>com.wms.costProc.web.action.CostProcListAction</web-action-class>
+    </url-mapping>
+	<!--원가진행률 정보 읽기부분-->
+    <url-mapping url="getCostProc.do"  >        
+    	<web-action-class>com.wms.costProc.web.action.GetCostProcAction</web-action-class>
+    </url-mapping>
+	<!--원가진행률 정보 수정 처리부분-->
+    <url-mapping url="costProcUpdate.do"  >        
+    	<web-action-class>com.wms.costProc.web.action.CostProcUpdateAction</web-action-class>
+    </url-mapping>
+	<!--매출 전표 생성부분-->
+    <url-mapping url="slipCreate.do"  >        
+    	<web-action-class>com.wms.costProc.web.action.SlipCreateAction</web-action-class>
+    </url-mapping>
+	<!--전표 조건부분-->
+    <url-mapping url="slipCondition.do"  >        
+    	<web-action-class>com.wms.costProc.web.action.SlipConditionAction</web-action-class>
+    </url-mapping>
+	<!--원가 전표 List부분-->
+    <url-mapping url="searchSlip.do"  >
+    	<web-action-class>com.wms.costProc.web.action.SlipListAction</web-action-class>
+    </url-mapping>
+	<!--원가 전표 조회부분-->
+    <url-mapping url="getSlip.do"  >
+    	<web-action-class>com.wms.costProc.web.action.GetSlipAction</web-action-class>
+    </url-mapping>
+	<!--원가 전표 수정부분-->
+    <url-mapping url="slipUpdate.do"  >
+    	<web-action-class>com.wms.costProc.web.action.SlipUpdateAction</web-action-class>
+    </url-mapping>
+	<!--매출 자료 List 처리 부분-->
+    <url-mapping url="salesList.do"  >
+    	<web-action-class>com.wms.costProc.web.action.SalesListAction</web-action-class>
+    </url-mapping>
+	<!--매출 세부 조회부분-->
+    <url-mapping url="getSales.do"  >
+    	<web-action-class>com.wms.costProc.web.action.GetSalesAction</web-action-class>
+    </url-mapping>
+
+    <!--EmpAll-->
+    <url-mapping url="createEmp.do"  >
+    	<web-action-class>com.wms.emp.web.action.CreateEmpAllAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="selectEmp.do"  >
+		<web-action-class>com.wms.emp.web.action.SelectEmpAllAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="selectListEmp.do"  >
+		<web-action-class>com.wms.emp.web.action.SelectListEmpAllAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="updateEmp.do"  >
+		<web-action-class>com.wms.emp.web.action.UpdateEmpAllAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="empSearchWithCar.do"  >
+		<web-action-class>com.wms.emp.web.action.EmpSearchWithCarAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="saveIdPw.do"  >
+		<web-action-class>com.wms.emp.web.action.SaveIdPwAction</web-action-class>
+    </url-mapping>
+ 
+    <!--EmpAll REVISION (김은주 작성)-->
+    <url-mapping url="updateEmpAll.do"  >
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpAction</web-action-class>
+    </url-mapping>
+    
+    <!--BizTrip 국내출장처리-->
+    <url-mapping url="createBizTrip.do"  >
+   		<web-action-class>com.wms.jobreport.web.action.CreateBizTripAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="uptBizTrip.do"  >
+   		<web-action-class>com.wms.jobreport.web.action.UptBizTripAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="delBizTrip.do"  >
+   		<web-action-class>com.wms.jobreport.web.action.DelBizTripAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="selectBizTrip.do"  >
+   		<web-action-class>com.wms.jobreport.web.action.SelectBizTripAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="selectBizTripList.do"  >
+    	<web-action-class>com.wms.jobreport.web.action.SelectBizTripListAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="bizTripPaymentWrite.do"  >
+    	<web-action-class>com.wms.jobreport.web.action.BizTripPaymentWriteAction</web-action-class>
+    </url-mapping>
+
+	<!-- inquiry -->
+    <!--업무계획 캘린더 조회 처리-->
+    <url-mapping url="planInqForCalendar.do"  >
+   		<web-action-class>com.wms.inquiry.web.action.PlanInqForCalendarAction</web-action-class>
+    </url-mapping>
+    <!--제품상태조회-->
+	<url-mapping url="prodInqList.do"  >
+		<web-action-class>com.wms.inquiry.web.action.ProdInqListAction</web-action-class>
+	</url-mapping>
+
+    <!--계약서 관리 조회LIST-->
+    <url-mapping url="contList.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContListAction</web-action-class>
+    </url-mapping>
+    <!--외주 관리 조회LIST-->
+    <url-mapping url="outContList.do"  >
+    	<web-action-class>com.wms.contract.web.action.OutContListAction</web-action-class>
+    </url-mapping>
+    <!--계약서 관리 조회LIST-->
+    <url-mapping url="contDetailList.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContDetailListAction</web-action-class>
+    </url-mapping>
+     <!--계약서 관리 등록조회LIST-->
+    <url-mapping url="contRegList.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContRegListAction</web-action-class>
+    </url-mapping>
+    <!--계약서 관리 관리자 조회LIST-->
+    <url-mapping url="contAdminList.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContAdminListAction</web-action-class>
+    </url-mapping>
+    <!--외주 관리 등록-->
+    <url-mapping url="outContReg.do"  >
+    	<web-action-class>com.wms.contract.web.action.OutContRegAction</web-action-class>
+    </url-mapping>
+    <!--외주 관리 수정-->
+    <url-mapping url="outContGet.do"  >
+    	<web-action-class>com.wms.contract.web.action.OutContGetAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="outContUpdate.do"  >
+    	<web-action-class>com.wms.contract.web.action.OutContUpdateAction</web-action-class>
+    </url-mapping>
+    <!--외주 관리 삭제-->
+    <url-mapping url="outContDel.do"  >
+    	<web-action-class>com.wms.contract.web.action.OutContDelAction</web-action-class>
+    </url-mapping>
+    <!--계약서 관리 등록-->
+    <url-mapping url="contRegist.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContRegistAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="contGet.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContGetAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="contAllGet.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContAllGetAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="contsGet.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContsGetAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="contNew.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContNewAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="prodSearch.do"  >
+    	<web-action-class>com.wms.contract.web.action.ProdSearchAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="contPersonReg.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContPersonRegAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="prodGet.do"  >
+    	<web-action-class>com.wms.contract.web.action.ProdGetAction</web-action-class>
+    </url-mapping>
+    <!--계약서 관리 수정-->
+    <url-mapping url="contUpdate.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContUpdateAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="contReUpdate.do"  >
+    	<web-action-class>com.wms.contract.web.action.ContReUpdateAction</web-action-class>
+    </url-mapping>
+    <!--계약서 중복체크-->
+    <url-mapping url="dupChk.do"  >
+    	<web-action-class>com.wms.contract.web.action.DupChkAction</web-action-class>
+    </url-mapping>
+    
+	<!-- BizAcq -->
+	<!-- 거래처 List -->
+	<url-mapping url="bizAcqList.do"  >        
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqListAction</web-action-class>
+	</url-mapping>
+	<!-- 거래처 List 조건조회-->
+	<url-mapping url="bizAcqListCon.do"  >        
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqListConAction</web-action-class>
+	</url-mapping>
+	<!-- 거래처 상세조회 -->
+	<url-mapping url="bizAcqDetail.do"  >        
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqDetailAction</web-action-class>
+	</url-mapping>
+	<!-- 거래처 등록 -->
+	<url-mapping url="bizAcqReg.do"  >        
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqRegAction</web-action-class>
+	</url-mapping>
+	<!-- 거래처 관련자 등록 -->
+	<url-mapping url="bizAcqPsnReg.do"  >        
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqPsnRegAction</web-action-class>
+	</url-mapping>
+	<!-- 거래처 관련자 전체삭제 -->
+	<url-mapping url="bizAcqPsnDeleteAll.do"  >        
+		<web-action-class>com.wms.bizAcq.web.action.BizAcqPsnDeleteAllAction</web-action-class>
+	</url-mapping>
+
+
+	<!--월간보고 분석노트 상세보기-->
+   <url-mapping url="reportDetail.do"  >
+	<web-action-class>com.wms.report.web.action.ReportDetailAction</web-action-class>
+   </url-mapping>
+	<!--월간보고 분석노트 수정하기-->
+   <url-mapping url="reportUpdate.do"  >
+	<web-action-class>com.wms.report.web.action.ReportUpdateAction</web-action-class>
+   </url-mapping>
+	<!--월간보고 분석노트 등록하기-->
+   <url-mapping url="reportReg.do"  >
+	<web-action-class>com.wms.report.web.action.ReportRegAction</web-action-class>
+   </url-mapping>
+
+
+	
+	<!--매출계획-->	
+	<url-mapping url="listSalesPlan.do"  >        
+		<web-action-class>com.wms.budget.web.action.ListSalesPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectSalesPlan.do"  >        
+		<web-action-class>com.wms.budget.web.action.SelectSalesPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="updateSalesPlan.do"  >        
+		<web-action-class>com.wms.budget.web.action.UpdateSalesPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectSalesPlanGrid.do"  >        
+		<web-action-class>com.wms.budget.web.action.SelectSalesPlanGridAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="updateSalesPlanGrid.do"  >        
+		<web-action-class>com.wms.budget.web.action.UpdateSalesPlanGridAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectSalesPlanFull.do"  >        
+		<web-action-class>com.wms.budget.web.action.SelectSalesPlanFullAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectSalesPlanFullGrid.do"  >        
+		<web-action-class>com.wms.budget.web.action.SelectSalesPlanFullGridAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="createSalesPlanCall.do"  >        
+		<web-action-class>com.wms.budget.web.action.CreateSalesPlanCallAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectSalesPlanAll.do"  >        
+		<web-action-class>com.wms.budget.web.action.SelectSalesPlanAllAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectSalesPlanAllGrid.do"  >        
+		<web-action-class>com.wms.budget.web.action.SelectSalesPlanAllGridAction</web-action-class>
+	</url-mapping>
+	
+	<!--사업계획-->
+	<url-mapping url="listYearPlan.do"  >        
+		<web-action-class>com.wms.budget.web.action.ListYearPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectYearPlan.do"  >        
+		<web-action-class>com.wms.budget.web.action.SelectYearPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="updateYearPlan.do"  >        
+		<web-action-class>com.wms.budget.web.action.UpdateYearPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="createYearPlan.do"  >        
+		<web-action-class>com.wms.budget.web.action.CreateYearPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="deleteYearPlan.do"  >        
+		<web-action-class>com.wms.budget.web.action.DeleteYearPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="updateYearPlanStatusChange.do"  >        
+		<web-action-class>com.wms.budget.web.action.UpdateYearPlanStatusChangeAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchDetailYearPlan.do"  >        
+		<web-action-class>com.wms.budget.web.action.SearchDetailYearPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="listOpptPlanInq.do"  >
+		<web-action-class>com.wms.budget.web.action.ListOpptPlanInqAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="listSalesPlanInq.do"  >
+		<web-action-class>com.wms.budget.web.action.ListSalesPlanInqAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="updateYearPlanBudget.do"  >        
+		<web-action-class>com.wms.budget.web.action.UpdateYearPlanBudgetAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="bizPlanUpload.do"  >        
+		<web-action-class>com.wms.budget.web.action.bizPlanUploadAction</web-action-class>
+	</url-mapping>	
+	 
+	
+	<!--결재연동-->	
+	<url-mapping url="getApproDoc.do"  >        
+		<web-action-class>com.wms.approval.web.action.GetApproDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="regApproStatus.do"  >        
+		<web-action-class>com.wms.approval.web.action.RegApproStatusAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="preparationDocList.do"  >        
+		<web-action-class>com.wms.approval.web.action.PreparationDocListAction</web-action-class>
+	</url-mapping>
+	
+	<!--ㅡ새로운 예산관리-->
+	<url-mapping url="srchBudgetTeam.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.SrchBudgetTeamAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="srchBudgetGroup.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.SrchBudgetGroupAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="srchBudgetGroupAdmin.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.SrchBudgetGroupAdminAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptBudgetGroup.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.UptBudgetGroupAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptExecBudgetFive.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.UptBudgetFiveAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="getPjtPlan.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.GetPjtPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="chkBizacqAcctcd.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.BizacqAcctcdCheckAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="budgetCheckAjax.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.BudgetCheckAjaxAction</web-action-class>
+	</url-mapping>
+	<!--집행예산-->	
+	<url-mapping url="conViewBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ConViewBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="conViewBudgetTeam.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ConViewBudgetTeamAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewExecBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewExecBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="conViewBudgetAdmin.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ConViewBudgetAdminAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewExecBudgetAdmin.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewExecBudgetAdminAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptExecBudgetAdmin.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptExecBudgetAdminAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewExecBudgetTeam.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewExecBudgetTeamAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="execBudgetLog.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ExecBudgetLogAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="execBudgetLogDetail.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ExecBudgetLogDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="execBudgetDetail.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ExecBudgetDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewExecBudgetDetail.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewExecBudgetDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="execBudgetDetailTeam.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewExecBudgetDetailTeamAction</web-action-class>
+	</url-mapping>
+	<!--지급품의-->	
+	<url-mapping url="budgetDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.BudgetDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="adminBudgetDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.AdminBudgetDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptAdminBudgetDetail.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptAdminBudgetDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="creBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.CreBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="regBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.RegBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="sendBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SendBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="chkBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ChkBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="chkBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ChkBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptAdminBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptAdminBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="delBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.DelBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="conNewBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ConNewBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewNewBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewNewBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="regNewBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.RegNewBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="getGridNewExecBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.GetGridNewExecBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="setGridNewExecBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SetGridNewExecBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptGridNewExecBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptGridNewExecBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptNewExecBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptNewExecBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="delNewExecBudgetDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.DelNewExecBudgetDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="budgetItemSearch.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.BudgetItemSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="lumpBudgetDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.LumpBudgetDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="initPayDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.InitPayDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="regPayDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.RegPayDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewPayDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewPayDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptPayDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptPayDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="delPayDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.DelPayDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchPayDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchPayDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchRevenueDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchRevenueDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="initRevenueDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.InitRevenueDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="regRevenueDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.RegRevenueDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewRevenueDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewRevenueDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptRevenueDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptRevenueDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="delRevenueDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.DelRevenueDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="initSearchBizAcq.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.InitSearchBizAcqAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="SearchBizAcq.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchBizAcqAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchDistList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchDistListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="initDist.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.InitDistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="regDist.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.RegDistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewDist.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewDistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptDist.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptDistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="delDist.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.DelDistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchDist.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchDistAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="filesDL.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.FilesDLAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptAdminPayDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptAdminPayDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptAdminRevenueDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.UptAdminRevenueDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="budgetCheck.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.BudgetCheckAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="viewAdminExecBudget.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ViewAdminExecBudgetAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="budgetNeoCheck.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.BudgetCheckNeoAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="chkBudgetNeoDoc.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ChkBudgetDocNeoAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="chkBudgetNeo.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ChkBudgetNeoAction</web-action-class>
+	</url-mapping>
+	<!-- 예산 체크 새로운 로직처리 -->
+	<url-mapping url="budgetMgtCheck.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.BudgetMgtCheckAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="chkBudgetMgtDoc.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.ChkBudgetMgtDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="chkBudgetMgt.do"  >        
+		<web-action-class>com.wms.budgetMgt.web.action.ChkBudgetMgtAction</web-action-class>
+	</url-mapping>
+	<!-- 마감일 정보 처리 -->
+	<url-mapping url="uptExpireInfo.do"  >        
+		<web-action-class>com.wms.acctRptCntr.web.action.UptExpireInfoAction</web-action-class>
+	</url-mapping>
+	<!-- 작성중 문서 삭제 -->
+	<url-mapping url="delDocOfGoing.do"  >        
+		<web-action-class>com.wms.acctRptCntr.web.action.DelDocOfGoingAction</web-action-class>
+	</url-mapping>
+	<!-- 조직검색 -->
+	<url-mapping url="orgSearch.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.OrgSearchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchProd.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchProdAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="initJob.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.InitJobAction</web-action-class>
+	</url-mapping>
+	<!-- 전자결재처리 -->
+	<url-mapping url="searchAcceptDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchAcceptDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchReAcceptDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchReAcceptDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchModDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchModDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchCompDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchCompDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="searchRejectDocList.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchRejectDocListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="conRevenuePrint.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.ConRevenuePrintAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="revenuePrint.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.RevenuePrintAction</web-action-class>
+	</url-mapping>
+	
+	<!-- 임시처리 -->
+	<url-mapping url="searchPayDocList1.do"  >        
+		<web-action-class>com.wms.execBudget.web.action.SearchPayDocList1Action</web-action-class>
+	</url-mapping>
+
+	<!-- 개별 사업계획 관리-->
+	<url-mapping url="detailBudgetReqSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.DetailBudgetReqSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="detailBudgetReg.do"  >        
+		<web-action-class>com.wms.budget.web.action.DetailBudgetRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="humanPlanSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.HumanPlanSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="humanPlanUpt.do"  >        
+		<web-action-class>com.wms.budget.web.action.HumanPlanUptAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="humanGrpSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.HumanGrpSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="humanPlanReg.do"  >        
+		<web-action-class>com.wms.budget.web.action.HumanPlanRegAction</web-action-class>
+	</url-mapping>
+
+	<url-mapping url="ivPlanSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.IvPlanSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="ivPlanSave.do"  >        
+		<web-action-class>com.wms.budget.web.action.IvPlanSaveAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="ivKeyCreate.do"  >        
+		<web-action-class>com.wms.budget.web.action.IvKeyCreateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="edPlanSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.EdPlanSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="edPlanSave.do"  >        
+		<web-action-class>com.wms.budget.web.action.EdPlanSaveAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="edKeyCreate.do"  >        
+		<web-action-class>com.wms.budget.web.action.EdKeyCreateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="goodPlanSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.GoodPlanSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="goodPlanSave.do"  >        
+		<web-action-class>com.wms.budget.web.action.GoodPlanSaveAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="goodKeyCreate.do"  >        
+		<web-action-class>com.wms.budget.web.action.GoodKeyCreateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="expPlanUpt.do"  >        
+		<web-action-class>com.wms.budget.web.action.ExpPlanUptAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="expPlanSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.ExpPlanSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="expPlanDetailSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.ExpPlanDetailSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="expPlanAcctSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.ExpPlanAcctSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="batchPlanSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.BatchPlanSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="expPlanAllSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.ExpPlanAllSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="detailBudgetUpt.do"  >        
+		<web-action-class>com.wms.budget.web.action.DetailBudgetUptAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="detailBudgetSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.DetailBudgetSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="humanEstSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.HumanEstSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="detailBudgetEstSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.DetailBudgetEstSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="hrAllSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.HrAllSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="hrAllPlanSave.do"  >        
+		<web-action-class>com.wms.budget.web.action.HrAllPlanSaveAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="hrKeyCreate.do"  >        
+		<web-action-class>com.wms.budget.web.action.HrKeyCreateAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="initHrAllSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.HumanInitHrAllSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="hrAllMonthPlanSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.HrAllMonthPlanSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="expProfitLoss.do"  >        
+		<web-action-class>com.wms.budget.web.action.ExpProfitLossAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="expUptProfit.do"  >        
+		<web-action-class>com.wms.budget.web.action.ExpUptProfitAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="expUptReception.do"  >        
+		<web-action-class>com.wms.budget.web.action.ExpUptReceptionAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="orgSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.OrgSchAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="hrOrgSch.do"  >        
+		<web-action-class>com.wms.budget.web.action.HrOrgSchAction</web-action-class>
+	</url-mapping>
+
+	<!--#사업계획지침제시 및 전략수립-->
+	<url-mapping url="BizPlanList.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="BizPlanListChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanListChgAction</web-action-class>
+	</url-mapping>
+
+		
+	<url-mapping url="BizPlanDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="BizPlanWorkTimeTgDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanWorkTimeTgDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="BizPlanRsltDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanRsltDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="BizPlanMarketDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanMarketDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="BizPlanSwotDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanSwotDetailAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanRecStdDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanRecStdDetailAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanLabDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanLabDetailAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanTgDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanTgDetailAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanExpDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanExpDetailAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanBscTgDetail.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanBscTgDetailAction</web-action-class>
+	</url-mapping>	
+	
+	<!--#BizPlan Chg Option -->	
+	<url-mapping url="BizPlanBscTgDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanBscTgDetailChgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanMarketDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanMarketDetailChgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanSwotDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanSwotDetailChgAction</web-action-class>
+	</url-mapping>		
+	<url-mapping url="BizPlanExpDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanExpDetailChgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanRsltDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanRsltDetailChgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanDetailChgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanLabDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanLabDetailChgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanRecStdDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanRecStdDetailChgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanTgDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanTgDetailChgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanWorkTimeTgDetailChg.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanWorkTimeTgDetailChgAction</web-action-class>
+	</url-mapping>	
+	
+	<!--#BizPlan Update Option -->	
+	<url-mapping url="BizPlanMarketUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanMarketUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanSwotUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanSwotUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanWorkTimeTgUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanWorkTimeTgUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanExpDetailUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanExpDetailUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanRsltDetailUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanRsltDetailUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanRecStdDetailUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanRecStdDetailUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanBscTgDetailUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanBscTgDetailUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanLabDetailUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanLabDetailUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanDetailUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanDetailUpdateAction</web-action-class>
+	</url-mapping>	
+
+	<!--#BizPlan Insert Option -->	
+	<url-mapping url="BizPlanMarketInsert.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanMarketInsertAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanSwotInsert.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanSwotInsertAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanWorkTimeTgInsert.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanWorkTimeTgInsertAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanExpDetailInsert.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanExpDetailInsertAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanRsltDetailInsert.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanRsltDetailInsertAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanBscTgDetailInsert.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanBscTgDetailInsertAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanDetailInsert.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanDetailInsertAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanLabDetailInsert.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanLabDetailInsertAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanRecStdDetailInsert.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanRecStdDetailInsertAction</web-action-class>
+	</url-mapping>
+
+	<!--#BizPlan ListUpdate Option -->	
+	<url-mapping url="BizPlanRsltDetailListUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanRsltDetailListUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanBscTgDetailListUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanBscTgDetailListUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanMarketListUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanMarketListUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="BizPlanSwotListUpdate.do"  >        
+		<web-action-class>com.wms.bizPlan.web.action.BizPlanSwotListUpdateAction</web-action-class>
+	</url-mapping>	
+
+	<!--#SalePL INQUIRY -->	
+	<url-mapping url="SalePLDetail.do"  >        
+		<web-action-class>com.wms.salePL.web.action.SalePLDetailAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="SalePLChg.do"  >        
+		<web-action-class>com.wms.salePL.web.action.SalePLChgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="SalePLUpdate.do"  >        
+		<web-action-class>com.wms.salePL.web.action.SalePLUpdateAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="SalePLReg.do"  >        
+		<web-action-class>com.wms.salePL.web.action.SalePLRegAction</web-action-class>
+	</url-mapping>
+	
+	<!--# 일일보고 원가 조회,  -->	
+	<url-mapping url="searchEmpList.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.SearchEmpListAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="viewPersonMHCost.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.ViewPersonMHCostAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="searchEmpList2.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.SearchEmpList2Action</web-action-class>
+	</url-mapping>	
+	<url-mapping url="viewPersonMHCost2.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.ViewPersonMHCost2Action</web-action-class>
+	</url-mapping>	
+	<url-mapping url="dailyReportList.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.DailyReportListAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="searchOrgList.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.SearchOrgListAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="searchOrg.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.SearchOrgAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="viewGroupMHCost.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.ViewGroupMHCostAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="dailyReportListGroup.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.DailyReportListGroupAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="viewProdMHCost.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.ViewProdMHCostAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="searchProdList.do"  >        
+		<web-action-class>com.wms.inquiryCost.web.action.SearchProdListAction</web-action-class>
+	</url-mapping>	
+
+	<!--영업관리-->
+	<url-mapping url="salesReg.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesRegAction</web-action-class>
+	</url-mapping>	
+	<!--영업관리수정-->
+	<url-mapping url="salesUpt.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesUptAction</web-action-class>
+	</url-mapping>	
+	<!--영업한건에대한 조회-->
+	<url-mapping url="salesSch.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesSchAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="salesUpdLogSch.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesUpdLogSchAction</web-action-class>
+	</url-mapping>	
+    
+	<!--영업관련자료 다운로드-->
+	<url-mapping url="salesFilesDL.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesFilesDLAction</web-action-class>
+	</url-mapping>
+	<!-- INQUIRY -->
+	<url-mapping url="salesPersonalBasicPlanInq.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesPersonalBasicPlanAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="salesGroupBasicPlanInq.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesGroupBasicPlanAction</web-action-class>
+	</url-mapping>		
+	<url-mapping url="salesNoteInq.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesNoteAction</web-action-class>
+	</url-mapping>		
+	<url-mapping url="salesDetailPlanInq.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesDetailPlanInqAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="salesOrgPlanInq.do"  >        
+		<web-action-class>com.wms.sales.web.action.SalesOrgPlanInqAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="salesNoteReg.do"  >        
+	<web-action-class>com.wms.sales.web.action.SalesNoteRegAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="salesNoteDelete.do"  >        
+	<web-action-class>com.wms.sales.web.action.SalesNoteDeleteAction</web-action-class>
+	</url-mapping>	
+
+	<url-mapping url="salesTrafficExpApproList.do"  >        
+	<web-action-class>com.wms.sales.web.action.SalesTrafficExpApproAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="salesTrafficExpList.do"  >        
+	<web-action-class>com.wms.sales.web.action.SalesTrafficExpAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="initTrafficExpApproPayDoc.do"  >         
+	<web-action-class>com.wms.sales.web.action.InitTrafficExpApproDocAction</web-action-class>
+	</url-mapping>		
+	<url-mapping url="regTrafficExpApproPayDoc.do"  >        
+	<web-action-class>com.wms.sales.web.action.RegTrafficExpApproDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="chkTrafficExpApproPayDoc.do"  >        
+	<web-action-class>com.wms.sales.web.action.ChkTrafficExpApproDocAction</web-action-class>	
+	</url-mapping>	
+	<url-mapping url="chkTrafficExpApproDoc.do"  >        
+	<web-action-class>com.wms.sales.web.action.ChkTrafficExpApproAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="downLoadFiles.do"  >        
+	<web-action-class>com.wms.common.web.action.DownLoadFilesAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="prodUploadRptSch.do"  >        
+	<web-action-class>com.wms.product.web.action.ProdUploadRptSchAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="dayRptConfirmSearch.do"  >        
+	<web-action-class>com.wms.jobreport.web.action.DayRptConfirmSearchAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="rptCtDetailSch.do"  >        
+	<web-action-class>com.wms.jobreport.web.action.RptCtDetailSchAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="rptCtDetailReg.do"  >        
+	<web-action-class>com.wms.jobreport.web.action.RptCtDetailRegAction</web-action-class>
+	</url-mapping>	
+	<!-- 업무지원합의 조회 --> 
+	<url-mapping url="rptCtLstSch.do"  >        
+	<web-action-class>com.wms.jobreport.web.action.RptCtLstSchAction</web-action-class>
+	</url-mapping>	
+	<!-- 상품매입매출대응 조회 --> 
+	<url-mapping url="searchGoodsSlipList.do"  >        
+	<web-action-class>com.wms.inquiryCost.web.action.SearchGoodsSlipListAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="searchGoodsSlip.do"  >        
+	<web-action-class>com.wms.inquiryCost.web.action.SearchGoodsSlipAction</web-action-class>
+	</url-mapping>	
+
+	<!-- 차량관리 유류 조회 --> 
+	<url-mapping url="gasList.do"  >        
+	<web-action-class>com.wms.car.web.action.GasListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="gasRegit.do"  >        
+	<web-action-class>com.wms.car.web.action.GasRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="gasListDetail.do"  >        
+	<web-action-class>com.wms.car.web.action.GasListDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="gasUpdate.do"  >        
+	<web-action-class>com.wms.car.web.action.GasUptAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="gasDelete.do"  >        
+	<web-action-class>com.wms.car.web.action.GasDelAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="gasPriceChange.do"  >        
+	<web-action-class>com.wms.car.web.action.GasPriceChangeAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="carList.do"  >        
+	<web-action-class>com.wms.car.web.action.CarListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="carListDetail.do"  >        
+	<web-action-class>com.wms.car.web.action.CarListDetailAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="carRegit.do"  >        
+	<web-action-class>com.wms.car.web.action.CarRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="carUpdate.do"  >        
+	<web-action-class>com.wms.car.web.action.CarUptAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="carDelete.do"  >        
+	<web-action-class>com.wms.car.web.action.CarDelAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="gasEmpHist.do"  >        
+	<web-action-class>com.wms.car.web.action.GasEmpHistAction</web-action-class>
+	</url-mapping>
+	<!-- 개발프로젝트 등록 --> 	
+	<url-mapping url="devPjtReg.do"  >        
+	<web-action-class>com.wms.devpjt.web.action.DevPjtRegAction</web-action-class>
+	</url-mapping>
+	<!-- 개발프로젝트 수정 --> 	
+	<url-mapping url="devPjtUpt.do"  >        
+	<web-action-class>com.wms.devpjt.web.action.DevPjtUptAction</web-action-class>
+	</url-mapping>	
+	<!-- 개발프로젝트 조회 --> 	
+	<url-mapping url="devPjtSrch.do"  >        
+	<web-action-class>com.wms.devpjt.web.action.DevPjtSrchAction</web-action-class>
+	</url-mapping>
+	<!-- 원가실적 초기화 입력 --> 	
+	<url-mapping url="actCostCrt.do"  >        
+	<web-action-class>com.wms.devpjt.web.action.ActualCostRegAction</web-action-class>
+	</url-mapping>
+	<!-- 원가실적 수정 --> 	
+	<url-mapping url="actCostUpt.do"  >        
+	<web-action-class>com.wms.devpjt.web.action.ActualCostUptAction</web-action-class>
+	</url-mapping>
+	<!-- 원가실적 조회 -->
+	<url-mapping url="actCostSrch.do"  >        
+	<web-action-class>com.wms.devpjt.web.action.ActualCostSrchAction</web-action-class>
+	</url-mapping>
+	<!-- 서비스 프로젝트 등록 --> 	
+	<url-mapping url="svcPjtReg.do"  >        
+	<web-action-class>com.wms.svcpjt.web.action.SvcPjtRegAction</web-action-class>
+	</url-mapping>
+	<!-- 서비스 프로젝트 수정 --> 	
+	<url-mapping url="svcPjtUpt.do"  >        
+	<web-action-class>com.wms.svcpjt.web.action.SvcPjtUptAction</web-action-class>
+	</url-mapping>	
+	<!-- 서비스 프로젝트 조회 --> 	
+	<url-mapping url="svcPjtSrch.do"  >        
+	<web-action-class>com.wms.svcpjt.web.action.SvcPjtSrchAction</web-action-class>
+	</url-mapping>	
+	<!-- 판매 프로젝트 수정 --> 	
+	<url-mapping url="salePjtUpt.do"  >        
+	<web-action-class>com.wms.salepjt.web.action.SalePjtUptAction</web-action-class>
+	</url-mapping>				
+	<!-- 수주 프로젝트 등록 --> 	
+	<url-mapping url="businessPjtReg.do"  >        
+	<web-action-class>com.wms.businesspjt.web.action.BusinessPjtRegAction</web-action-class>
+	</url-mapping>
+	<!-- 서비스 프로젝트 수정 --> 	
+	<url-mapping url="businessPjtUpt.do"  >        
+	<web-action-class>com.wms.businesspjt.web.action.BusinessPjtUptAction</web-action-class>
+	</url-mapping>	
+	<!-- 서비스 프로젝트 조회 --> 	
+	<url-mapping url="businessPjtSrch.do"  >        
+	<web-action-class>com.wms.businesspjt.web.action.BusinessPjtSrchAction</web-action-class>
+	</url-mapping>			
+	<!-- 서비스 프로젝트 리스트 조회 --> 	
+	<url-mapping url="businessPjtLstSrch.do"  >        
+	<web-action-class>com.wms.businesspjt.web.action.BusinessPjtLstSrchAction</web-action-class>
+	</url-mapping>		
+	<!-- 결재문서 수정 --> 
+	<url-mapping url="docControl.do"  >        
+	<web-action-class>com.wms.docControl.web.action.DocControlAction</web-action-class>
+	</url-mapping>
+	<!-- 결재문서 Print --> 
+	<url-mapping url="printControl.do"  >        
+	<web-action-class>com.wms.docControl.web.action.PrintControlAction</web-action-class>
+	</url-mapping>
+	<!-- 사업유형 NEW -->
+	<url-mapping url="searchBizHisList.do"  >        
+	<web-action-class>com.wms.bizHis.web.action.SearchBizHisListAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizTypeRegit.do"  >        
+	<web-action-class>com.wms.bizHis.web.action.CreateBizTypeHisAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizCdRegit.do"  >        
+	<web-action-class>com.wms.bizHis.web.action.CreateBizCdHisAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizCdDupChk.do"  >        
+	<web-action-class>com.wms.bizHis.web.action.dupChkBizCdAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizTypeUpdate.do"  >        
+	<web-action-class>com.wms.bizHis.web.action.UpdateBizTypeHisAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="bizCdUpdate.do"  >        
+	<web-action-class>com.wms.bizHis.web.action.UpdateBizCdHisAction</web-action-class>
+	</url-mapping>
+	
+	<!--공통 팝업 조회-->
+    <url-mapping url="comCodeList.do"  >
+    	<web-action-class>com.wms.comPopup.web.action.ComPopupAction</web-action-class>
+    </url-mapping>
+	<!--직무 조회-->
+    <url-mapping url="JobList.do"  >
+    	<web-action-class>com.wms.job.web.action.JobListAction</web-action-class>
+    </url-mapping> 
+
+	<!--New 조직LIST(2006-06-01)-->
+	<url-mapping url="searchOrgList_new.do" >
+		<web-action-class>com.wms.orgHis.web.action.SearchOrgListAction</web-action-class>
+	</url-mapping>	
+	<!--조직정보 생성 선택(2006-06-01)-->
+	<url-mapping url="createOrg.do" >
+		<web-action-class>com.wms.orgHis.web.action.CreateOrgnAction</web-action-class>
+	</url-mapping>
+	<!--조직정보 저장 선택(2006-06-01)-->
+	<url-mapping url="saveOrg.do" >
+		<web-action-class>com.wms.orgHis.web.action.SaveOrgAction</web-action-class>
+	</url-mapping>	
+	<!--조직정보 저장 선택-->
+	<url-mapping url="saveOrgRev.do" >
+		<web-action-class>com.wms.org.web.action.SaveOrgAction</web-action-class>
+	</url-mapping>	
+	<!--조직정보 삭제 선택(2006-06-01)-->
+	<url-mapping url="deleteOrg.do" >
+		<web-action-class>com.wms.orgHis.web.action.DeleteOrgAction</web-action-class>
+	</url-mapping>	
+	<!--조직이력정보 생성 선택(2006-06-01)-->
+	<url-mapping url="updateOrg.do" >
+		<web-action-class>com.wms.orgHis.web.action.CreateOrgnHisAction</web-action-class>
+	</url-mapping>	
+	<!--조직이력정보 조회(2006-06-01)-->
+	<url-mapping url="searchOrgHistory.do" >
+		<web-action-class>com.wms.orgHis.web.action.SearchOrgnHisListAction</web-action-class>
+	</url-mapping>	
+	<!--팝업셋팅정보 조회(2006-07-26)-->
+	<url-mapping url="searchPopupSetList.do" >
+		<web-action-class>com.wms.popupSet.web.action.SearchPopupSetListAction</web-action-class>
+	</url-mapping>
+	<!--팝업셋팅정보 생성 선택(2006-07-26)-->
+	<url-mapping url="createPopupSet.do" >
+		<web-action-class>com.wms.popupSet.web.action.CreatePopupSetAction</web-action-class>
+	</url-mapping>
+	<!--팝업셋팅정보 수정 선택(2006-07-26)-->
+	<url-mapping url="savePopupSet.do" >
+		<web-action-class>com.wms.popupSet.web.action.SavePopupSetAction</web-action-class>
+	</url-mapping>	
+	<!--팝업셋팅정보 삭제 선택(2006-07-26)-->
+	<url-mapping url="deletePopupSet.do" >
+		<web-action-class>com.wms.popupSet.web.action.DeletePopupSetAction</web-action-class>
+	</url-mapping>		
+	<!--팝업셋팅정보 조직별/사원별LIST-->
+	<url-mapping url="searchOrgMemberList.do" >
+		<web-action-class>com.wms.popupSet.web.action.SearchOrgMemberListAction</web-action-class>
+	</url-mapping>		
+	<!--팝업셋팅정보 조직별/사원별  세부LIST-->
+	<url-mapping url="searchOrgMemberSetList.do" >
+		<web-action-class>com.wms.popupSet.web.action.SearchOrgMemberSetListAction</web-action-class>
+	</url-mapping>		
+	<!--팝업셋팅정보 조직별/사원별  세부권한  저장-->
+	<url-mapping url="saveOrgMemberSet.do" >
+		<web-action-class>com.wms.popupSet.web.action.SaveOrgMemberSetAction</web-action-class>
+	</url-mapping>		
+	
+	<!--공통코드-->
+	<!--공통코드 조회 리스트-->
+	<url-mapping url="searchCodeList.do" >
+		<web-action-class>com.wms.coCode.web.action.SearchCodeListAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="createCode.do" >
+		<web-action-class>com.wms.coCode.web.action.CreateCodeAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="deleteCode.do" >
+		<web-action-class>com.wms.coCode.web.action.DeleteCodeAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="saveCode.do" >
+		<web-action-class>com.wms.coCode.web.action.SaveCodeAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="regPRTBizSave.do" >
+		<web-action-class>com.wms.coCode.web.action.SavePRTBizAction</web-action-class>
+	</url-mapping>	
+	
+<!--Test-->
+	<url-mapping url="projectNameSrch.do" >
+		<web-action-class>com.wms.project.web.action.ProjectNameSrchAction</web-action-class>
+	</url-mapping>	
+	
+<!--원가수집-->
+	<!--MonthlyEmpOrg Data생성-->
+	<url-mapping url="createGather.do" >
+		<web-action-class>com.wms.costARs.Gather.web.action.GatherAction</web-action-class>
+	</url-mapping>	
+	<!--DailyReport_RptMh Data생성-->
+	<url-mapping url="createDailyReport_RptMh.do" >
+		<web-action-class>com.wms.costARs.Gather.web.action.GatherAction</web-action-class>
+	</url-mapping>	
+	<!--UpdateDailyReport-->
+	<url-mapping url="updateDailyReport.do" >
+		<web-action-class>com.wms.costARs.Gather.web.action.SaveReportDetailAction</web-action-class>
+	</url-mapping>	
+	<!--updateBasicEmp.do-->
+	<url-mapping url="updateBasicEmp.do" >
+		<web-action-class>com.wms.costARs.Gather.web.action.SaveBasicEmpAction</web-action-class>
+	</url-mapping>	
+	<!--CreateAcctSlip-->
+	<url-mapping url="createAcctSlip.do" >
+		<web-action-class>com.wms.costARs.Gather.web.action.CreateSlipAction</web-action-class>
+	</url-mapping>	
+	<!--UpdateAcctSlip-->
+	<url-mapping url="updateAcctSlip" >
+		<web-action-class>com.wms.costARs.Gather.web.action.UpdateSlipAction</web-action-class>
+	</url-mapping>	
+	<!--UpdateSlip-->
+	<url-mapping url="updateSlip.do" >
+		<web-action-class>com.wms.costARs.Gather.web.action.SaveSlipAction</web-action-class>
+	</url-mapping>	
+	<!--일일 업무보고 월별 생성-->
+	<url-mapping url="createDailyRpt.do" >
+		<web-action-class>com.wms.dailyReport.web.action.CreateDailyRptAction</web-action-class>
+	</url-mapping>	
+
+	<!--팀별 MM Note -->
+	<url-mapping url="createTeamMMNote.do" >
+		<web-action-class>com.wms.costARs.teamMMRpt.web.action.InsertTeamMMNoteAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="updateTeamMMNote.do" >
+		<web-action-class>com.wms.costARs.teamMMRpt.web.action.UpdateTeamMMNoteAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="searchTeamMMList.do" >
+		<web-action-class>com.wms.costARs.teamMMRpt.web.action.SearchTeamMMNoteAction</web-action-class>
+	</url-mapping>
+	<!--팀별 주요업무현황  -->	
+	<url-mapping url="createDailyNote.do" >
+		<web-action-class>com.wms.costARs.DailyNoteRpt.web.action.InsertDailyNoteAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="updateDailyNote.do" >
+		<web-action-class>com.wms.costARs.DailyNoteRpt.web.action.UpdateDailyNoteAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="searchDailyNote.do" >
+		<web-action-class>com.wms.costARs.DailyNoteRpt.web.action.SearchDailyNoteAction</web-action-class>
+	</url-mapping>	
+
+	<!-- Report list --> 	
+	<url-mapping url="rptList.do"  >        
+	<web-action-class>com.wms.costReport.web.action.RptListAction</web-action-class>
+	</url-mapping>
+
+	<!-- Report Group list --> 	
+	<url-mapping url="rptGroupList.do"  >        
+	<web-action-class>com.wms.costReport.web.action.RptGroupListAction</web-action-class>
+	</url-mapping>
+	
+	<!-- Report 조회 --> 	
+	<url-mapping url="rptSrch.do"  >        
+	<web-action-class>com.wms.costReport.web.action.RptSrchAction</web-action-class>
+	</url-mapping>
+
+	<!-- ReportDetail 조회 --> 	
+	<url-mapping url="rptSrchDetail.do"  >        
+	<web-action-class>com.wms.costReport.web.action.RptSrchDetailAction</web-action-class>
+	</url-mapping>
+    
+	<!-- 1.12 원가배부기준 조회 --> 	
+	<url-mapping url="rptDelivery.do"  >        
+	<web-action-class>com.wms.costReport.web.action.RptDeliveryAction</web-action-class>
+	</url-mapping>    
+
+	<!-- 1.13 원가배부기준 조회 : 비목--> 	
+	<url-mapping url="rptDeliveryDetail.do"  >        
+	<web-action-class>com.wms.costReport.web.action.RptDeliveryDetailAction</web-action-class>
+	</url-mapping>    
+	
+	<!-- DistributionBasis 간접원가 배부표 --> 
+	<url-mapping url="srcDbDetail.do"  >        
+	<web-action-class>com.wms.costARs.distBasis.web.action.DbDetailSrcAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="regDb.do"  >        
+	<web-action-class>com.wms.costARs.distBasis.web.action.DbRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptDb.do"  >        
+	<web-action-class>com.wms.costARs.distBasis.web.action.DbUptAction</web-action-class>
+	</url-mapping>
+	
+	<!-- 원가기초자료 관리자 조회용 cylim --> 	
+	<!-- costRptAll --> 	
+	<url-mapping url="costRptYear.do"  >        
+	<web-action-class>com.wms.costRpt.web.action.CostRptYearAction</web-action-class>
+	</url-mapping>    
+
+	<url-mapping url="costRptAll.do"  >        
+	<web-action-class>com.wms.costRpt.web.action.CostRptAllAction</web-action-class>
+	</url-mapping>    
+	
+	<!-- daiyRptEstimate --> 		
+	<url-mapping url="etmtListUpdate.do"  >        
+	<web-action-class>com.wms.dailyRptEstimate.web.action.EtmtListUpdateAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="etmtListUpdateFinish.do"  >        
+	<web-action-class>com.wms.dailyRptEstimate.web.action.EtmtListUpdateFinishAction</web-action-class>
+	</url-mapping>   	
+	<url-mapping url="etmtInsert.do"  >        
+	<web-action-class>com.wms.dailyRptEstimate.web.action.EtmtInsertAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="etmtGather.do"  >        
+	<web-action-class>com.wms.dailyRptEstimate.web.action.EtmtGatherAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="etmtUpdate.do"  >        
+	<web-action-class>com.wms.dailyRptEstimate.web.action.EtmtUpdateAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="etmtUpdateFinish.do"  >        
+	<web-action-class>com.wms.dailyRptEstimate.web.action.EtmtUpdateFinishAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="etmtPsnUpdateFinish.do"  >        
+	<web-action-class>com.wms.dailyRptEstimate.web.action.EtmtPsnUpdateFinishAction</web-action-class>
+	</url-mapping> 
+
+
+	<!-- MailMgm --> 		
+	<url-mapping url="mailMgmInsert.do"  >        
+	<web-action-class>com.wms.mailMgm.web.action.MailMgmInsertAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="mailMgmUpdate.do"  >        
+	<web-action-class>com.wms.mailMgm.web.action.MailMgmUpdateAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="mailMgmDelete.do"  >        
+	<web-action-class>com.wms.mailMgm.web.action.MailMgmDeleteAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="sendMail.do"  >        
+	<web-action-class>com.wms.comMail.web.action.EmailSendAction</web-action-class>
+	</url-mapping>   
+	<url-mapping url="dailyErrMailSend.do"  >        
+	<web-action-class>com.wms.comMail.web.action.DailyErrSend</web-action-class>
+	</url-mapping>   
+	 
+	<!-- 재무 시스템 --> 		
+	<url-mapping url="updateCorpCustCd.do"  >        
+	<web-action-class>com.wms.Account.web.action.SaveBizMapAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="insertRmDoc.do"  >        
+	<web-action-class>com.wms.Account.web.action.InsertDelDocAction</web-action-class>
+	</url-mapping>    
+
+	<!-- 판매품의 시스템 --> 		
+	<url-mapping url="saleConferReg.do"  >        
+	<web-action-class>com.wms.cfd.web.action.SaleConferRegAction</web-action-class>
+	</url-mapping>    
+	
+	<url-mapping url="saleConferUpt.do"  >        
+	<web-action-class>com.wms.cfd.web.action.SaleConferUptAction</web-action-class>
+	</url-mapping>  
+	
+	<url-mapping url="saleConferDel.do"  >        
+	<web-action-class>com.wms.cfd.web.action.SaleConferDelAction</web-action-class>
+	</url-mapping>    
+	
+		<!-- 구매품의 시스템 --> 		
+	<url-mapping url="buyConferReg.do"  >        
+	<web-action-class>com.wms.cfd.web.action.BuyConferRegAction</web-action-class>
+	</url-mapping>    
+	
+	<url-mapping url="buyConferUpt.do"  >        
+	<web-action-class>com.wms.cfd.web.action.BuyConferUptAction</web-action-class>
+	</url-mapping>  
+
+	<url-mapping url="buyConferDel.do"  >        
+	<web-action-class>com.wms.cfd.web.action.BuyConferDelAction</web-action-class>
+	</url-mapping>  
+
+	
+	<url-mapping url="buyReqConferReg.do"  >        
+	<web-action-class>com.wms.cfd.web.action.BuyReqConferRegAction</web-action-class>
+	</url-mapping>    
+	
+	<url-mapping url="buyReqConferUpt.do"  >        
+	<web-action-class>com.wms.cfd.web.action.BuyReqConferUptAction</web-action-class>
+	</url-mapping>  
+
+	<url-mapping url="buyReqConferDel.do"  >        
+	<web-action-class>com.wms.cfd.web.action.BuyReqConferDelAction</web-action-class>
+	</url-mapping>  
+
+	
+	<!-- 부가세 환급 -->
+	<url-mapping url="cardCreate.do"  >        
+	<web-action-class>com.wms.vat.web.action.CreateCardAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="cardUpdate.do"  >        
+	<web-action-class>com.wms.vat.web.action.UpdateCardAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="cardDelete.do"  >        
+	<web-action-class>com.wms.vat.web.action.DeleteCardAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="cardUseSave.do"  >        
+	<web-action-class>com.wms.vat.web.action.SaveCardUseAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="cardModSave.do"  >        
+	<web-action-class>com.wms.vat.web.action.SaveCardModAction</web-action-class>
+	</url-mapping>
+		
+	<!-- 주문서 -->
+	<url-mapping url="regOrderInfo.do"  >        
+	<web-action-class>com.wms.order.web.action.RegOrderAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="uptOrderInfo.do"  >        
+	<web-action-class>com.wms.order.web.action.UptOrderAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="orderMailSend.do"  >        
+	<web-action-class>com.wms.order.web.action.OrderMailSendAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="orderMailConfirm.do"  >        
+	<web-action-class>com.wms.order.web.action.OrderMailConfirmAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="orderMailView.do"  >        
+	<web-action-class>com.wms.order.web.action.OrderMailViewAction</web-action-class>
+	</url-mapping>
+
+	<!-- 산출물 -->
+	<url-mapping url="docCreate.do"  >        
+	<web-action-class>com.wms.productDoc.web.action.CreateDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="docUpdate.do"  >        
+	<web-action-class>com.wms.productDoc.web.action.UpdateDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="docDelete.do"  >        
+	<web-action-class>com.wms.productDoc.web.action.DeleteDocAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="docSubSave.do"  >        
+	<web-action-class>com.wms.productDoc.web.action.SaveDocSubAction</web-action-class>
+	</url-mapping>
+	
+	<!-- 산출물 -->
+	<url-mapping url="getConferInfo.do"  >        
+	<web-action-class>com.wms.order.web.action.GetConferInfoAction</web-action-class>
+	</url-mapping>
+ 
+	<!-- 계정코드 -->
+	<url-mapping url="acctCreate.do"  >        
+	<web-action-class>com.wms.Account.web.action.CreateAcctAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="acctUpdate.do"  >        
+	<web-action-class>com.wms.Account.web.action.UpdateAcctAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="acctDelete.do"  >        
+	<web-action-class>com.wms.Account.web.action.DeleteAcctAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="acctSubSave.do"  >        
+	<web-action-class>com.wms.Account.web.action.SaveAcctSubAction</web-action-class>
+	</url-mapping>	
+	
+	<!-- 보증서 -->
+	<url-mapping url="gutAppSave.do"  >        
+	<web-action-class>com.wms.guarantee.web.action.SaveGutAppAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="gutSave.do"  >        
+	<web-action-class>com.wms.guarantee.web.action.SaveGutAction</web-action-class>
+	</url-mapping>  
+	
+	<!--  CSR Page -->  
+	<url-mapping url="csrSave.do"  >        
+		<web-action-class>com.wms.CSR.web.action.CSRSaveAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="csrInsert.do"  >                     
+		<web-action-class>com.wms.CSR.web.action.CSRInsertAction</web-action-class>
+	</url-mapping> 
+
+	<url-mapping url="csrUpdate.do"  >        
+		<web-action-class>com.wms.CSR.web.action.CSRUpdateAction</web-action-class>
+	</url-mapping>    
+	
+	<url-mapping url="csrDelete.do"  >        
+		<web-action-class>com.wms.CSR.web.action.CSRDeleteAction</web-action-class>
+	</url-mapping>  
+	
+	<url-mapping url="csrMDelete.do"  >        
+		<web-action-class>com.wms.CSR.web.action.CSRMDeleteAction</web-action-class>
+	</url-mapping>   
+
+	<url-mapping url="rdBatch.do"  >        
+		<web-action-class>com.wms.RD.web.action.RDBatch</web-action-class>
+	</url-mapping>     
+
+	<url-mapping url="rdBatchCancel.do"  >        
+		<web-action-class>com.wms.RD.web.action.RDBatchCancel</web-action-class>
+	</url-mapping>     
+
+	<url-mapping url="rdUpload.do"  >         
+		<web-action-class>com.wms.RD.web.action.RDUpload</web-action-class>
+	</url-mapping>     
+	
+	<!--  검수자 Page -->  
+	<url-mapping url="inspectInsert.do"  >                     
+		<web-action-class>com.wms.inspect.web.action.InspectAction</web-action-class>
+	</url-mapping> 
+	
+	
+	<!-- 외주관리(SubCon) Start -->
+	<url-mapping url="SaveSC_BIZACQCORP.do"  >                     
+		<web-action-class>com.wms.outSource.web.action.SaveSubConAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="SaveSC_INVOICE.do"  >                     
+		<web-action-class>com.wms.outSource.web.action.SaveInvoiceAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="SaveSC_INVOICE_SubCon.do"  >                     
+		<web-action-class>com.wms.outSource.web.action.SaveInvoiceFromSubConAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="SelValueItemCreate.do"  >                     
+		<web-action-class>com.wms.outSource.web.action.CreateSelValueItemAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="SelValueItemUpdate.do"  >                     
+		<web-action-class>com.wms.outSource.web.action.UpdateSelValueItemAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="SelValueItemDelete.do"  >                     
+		<web-action-class>com.wms.outSource.web.action.DeleteSelValueItemAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="ExeValueItemCreate.do"  >                     
+		<web-action-class>com.wms.outSource.web.action.CreateExeValueItemAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="ExeValueItemUpdate.do"  >                     
+		<web-action-class>com.wms.outSource.web.action.UpdateExeValueItemAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="ExeValueItemDelete.do"  >                     
+		<web-action-class>com.wms.outSource.web.action.DeleteExeValueItemAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="scReqConferReg.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCReqConferRegAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="scReqConferUpt.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCReqConferUptAction</web-action-class>
+	</url-mapping>  
+	<url-mapping url="scReqConferDel.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCReqConferDelAction</web-action-class>
+	</url-mapping>  
+	<url-mapping url="scConConferReg.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCConConferRegAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="scConConferUpt.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCConConferUptAction</web-action-class>
+	</url-mapping>  
+	<url-mapping url="scConConferDel.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCConConferDelAction</web-action-class>
+	</url-mapping>  
+	<url-mapping url="sCCorpSelValueReg.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCCorpSelValueRegAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="sCCorpSelReg.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCCorpSelRegAction</web-action-class>
+	</url-mapping>  
+	<url-mapping url="sCCorpSelDel.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCCorpSelDelAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="subConPayCorp.do"  >        
+	<web-action-class>com.wms.outSource.web.action.CreatePayCorpAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="ExeValueSave.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SaveExeValueAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="ContractSave.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SaveContractAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="scInsConReg.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCInsConferRegAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="scInsConUpt.do"  >        
+	<web-action-class>com.wms.outSource.web.action.SCInsConferUptAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="TmpLaborCostSave.do"  >        
+	<web-action-class>com.wms.outSource.web.action.TmpLaborCostAction</web-action-class>
+	</url-mapping> 
+	<!-- 외주관리(SubCon) End -->
+	
+	
+	
+	<!-- GIS 공정관리 Start --> 		
+	<url-mapping url="RDNReg.do"  >        
+	<web-action-class>com.wms.rdn.web.action.RDNRegAction</web-action-class>
+	</url-mapping>    
+	<url-mapping url="RDNUpt.do"  >        
+	<web-action-class>com.wms.rdn.web.action.RDNUptAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="RDNDel.do"  >        
+	<web-action-class>com.wms.rdn.web.action.RDNDelAction</web-action-class>
+	</url-mapping>  
+	<url-mapping url="devPjtSrch_RDN.do"  >        
+	<web-action-class>com.wms.rdn.web.action.DevPjtSrch_RDNAction</web-action-class>
+	</url-mapping> 
+	<url-mapping url="svcPjtSrch_RDN.do"  >        
+	<web-action-class>com.wms.rdn.web.action.SvcPjtSrch_RDNAction</web-action-class>
+	</url-mapping> 
+	
+	<!-- 식권관리 -->
+	<url-mapping url="FoodSave.do">
+	<web-action-class>com.wms.Food.web.action.FoodDetailAction</web-action-class>
+	</url-mapping>
+  
+
+	<url-mapping url="FoodAccountSave.do">
+	<web-action-class>com.wms.Food.web.action.FoodAccountAction</web-action-class>
+	</url-mapping> 
+	
+	<url-mapping url="FoodAccountDel.do">
+	<web-action-class>com.wms.Food.web.action.FoodAccountDelAction</web-action-class>
+	</url-mapping>
+
+	<url-mapping url="FoodAccountAdd.do">
+	<web-action-class>com.wms.Food.web.action.FoodAccountAddAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="FoodEmpSave.do"> 
+	<web-action-class>com.wms.Food.web.action.FoodEmpAction</web-action-class>
+	</url-mapping>
+ 
+	<url-mapping url="FoodFileUpload.do">
+	<web-action-class>com.wms.Food.web.action.FoodFileUploadAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="FoodFlagChk.do">
+	<web-action-class>com.wms.Food.web.action.FoodFlagChkAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="FoodPopXSave.do">
+	<web-action-class>com.wms.Food.web.action.FoodPopXSaveAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="FoodEmpTransfer.do">
+	<web-action-class>com.wms.Food.web.action.FoodEmpTransferAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="FoodAccountTransfer.do">
+	<web-action-class>com.wms.Food.web.action.FoodAccountTransferAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="dinnerTicketPrint.do">
+	<web-action-class>com.wms.Food.web.action.DinnerTicketPrintAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="dinnerTicketPrintUpdate.do">
+	<web-action-class>com.wms.Food.web.action.dinnerTicketPrintUpdateAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="dinnerTicketApply.do">
+	<web-action-class>com.wms.Food.web.action.DinnerTicketApplyAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="dinnerTicketUpt.do">
+	<web-action-class>com.wms.Food.web.action.DinnerTicketUptAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="foodSuvProcess.do">
+	<web-action-class>com.wms.Food.web.action.DinnerTicketSuvProcessAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="foodSuvMultiProcess.do">
+	<web-action-class>com.wms.Food.web.action.DinnerTicketMultiSuvProcessAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="dinnerTicketSearch.do">
+	<web-action-class>com.wms.Food.web.action.DinnerTicketSearchAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="dinnerTicketSuv.do">
+	<web-action-class>com.wms.Food.web.action.DinnerTicketSuvAction</web-action-class>
+	</url-mapping>
+	
+	<!-- 지급/수입품의 생성 -->
+	<url-mapping url="AcctRptCreation.do">
+	<web-action-class>com.wms.docControl.web.action.AcctRptCreationAction</web-action-class>
+	</url-mapping>
+
+	<!-- 공통코드 관리 -->
+	<url-mapping url="regComCodeSub.do">
+	<web-action-class>com.wms.BasicData.web.action.regComCodeSubAction</web-action-class>
+	</url-mapping>
+
+	<!-- SI 고객사 관리 -->
+	
+	<url-mapping url="custCRUD.do">
+	<web-action-class>com.wms.Cust.web.action.CustCRUD</web-action-class>   
+	</url-mapping>
+	 	
+	<url-mapping url="custHistoryCRUD.do">
+	<web-action-class>com.wms.Cust.web.action.CustHistoryCRUD</web-action-class>
+	</url-mapping>
+
+
+	<!-- FIXED ASSETS -->
+	
+	<url-mapping url="faReg.do">
+	<web-action-class>com.wms.fa.web.action.FARegAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faUpd.do">
+	<web-action-class>com.wms.fa.web.action.FAUpdateAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faDel.do">
+	<web-action-class>com.wms.fa.web.action.FADeleteAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faSuvPlanReg.do">
+	<web-action-class>com.wms.fa.web.action.FASuvPlanRegAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faMove.do">
+	<web-action-class>com.wms.fa.web.action.FAMoveAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faSell.do">
+	<web-action-class>com.wms.fa.web.action.FASellAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faTrash.do">
+	<web-action-class>com.wms.fa.web.action.FATrashAction</web-action-class>   
+	</url-mapping>
+
+	<url-mapping url="faCE.do">
+	<web-action-class>com.wms.fa.web.action.FACEAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faReq.do"> 
+		<web-action-class>com.wms.fa.web.action.FAReqAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="faReq2.do"> 
+		<web-action-class>com.wms.fa.web.action.FAReq2Action</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="faReq3.do">
+		<web-action-class>com.wms.fa.web.action.FAReq3Action</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="faReq4.do">
+		<web-action-class>com.wms.fa.web.action.FAReq4Action</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="faReq5.do">
+		<web-action-class>com.wms.fa.web.action.FAReq5Action</web-action-class>
+	</url-mapping>
+		
+	<url-mapping url="faSuvPlanUpd.do">
+	<web-action-class>com.wms.fa.web.action.FASuvPlanUpdAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faSuvItemSelect.do">
+	<web-action-class>com.wms.fa.web.action.FASuvItemSelectAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faSuvItemRemove.do">
+	<web-action-class>com.wms.fa.web.action.FASuvItemRemoveAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faSuvPlanDel.do">
+	<web-action-class>com.wms.fa.web.action.FASuvPlanDelAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faSuvProcess.do">
+	<web-action-class>com.wms.fa.web.action.FASuvProcessAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faRetireEmpSelect.do">
+	<web-action-class>com.wms.fa.web.action.FARetireEmpSelectAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faRetireEmpRemove.do">
+	<web-action-class>com.wms.fa.web.action.FARetireEmpRemoveAction</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="faUserChange.do">
+	<web-action-class>com.wms.fa.web.action.FAUserChangeAction</web-action-class>   
+	</url-mapping>
+
+	<url-mapping url="faQntReg.do">
+	<web-action-class>com.wms.fa.web.action.FAQntRegAction</web-action-class>   
+	</url-mapping>
+
+	<url-mapping url="createDepr.do" >
+	<web-action-class>com.wms.fa.web.action.FADeprAction</web-action-class>
+	</url-mapping>	
+			 			 	
+	<!-- WELFARE -->	
+	<url-mapping url="saveAirTicketDetail.do">
+	<web-action-class>com.wms.welfare.web.action.SaveWelfareAction</web-action-class>   
+	</url-mapping>		
+	
+	<url-mapping url="jungsanWelfare06.do">
+	<web-action-class>com.wms.welfare.web.action.JungsanWelfare06Action</web-action-class>   
+	</url-mapping>		 			 
+	
+	<url-mapping url="printWelfare06.do">
+	<web-action-class>com.wms.welfare.web.action.PrintWelfare06Action</web-action-class>   
+	</url-mapping>
+	
+	<url-mapping url="backWelfare06.do">
+	<web-action-class>com.wms.welfare.web.action.BackWelfare06Action</web-action-class>   
+	</url-mapping>		
+			 			 	
+	<!-- MANUAL -->	
+	<url-mapping url="saveManual.do">
+	<web-action-class>com.wms.manual.web.action.SaveManualAction</web-action-class>   
+	</url-mapping>		 			 
+
+	<url-mapping url="saveFAQ.do">
+	<web-action-class>com.wms.manual.web.action.SaveManualFAQAction</web-action-class>   
+	</url-mapping>		 			 
+	
+	<url-mapping url="saveQnA.do">
+	<web-action-class>com.wms.manual.web.action.SaveManualQnAAction</web-action-class>   
+	</url-mapping>		 			 
+	
+	<!-- SIMS -->
+	<url-mapping url="saveMaintReq.do">
+	<web-action-class>com.wms.sims.web.action.MaintReqSaveAction</web-action-class>
+	</url-mapping>
+	
+	<!-- SIMS -->
+	<url-mapping url="saveMaintReqManage.do">
+	<web-action-class>com.wms.sims.web.action.MaintReqManageAction</web-action-class>
+	</url-mapping>
+	
+	<!-- SIMS -->
+	<url-mapping url="saveMaintProjSave.do">
+	<web-action-class>com.wms.sims.web.action.MaintProjSaveAction</web-action-class>
+	</url-mapping>
+	
+	<!-- OJT -->	
+    <url-mapping url="selectEmpList.do"  >
+		<web-action-class>com.wms.empAll.web.action.SelectEmpAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="createEmp2.do"  >
+		<web-action-class>com.wms.empAll.web.action.CreateEmpAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="deleteEmp2.do"  >
+		<web-action-class>com.wms.empAll.web.action.DeleteEmpAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="selectAuthList.do"  >
+		<web-action-class>com.wms.comAuth.web.action.SelectcomAuthAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="SelectcomFaq.do"  >
+		<web-action-class>com.wms.comBoard.web.action.SelectcomFaqAction</web-action-class>
+    </url-mapping>
+   	<url-mapping url="SavecomboardFaq.do"  >        
+		<web-action-class>com.wms.comBoard.web.action.SaveFaqAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="DelFaq.do"  >        
+		<web-action-class>com.wms.comBoard.web.action.DelFaqAction</web-action-class>
+	</url-mapping>	
+    <url-mapping url="EditionFaq.do"  >
+		<web-action-class>com.wms.comBoard.web.action.EditionFaqAction</web-action-class>
+    </url-mapping>
+	<url-mapping url="deleteAuth.do"  >
+		<web-action-class>com.wms.comAuth.web.action.DeleteAuthAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="createAuth.do"  >
+		<web-action-class>com.wms.comAuth.web.action.CreateAuthAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="editAuth.do"  >
+		<web-action-class>com.wms.comAuth.web.action.EditAuthAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="CopyAuthList.do"  >
+		<web-action-class>com.wms.comAuth.web.action.CopyAuthAction</web-action-class>
+	</url-mapping>
+	<!--사 보 -->
+	<url-mapping url="EditSabo.do"  >
+		<web-action-class>com.wms.Sabo.web.action.EditSaboAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="preEditSabo.do"  >
+		<web-action-class>com.wms.Sabo.web.action.preEditSaboAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="pastEditSabo.do"  >
+		<web-action-class>com.wms.Sabo.web.action.pastEditSaboAction</web-action-class>
+	</url-mapping>
+
+    <url-mapping url="selectOrgList.do"  >
+		<web-action-class>com.wms.org.web.action.SelectOrgAction</web-action-class>
+    </url-mapping>  	
+    <url-mapping url="selectBoardList.do"  >
+		<web-action-class>com.wms.comBoard.web.action.SelectBoardAction</web-action-class>
+    </url-mapping>	
+    <url-mapping url="createBoardList.do"  >
+		<web-action-class>com.wms.comBoard.web.action.CreateBoardAction</web-action-class>
+    </url-mapping>	
+    <url-mapping url="createOrg2.do"  >
+		<web-action-class>com.wms.org.web.action.CreateOrgAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="deleteOrg2.do"  >
+		<web-action-class>com.wms.org.web.action.DeleteOrgAction</web-action-class>
+    </url-mapping>
+    <url-mapping url="updateOrg2.do"  >
+		<web-action-class>com.wms.org.web.action.UpdateOrgAction</web-action-class>
+    </url-mapping>
+    <!-- 제증명 발급 -->
+   <url-mapping url="CertPrint.do"  >
+		<web-action-class>com.wms.cert.web.action.UpdateCertAction</web-action-class>
+    </url-mapping>
+ 	<url-mapping url="UpdateCertStatusAction.do"  >
+		<web-action-class>com.wms.cert.web.action.UpdateCertStatusAction</web-action-class>
+    </url-mapping>    
+	<url-mapping url="saveCertApp.do"  >        
+		<web-action-class>com.wms.cert.web.action.SaveAppCertAction</web-action-class>
+    </url-mapping>    
+
+	<!--프로젝트MM 저장 --> 	
+	<url-mapping url="pjtMMChkSave.do"  >        
+		<web-action-class>com.wms.project.web.action.PjtMMCheckSaveAction</web-action-class>
+    </url-mapping>
+
+	<!--연차관리 저장 --> 	
+	<url-mapping url="pdsSave.do"  >        
+		<web-action-class>com.wms.Pds.web.action.PdsSaveAction</web-action-class>
+    </url-mapping> 
+    <!--연차계획 저장 --> 	
+	<url-mapping url="PdsAppAction.do"  >        
+		<web-action-class>com.wms.Pds.web.action.PdsAppAction</web-action-class>
+    </url-mapping>
+     <!--연차계획상태변경  --> 	
+	<url-mapping url="PdsStatusChange.do"  >        
+		<web-action-class>com.wms.Pds.web.action.PdsStatusChangeAction</web-action-class>
+    </url-mapping>
+   
+	<!-- DPW 제품삭제 -->
+	<url-mapping url="deleteDPW.do"  >
+		<web-action-class>com.wms.DPW.web.action.deleteDPWAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 제품등록 -->
+	<url-mapping url="createDPW.do"  >
+		<web-action-class>com.wms.DPW.web.action.CreateDPWAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 제품저장 -->
+	<url-mapping url="CreateBizDpw.do"  >
+		<web-action-class>com.wms.DPW.web.action.CreateBizDpwAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 제품수정 -->
+	<url-mapping url="editDPW.do"  >
+		<web-action-class>com.wms.DPW.web.action.editDPWAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 고객사수정 -->
+	<url-mapping url="ModifyDPW.do"  >
+		<web-action-class>com.wms.DPW.web.action.ModifyDPWAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 고객사삭제 -->
+	<url-mapping url="delDPW.do"  >
+		<web-action-class>com.wms.DPW.web.action.delDPWAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 유지보수 접수(등록) -->
+	<url-mapping url="createDpwMsh.do"  >
+		<web-action-class>com.wms.DPW.web.action.CreateDpwMshAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 유지보수 접수(수정) -->
+	<url-mapping url="createDpwMsh_U.do"  >
+		<web-action-class>com.wms.DPW.web.action.UdateDpwMshAction</web-action-class>
+	</url-mapping>	
+	<!-- DPW 유지보수 접수(삭제) -->
+	<url-mapping url="deleteDpwMsh.do"  >
+		<web-action-class>com.wms.DPW.web.action.deleteDpwMshAction</web-action-class>
+	</url-mapping>	
+	<!-- DPW 판매관리 등록-->
+	<url-mapping url="createDpwSale.do"  >
+		<web-action-class>com.wms.DPW.web.action.CreateDpwSaleAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 판매관리 삭제 -->
+	<url-mapping url="deleteDpwSale.do"  >
+		<web-action-class>com.wms.DPW.web.action.DeleteDpwSaleAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 판매관리 수정 -->
+	<url-mapping url="updateDpwSale.do"  >
+		<web-action-class>com.wms.DPW.web.action.UpdateDpwSaleAction</web-action-class>
+	</url-mapping>
+	<!-- DPW 판매관리 수정 -->
+	<url-mapping url="saveDpwRev.do"  >
+		<web-action-class>com.wms.DPW.web.action.SaveDpwRevAction</web-action-class>
+	</url-mapping>
+	<!-- 게시판 수정 -->
+	<url-mapping url="ModifyComBoard.do"  >
+		<web-action-class>com.wms.comBoard.web.action.ModifyComBoardAction</web-action-class>
+	</url-mapping>
+	<!--  게시판 등록 -->
+	<url-mapping url="CreateComBoardAction.do"  >
+		<web-action-class>com.wms.comBoard.web.action.CreateComBoardAction</web-action-class>
+	</url-mapping>
+	<!-- 게시판 삭제  -->
+	<url-mapping url="DeleteComBoard.do"  >
+		<web-action-class>com.wms.comBoard.web.action.DeleteComBoardAction</web-action-class>
+	</url-mapping>
+	<!-- 답글 등록  -->
+	<url-mapping url="ReplyComBoard.do"  >
+		<web-action-class>com.wms.comBoard.web.action.ReplyComBoardAction</web-action-class>
+	</url-mapping>
+	<!-- 조회수 카운트 -->
+	<url-mapping url="BordViewCnt.do"  >
+		<web-action-class>com.wms.comBoard.web.action.BordViewCntAction</web-action-class>
+	</url-mapping>
+ 	<!-- 암호처리-->
+	<url-mapping url="PassWordComboard.do"  >
+		<web-action-class>com.wms.comBoard.web.action.PassWordComboardAction</web-action-class>
+	</url-mapping>
+	<!-- 부서관리 -->
+	<url-mapping url="selectComOrg.do"  >
+		<web-action-class>com.wms.org.web.action.SelectOrgAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="selectComOrgHistory.do" >
+		<web-action-class>com.wms.org.web.action.selectComOrgHistoryAction</web-action-class>
+	</url-mapping>
+
+	<!-- EDMS 권한관리-->
+	<url-mapping url="saveAuthpopup.do">
+		<web-action-class>com.wms.edms.web.action.edAuthpopupAction</web-action-class>
+	</url-mapping>
+	<!-- EDMS 분류구성 관리 -->
+	<url-mapping url="insertEdAction.do" >
+		<web-action-class>com.wms.edms.web.action.insertEdAction</web-action-class>
+	</url-mapping>
+	<!-- ED 분류구성 관리(다중) -->
+	<url-mapping url="insertEdsAction.do" >
+		<web-action-class>com.wms.edms.web.action.insertEdsAction</web-action-class>
+	</url-mapping>	
+	<!-- ED 분류구성 삭제 -->
+	<url-mapping url="deleteEdAction.do" >
+		<web-action-class>com.wms.edms.web.action.deleteEdAction</web-action-class>
+	</url-mapping>	
+	<!-- EDMS 폴더 추가  -->
+	<url-mapping url="mkFolderEdAction.do" >
+		<web-action-class>com.wms.edms.web.action.mkFolderEDAction</web-action-class>
+	</url-mapping>	
+	<!-- EDMS 폴더 삭제  -->
+	<url-mapping url="rmFolderEdAction.do" >
+		<web-action-class>com.wms.edms.web.action.rmFolderEDAction</web-action-class>
+	</url-mapping>	
+	<!-- EDMS 폴더명 변경  -->
+	<url-mapping url="rnFolderEdAction.do" >
+		<web-action-class>com.wms.edms.web.action.rnFolderEDAction</web-action-class>
+	</url-mapping>		
+	<!-- EDMS 폴더 이동  -->
+	<url-mapping url="mvFolderEdAction.do" >
+		<web-action-class>com.wms.edms.web.action.mvFolderEDAction</web-action-class>
+	</url-mapping>		
+	<!-- EDMS 파일저장  -->
+	<url-mapping url="insertFileEdAction.do" >
+		<web-action-class>com.wms.edms.web.action.insertFileEDAction</web-action-class>
+	</url-mapping>		
+	<!-- 재무시스템  -->
+	<url-mapping url="acctMbUpdate.do" >
+		<web-action-class>com.wms.Account.web.action.SaveMbAction</web-action-class>
+	</url-mapping>		
+	
+	<!-- GreenBill  -->
+	<url-mapping url="GbSave.do" >
+		<web-action-class>com.wms.greenBill.web.action.SaveGbAction</web-action-class>
+	</url-mapping>		
+
+	<!-- 인사/급여시스템 -->
+	<url-mapping url="payrollSave.do">
+	<web-action-class>com.wms.payroll.web.action.SavePaAction</web-action-class>
+	</url-mapping>	
+	
+	<!--  부서자산관리  -->
+	<url-mapping url="searchOrgFaList.do">
+	<web-action-class>com.wms.orgFA.web.action.SearchOrgFaAction</web-action-class>
+	</url-mapping>	
+	
+	<url-mapping url="createOrgFaForm.do">
+	<web-action-class>com.wms.orgFA.web.action.SaveOrgFaAction</web-action-class>
+	</url-mapping>	
+	
+	<url-mapping url="updateOrgFaForm.do">
+	<web-action-class>com.wms.orgFA.web.action.UpdateOrgFaAction</web-action-class>
+	</url-mapping>	
+	
+	<url-mapping url="deleteOrgFaForm.do">
+	<web-action-class>com.wms.orgFA.web.action.DeleteOrgFaAction</web-action-class>
+	</url-mapping>	
+	
+	<url-mapping url="multiDeleteOrgFaForm.do">
+	<web-action-class>com.wms.orgFA.web.action.MDeleteOrgFaAction</web-action-class>
+	</url-mapping>	
+	
+	<url-mapping url="saveAcctOrg.do">
+	<web-action-class>com.wms.AcctOrg.web.action.SaveAcctOrgAction</web-action-class>
+	</url-mapping>	
+	
+	<url-mapping url="saveEmpOrg.do">
+	<web-action-class>com.wms.EmpOrg.web.action.SaveEmpOrgAction</web-action-class>
+	</url-mapping>	
+	
+	<url-mapping url="saveAcctTB.do">
+	<web-action-class>com.wms.Account.web.action.saveAcctTBListAction</web-action-class>
+	</url-mapping>
+	
+	
+
+	<!--  공통 Ajax처리  -->
+	<url-mapping url="comAjax.do">
+	<web-action-class>com.wms.comAjax.web.action.ComAjaxAction</web-action-class>
+	</url-mapping>		
+	
+	<!-- 인하대 병원 -->
+	<url-mapping url="CommonJsonView.do"  >
+		<web-action-class>com.wms.confer.budgetMgt.web.action.CommonJsonViewAction</web-action-class>
+	</url-mapping>
+    <url-mapping url="BudgetUpdate.do"  >
+		<web-action-class>com.wms.confer.budgetMgt.web.action.BudgetUptAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="BudgetCheck_Hist.do"  >
+		<web-action-class>com.wms.confer.budgetMgt.web.action.BudgetCheckAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="BudgetCheck_Inha.do"  >
+		<web-action-class>com.wms.confer.budgetMgt.web.action.BudgetCheckInhaAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="BudgetUpt_Inha.do"  >
+		<web-action-class>com.wms.confer.budgetMgt.web.action.BudgetUptInhaAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="AcctRptReg.do" >
+		<web-action-class>com.wms.confer.acctDocMgt.web.action.AcctRptRegAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="AcctRptSave.do" >
+		<web-action-class>com.wms.confer.acctDocMgt.web.action.AcctRptSaveAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="AcctRptDelete.do" >
+		<web-action-class>com.wms.confer.acctDocMgt.web.action.AcctRptDelAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="HanwayLink.do" >
+		<web-action-class>com.wms.confer.acctDocMgt.web.action.HanwayLinkAction</web-action-class>
+	</url-mapping>	
+	<url-mapping url="saveAcctTBRpt.do" >
+		<web-action-class>com.wms.Acct.web.action.SaveAcctTBRptAction</web-action-class>
+	</url-mapping>	
+	
+	<!-- 사원등록 테스트 -->
+	<url-mapping url="updateEmpAllTest.do"  >        
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpActionTest</web-action-class>
+	</url-mapping>
+	<!-- 사원업무관리 테스트 -->
+	<url-mapping url="empJobCreate.do"  >        
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpActionTest</web-action-class>
+	</url-mapping>
+	<url-mapping url="empJobUpdate.do"  >        
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpActionTest</web-action-class>
+	</url-mapping>
+	<url-mapping url="empJobDelete.do"  >        
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpActionTest</web-action-class>
+	</url-mapping>
+	<!-- 명함관리 테스트 -->
+	<url-mapping url="*empJobCreate.do"  >        
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpActionTest</web-action-class>
+	</url-mapping>
+	<url-mapping url="*empJobUpdate.do"  >        
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpActionTest</web-action-class>
+	</url-mapping>
+	<url-mapping url="*empJobDelete.do"  >        
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpActionTest</web-action-class>
+	</url-mapping>
+	<!-- 기념일관리 테스트 -->
+	<url-mapping url="empDayCreate.do"  >        
+		<web-action-class>com.wms.empDay.web.action.empDayAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="empDayUpdate.do"  >        
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpActionTest</web-action-class>
+	</url-mapping>
+	<url-mapping url="empDayDelete.do"  >        
+		<web-action-class>com.wms.empAll.web.action.UpdateEmpActionTest</web-action-class>
+	</url-mapping>
+	
+	
+	<!-- 그룹인사통합정보 -->
+	<!-- 인사기본사항 -->
+	<url-mapping url="groupEmpSave.do"  >        
+		<web-action-class>com.wms.PA001.HTPA01.web.action.SaveHTPA01Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="groupEmpTabSave.do"  >        
+		<web-action-class>com.wms.PA001.HTPA01.web.action.SaveHTPA01TabAction</web-action-class>
+	</url-mapping>
+	
+	<!-- 발령 -->
+	<url-mapping url="groupEmpDispSave.do"  >        
+		<web-action-class>com.wms.PA001.HTPA06.web.action.SaveHTPA06Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 신상 -->
+	<url-mapping url="HTPA02Create.do"  >        
+	<web-action-class>com.wms.PA001.HTPA02.web.action.CreateHTPA02Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA02Update.do"  >        
+	<web-action-class>com.wms.PA001.HTPA02.web.action.UpdateHTPA02Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA02Delete.do"  >        
+	<web-action-class>com.wms.PA001.HTPA02.web.action.DeleteHTPA02Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 주소 -->
+	<url-mapping url="HTPA03Create.do"  >        
+	<web-action-class>com.wms.PA001.HTPA03.web.action.CreateHTPA03Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA03Update.do"  >        
+	<web-action-class>com.wms.PA001.HTPA03.web.action.UpdateHTPA03Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA03Delete.do"  >        
+	<web-action-class>com.wms.PA001.HTPA03.web.action.DeleteHTPA03Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA03Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA03.web.action.SaveHTPA03Action</web-action-class>
+	</url-mapping>
+	
+	
+	<!-- 학력 -->
+	<url-mapping url="HTPA04Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA04.web.action.SaveHTPA04Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 가족 -->
+	<url-mapping url="HTPA05Create.do"  >        
+	<web-action-class>com.wms.PA001.HTPA05.web.action.CreateHTPA05Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA05Update.do"  >        
+	<web-action-class>com.wms.PA001.HTPA05.web.action.UpdateHTPA05Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA05Delete.do"  >        
+	<web-action-class>com.wms.PA001.HTPA05.web.action.DeleteHTPA05Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA05Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA05.web.action.SaveHTPA05Action</web-action-class>
+	</url-mapping>
+
+	<!-- 경력 -->
+	<url-mapping url="HTPA07Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA07.web.action.SaveHTPA07Action</web-action-class>
+	</url-mapping>
+
+	<!-- 어학 -->
+	<url-mapping url="HTPA08Create.do"  >        
+	<web-action-class>com.wms.PA001.HTPA08.web.action.CreateHTPA08Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA08Update.do"  >        
+	<web-action-class>com.wms.PA001.HTPA08.web.action.UpdateHTPA08Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA08Delete.do"  >        
+	<web-action-class>com.wms.PA001.HTPA08.web.action.DeleteHTPA08Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA08Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA08.web.action.SaveHTPA08Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 자격 -->
+	<url-mapping url="HTPA09Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA09.web.action.SaveHTPA09Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 평가 -->
+	<url-mapping url="HTPA10Create.do"  >        
+	<web-action-class>com.wms.PA001.HTPA10.web.action.CreateHTPA10Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA10Update.do"  >        
+	<web-action-class>com.wms.PA001.HTPA10.web.action.UpdateHTPA10Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA10Delete.do"  >        
+	<web-action-class>com.wms.PA001.HTPA10.web.action.DeleteHTPA10Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA10Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA10.web.action.SaveHTPA10Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 포상 -->
+	<url-mapping url="HTPA11Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA11.web.action.SaveHTPA11Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 징계 -->
+	<url-mapping url="HTPA12Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA12.web.action.SaveHTPA12Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 병역 -->
+	<url-mapping url="HTPA13Create.do"  >        
+	<web-action-class>com.wms.PA001.HTPA13.web.action.CreateHTPA13Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA13Update.do"  >        
+	<web-action-class>com.wms.PA001.HTPA13.web.action.UpdateHTPA13Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA13Delete.do"  >        
+	<web-action-class>com.wms.PA001.HTPA13.web.action.DeleteHTPA13Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA13Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA13.web.action.SaveHTPA13Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 여권 -->
+	<url-mapping url="HTPA14Create.do"  >        
+	<web-action-class>com.wms.PA001.HTPA14.web.action.CreateHTPA14Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA14Update.do"  >        
+	<web-action-class>com.wms.PA001.HTPA14.web.action.UpdateHTPA14Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA14Delete.do"  >        
+	<web-action-class>com.wms.PA001.HTPA14.web.action.DeleteHTPA14Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA14Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA14.web.action.SaveHTPA14Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 비자 -->
+	<url-mapping url="HTPA15Create.do"  >        
+	<web-action-class>com.wms.PA001.HTPA15.web.action.CreateHTPA15Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA15Update.do"  >        
+	<web-action-class>com.wms.PA001.HTPA15.web.action.UpdateHTPA15Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA15Delete.do"  >        
+	<web-action-class>com.wms.PA001.HTPA15.web.action.DeleteHTPA15Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA15Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA15.web.action.SaveHTPA15Action</web-action-class>
+	</url-mapping>
+	
+	<!-- 기타 -->
+	<url-mapping url="HTPA16Create.do"  >        
+	<web-action-class>com.wms.PA001.HTPA16.web.action.CreateHTPA16Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA16Update.do"  >        
+	<web-action-class>com.wms.PA001.HTPA16.web.action.UpdateHTPA16Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA16Delete.do"  >        
+	<web-action-class>com.wms.PA001.HTPA16.web.action.DeleteHTPA16Action</web-action-class>
+	</url-mapping>
+	<url-mapping url="HTPA16Save.do"  >        
+	<web-action-class>com.wms.PA001.HTPA16.web.action.SaveHTPA16Action</web-action-class>
+	</url-mapping>
+	
+	
+	<!-- food 맛집관리 -->
+	<url-mapping url="NewfoodSave.do"  >        
+	<web-action-class>com.wms.NewFood.web.action.foodSaveAction</web-action-class>
+	</url-mapping>
+
+	<!-- club 제안관리-->
+	<url-mapping url="clubSave.do"  >        
+	<web-action-class>com.wms.club.web.action.clubSaveAction</web-action-class>
+	</url-mapping>
+	
+	<!-- 칭찬 관리 -->
+	<url-mapping url="prSave.do"  >        
+	<web-action-class>com.wms.pr.web.action.prSaveAction</web-action-class>
+	</url-mapping>
+	
+	<!-- 칭찬 댓글 관리 -->
+	<url-mapping url="prReSave.do"  >        
+	<web-action-class>com.wms.pr.web.action.1prSaveAction</web-action-class>
+	</url-mapping>
+	
+	<!-- 칭찬 포인트 관리 -->
+	<url-mapping url="prPointSave.do"  >        
+	<web-action-class>com.wms.pr.web.action.2prSaveAction</web-action-class>
+	</url-mapping>
+	
+	<!-- Market 장터등록관리 -->
+	<url-mapping url="marketSaveAction.do"  >        
+	<web-action-class>com.wms.marketAction.web.action.marketSaveAction</web-action-class>
+	</url-mapping>
+	<!-- Market 장터댓글관리 -->
+	<url-mapping url="marketReSave.do"  >        
+	<web-action-class>com.wms.PA001.HTPA16_POPUP.web.action.CreateHTPA16_POPUPAction</web-action-class></url-mapping>
+	<!-- Market 장터파일관리 -->
+	<url-mapping url="marketFileSave.do"  >        
+	<web-action-class>com.wms.PA001.HTPA16_POPUP.web.action.CreateHTPA16_POPUPAction</web-action-class></url-mapping>
+
+	<!-- member a등록-->
+	<url-mapping url="memberSave.do"  >        
+	<web-action-class>com.wms.member.web.action.memberSaveAction</web-action-class>
+	</url-mapping>
+	
+	<!-- auth04 -->
+	<url-mapping url="saveAuth04.do"  >        
+	<web-action-class>com.wms.Auth04.web.action.auth04SaveAction</web-action-class>
+	</url-mapping>
+	
+	<!-- auth -->
+	<url-mapping url="saveAuth05.do"  >        
+	<web-action-class>com.wms.Auth05.web.action.auth05SaveAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="saveAuth02.do"  >        
+	<web-action-class>com.wms.Auth02.web.action.Auth02SaveAction</web-action-class>
+	</url-mapping>
+	<!-- member a등록-->
+	<url-mapping url="memberSave2.do"  >        
+	<web-action-class>com.wms.member.web.action.memberSaveAction</web-action-class>
+	</url-mapping>
+	<url-mapping url="saveAuth099.do"  >        
+	<web-action-class>com.wms.Auth01.web.action.auth01SaveAction</web-action-class>
+	</url-mapping>
+	
+	<!-- sr_System -->
+	<url-mapping url="SystemSave.do"  >        
+	<web-action-class>com.wms.cms2.web.action.SaveSrSystemAction</web-action-class>
+	</url-mapping>
+	
+	<!-- com_User -->
+	<url-mapping url="comOrgDetail.do"  >        
+	<web-action-class>com.wms.ComOrg.web.action.SaveComOrgAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="comUser.do"  >        
+	<web-action-class>com.wms.comUser.web.action.SaveComUserAction</web-action-class>
+	</url-mapping>
+	
+	<url-mapping url="FASave.do"  >        
+	<web-action-class>com.wms.FA.web.action.SaveFAAction</web-action-class>
+	</url-mapping>	
+	
+	<url-mapping url="hafSample.do"  >        
+	<web-action-class>com.wms.hafsample.web.action.SaveSampleAction</web-action-class>
+	</url-mapping>	
+
+</mappings >
+	
+<!-- 경고!!!: xml 태그 작성시 반드시 줄 맞출것, 안 맞추는 경우 지워버릴것 임 -->
+<!-- TAB 크기는 반드시 4로 통일할 것 -->                                        
+<!-- 동일한 모듈내에서는 개행하지 말것  -->
+
+

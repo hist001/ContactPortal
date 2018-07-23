@@ -1,0 +1,670 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="R_001"   value-count="2"
+   url="dailyPrcsMhInfo-regist 영업직원의 m/h 간접비로전환 " >  
+   <sql-content>
+   <![CDATA[
+	insert into dailyprcsmhInfo(jobno,ym,reportdt,reempid,prcsno,hh,mm,orgcd,bizno,createdt,
+	confirmflag,ETYPE)
+	select  
+	case when substr(a.orgcd,1,2)  in ('CD','CA') and substr(a.jobno,1,1)='P' then
+	'Z'||substr(a.jobno,2,5)
+	else
+	a.jobno
+	end jobno,
+	a.ym,a.reportdt,a.reempid,a.prcsno,a.hh,a.mm,a.orgcd,a.bizno,a.createdt,
+	a.confirmflag,B.ETYPE
+	from 
+	(select * from dailyprcsmh where ym=?) a,
+	(SELECT EMPID,ETYPE FROM MONTHLYEMPORG WHERE YM=?)B
+	WHERE 
+	A.REEMPID=B.EMPID
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_002"  value-count="4"
+   url="realBizMappingView-create 실제 발생한 사업으로 매핑 " >  
+   <sql-content>
+   <![CDATA[
+create or replace view realBizMappingView as
+	select  a.bizno,a.realbizno,nvl(sum(b.mm),0) mm
+		from 
+		(
+		select  a.bizno,
+			case when nvl(sum(b.mm),0) =0 then
+				substr(a.realbizno,1,length(a.realbizno)-1)
+			else
+				a.realbizno
+			end realbizno,nvl(sum(b.mm),0) mm
+			from 
+			(
+			select  a.bizno,
+                case when nvl(sum(b.mm),0) =0 then
+				substr(replace(a.bizno,'Z',''),1,length(replace(a.bizno,'Z',''))-1)
+				else
+				replace(a.bizno,'Z','')
+				end realbizno,nvl(sum(b.mm),0)
+				from 
+				(
+					select a.bizno
+					from bizmmview a
+					where a.ym=? 
+					group by a.bizno
+				) a, (select * from prodmmview where ym=?)b
+			where  b.bizno (+) like replace(a.bizno,'Z','')||'%'
+			group by a.bizno
+			) a, (select * from prodmmview where ym=?)b
+		where  b.bizno (+) like a.realbizno||'%'
+		group by a.bizno,a.realbizno
+		) a, (select * from prodmmview where ym=?)b
+	where  b.bizno (+) like a.realbizno||'%'
+	group by a.bizno,a.realbizno
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_003"  value-count="6"
+   url="payrolltempview-create 조직별 노무비 생성 " >  
+   <sql-content>
+   <![CDATA[
+ create or replace view payrolltempview as
+   select 
+     a.ym,
+	 orgcd,
+     a.orgcd, a.eType,payAmt,bonusAmt,allwAmt,ptAmt,tempEmpAmt,othAmt,ntnPnsAmt,
+     mdcInsAmt,prnAmt,crdUnnAmt,indInsAmt,
+     rtrApprAmt,
+     nvl(b.drtmm,0) drtmm,
+     nvl(c.indrtmm,0) indrtmm  
+   from 
+   (
+	select * from (
+		select 
+		ym,orgcd,
+		case when sn=1 then
+			  'R'
+			  when sn=2 then
+			  'T'
+			  end eType,
+		case when sn=1 then
+			  payAmt
+			  when sn=2 then
+			  0 
+			  end payAmt,
+		case when sn=1 then
+			  bonusAmt
+			  when sn=2 then
+			  0 
+			  end bonusAmt,
+		case when sn=1 then
+			  allwAmt
+			  when sn=2 then
+			  0 
+			  end allwAmt,
+		case when sn=1 then
+			  0
+			  when sn=2 then
+			  ptAmt
+			  end ptAmt,
+		case when sn=1 then
+			  0
+			  when sn=2 then
+			  tempEmpAmt
+			  end tempEmpAmt,
+		case when sn=1 then
+			  0
+			  when sn=2 then
+			  othAmt
+			  end othAmt,
+		case when sn=1 then
+			  ntnPnsAmt
+			  when sn=2 then
+			  0
+			  end ntnPnsAmt,
+		case when sn=1 then
+			  mdcInsAmt
+			  when sn=2 then
+			  0
+			  end mdcInsAmt,
+		case when sn=1 then
+			  prnAmt
+			  when sn=2 then
+			  0
+			  end prnAmt,
+		case when sn=1 then
+			  crdUnnAmt
+			  when sn=2 then
+			  0
+			  end crdUnnAmt,
+		case when sn=1 then
+			  indInsAmt
+			  when sn=2 then
+			  0
+			  end indInsAmt,
+		case when sn=1 then
+			  rtrApprAmt
+			  when sn=2 then
+			  0
+			  end rtrApprAmt
+		 from laborcost a,(select sn from months where sn<3) b
+		 where a.ym=?
+	 ) 
+	 where payAmt+bonusAmt+allwAmt+ptAmt+tempEmpAmt+othAmt+ntnPnsAmt+mdcInsAmt+prnAmt+
+	 crdUnnAmt+indInsAmt+rtrApprAmt<>0
+   ) a  ,
+   (      
+	   select distinct orgcd,ym,eType,
+	   sum(mm) over (partition by orgcd,ym,eType order by 1) drtmm 
+	   from ( 
+		select a.ym,a.jobno,b.orgcd,(sum(a.HH)*60)+sum(a.MM) mm,a.bizno,a.eType from 
+		(select * from dailyprcsmhInfo where ym = ? and jobno  like 'P%')a,
+		(select empid,orgcd from monthlyemporg where ym=?)b
+		where a.reempid=b.empid
+		group by a.jobno,a.ym,a.bizno,b.orgcd,a.eType
+	   )  
+   ) b,
+   ( 
+	   select distinct orgcd,ym,eType,
+	   sum(mm) over (partition by orgcd,ym,eType order by 1) indrtmm 
+	   from ( 
+		select a.ym,a.jobno,b.orgcd,(sum(a.HH)*60)+sum(a.MM) mm,a.bizno,a.eType from 
+		(select * from dailyprcsmhInfo where ym = ? and not jobno  like 'P%')a,
+		(select empid,orgcd from monthlyemporg where ym=?)b
+		where a.reempid=b.empid
+		group by a.jobno,a.ym,a.bizno,b.orgcd,a.eType
+	   )
+   ) c
+   where a.ym=?
+   and a.orgcd       =b.orgcd(+)
+   and a.ym          =b.ym(+)
+   and a.eType       =b.eType(+)
+   and a.orgcd       =c.orgcd(+)
+   and a.ym          =c.ym(+)
+   and a.eType       =c.eType(+)
+	]]>
+   </sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_004"   value-count="1"
+   url="orgPayRollRate-regist" >  
+   <sql-content>
+   <![CDATA[
+	insert into orgpayrollrate(ym,orgcd,eType,payAmt,bonusAmt,
+	allwAmt,ptAmt,tempEmpAmt,othAmt,
+	ntnPnsAmt,mdcInsAmt,
+	prnAmt,crdUnnAmt,
+	indInsAmt,
+	rtrApprAmt,
+	drtmm,indrtmm,payrollrate)
+	select b.ym,b.orgcd,eType,
+		payAmt,bonusAmt,allwAmt,ptAmt,tempEmpAmt,othAmt,ntnPnsAmt,
+		mdcInsAmt,prnAmt,crdUnnAmt,indInsAmt,
+		rtrApprAmt,b.drtmm,b.indrtmm,
+		case when b.drtmm+b.indrtmm>0 then
+	 (  
+	   b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+	   b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+	   b.indInsAmt+b.rtrApprAmt
+	  )
+	  /((b.drtmm+b.indrtmm)/60) 
+	  else 
+	 (  
+	   b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+	   b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+	   b.indInsAmt+b.rtrApprAmt
+	  )  
+	  end rate
+	 from  
+	(select * from payrolltempview where ym=?) b
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_005"   value-count="3"
+   url="prodInfo-regist 제품정보에 등재 m/h" >  
+   <sql-content>
+   <![CDATA[
+	insert into prodInfo(ym,prodno,bizno,orgcd,MM,FLAG) 
+	select 
+	 b.ym,b.jobno,b.bizno,a.orgcd,
+		   sum((b.mm/a.total_mm)*a.i_mm) mm, 'I'
+	from (	
+		select b.realbizno bizno, sum(a.mm) i_mm,a.orgcd,b.mm total_mm
+		from (select * from bizmmview where ym=?) a,
+				realBizMappingView b
+		where b.bizno=a.bizno
+		group by b.realbizno,b.mm,a.orgcd
+	) a,
+	(select * from prodmmview where ym=?) b
+	where 
+	b.bizno like a.bizno||'%'
+	group by b.ym,b.jobno,b.bizno,a.orgcd
+	union all
+	select a.ym, a.jobno,a.bizno, a.orgcd,sum(a.mm) mm, 'D'
+	from (select * from prodmmview where ym=? )a
+	group by a.jobno,a.orgcd,a.ym,a.bizno
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_006"   value-count="4"
+   url="realCostInfo-regist 조직별원가에 노무비 등록" >  
+   <sql-content>
+   <![CDATA[
+insert into RealCostInfo(ym,jobno,orgcd,acctcd,amt,lastUpdateDtm)
+select ym,jobno,orgcd,acctcd,sum(amt), sysdate from (
+select ym,jobno,orgcd,acctcd||'' acctcd,sum(amt) amt from (
+	select a.ym,a.jobno,a.realorgcd orgcd,
+	case 
+		when c.sn=1 then
+		 50021
+		when c.sn=2 then
+		 50031
+		when c.sn=3 then
+		 50041
+		when c.sn=4 then
+		 50051
+		when c.sn=5 then
+		 50052
+		when c.sn=6 then
+		 50059
+		when c.sn=7 then
+		 50141
+		when c.sn=8 then
+		 50142
+		when c.sn=9 then
+		 50143
+		when c.sn=10 then
+		 50145
+		when c.sn=11 then
+		 50147
+		when c.sn=12 then
+		 50061
+	end acctcd ,
+	case 
+		when c.sn=1 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.payAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=2 then
+		 ((a.mm/60)*b.payrollrate) *	
+		 (b.bonusAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=3 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.allwAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=4 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.ptAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=5 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.tempEmpAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=6 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.othAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=7 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.ntnPnsAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=8 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.mdcInsAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=9 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.prnAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=10 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.crdUnnAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=11 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.indInsAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+		when c.sn=12 then
+		 ((a.mm/60)*b.payrollrate) *
+		 (b.rtrApprAmt/
+		   ( b.payAmt+b.bonusAmt+b.allwAmt+b.ptAmt+b.tempEmpAmt+b.othAmt+b.ntnPnsAmt+
+		     b.mdcInsAmt+b.prnAmt+b.crdUnnAmt+
+		     b.indInsAmt+b.rtrApprAmt
+		    )
+		  )
+	end amt
+	from 
+	(
+		select a.ym,decode(substr(jobno,1,1),'P',jobno,bizno) jobno,b.orgcd,b.realorgcd,a.etype,(sum(a.HH)*60)+sum(a.MM) mm from 
+		(select * from dailyprcsmhInfo where ym = ? )a,
+		(select empid,orgcd,realorgcd from monthlyemporg where ym=?)b
+		where a.reempid=b.empid
+		group by decode(substr(jobno,1,1),'P',jobno,bizno),a.ym,a.bizno,b.orgcd,b.realorgcd,
+		a.eType
+        union all
+        select ym,
+		case when orgCd='CI00' then
+         'CCZ'
+		else
+		 'ZZZ'
+		end 
+		,orgcd,orgcd,EType ,60 from orgpayrollrate where ym=? and drtmm+indrtmm=0 
+		) a, 
+	orgpayrollrate b,
+	months c
+	where a.ym = b.ym
+	and a.orgcd=b.orgcd 
+	and a.eType=b.eType
+	and c.sn<13
+)
+where amt!=0 
+group by ym,jobno,orgcd,acctcd
+union all
+select ym,jobcd,orgcd,acctcd||'',amt from DRTCOSTADJUST where ym=?
+)
+group  by ym,jobno,orgcd,acctcd
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_007"   value-count="3"
+   url="fixAsstInfo-regist 고정자산등록" >  
+   <sql-content>
+   <![CDATA[
+insert into fixAsstInfo(ym,fixAsstNo,amt,orgCd,jobNo,acctCd,lastUpdDtm)
+select ym,fixasstno,sum(amt),orgcd,bizNo,acctcd,sysdate from (
+	select a.ym,a.fixasstno,a.mthdprAmt*b.rate amt,a.orgcd,b.bizNo,c.acctcd
+	from fixasst a,bizfixasst b,assttype c
+	 where a.ym=?
+	 and a.fixasstno=b.fixasstno
+	 and c.asstcd=substr(a.fixasstno,1,1)
+	union all
+	select a.ym,a.fixasstno,a.mthDprAmt*b.rate amt,a.orgcd,b.bizno, c.acctcd 
+	from 
+		(
+		select a.ym,a.fixasstno,a.mthDprAmt,a.orgcd 
+		from fixasst a ,bizfixasst b
+		where a.fixasstno=b.fixasstno(+)
+		and   a.ym=?
+		and   b.fixasstno is null
+		)a,
+		( 
+			select  distinct a.orgcd,a.bizno,
+				sum(b.mm) over (partition by a.orgcd,a.bizno order by 1)
+				/sum(b.mm) over(partition by a.orgcd order by 1) rate
+				from (
+					select orgcd,bizno bizno from orgUseBiz
+					     group by orgcd,bizno 
+				)a,
+				(
+				     select substr(bizno,1,2) bizno , sum(mm) mm from prodinfo 
+					 where ym=?	     group by substr(bizno,1,2)
+				)b
+				where
+				b.bizno like replace(a.bizno,'Z','')||'%'
+			union  all 
+			select 'CI00','CCZ',1 from dual
+		)b,assttype c
+	where a.orgcd=b.orgcd
+	and c.asstcd=substr(a.fixasstno,1,1)
+	)
+group by  ym,fixasstno,orgcd,bizNo,acctcd
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_008"   value-count="1"
+   url="realCostInfo-regist 감가상각 조직별금액에 등록" >  
+   <sql-content>
+   <![CDATA[
+	insert into RealCostInfo(ym,orgcd,acctcd,jobno,amt,lastUpdateDtm)
+	select ym,orgcd,acctcd,jobno,sum(amt) amt, sysdate from fixasstinfo
+	where ym=?
+	group by ym,orgcd,acctcd,jobno
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_009"   value-count="1"
+   url="realCostInfo-regist 제비용 등록" >  
+   <sql-content>
+   <![CDATA[
+	insert into RealCostInfo(ym,orgcd,acctcd,jobno,amt,lastUpdateDtm)
+	select  
+	substr(slipno_jpno,2,6) ym,
+	orgcd_bscd orgcd,acctcd_gjcd acctcd, 
+	decode(substr(prodtaskcd_sucd,1,1),'P',
+	case when substr(orgcd_bscd,1,2) in ('CA','CD') then
+	upper(bizno)
+	else
+	prodtaskcd_sucd
+	end,bizno) jobno,
+	sum(decode(drcrflag_cdgb,'D',-amount_amt,amount_amt)) amt ,sysdate
+	 from  (select *  from slip where slipDt like ?||'%')
+	where acctcd_gjcd like '5%'  
+	and not substr(acctcd_gjcd,1,4) in (5002,5003,5004,5005,5006,5007)  
+	and not acctcd_gjcd in (50141,50142,50143,50145,50147)
+	group by substr(slipno_jpno,2,6) ,orgcd_bscd ,acctcd_gjcd,
+	decode(substr(prodtaskcd_sucd,1,1),'P',
+	case when substr(orgcd_bscd,1,2) in ('CA','CD') then
+	upper(bizno)
+	else
+	prodtaskcd_sucd 
+	end,bizno)
+	]]>
+</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_010"   value-count="1"
+   url="realTempView-create" >  
+   <sql-content>
+   <![CDATA[
+	create or replace view RealTempView as
+	select a.ym,a.jobno,a.acctcd,a.amt,a.jobno bizno,a.cd ,nvl(b.mastdvalue,'HP') cdValue,
+	case when substr(a.acctCd,1,4) = 5001 then
+		'P'
+		 when substr(a.acctCd,1,4) in (5002,5003,5004,5006) then
+		'L'
+		 when substr(a.acctCd,1,4) in (5005) then
+		'V'
+		 when substr(a.acctCd,1,4) = 5011 then
+		'D'
+		 when substr(a.acctCd,1,4) = 5014 then
+		'W'
+		 when substr(a.acctCd,1,4) = 5018 then
+		'T' 
+		 else
+		'E' 
+	end grpCd
+		from (	
+			select ym,acctcd,sum(amt)amt,jobno,
+			trim(to_char(nvl(length(replace(jobno,'Z','')),0)+3,'00')) cd 
+			from (select *
+				from RealCostInfo a 
+				where ym=?
+				and not substr(orgcd,1,2) in ('CQ','CR','CP')
+				)                
+			group by ym,acctcd,jobno 
+		) a, acctmastd b
+		where b.acctcd=a.acctcd
+		and b.cd=a.cd
+		and a.amt<>0
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_011"   value-count="4"
+   url="RealBizMapping-regist" >  
+   <sql-content>
+   <![CDATA[
+insert into RealBizMapping(ym,bizno,realbizno,mm)
+	select  b.ym,a.bizno,a.realbizno,nvl(sum(b.mm),0) mm
+		from 
+		(
+		select  a.bizno,
+			case when nvl(sum(b.mm),0) =0 then
+				substr(a.realbizno,1,length(a.realbizno)-1)
+			else
+				a.realbizno
+			end realbizno,nvl(sum(b.mm),0) mm
+			from 
+			(
+			select  a.bizno,
+                case when nvl(sum(b.mm),0) =0 then
+				substr(replace(a.bizno,'Z',''),1,length(replace(a.bizno,'Z',''))-1)
+				else
+					replace(a.bizno,'Z','')
+				end realbizno,nvl(sum(b.mm),0)
+				from 
+				(
+					select upper(jobno) bizno from RealCostInfo 
+					where jobno not like 'P%' 
+					and ym=?
+					group by jobno
+				) a, (select * from prodmmview where ym=?)b
+			where  b.bizno (+) like replace(a.bizno,'Z','')||'%'
+			group by a.bizno
+			) a, (select * from prodmmview where ym=?)b
+		where  b.bizno (+) like a.realbizno||'%'
+		group by a.bizno,a.realbizno
+		) a, 
+	       (select * from prodmmview where ym=?)b
+	where  b.bizno (+) like a.realbizno||'%'
+	group by a.bizno,a.realbizno,b.ym
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_012"   value-count="1"
+   url="realBizMapping 자료중 ITO 사업 삭제" >  
+    <sql-content>
+   <![CDATA[
+	delete  from realBizMapping where bizno in ('CBZ','CCZ') and YM=?
+	]]>
+    </sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_013"   value-count="2"
+   url="realBizMapping 자료중 ITO 사업 등록" >  
+    <sql-content>
+   <![CDATA[
+	insert into RealBizMapping(ym,bizno,realbizno,mm,rate)
+	select ym,'CBZ',realbizno,mm,round(mm/sum(mm) over (partition by 1 order by 1),2)
+	from realBizMapping where bizno in ('CBA','CBB','CBE','CBF','CBH') and YM=?
+	union all
+	select ym,'CCZ',realbizno,mm,round(mm/sum(mm) over (partition by 1 order by 1),2)
+	from realBizMapping where bizno in ('CBC','CBD','CBG') and YM=?
+	]]>
+    </sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="R_014"   value-count="4"
+   url="RealCostItem-regist 실제원가 등록" >  
+   <sql-content>
+   <![CDATA[
+insert into RealCostItem(ym,prodtype,prodno,acctcd,InDrtAmt,DrtAmt,lastUpdateDtm,grpCd)
+select  ym,prodType,prodNo,acctcd,sum(Iprodamt) Iprodamt, sum(Dprodamt) Dprodamt,sysdate,grpCd
+from (
+	select ym,substr(jobno,1,1) prodType,substr(jobno,2) prodNo,
+	acctcd,0 Iprodamt,amt Dprodamt,grpCd
+	from 
+		(select * from RealTempView a 	
+		 where jobno like 'P%' and ym=?) a 
+union all
+	select a.ym,substr(c.jobno,1,1) prodType,substr(c.jobno,2) prodNo,a.acctcd,sum(a.amt*(
+	case when a.bizno in ('CBZ','CCZ') then
+	(c.mm*b.rate)/b.mm
+	else
+	c.mm/b.mm
+	end
+	)) Iprodamt,
+	0 Dprodamt ,grpCd
+	from 
+	(
+		select  a.ym,a.acctcd,
+			a.bizno,a.grpCd,
+			case when a.cdvalue='HP' then
+				a.amt
+			else
+			a.amt *
+			 (b.arvalue /
+			(sum(arvalue) 
+			over (partition by a.ym,a.acctcd,a.cdvalue,a.grpCd order by 1))) 
+			end amt
+		    from
+		RealTempView a,
+		(
+			select b.arCd,b.arValue,b.arBizNo,b.arNote from 
+			(
+				select arCd,arType,max(arStartDt) arStartDt from allrate 
+				where arCd like 'H%' 
+				and arType='A' and arStartDt<to_char(last_day(?||'01'),'yyyymmdd')
+				group by arCd,arType
+			) a,
+			allratedetail b
+			where a.arCd=b.arCd
+			and a.arType=b.arType
+			and a.arStartDt=b.arStartDt
+		) b	 	
+		where b.arcd(+)=a.cdvalue
+		and   not a.jobno like 'P%'
+	)a,
+	(select * from RealBizMapping where ym=?) b,
+	(select * from prodmmview where ym=?)c
+	where Upper(a.bizno)=b.bizno
+	and c.bizno(+) like b.realBizno||'%'
+	group by a.ym,c.jobno,a.acctcd,a.grpCd
+)
+group by ym,prodType,prodNo,acctcd,grpCd
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+</sql>

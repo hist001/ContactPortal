@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="J_001"   value-count="4"
+   url="업무합의목록 조회" >  
+   <sql-content>
+   <![CDATA[
+            SELECT
+            A.REPORTDT,A.REEMPID,TO_EMPKNAME(A.REEMPID) REEMPNAME,A.SN,
+	        A.JOBTITLE JOBNAME,A.JOBDETAIL,
+            --JOBNO PRODNO,
+            TO_pjtno_tocode(jobno) AS PRODNO,
+            JOBNAME PRODNAME,A.PRCSNO,A.PRCSNAME,
+            RPTCTSTATUS FRPTCTSTATUS,TO_STATUSNM(RPTCTSTATUS) FRPTCTSTATUSNAME,
+            RPTCTHH FRPTCTHH,RPTCTMM FRPTCTMM,
+            TO_CHAR(RPTCTDATE,'YYYY-MM-DD HH24:MI:SS') FRPTCTDATE
+            ?
+            FROM DAILYREPORTDETAIL A,
+            (
+			SELECT /*+INDEX(A IDX_RPTMHCONTROL)*/
+			rank() over(partition by A.reportdt,A.reempid ,A.sn order by A.rptctstatus DESC) rank,
+			A.* FROM RPTMHCONTROL A,
+			(                
+			SELECT distinct
+			reportdt,reempid,sn FROM RPTMHCONTROL A
+			?
+			)B
+			where A.REPORTDT= B.REPORTDT
+			AND   A.REEMPID = B.REEMPID
+			AND   A.SN      = B.SN
+            )B
+            ?
+            WHERE A.REPORTDT=B.REPORTDT
+            AND   A.REEMPID=B.REEMPID
+            AND   A.SN     =B.SN			
+            AND   B.RANK   =1
+	        ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="J_002"   value-count="1"
+   url="업무합의상세 조회" >  
+   <sql-content>
+   <![CDATA[
+		SELECT REPORTDT,REEMPID,SN,
+		RPTCTSTATUS,TO_STATUSNM(RPTCTSTATUS) RPTCTSTATUSNAME,
+		RPTCTHH,RPTCTMM,RPTCTNOTE,
+		TO_CHAR(RPTCTDATE,'YYYY-MM-DD') RPTCTDATE,
+		RPTCTEMPID, TO_EMPKNAME(RPTCTEMPID) RPTCTEMPNAME,
+		OBJEMPID , TO_EMPKNAME(OBJEMPID) OBJEMPNAME
+		FROM RPTMHCONTROL
+		?
+		order by rptctstatus
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="J_003"   value-count="1"
+   url="조건1" >  
+   <sql-content>
+   <![CDATA[
+         WHERE OBJEMPID IN (
+							SELECT B.EMPID
+							FROM EMPALL A, EMPALL B
+							WHERE A.EMPID = ?
+							AND A.SYSEMPID =B.SYSEMPID)		
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="J_004"   value-count="3"
+   url="조건2" >  
+   <sql-content>
+   <![CDATA[
+		WHERE REPORTDT=?
+		AND REEMPID=?
+		AND SN=?
+	]]>
+	</sql-content>
+   </sql-mapping>	
+   <sql-mapping  id="J_005"   value-count="2"
+   url="조건3(승인 리스트 부가 조건)" >  
+   <sql-content>
+   <![CDATA[
+		AND   NOT (NOT B.RPTCTEMPID=? AND NOT B.OBJEMPID=?)
+		AND   B.RPTCTSTATUS IN ('11','21','31')
+		ORDER BY 1 DESC, 2
+	]]>
+	</sql-content>	
+   </sql-mapping>
+   <sql-mapping  id="J_006"   value-count="1"
+   url="승인자,조정자 추가 조회" >  
+   <sql-content>
+   <![CDATA[
+	,(
+		select	max(ctempid) ctempid,max(ctempname) ctempname,
+				max(apprempid) apprempid,max(apprempname) apprempname 
+		from 
+		(
+			select
+			case when rownum=1 then	empid		end ctEmpId,
+			case when rownum=1 then	empkname	end ctEmpName, 
+			case when lvl=2    then	empid		end apprEmpId,
+			case when lvl=2    then	empkname	end apprEmpName  
+			from (
+				select empid,empkname,level lvl from empall			
+				where level <= 3
+				and level   >  1			
+				and egrade  > 'AA'			 
+				connect by empid =  prior aprvempid start with empid = ?
+				order by level desc
+				)
+		)
+	)C		
+	]]>
+	</sql-content>	
+   </sql-mapping>
+   <sql-mapping  id="J_007"   value-count="0"
+   url="승인자,조정자 칼럼 추가 " >  
+   <sql-content>
+   <![CDATA[
+	,CTEMPID,CTEMPNAME,APPREMPID,APPREMPNAME
+	]]>
+	</sql-content>	
+   </sql-mapping>
+   <sql-mapping  id="J_008"   value-count="4"
+   url="합의삭제 " >  
+   <sql-content>
+   <![CDATA[
+		DELETE FROM RPTMHCONTROL
+		WHERE REPORTDT  = ?
+		AND   REEMPID   = ?
+		AND   SN        = ?
+		AND   RPTCTSTATUS = ?
+	]]>
+	</sql-content>	
+   </sql-mapping>
+   
+   <sql-mapping  id="J_009"   value-count="2"
+   url="조회1(조직/사업조회)" >  
+   <sql-content>
+   <![CDATA[
+	    SELECT REPORTDT,REEMPID,REEMPNAME,ORGCD,ORGNAME,PRODNO,PRODNAME,
+        SUM(FRPTCTHH)+trunc(SUM(FRPTCTMM)/60) FRPTCTHH,MOD(SUM(FRPTCTMM), 60) FRPTCTMM,
+        SUM(IRPTCTHH)+trunc(SUM(IRPTCTMM)/60) IRPTCTHH,MOD(SUM(IRPTCTMM), 60) IRPTCTMM	
+	    FROM (
+	    	SELECT
+            SUBSTR(A.REPORTDT,1,6) REPORTDT,
+	    	A.REEMPID,TO_EMPKNAME(A.REEMPID) REEMPNAME,
+	    	TO_EMPORGCD(A.REEMPID) ORGCD , TO_ORGNAME(A.REEMPID) ORGNAME,				
+            JOBNO PRODNO,JOBNAME PRODNAME,
+            B.RPTCTHH FRPTCTHH,B.RPTCTMM FRPTCTMM,
+	    	C.RPTCTHH IRPTCTHH,C.RPTCTMM IRPTCTMM
+            FROM DAILYREPORTDETAIL A,
+            (
+                    SELECT /*+INDEX(A IDX_RPTMHCONTROL)*/
+                    rank() over(partition by A.reportdt,A.reempid ,A.sn order by A.rptctstatus DESC) rank,
+                    A.* FROM RPTMHCONTROL A
+					?
+            )B,
+            (
+                    SELECT 
+                    A.* FROM RPTMHCONTROL A
+					?
+					AND RPTCTSTATUS ='11'
+            )C
+            WHERE A.REPORTDT=B.REPORTDT
+            AND   A.REEMPID=B.REEMPID
+            AND   A.SN     =B.SN
+            AND   B.RANK   =1
+	    	AND   B.RPTCTSTATUS LIKE '%0'
+            AND   A.REPORTDT=C.REPORTDT
+            AND   A.REEMPID=C.REEMPID
+            AND   A.SN     =C.SN
+	    )
+	    GROUP BY REPORTDT,REEMPID,REEMPNAME,ORGCD,ORGNAME,PRODNO,PRODNAME   
+	]]>
+	</sql-content>	
+   </sql-mapping>
+   
+   <sql-mapping  id="J_010"   value-count="3"
+   url="조회조건1(사번,기간검색)" >  
+   <sql-content>
+   <![CDATA[
+		WHERE REEMPID IN (?)
+		AND REPORTDT BETWEEN ? AND ?
+	]]>
+	</sql-content>	
+   </sql-mapping> 
+           
+   <sql-mapping  id="J_011"   value-count="1"
+   url="조회조건2(조직검색)" >  
+   <sql-content>
+   <![CDATA[
+		SELECT EMPID FROM EMPALL 
+		WHERE ORGCD IN (
+		SELECT ORGCD FROM ORG CONNECT BY PRIOR ORGCD = HIGHORGCD START WITH ORGCD = ?
+		)  
+		AND WENDDT='99991231'
+	]]>
+	</sql-content>	
+   </sql-mapping>         
+   
+   <sql-mapping  id="J_012"   value-count="3"
+   url="조회조건3(사업/제품검색)" >  
+   <sql-content>
+   <![CDATA[
+	    ,(					
+		SELECT REPORTDT,REEMPID,SN FROM DAILYREPORTDETAIL
+		WHERE JOBNO IN (select prodtype||prodno from prod where bizno like '?%' )
+		AND REPORTDT BETWEEN ? AND ?
+		)B
+		where a.reportdt=b.reportdt
+		and a.reempid=b.reempid
+		and a.sn=b.sn   
+	]]>
+	</sql-content>	
+   </sql-mapping>         
+
+   <sql-mapping  id="J_013"   value-count="3"
+   url="일일보고 수정" >  
+   <sql-content>
+   <![CDATA[
+   		update dailyreportdetail set hh=?,mm=?
+		?
+	]]>
+	</sql-content>	
+   </sql-mapping> 
+   <sql-mapping  id="J_014"   value-count="1"
+   url="기본업무계획 직무 조회" >  
+   <sql-content>
+   <![CDATA[     
+	SELECT  
+	CODE,
+	CODENO,
+	CODENAME,
+	HIGHCODE,
+	LEVEL,
+	CASE WHEN SUBSTR(CODENO,3,5) != '000' THEN 'Y'
+	ELSE 'N' END SELFLAG
+	FROM
+	(
+		SELECT  '99999' AS CODE ,
+		 '' CODENO,
+		 '직무' CODENAME,
+		 '' HIGHCODE
+		FROM DUAL
+		UNION
+		SELECT
+		 JOBCD AS CODE,
+		 JOBCD AS CODENO,
+		 JOBNAME AS CODENAME,
+		 SUPERJOBCD AS HIGHCODE
+		FROM HISTJOB
+		WHERE USEFLAG = 'Y'
+		AND JOBCD IN
+		(
+			SELECT JOBCD
+			FROM orgjob
+			WHERE ORG_NO in 		
+			(
+				select org_no from org
+				connect by prior highorgcd =  to_char(org_no)
+				start with to_char(org_no)=
+				(
+					select orgcd 
+					from empall  
+					where empid=?
+				)
+			)
+		)
+	)
+	START WITH CODE = '99999'
+	CONNECT BY PRIOR CODE=HIGHCODE   
+	]]>
+	</sql-content>	
+   </sql-mapping>   
+   
+  <sql-mapping  id="J_015"   value-count="3"
+   url="다음 합의건 가져오기" >  
+   <sql-content>
+   <![CDATA[  
+SELECT *
+FROM (   
+SELECT A.REPORTDT,
+		     A.REEMPID,
+		     A.SN
+         FROM DAILYREPORTDETAIL A,            
+         (   SELECT /*+INDEX(A IDX_RPTMHCONTROL)*/    
+                    RANK() OVER(PARTITION BY A.REPORTDT,
+						                    A.REEMPID ,
+						                    A.SN ORDER BY A.RPTCTSTATUS DESC) RANK,    
+                   A.* 
+         FROM RPTMHCONTROL A, ( SELECT DISTINCT  REPORTDT,
+                                                                    REEMPID,
+                                                                      SN 
+                                                        FROM RPTMHCONTROL A
+                                                        WHERE OBJEMPID=input_empId: ) B
+         WHERE A.REPORTDT= B.REPORTDT                        
+         AND   A.REEMPID = B.REEMPID                        
+         AND   A.SN      = B.SN ) B            
+         WHERE A.REPORTDT=B.REPORTDT           
+        AND   A.REEMPID=B.REEMPID           
+         AND   A.SN     =B.SN            
+         AND   B.RANK   =1                
+         AND   NOT (NOT B.RPTCTEMPID=input_empId: 
+         AND NOT B.OBJEMPID=input_empId: )                
+         AND   B.RPTCTSTATUS IN ('11','21','31')   
+--         AND  ROWNUM=1             
+         ORDER BY 1 DESC, 2)
+WHERE ROWNUM=1      
+	
+	]]>
+	</sql-content>	
+   </sql-mapping> 
+      
+</sql>
+

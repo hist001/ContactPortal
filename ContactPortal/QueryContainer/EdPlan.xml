@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="E_001"   value-count="2"
+   url="교육계획 검색" >  
+   <sql-content>
+   <![CDATA[
+		select * from  edPlan where yPlanCd=? and dyPlanCd=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="E_002"   value-count="3"
+   url="교육계획 개별 조건" >  
+   <sql-content>
+   <![CDATA[
+		where yPlanCd=? and dyPlanCd=? and edCd=?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="E_003"   value-count="0"
+   url="교육계획 key 검색" >  
+   <sql-content>
+   <![CDATA[
+		select nvl(max(edCd),to_char(sysdate,'yyyymmdd')||'0000')+1 edCd from edPlan where  substr(edCd,1,8)= to_char(sysdate,'yyyymmdd')
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="E_004"   value-count="3"
+   url="교육계획 종합 조회" >  
+   <sql-content>
+   <![CDATA[
+	select yplancd||dyplancd||edname||edorgname key,yplancd, dyplancd,dyPlanName,edname,edorgname,max(ednote) ednote,
+	sum(hr_amt_01) hr_amt_01,
+	sum(hr_amt_02) hr_amt_02,
+	sum(hr_amt_03) hr_amt_03,
+	sum(hr_amt_04) hr_amt_04,
+	sum(hr_amt_05) hr_amt_05,
+	sum(hr_amt_06) hr_amt_06,
+	sum(hr_amt_07) hr_amt_07,
+	sum(hr_amt_08) hr_amt_08,
+	sum(hr_amt_09) hr_amt_09,
+	sum(hr_amt_10) hr_amt_10,
+	sum(hr_amt_11) hr_amt_11,
+	sum(hr_amt_12) hr_amt_12,
+	sum(hr_amt_01)+
+	sum(hr_amt_02)+
+	sum(hr_amt_03)+
+	sum(hr_amt_04)+
+	sum(hr_amt_05)+
+	sum(hr_amt_06)+
+	sum(hr_amt_07)+
+	sum(hr_amt_08)+
+	sum(hr_amt_09)+
+	sum(hr_amt_10)+
+	sum(hr_amt_11)+
+	sum(hr_amt_12)
+	hr_amt_tot,
+	sum(ed_amt_01) ed_amt_01,
+	sum(ed_amt_02) ed_amt_02,
+	sum(ed_amt_03) ed_amt_03,
+	sum(ed_amt_04) ed_amt_04,
+	sum(ed_amt_05) ed_amt_05,
+	sum(ed_amt_06) ed_amt_06,
+	sum(ed_amt_07) ed_amt_07,
+	sum(ed_amt_08) ed_amt_08,
+	sum(ed_amt_09) ed_amt_09,
+	sum(ed_amt_10) ed_amt_10,
+	sum(ed_amt_11) ed_amt_11,
+	sum(ed_amt_12) ed_amt_12,
+	sum(ed_amt_01)+
+	sum(ed_amt_02)+
+	sum(ed_amt_03)+
+	sum(ed_amt_04)+
+	sum(ed_amt_05)+
+	sum(ed_amt_06)+
+	sum(ed_amt_07)+
+	sum(ed_amt_08)+
+	sum(ed_amt_09)+
+	sum(ed_amt_10)+
+	sum(ed_amt_11)+
+	sum(ed_amt_12)
+	ed_amt_tot
+	from 
+	(
+		select a.yplancd, a.dyplancd,dyplanName,edname,edorgname,ednote,
+		case when month = 1 then
+		count
+		else
+		0
+		end hr_amt_01,
+		case when month = 2 then
+		count
+		else
+		0
+		end hr_amt_02,
+		case when month = 3 then
+		count
+		else
+		0
+		end hr_amt_03,
+		case when month = 4 then
+		count
+		else
+		0
+		end hr_amt_04,
+		case when month = 5 then
+		count
+		else
+		0
+		end hr_amt_05,
+		case when month = 6 then
+		count
+		else
+		0
+		end hr_amt_06,
+		case when month = 7 then
+		count
+		else
+		0
+		end hr_amt_07,
+		case when month = 8 then
+		count
+		else
+		0
+		end hr_amt_08,
+		case when month = 9 then
+		count
+		else
+		0
+		end hr_amt_09,
+		case when month = 10 then
+		count
+		else
+		0
+		end hr_amt_10,
+		case when month = 11 then
+		count
+		else
+		0
+		end hr_amt_11,
+		case when month = 12 then
+		count
+		else
+		0
+		end hr_amt_12,
+		case when month = 1 then
+		edsum
+		else
+		0
+		end ed_amt_01,
+		case when month = 2 then
+		edsum
+		else
+		0
+		end ed_amt_02,
+		case when month = 3 then
+		edsum
+		else
+		0
+		end ed_amt_03,
+		case when month = 4 then
+		edsum
+		else
+		0
+		end ed_amt_04,
+		case when month = 5 then
+		edsum
+		else
+		0
+		end ed_amt_05,
+		case when month = 6 then
+		edsum
+		else
+		0
+		end ed_amt_06,
+		case when month = 7 then
+		edsum
+		else
+		0
+		end ed_amt_07,
+		case when month = 8 then
+		edsum
+		else
+		0
+		end ed_amt_08,
+		case when month = 9 then
+		edsum
+		else
+		0
+		end ed_amt_09,
+		case when month = 10 then
+		edsum
+		else
+		0
+		end ed_amt_10,
+		case when month = 11 then
+		edsum
+		else
+		0
+		end ed_amt_11,
+		case when month = 12 then
+		edsum
+		else
+		0
+		end ed_amt_12 
+		from 
+			(
+				 select yplancd, dyplancd,edname,edorgname,ednote,
+				 		to_number(substr(eddt,5,6)) month,count,edsum from edplan 
+					where yPlanCd=?
+					and dyPlanCd in
+					(
+						select dyplancd from detailYearPlan
+						where orgCd in 
+						(
+								SELECT ORGCD 
+								FROM ORG A
+								WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))								
+								START WITH A.ORGCD = ?						
+								CONNECT BY PRIOR TO_CHAR(A.ORG_NO) = A.HIGHORGCD 
+						)
+						?
+					)
+			)a, detailYearPlan b
+		where a.dyplancd=b.dyplancd
+		and a.yplancd=b.yplancd
+	)
+	group by yplancd, dyplancd,dyPlanName,edname,edorgname
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+</sql>
+
+

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="ViewNewBudget"   value-count="1"
+   url="집행예산 초기값" >  
+   <sql-content>
+   <![CDATA[
+SELECT MAINNO, DOCNO, CREATEDTM, CRORGCD, TO_ORGCDNAME(CRORGCD) CRORGNAME, 
+       CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME, TO_EMPGRADENAME(CREMPID) CREMPGRADE, PHONENO, 
+       ORGCD, TO_ORGCDNAME(ORGCD) ORGNAME, YYYY, STARTMM, ENDMM, STATUS, TO_STATUSNM(STATUS) STATUSNAME, 
+       CRTYPE,  SUBSTANCE
+ FROM  MASM_INHAUH.LUMPBUDGETDOC
+ WHERE  mainNo = ?
+      	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="RegBudgetDoc"   value-count="2"
+   url="예산변경 등록" >  
+   <sql-content>
+   <![CDATA[
+SELECT MAINNO, DOCNO, CREATEDTM, CRORGCD, TO_ORGCDNAME(CRORGCD) CRORGNAME, 
+       CREMPID, TO_EMPKNAME(CREMPID) CREMPNAME, TO_EMPGRADENAME(CREMPID) CREMPGRADE, PHONENO, 
+       ORGCD, TO_ORGCDNAME(ORGCD) ORGNAME, YYYY, STARTMM, ENDMM, STATUS, TO_STATUSNM(STATUS) STATUSNAME, 
+       CRTYPE,  SUBSTANCE
+ FROM  MASM_INHAUH.LUMPBUDGETDOC
+ WHERE  YYYY = ?
+   AND ORGCD = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ViewBudgetGrid"   value-count="1"
+   url="집행예산 초기값" >  
+   <sql-content>
+   <![CDATA[
+SELECT MAINNO, SUBSTR(ACCTCD,1,4)||'0' ACCTCD, SUM(execBudget01) execBudget01, SUM(execBudget02) execBudget02,
+       SUM(execBudget03) execBudget03, SUM(execBudget04) execBudget04, SUM(execBudget05) execBudget05,
+           SUM(execBudget06) execBudget06, SUM(execBudget07) execBudget07, SUM(execBudget08) execBudget08,
+           SUM(execBudget09) execBudget09, SUM(execBudget10) execBudget10, SUM(execBudget11) execBudget11,
+           SUM(execBudget12) execBudget12,
+        AGENDA, TO_ACCTNAME(SUBSTR(ACCTCD,1,4)||'0') ACCTNAME
+  FROM  LUMPBUDGETDOCAMT Where mainNo = ?
+  GROUP by mainNo, SUBSTR(ACCTCD,1,4), AGENDA
+Order by 2
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="InitLumpBudget"   value-count="6"
+   url="집행예산 품의 초기값" >  
+   <sql-content>
+   <![CDATA[
+insert into Lumpbudgetdoc
+Select distinct (select 'L'||YMD||no as mainNo from (select Lpad(TO_CHAR(to_number(NVL(SUBSTR(MAX(mainNo),10,3),'0')) + 1), 3,'0') no 
+from LUMPBUDGETDOC where substr(mainNo,2,8) = (select to_char(sysdate, 'YYYYMMDD') YMD  from dual) 
+Order by mainNo desc ) ,(select to_char(sysdate, 'YYYYMMDD') YMD  from dual)) mainNo, 
+sysdate,?, ?, null, ?, ?, ?, ?, 'DA0', 'C', null, null
+from MASM_INHAUH.LUMPBUDGETDOC
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="InitLumpBudgetAmt"   value-count="0"
+   url="집행예산 품의 초기값" >  
+   <sql-content>
+   <![CDATA[
+insert into Lumpbudgetdocamt
+SELECT (select 'L'||YMD||no as mainNo from (select Lpad(TO_CHAR(to_number(NVL(SUBSTR(MAX(mainNo),10,3),'0')) + 1), 3,'0') no 
+from LUMPBUDGETDOCAMT where substr(mainNo,2,8) = (select to_char(sysdate, 'YYYYMMDD') YMD  from dual) 
+Order by mainNo desc ) ,(select  to_char(sysdate, 'YYYYMMDD') YMD  from dual)) mainNo, a.ACCTCD, 
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+0, 0, 0, 0, 'N',
+to_char(sysdate, 'YYYYMMDD'), null, null, null, null, '신규생성'
+  FROM  (Select * from accttb Where AcctCD like '5%' AND substr(AcctCD,5,1) not in ('0')) a
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="InitBudgetAmt"   value-count="2"
+   url="집행예산 품의 초기값" >  
+   <sql-content>
+   <![CDATA[
+insert into Lumpbudgetdocamt
+SELECT (select 'L'||YMD||no as mainNo from (select Lpad(TO_CHAR(to_number(NVL(SUBSTR(MAX(mainNo),10,3),'0')) + 1), 3,'0') no 
+from LUMPBUDGETDOCAMT where substr(mainNo,2,8) = (select to_char(sysdate, 'YYYYMMDD') YMD  from dual) 
+Order by mainNo desc ) ,(select  to_char(sysdate, 'YYYYMMDD') YMD  from dual)) mainNo, b.DACCTCD, 
+b.PLANBUD01, b.EXECBUD01, b.REMBUD01, b.USEDBUD01, b.FINFLAG01,
+b.PLANBUD02, b.EXECBUD02, b.REMBUD02, b.USEDBUD02, b.FINFLAG02,
+b.PLANBUD03, b.EXECBUD03, b.REMBUD03, b.USEDBUD03, b.FINFLAG03,
+b.PLANBUD04, b.EXECBUD04, b.REMBUD04, b.USEDBUD04, b.FINFLAG04,
+b.PLANBUD05, b.EXECBUD05, b.REMBUD05, b.USEDBUD05, b.FINFLAG05,
+b.PLANBUD06, b.EXECBUD06, b.REMBUD06, b.USEDBUD06, b.FINFLAG06,
+b.PLANBUD07, b.EXECBUD07, b.REMBUD07, b.USEDBUD07, b.FINFLAG07,
+b.PLANBUD08, b.EXECBUD08, b.REMBUD08, b.USEDBUD08, b.FINFLAG08,
+b.PLANBUD09, b.EXECBUD09, b.REMBUD09, b.USEDBUD09, b.FINFLAG09,
+b.PLANBUD10, b.EXECBUD10, b.REMBUD10, b.USEDBUD10, b.FINFLAG10,
+b.PLANBUD11, b.EXECBUD11, b.REMBUD11, b.USEDBUD11, b.FINFLAG11,
+b.PLANBUD12, b.EXECBUD12, b.REMBUD12, b.USEDBUD12, b.FINFLAG12,
+to_char(sysdate, 'YYYYMMDD'), null, null, null, null, '신규생성'
+  FROM  (select * from budgetdetail where  ORGCD = ? AND  YYYY = ?) b
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ViewBudgetSetGrid"   value-count="2"
+   url="집행예산 신규 품의 세부 계정값" >  
+   <sql-content>
+   <![CDATA[
+SELECT MAINNO, ACCTCD, execBudget01, execBudget02, execBudget03, execBudget04, execBudget05, execBudget06, 
+           execBudget07, execBudget08, execBudget09, execBudget10, execBudget11, execBudget12,
+        AGENDA, TO_ACCTNAME(ACCTCD) ACCTNAME
+  FROM LUMPBUDGETDOCAMT Where mainNo = ?
+   AND SUBSTR(ACCTCD,1,4) = SUBSTR(?,1,4)
+Order by 2
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ViewBudgetUptGrid"   value-count="2"
+   url="집행예산 신규 품의 세부 계정 수정" >  
+   <sql-content>
+   <![CDATA[
+Where mainNo = ? AND ACCTCD = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="LumpBudgetUpt"   value-count="1"
+   url="집행예산 신규 품의 Head 정보 수정" >  
+   <sql-content>
+   <![CDATA[
+Where mainNo = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="LumpBudgetDocDel"   value-count="1"
+   url="일괄 품의 DOC 정보 삭제" >  
+   <sql-content>
+   <![CDATA[
+Delete from MASM_INHAUH.LUMPBUDGETDOC
+Where mainNo = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="LumpBudgetDel"   value-count="1"
+   url="일괄 품의 detail 정보 삭제" >  
+   <sql-content>
+   <![CDATA[
+Delete from LumpbudgetdocAmt
+Where mainNo = ?
+	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="ChkLumpBudget"   value-count="4"
+   url="기존자료 생성 유무" >  
+   <sql-content>
+   <![CDATA[
+Select a.cnt + b.cnt from
+(SELECT count(*) cnt FROM MASM_INHAUH.LUMPBUDGETDOC a WHERE  a.ORGCD = ? AND  a.YYYY = ? AND a.status not in ('DA0','DB0')) a, 
+(SELECT count(*) cnt FROM MASM_INHAUH.BUDGET a WHERE  a.ORGCD = ? AND  a.YYYY = ?) b
+	]]>
+	</sql-content>
+   </sql-mapping>
+</sql>

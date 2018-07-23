@@ -1,0 +1,130 @@
+<!--
+/* trskin : 뷰에서 컬럼제목 표시하는 부분 */
+/* ielay : 버튼 리스트 표시하는 부분 */
+/* viewContent : 문서리스트 밑 라인 */
+/* view에서 문서 마우스 오버, 마우스아웃 색깔 */
+/* comment : 의견 갯수 나타내기 */
+/* base : 버튼부분 */
+
+body, table, select,div, form {font-family:굴림,arial; color:#333333;font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none;}
+
+/* 보기에서 사용되는 부분*/
+/*.loctitle {background:#F6E5B4;}*/
+.loctitle {background:#EAEBEB;}
+
+.trskin {font:bold 굴림,arial; font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none; background:#DFEFFF;border-style:solid; border-color:#0072BB #0072BB #0072BB #0072BB; border-width:2 0 1 0}
+.bottomtrskin {font-family:굴림,arial; font-size:9pt; line-height: 15pt; vertical-align : middle; text-decoration: none; background:#DDDBDB;border-style:solid; border-color:#82A061 #82A061 #82A061 #82A061; border-width:0 0 0 0}
+/*.contentsbox {border-style:solid; border-color:#82A061 #82A061 #82A061 #82A061; border-width:1 1 1 1;}*/
+.contentsbox {border-style:solid; border-color:#0072BB #0072BB #0072BB #0072BB; border-width:1 1 1 1;}
+
+/*보기에서 목록 라인 그려주는 부분*/
+.viewContent {text-align:center;cursor:hand;border-style:solid; border-color:#EBEEF0 #EBEEF0 #EBEEF0 #EBEEF0;border-width:0 0 1 0}
+.viewContentL {text-align:left;cursor:hand;border-style:solid; border-color:#EBEEF0 #EBEEF0 #EBEEF0 #EBEEF0;border-width:0 0 1 0}
+.viewContentC {text-align:center;cursor:hand;border-style:solid; border-color:#EBEEF0 #EBEEF0 #EBEEF0 #EBEEF0;border-width:0 0 1 0}
+.viewContentR {text-align:right;cursor:hand;border-style:solid; border-color:#EBEEF0 #EBEEF0 #EBEEF0 #EBEEF0;border-width:0 0 1 0}
+
+.viewSelect {cursor:hand;border-style:solid;border-color:#82A061 #82A061 #82A061 #82A061; border-width:0 0 0 0}
+.docSelect {cursor:hand;border-style:solid;border-color:#EBEEF0 #EBEEF0 #EBEEF0 #EBEEF0; border-width:0 0 1 0;text-align:center;}
+
+.tron {background:#E6F2FD;}
+.trout {background:white;}
+.comment {font-size:8pt; font-family: helvetica; color: blue}
+.unReadRow {background:white;color:blue;}
+.unReadtron {background:#E6F2FD;color:blue;}
+
+/*보기의 버튼 관련*/
+.base {border-style:solid; border-width:1; border-color:#B4DFFF #B4DFFF #B4DFFF #B4DFFF; line-height:13pt; color:#0072BB; background:#B4DFFF; text-align:center; padding:0 5 0 5}
+.onbase {border-style:solid; border-width:1; border-color:#D0E2EF; line-height:13pt; color:black; text-align:center; padding:0 5 0 5}
+.on {border-style:solid; border-width:1; border-color:#0072BB #0072BB #0072BB #0072BB; line-height:13pt; color:#FFFFFF; background:#0072BB; text-align:center; padding:0 5 0 5}
+.down {border-style:solid; border-width:1; border-color:#B4DFFF #B4DFFF #B4DFFF #B4DFFF; line-height:13pt; color:#0072BB; background:#B4DFFF; text-align:center; padding:0 5 0 5}
+
+/* Gradient 버튼색상을 원하시면 이 스타일시트를 이용하세요.
+.base {filter='progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr=#D0E2EF, EndColorStr=#FFFFFF)';border-style:solid; border-width:1; border-color:#E3EEF5 #6D8A9D #6D8A9D #E3EEF5; line-height:13pt; color:#005082;text-align:center; padding:0 5 0 5}
+.onbase {filter='progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr=#D0E2EF, EndColorStr=#FFFFFF)';border-style:solid; border-width:1; border-color:#E3EEF5 #6D8A9D #6D8A9D #E3EEF5;color:#2A8A2A;text-align:center; padding:0 5 0 5;line-height:13px;}
+.on {filter='progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr=#D3E3BC, EndColorStr=#FFFFFF)';border-style:solid; border-width:1; border-color:#E6F3D4 #809069 #809069 #E6F3D4; color:#2A8A2A;text-align:center; padding:0 5 0 5;line-height:13pt;}
+.down {filter='progid:DXImageTransform.Microsoft.Gradient(GradientType=0, StartColorStr=#D3E3BC, EndColorStr=#FFFFFF)';border-style:solid; border-width:1; border-color:#809069 #E6F3D4 #E6F3D4 #809069; line-height:13pt;color:#087008;text-align:center; padding:0 5 0 5}*/
+
+/*근태관리용 전인혜추가(05/07)*/
+.table5 {background:#C4D6AF;border-style:solid; border-color:#598527 #598527 #598527 #598527; border-width:2 0 1 0}
+.td1 {background:#E2EED5 ;text-align:center;}
+.td2 {background:#FFFFFF;}3
+
+/*행사.세미나 관련*/
+.trskinSeminar {font:bold 굴림,arial; font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none; background:#C4D6AF;border-style:solid; border-color:#598527 #598527 #598527 #598527; border-width:2 1 2 1; bordercolordark:#FFFFFF; bordercolorlight:#EDD077}
+.tdsche2 {background:#E2EED5; font-family:굴림; font-size:9pt;}
+.tdsche3 {background:#FFFFFF; font-family:굴림; font-size:9pt;vertical-align:top;}
+.tableSeminar {table-layout:fixed;background:#63AEE7}
+
+/*자원예약 관련 */
+.tronsche2 {background:#FFF9E8;}
+.troutsche2 {background:#E2EED5;}
+
+/*MyPage셋팅시 이용-문필란*/
+.table1 {background:#82A061;}
+.td1 {background:#efefef;text-align:left;}
+.td2 {background:#E2EED5;text-align:center;}
+.td3 {background:#FFFFFF;}
+.td5 {background:#DAEDF2;text-align:left;}
+.inputcheck {font-family:굴림; font-size:9pt; border-width:0;}
+
+#ielay{position:absolute; top:22px; font: .8em '굴림';}
+
+BODY
+{line-height:15pt;scrollbar-face-color:#ffffff;scrollbar-shadow-color:#8D8D8D;scrollbar-highlight-color:#8D8D8D;scrollbar-3dlight-color:#ffffff;scrollbar-darkshadow-color:#ffffff;scrollbar-track-color:#ffffff;scrollbar-arrow-color:#8D8D8D;}
+
+a:link {font-family:굴림,arial; color:black ; font-size:9pt; text-decoration: none} 
+a:visited {font-family:굴림,arial; color:#000080; font-size:9pt; text-decoration: none}
+a:hover {font-family:굴림,arial;font-size: 9pt; color:red; text-decoration:none}
+a:active {font-family:굴림,arial; color: red; font-size:9pt; text-decoration: none} 
+
+
+/*일정관리용*/
+.buttona {font-family:굴림; font-size:9pt; height:20px; border-width:1; border-style:ridge; border-color:#0072BB;color: #FFFFFF;background-color:#0072BB;}
+input {font-family:굴림; font-size:9pt; border-width:1; border-color:gray; border-style:solid;}
+
+.inputa {font-family:굴림; font-size:9pt; background-color:white; border-width:1; border-color:gray; border-style:solid;}
+.tronsche {background:#FDE6D4;}
+.troutsche {background:#DFEFFF;} /*FFF9E8*/
+.tdsche1 {background:#DFEFFF; font-family:굴림; font-size:9pt;}
+
+/*일정추가 버튼에 있는 테이블*/
+.tdsche7 {background:#4EA2EB;border-color:#FFFFFF;font-family:굴림; font-size:9pt;}
+
+.tdsche1_1 {background:#FFFFFF;}
+.tdsche1_2 {background: #D3EBBC;} /*오늘날짜 박스 색깔  #FFF5C2*/
+
+.tdtop {vertical-align:top;}
+/*카렌다에서 사용*/
+.tablecalendar {background:#0072BB; vertical-align:top;}
+
+.trcalendar {background:#C0D6A1;}
+.movecalendar {background:#C0D6A1;}
+/*카렌다에서 요일 표시 부분*/
+.trcal {background:#DDDBDB;}
+
+/*일정관리탭에서 맨 마지막에 색깔 넣기*/
+.bottomcal {background:#DFEFFF;}
+
+.ymselect {font-family:verdana;border:1x solid black; background-color:#E7EFDE; font-size:8pt;  text-decoration: none}
+
+/*어드민 근태관리(월간보기)*/
+.tableM1 {background:#C4D6AF;}
+.tdM1 {background:#E2EED5 ;text-align:center;}
+.tdM2 {background:#FFFFFF;}
+.tdM3 {background:#BCDAE8;}
+
+/*일반 근태현황(월간/연간)*/
+.t_trskin {font: 굴림,arial; font-size:9pt;line-height: 15pt; vertical-align : middle; text-decoration: none; background:E2EED5;border-style:solid; border-color:#598527 #598527 #598527 #598527; border-width:0 0 1 0}
+
+/*비상연락망*/
+
+.orgtable {table-layout: fixed;background:#FFFFFF;color:#FFFFFF;font-family:굴림; font-size:9pt;}
+.orgline {background:#4EA2EB;}
+
+.orgTB {background:#63AEE7;}
+.orgTR {line-height:15pt;background:white;}
+.orgHTR {line-height:15pt;background:#DFEFFF;}
+
+/*kms 평가내역조회*/
+#tooltip {position:absolute; top:0; left:0; border:solid 1 black; background:#F6E5B4; color:black; font-size:9pt; width:350; padding:3 3; overflow:hidden; z-index:20; display:none}
+-->

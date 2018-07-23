@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="euc-kr"?><sql>
+
+	<sql-mapping  id="F_001"   value-count="1" url="장터리스트조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+				SN,
+				CREMPID,
+				AREA,
+				FOOD_TYPE,
+				TITLE,
+				CREATEDT,
+				TO_EMPKNAME(CREMPID) AS CREMPNM,
+				B.EMPKNAME,
+				VIEW_CNT,
+				CAR_P,
+				TE_P,
+				SERVIC_P,
+				SIZE_P	
+		
+				
+		FROM FOOD_BD A,EMPALL B
+		WHERE AREA  LIKE [F_AREA]||'%'
+		AND TITLE LIKE [F_TITLE]||'%'
+		AND CREMPID =EMPID
+		AND EMPKNAME LIKE [F_CREMPID]||'%'
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="F_002"   value-count="1" url="장터리스트조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+				SN,
+				CREMPID,
+				AREA,
+				FOOD_TYPE,
+				TITLE,
+				NOTE,
+				ADDRESS,
+				TE_P,
+				CAR_P,
+				SERVIC_P,
+				SIZE_P,				
+				CREATEDT,
+				TO_EMPKNAME(CREMPID) AS CREMPNM,
+				B.EMPKNAME,
+				VIEW_CNT
+		
+				
+		FROM FOOD_BD A,EMPALL B
+		WHERE SN =[F_SN]
+		AND CREMPID =EMPID
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="F_003"   value-count="1" url="장터리스트조회" >
+	<sql-content>
+	<![CDATA[
+		SELECT
+                A.SN,
+                A.CREMPID,
+                A.AREA,
+                A.FOOD_TYPE,
+                A.TITLE,
+                A.NOTE,
+                A.ADDRESS,
+                A.TE_P,
+                A.CAR_P,
+                A.SERVIC_P,
+                A.SIZE_P,                
+                A.CREATEDT,
+                TO_EMPKNAME(A.CREMPID) AS CREMPNM,
+                B.EMPKNAME,
+                A.VIEW_CNT,
+                A.MAPX,
+				A.MAPY,
+               
+                C.RE_NOTE,
+                
+                C.CREATEDT REDATE
+        FROM FOOD_BD A,EMPALL B, FOOD_RE C
+        WHERE A.SN =[F_SN]
+        AND A.CREMPID =B.EMPID
+        AND C.SN(+)=A.SN 
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	
+	<sql-mapping  id="F_004"   value-count="1" url="맛집 수정" >
+	<sql-content>
+	<![CDATA[
+		UPDATE FOOD_BD SET
+		CREMPID=[CREMPID],
+		AREA=[AREA],
+		ADDRESS=[ADDRESS],
+		NOTE=[NOTE],
+		TITLE=[TITLE],
+		VIEW_CNT=[VIEW_CNT],
+		CREATEDT=SYSDATE,
+		FOOD_TYPE=[FOOD_TYPE],
+		CAR_P=[CAR_P]
+		WHERE SN=[SN] 
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="F_005"   value-count="1" url="맛집 삭제" >
+	<sql-content>
+	<![CDATA[
+
+		DELETE FOOD_BD 
+		WHERE SN=[SN] 
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="F_006"   value-count="1" url="맛집 등록" >
+	<sql-content>
+	<![CDATA[
+
+		INSERT INTO FOOD_BD (SN,
+							 CREMPID,
+							 AREA,
+							 ADDRESS,
+							 NOTE,
+							 TITLE,
+							 VIEW_CNT,
+							 CREATEDT,
+							 FOOD_TYPE,
+							 CAR_P)
+		VALUES(				 [SN],
+							 [CREMPID],
+							 [AREA],
+							 [ADDRESS],
+							 [NOTE],
+							 [TITLE],
+							 [VIEW_CNT],
+							 sysdate,
+							 [FOOD_TYPE],
+							 [CAR_P])							 
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+<sql-mapping  id="F_007"   value-count="1" url="맛집 조회" >
+	<sql-content>
+	<![CDATA[
+
+	SELECT
+		        A.SN,
+                A.CREMPID,
+                A.AREA,
+                A.FOOD_TYPE,
+                A.TITLE,
+                A.CREATEDT,
+                B.EMPKNAME,
+                A.VIEW_CNT,
+                A.CAR_P,
+                A.TE_P,
+                A.SERVIC_P,
+                A.SIZE_P,
+                nvl((
+	           SELECT AVG(d.PNT)
+	           from food_point d
+	           Where d.sn = A.SN
+	     	   ),0)  as avg,
+                
+ 				 nvl((
+                   SELECT COUNT(d.PNT)
+                   from food_point d
+                   Where d.sn = A.SN
+                   
+                ),0)  as count
+	     	   
+				FROM FOOD_BD A,EMPALL B
+				WHERE AREA  LIKE [F_AREA]||'%'
+				AND TITLE LIKE [F_TITLE]||'%'
+				AND CREMPID =EMPID
+				AND EMPKNAME LIKE [F_CREMPID]||'%'
+				order by A.CREATEDT desc
+
+
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="F_008"   value-count="1" url="맛집리스트조회" >
+	<sql-content>
+	<![CDATA[
+          		SELECT
+                A.SN,
+                A.CREMPID,
+                A.AREA,
+                A.FOOD_TYPE,
+                A.TITLE,
+                A.NOTE,
+                A.ADDRESS,
+                A.TE_P,
+                A.CAR_P,
+                A.SERVIC_P,
+                A.SIZE_P,                
+                A.CREATEDT,
+                TO_EMPKNAME(A.CREMPID) AS CREMPNM,
+                B.EMPKNAME,
+                A.VIEW_CNT,
+                A.MAPX,
+				A.MAPY,
+               
+                C.RE_NOTE,
+                                        nvl((
+                   SELECT AVG(d.PNT)
+                   from food_point d
+                   Where d.sn = A.SN
+                   
+                ),0)  as avg,
+                         
+                        nvl((
+                   SELECT COUNT(d.PNT)
+                   from food_point d
+                   Where d.sn = A.SN
+                   
+                ),0)  as count,
+                
+                C.CREATEDT REDATE,
+                C.CREMPKNAME RE_WRITER
+              
+        FROM FOOD_BD A,EMPALL B, FOOD_RE C
+        WHERE A.SN =[F_SN]
+        AND A.CREMPID =B.EMPID
+        AND C.SN(+)=A.SN 
+        
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+</sql>
+

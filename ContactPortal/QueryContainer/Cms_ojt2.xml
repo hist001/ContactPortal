@@ -1,0 +1,119 @@
+
+	
+	<sql-mapping  id="O_001"   value-count="3" url="공통코드 조회" >  
+	<sql-content>
+	<![CDATA[
+	
+SELECT LEVEL AS LEV,
+                        A.ORGCD,
+                        A.ORGNM ,
+                        A.HIGH_ORGCD,
+                                (SELECT COUNT(*)
+                                FROM COM_ORG B
+                                WHERE B.HIGH_ORGCD=A.ORGCD)
+
+                        AS SUBCNT,
+                        A.STARTDT,
+                        A.ENDDT,
+                        A.NOTE,
+                        A.HIGH_ORGCD AS HIGHORG_NO,
+                                NVL((SELECT ORGNM
+                                FROM COM_ORG B
+                                WHERE A.HIGH_ORGCD=B.ORGCD),'***')
+                        AS HIGHORGNM,
+                        A.SEQ
+        FROM COM_ORG A
+                                WHERE LEVEL<=S_LEVEL:
+                                AND ORGNM LIKE '%'||[S_ORGNM]||'%'
+                                AND A.STARTDT <= REPLACE([S_DT],'-','')
+                            	
+                  START WITH (A.ORGCD IN NVL([S_HIGH_ORGCD],[LS_ORGCD]))
+                   CONNECT BY PRIOR A.ORGCD=A.HIGH_ORGCD
+                   ORDER SIBLINGS BY A.ORGCD
+
+
+
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="O_002"   value-count="0" url="공통코드 세부조회" >  
+	<sql-content>
+	<![CDATA[
+	
+		SELECT
+				LEVEL AS LEV,
+				A.ORGCD,
+				A.ORGNM,
+				(SELECT ORGNM
+				FROM COM_ORG B
+				WHERE A.HIGH_ORGCD=B.ORGCD)
+			    AS HIGHORGNM,
+			    A.STARTDT,
+			    A.ENDDT,
+			    A.HIGH_ORGCD,
+			    A.SEQ,
+			    A.NOTE
+			    
+			 
+		FROM COM_ORG A
+		WHERE LEVEL=1
+		   AND A.STARTDT <= REPLACE([S_DT],'-','')
+		START WITH A.HIGH_ORGCD =S_HIGH_ORGCD:
+		CONNECT BY PRIOR A.ORGCD=A.HIGH_ORGCD
+		ORDER SIBLINGS BY A.SEQ
+	
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	
+	<sql-mapping  id="O_003"   value-count="4" url="공통 코드 [등록]" >  
+	<sql-content>
+	<![CDATA[
+	INSERT INTO COM_ORG (HIGH_ORGCD, ORGNM, ORGCD,STARTDT,ENDDT,NOTE,SEQ) 
+		VALUES([HIGH_ORGCD], [ORGNM], [ORGCD], NVL([STARTDT], TO_CHAR(SYSDATE,'yyyymmdd')), NVL([ENDDT], TO_CHAR(SYSDATE,'yyyymmdd')+1),[S_NOTE],'')
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="O_004"   value-count="5" url="공통 코드 [수정]" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE COM_ORG SET
+			SEQ=[SEQ],
+			HIGH_ORGCD=[HIGH_ORGCD],
+			ORGNM=[ORGNM],
+			ORGCD=[ORGCD],		
+			STARTDT	= NVL([STARTDT],SYSDATE),
+			ENDDT=NVL([ENDDT],SYSDATE),
+			NOTE =[S_NOTE]
+		WHERE ORGCD = [S_MOD_ORGCD]
+		
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+	<sql-mapping  id="O_005"   value-count="1" url="공통 코드 [삭제]" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM COM_ORG
+		WHERE ORGCD =[ORGCD]
+						 
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="O_006"   value-count="0" url="부서 정렬" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE COM_ORG SET	 
+		SEQ		= [p0]
+		WHERE ORGCD = [p1]
+	]]>
+	</sql-content>
+	</sql-mapping>
+
+			
+</sql>
+

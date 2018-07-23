@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="euc-kr"?>
+ 
+<sql>
+
+   <sql-mapping  id="Cust_001"   value-count="0"   url="Cust 입력" >  
+   <sql-content>
+   <![CDATA[ 
+ 
+INSERT INTO SI_BIZACQCORP ( BizAcqCd,
+													 Sales,
+							 	                     Product, 
+													 CustType,
+													 CustLev,
+													 CreditLev,
+													 CustDiv,
+													 Memo,
+													 CreateDt,
+													 ModifyDt,
+												 	 CrEmpid,
+													 EmpCnt								
+													) 
+	                                
+VALUES (BizAcqCd:,
+                TO_NUMBER(REPLACE(Sales:,',','')),
+               Product:,
+               CustType:,
+               CustLev:,
+               CreditLev:,
+               CustDiv:,
+               Memo:,
+               Sysdate,
+               Sysdate, 
+               CrEmpId:,
+               TO_NUMBER(REPLACE(EmpCnt:,',',''))
+                   )
+
+
+	]]>
+	</sql-content>
+   </sql-mapping>
+ 
+<sql-mapping id="Cust_002" value-count="0" url="Cust 수정">
+<sql-content>
+	<![CDATA[
+
+UPDATE SI_BIZACQCORP 
+
+SET      Product=Product:, 
+			CustType=CustType:,
+			CustLev=CustLev:,
+			CreditLev=CreditLev:,
+			CustDiv=CustDiv:,
+			Sales=TO_NUMBER(REPLACE(Sales:,',','')),			
+			Memo=Memo:,
+			ModifyDt = SYSDATE,
+  			EmpCnt=TO_NUMBER(REPLACE(EmpCnt:,',',''))	 							
+
+WHERE BizAcqCd = BizAcqCd:
+
+	]]>
+</sql-content>
+	</sql-mapping>
+
+<sql-mapping id="Cust_003" value-count="0" url="CustHistory 생성">
+<sql-content>
+	<![CDATA[
+
+	INSERT INTO SI_CUSTMNG( PJT_NO,
+													PJTNAME,
+													BIZACQCD,
+													CONTRACT_AMT,
+													STARTDT,
+													ENDDT,
+													CUSTORG,
+													CUSTEMPNM,
+													PHONE,
+													MOBILE,
+													PM_EMPID,
+													SA_EMPID,
+													DETAIL,
+													CREATEDT,
+													CREMPID,
+													PUBFLAG	)
+   VALUES (  PjtNo:,
+			    	PjtName:,
+			    	BizAcqCd:,
+			    	REPLACE(ContractAmt:,',',''),
+			    	REPLACE(StartDt:,'-',''),
+			    	REPLACE(EndDt:,'-',''),
+			    	CustOrg:,
+			    	CustEmpNm:,
+			    	Phone:, 
+			    	Mobile:,
+			    	PMEmpId:,
+			    	SAEmpId:,
+			    	Detail:,
+			    	SYSDATE,
+			    	CrEmpId: ,
+			    	PUB:)				 									
+	
+	]]>
+</sql-content>
+	</sql-mapping>
+	
+		
+   <sql-mapping  id="Cust_004"   value-count="0"   url="Cust 목록 조회" >  
+   <sql-content>
+   <![CDATA[ 
+ SELECT BIZREGNO,
+              BIZACQNAME,
+              BIZGROUPFLAG,
+              BIZTYPE,
+              BIZITEM,
+              BIZCEONAME,
+              BIZACQADDR,
+              BIZACQCD,
+              BIZACQACCTCD,
+              MODIFYDT,
+              CUSTTYPE,
+              CUSTLEV,
+              CREDITLEV,
+              CUSTDIV,
+              SALES,
+              BIZPHNO,
+              PRODUCT,
+              BIZHOMEPAGE,
+              EMPCNT,
+              MEMO,
+              FILE_CNT ,
+			 CREATEDT              
+ FROM (
+SELECT B.BIZREGNO BIZREGNO,
+			B.BIZACQNAME BIZACQNAME,
+			B.BIZGROUPFLAG BIZGROUPFLAG,
+			B.BIZTYPE BIZTYPE,
+			B.BIZITEM BIZITEM,
+             B.BIZCEONAME BIZCEONAME,
+             B.BIZACQADDR BIZACQADDR,
+			 B.BIZACQCD BIZACQCD,
+			 B.BIZACQACCTCD BIZACQACCTCD,
+			 TO_CHAR(A.MODIFYDT,'YYYY.MM.DD') MODIFYDT,			 
+			 A.CUSTTYPE CUSTTYPE,
+			 A.CUSTLEV CUSTLEV,
+			 A.CREDITLEV CREDITLEV,
+			 A.CUSTDIV CUSTDIV,
+			 A.SALES SALES,
+			 B.BIZPHNO BIZPHNO,
+			 A.PRODUCT PRODUCT,
+			 B.BIZHOMEPAGE BIZHOMEPAGE,
+			 A.EMPCNT EMPCNT,
+			 A.MEMO MEMO,
+			 (SELECT CASE WHEN  COUNT(FILE_NO) >0 THEN '있음' ELSE '없음' END 
+			  FROM COM_FILES
+			  WHERE OBJ_NO=A.BIZACQCD
+			  AND UI_NO='SI_CUST'
+			  AND DELFLAG='N'
+			 ) FILE_CNT,
+			 A.CREATEDT CREATEDT
+FROM SI_BIZACQCORP A, BIZACQCORP B
+WHERE A.BIZACQCD = B.BIZACQCD
+) 
+WHERE BIZREGNO LIKE '%'||S_BIZREGNO:||'%'
+ AND     BIZACQNAME LIKE '%'||S_BIZACQNAME:||'%'
+ AND     BIZACQCD LIKE '%'||S_BIZACQCD:||'%'
+ AND     BIZCEONAME LIKE '%'||S_BIZCEONAME:||'%'
+ AND     BIZACQADDR LIKE '%'||S_BIZACQADDR:||'%'
+ORDER BY MODIFYDT DESC,CREATEDT DESC,BIZACQNAME DESC,BIZACQADDR,BIZCEONAME   
+	]]>
+	</sql-content>
+   </sql-mapping>
+
+<sql-mapping id="Cust_005" value-count="0" url="CustHistory 수정">
+<sql-content>
+	<![CDATA[
+	
+	UPDATE  SI_CUSTMNG
+	SET		   PJT_NO = PjtNo:,
+			       PJTNAME = PjtName:,
+			       BIZACQCD = BizAcqCd:,
+		           CONTRACT_AMT = REPLACE(ContractAmt:,',',''),
+		           STARTDT = REPLACE(StartDt:,'-',''),
+		           ENDDT = REPLACE(EndDt:,'-',''),
+		           CUSTORG = CustOrg:,
+		           CUSTEMPNM = CustEmpNm:,
+		           PHONE = Phone:,
+		           MOBILE = Mobile:,
+		           PM_EMPID = PMEmpId:,
+		           SA_EMPID = SAEmpId:,
+		           DETAIL = Detail:,
+		           MODIFYDT = SYSDATE,
+		           PUBFLAG= PUB:
+	WHERE   PJT_NO =PjtNo:
+	AND        BIZACQCD= BizAcqCd:         
+	             	
+	]]>
+</sql-content>
+	</sql-mapping>
+
+  
+
+<sql-mapping id="Cust_006" value-count="0" url="CustHistory 목록조회">
+<sql-content>
+	<![CDATA[
+SELECT PJT_NO,
+			 PJTNAME,
+			 BIZACQCD,
+			 BIZACQN,
+			 CONTRACT_AMT,
+			 STARTDT,
+			 ENDDT,
+			 CUSTORG,
+			 ORGN,
+			 CUSTEMPNM,
+			 PHONE,
+			 MOBILE,
+			 PM_EMPID,
+			 SA_EMPID,
+			 PM_EMPN,
+			 SA_EMPN,
+			 DETAIL,
+			 MODIFYDT,
+			 CREATEDT,
+			 PUBFLAG
+
+			 
+FROM (
+	
+SELECT PJT_NO, 
+       PJTNAME, 
+       BIZACQCD, 
+       TO_BIZACQNAME(BIZACQCD) BIZACQN,
+       CONTRACT_AMT, 
+       STARTDT, 
+       ENDDT, 
+       CUSTORG, 
+       TO_ORGCDNAME_N(CUSTORG,TO_CHAR(SYSDATE,'YYYYMM')) ORGN,
+       CUSTEMPNM, 
+       PHONE, 
+       MOBILE, 
+       PM_EMPID, 
+       SA_EMPID, 
+       TO_EMPKNAME(PM_EMPID) PM_EMPN,
+       TO_EMPKNAME(SA_EMPID) SA_EMPN,
+       DETAIL,
+       MODIFYDT,
+       CREATEDT,
+       PUBFLAG,
+       CREMPID   
+
+FROM SI_CUSTMNG   	
+WHERE CREMPID= S_EMPID:
+OR PUBFLAG='Y'
+)
+WHERE BIZACQN LIKE '%'||S_CUSTN:||'%'
+ORDER BY MODIFYDT, CREATEDT, PJTNAME,CONTRACT_AMT,STARTDT,BIZACQN,ORGN,CUSTEMPNM,
+            PM_EMPN,SA_EMPN      	
+	]]>
+</sql-content>
+	</sql-mapping>
+
+<sql-mapping id="Cust_007" value-count="0" url="CustHistory 생성1">
+<sql-content>
+	<![CDATA[
+
+	INSERT INTO SI_CUSTMNG( PJT_NO,
+													PJTNAME,
+													BIZACQCD,
+													CONTRACT_AMT,
+													STARTDT,
+													ENDDT,
+													CUSTORG,
+													CUSTEMPNM,
+													PHONE,
+													MOBILE,
+													PM_EMPID,
+													SA_EMPID,
+													DETAIL,
+													CREATEDT,
+													CREMPID,
+													PUBFLAG	)
+   VALUES (  GET_SEQ('PJT'),
+			    	PjtName:,
+			    	BizAcqCd:,
+			    	REPLACE(ContractAmt:,',',''),
+			    	REPLACE(StartDt:,'-',''),
+			    	REPLACE(EndDt:,'-',''),
+			    	CustOrg:,
+			    	CustEmpNm:,
+			    	Phone:, 
+			    	Mobile:,
+			    	PMEmpId:,
+			    	SAEmpId:,
+			    	Detail:,
+			    	SYSDATE,
+			    	CrEmpId:,
+			    	PUB: )				 									
+	
+	]]>
+</sql-content>
+	</sql-mapping>
+
+		<sql-mapping  id="Cust_008"   value-count="0" url="회사정보 조회" >  
+		<sql-content>
+			<![CDATA[
+SELECT 
+	BQ.BIZACQCD BIZACQCD--거래처코드            
+	,BQ.BIZACQNAME BIZACQNAME--거래처명            
+	,BQ.BIZGROUPFLAG BIZGROUPFLAG--그룹사구분        
+	,BQ.BIZUSEFLAG BIZUSEFLAG--사용구분            
+	,BQ.BIZDIVTYPE BIZDIVTYPE--업체형태            
+	,BQ.BIZREGNO BIZREGNO--사업자등록번호        
+	,BQ.BIZFIRMNO BIZFIRMNO--법인번호             
+	,BQ.BIZTYPE BIZTYPE--업태                   
+	,BQ.BIZITEM BIZITEM--종목                   
+	,BQ.BIZJOINITEM BIZJOINITEM--협력업종           
+	,BQ.BIZACQADDR BIZACQADDR--사업장주소          
+	,BQ.BIZEMPID BIZEMPID--등록자사번            
+	,BQ.BIZCEONAME BIZCEONAME--대표자성명          
+	,BQ.BIZPHNO BIZPHNO--전화번호               
+	,BQ.BIZFAXNO BIZFAXNO--팩스번호              
+	,BQ.BIZBANKNAME BIZBANKNAME--거래은행명         
+	,BQ.BIZACCTNO BIZACCTNO--거래계좌번호         
+	,BQ.BIZACCTNAME BIZACCTNAME--예금주             
+	,BQ.BIZACQACCTCD BIZACQACCTCD--재무거래처코드    
+	,BQ.BIZHEADSPOTFLAG BIZHEADSPOTFLAG--본지점구분     
+	,BQ.BIZHEADACQCD BIZHEADACQCD--본점코드(상위코드)
+	,BQ.BIZCURRFLAG BIZCURRFLAG--현재진행상태       
+	,BQ.BIZHOMEPAGE BIZHOMEPAGE--거래처홈페이지     
+	,BQ.BIZALIAS BIZALIAS--별칭                  
+	,BQ.BIZMEMO BIZMEMO--메모                   
+	,BQ.BIZSTARTDT BIZSTARTDT--사용시작일자        
+	,BQ.BIZENDDT BIZENDDT--사용종료일자          
+	,BQ.BIZUPDDT BIZUPDDT--최종수정일자          
+	,BQ.BIZUPDEMPID BIZUPDEMPID--최종수정자         
+FROM 
+	BIZACQCORP BQ
+WHERE
+	BQ.BIZACQCD 	LIKE '%'||keyBIZACQCD:||'%'
+	AND BQ.BIZACQNAME	LIKE '%'||keyBIZACQNAME:||'%'
+	AND BQ.BIZREGNO		LIKE '%'||keyBIZREGNO:||'%'
+	AND BQ.BIZCEONAME	LIKE '%'||keyBIZCEONAME:||'%'
+	AND BQ.BIZACQADDR	LIKE '%'||keyBIZACQADDR:||'%'
+	AND BQ.BIZREGNO <> '$'
+	AND BQ.BIZACQCD NOT IN  (SELECT   BIZACQCD FROM  SI_BIZACQCORP)
+			]]>
+		</sql-content>
+	</sql-mapping>
+ </sql>
+ 

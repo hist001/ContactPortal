@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+   <sql-mapping  id="GetDocInfo"   value-count="1"
+   url="결재할 문서의 정보" >  
+   <sql-content>
+   <![CDATA[
+select mainNo, substr(mainno, 1,1) docType, payType
+From acctrpthd
+where docno = ?
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+      <sql-mapping  id="GetConferInfo"   value-count="1"
+   url="품으서 기본정보" >  
+   <sql-content>
+   <![CDATA[
+select conf_no mainNo, confType docType,'' payType, pjt_no
+From confer
+where conf_no = ?
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+   <sql-mapping  id="GetDocInfo_Biztrip"   value-count="1"
+   url="출장품의서 기본정보" >  
+   <sql-content>
+   <![CDATA[
+select btmkempid crempid, btmkdtm createDtm, docno mainno,substr(docno,1,2) docType, biztriptype payType
+from biztrip  
+where docno =?
+ 	]]>
+	</sql-content>
+   </sql-mapping>
+</sql>

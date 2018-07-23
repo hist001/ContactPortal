@@ -1,0 +1,130 @@
+	<sql-mapping id="S_001" value-count="0" url="시스템 리스트 조회">
+	<sql-content>
+	<![CDATA[
+		SELECT LEVEL AS LEV,
+			A.SYSTEMCD,
+			A.SYSTEMNM,
+			A.STARTDT,
+			A.ENDDT,
+			(SELECT SYSTEMCD
+			   FROM SR_SYSTEM
+			   WHERE SYSTEMCD=A.HIGH_SYSTEMCD)
+			AS HIGH_SYSTEMCD,
+			A.SYSTEM_GB,
+				(SELECT COUNT(*)
+				FROM SR_SYSTEM B
+				WHERE B.HIGH_SYSTEMCD=A.SYSTEMCD)
+			AS SUBCNT,
+			A.NOTE,
+				(SELECT SYSTEMNM
+				FROM SR_SYSTEM B
+				WHERE A.HIGH_SYSTEMCD=B.SYSTEMCD)
+			AS HIGH_SYSTEMNM
+	FROM SR_SYSTEM A
+	WHERE LEVEL<=S_LEVEL:
+	AND SYSTEMNM LIKE '%'||[S_SYSTEMNM]||'%'
+			START WITH (A.SYSTEMCD IN NVL([S_HIGH_SYSTEMCD], S_SYSTEMCD:))
+	CONNECT BY PRIOR A.SYSTEMCD=A.HIGH_SYSTEMCD
+	ORDER SIBLINGS BY A.SYSTEMCD
+	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping id="S_002" value-count="0" url="시스템 세부 조회">
+	<sql-content>
+	<![CDATA[
+		SELECT
+				LEVEL AS LEV,
+				A.SYSTEMCD,
+				A.SYSTEM_GB,
+				(SELECT B.CODENAME AS CODE_NAME
+				 FROM COMCODE A,
+				      COMCODE B
+			   	 WHERE A.CODE_NO=B.HIGHCODE
+				 AND   A.CODE = 'SR_SYS_GB'
+				 AND   B.CODE = A.SYSTEM_GB)
+				AS SYSTEM_GBNM,
+				A.SYSTEMNM,
+				A.NOTE,
+				A.STARTDT,
+				A.ENDDT,
+				A.SEQ,
+                 (SELECT SYSTEMNM
+				 FROM SR_SYSTEM B
+				 WHERE A.HIGH_SYSTEMCD=B.SYSTEMCD)
+				AS HIGH_SYSTEMNM,
+                 (SELECT SYSTEMCD
+                 FROM SR_SYSTEM
+                 WHERE SYSTEMCD=A.HIGH_SYSTEMCD)
+                AS HIGH_SYSTEMCD
+		FROM SR_SYSTEM A
+		WHERE LEVEL=1
+		START WITH A.HIGH_SYSTEMCD = S_HIGH_SYSTEMCD:
+		CONNECT BY PRIOR A.SYSTEMCD=A.HIGH_SYSTEMCD
+		ORDER SIBLINGS BY A.SEQ, A.SYSTEMCD
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	
+	
+	
+	<sql-mapping  id="S_003"   value-count="0" url="공통코드 [저장]" >
+	<sql-content>
+	<![CDATA[
+		INSERT INTO SR_SYSTEM (
+				SYSTEMCD
+				,SYSTEMNM
+				,SYSTEM_GB
+				,HIGH_SYSTEMCD
+				,NOTE
+				,STARTDT
+				,ENDDT
+				)
+		VALUES(
+				[U_SYSTEMCD]
+				,[SYSTEMNM]
+				,[SYSTEM_GB]
+				,[HIGH_SYSTEMCD]
+				,[NOTE]
+				,REPLACE([STARTDT],'-','')
+				,REPLACE([ENDDT],'-','')
+				)
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_004"   value-count="0" url="공통 코드 [삭제]" >  
+	<sql-content>
+	<![CDATA[
+		DELETE FROM SR_SYSTEM
+		WHERE SYSTEMCD = [SYSTEMCD]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="S_005"   value-count="0" url="공통 코드 [수정]" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE SR_SYSTEM SET
+			SYSTEMCD = [U_SYSTEMCD]
+			,SYSTEMNM=[SYSTEMNM]
+			,SYSTEM_GB=[SYSTEM_GB]
+			,HIGH_SYSTEMCD=[HIGH_SYSTEMCD]
+			,NOTE=[NOTE]
+			,STARTDT=REPLACE([STARTDT],'-','')
+			,ENDDT=REPLACE([ENDDT],'-','')
+		WHERE SYSTEMCD = [SYSTEMCD]
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	
+	<sql-mapping  id="S_006"   value-count="0" url="SR시스템 순번수정" >  
+	<sql-content>
+	<![CDATA[
+		UPDATE SR_SYSTEM SET	 
+		SEQ		= [p0]
+		WHERE SYSTEMCD = [p1]
+	]]>
+	</sql-content>
+	</sql-mapping>

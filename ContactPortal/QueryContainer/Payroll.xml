@@ -1,0 +1,746 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="PA_001"   value-count="0" url="급여기초자료 템플릿 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT *
+	FROM
+		(SELECT 	ROWNUM AS SN,
+					LEVEL AS LEV,
+					CODE_SEQ AS CODENO,
+					HIGHCODE,
+					CODE,
+					CODE_NM, 
+					CODE_DETAIL,
+				    COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT,
+				    '' DOCTYPE,
+				    '' USE_TYPE,
+				    '' URL
+			FROM BBDBO.PAY_CODE_TEMP
+			WHERE TEMP_TYPE=[S_TEMP_TYPE]
+			START WITH HIGHCODE='PAYROLL'
+			CONNECT BY PRIOR  CODE_SEQ=HIGHCODE
+			ORDER SIBLINGS BY IDX
+		)
+	ORDER BY SN
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_002"   value-count="0" url="급여기초자료등록 내역조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			B.TEMP_TYPE,
+			B.CODE_SEQ,
+			B.HIGHCODE,
+			C.CODE_NM AS HIGHCODE_NM,
+			B.CODE,
+			B.CODE_NM,
+			B.CODE_DETAIL,
+			B.PAY_AMT,
+			B.PAY_RATE1,
+			B.PAY_RATE2,
+			B.NOTE,
+			B.USE_TYPE,
+			B.CREATEDT,
+			B.MODIFYDT,
+			B.CREMPID,
+			B.MODEMPID,
+			B.IDX
+	FROM  BBDBO.PAY_CODE_TEMP B ,BBDBO.PAY_CODE_TEMP C
+	WHERE B.HIGHCODE =[S_HIGHCODE]
+	AND B.HIGHCODE=C.CODE_SEQ
+	ORDER BY B.IDX
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_003"   value-count="0" url="급여기초자료 템플릿 UPDATE" >  
+	<sql-content>
+	<![CDATA[
+	UPDATE BBDBO.PAY_CODE_TEMP SET
+			TEMP_TYPE   =[TEMP_TYPE]
+			,HIGHCODE   =[HIGHCODE]
+			,CODE       =[CODE]
+			,CODE_NM    =[CODE_NM]
+			,CODE_DETAIL=[CODE_DETAIL]
+			,PAY_AMT    =REPLACE([PAY_AMT],',','')
+			,PAY_RATE1  =[PAY_RATE1]
+			,PAY_RATE2  =[PAY_RATE2]
+			,NOTE       =[NOTE]
+			,USE_TYPE    =[USE_TYPE]
+			,MODIFYDT   =SYSDATE
+			,MODEMPID   =[MODEMPID]
+			,IDX        =[IDX]
+	WHERE  CODE_SEQ  =[CODE_SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_004"   value-count="0" url="급여기초자료 템플릿 DELETE" >  
+	<sql-content>
+	<![CDATA[
+	DELETE FROM BBDBO.PAY_CODE_TEMP		
+	WHERE  CODE_SEQ  =[CODE_SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_005"   value-count="0" url="급여기초자료 템플릿 INSERT" >  
+	<sql-content>
+	<![CDATA[
+	INSERT INTO BBDBO.PAY_CODE_TEMP (TEMP_TYPE
+									,CODE_SEQ
+									,HIGHCODE
+									,CODE
+									,CODE_NM
+									,CODE_DETAIL
+									,PAY_AMT
+									,PAY_RATE1
+									,PAY_RATE2
+									,NOTE
+									,USE_TYPE
+									,CREATEDT
+									,CREMPID
+									,IDX)
+			VALUES([TEMP_TYPE]
+			,MASM_INHAUH.GET_SEQ('PACD') 
+			,[HIGHCODE]
+			,[CODE]
+			,[CODE_NM]
+			,[CODE_DETAIL]
+			,REPLACE([PAY_AMT],',','')
+			,[PAY_RATE1]
+			,[PAY_RATE2]
+			,[NOTE]
+			,'Y'
+			,SYSDATE
+			,[CREMPID]
+			,[IDX])
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PA_006"   value-count="0" url="급여기초자료 템플릿 코드명 " >  
+	<sql-content>
+	<![CDATA[
+	SELECT CODE_NM,TEMP_TYPE
+	FROM BBDBO.PAY_CODE_TEMP
+	WHERE CODE_SEQ =[S_HIGHCODE]	
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PA_007"   value-count="0" url="급여기초코드 템플릿 이동 " >  
+	<sql-content>
+	<![CDATA[
+	UPDATE BBDBO.PAY_CODE_TEMP SET
+  		   HIGHCODE   =[HIGHCODE]
+  		  ,MODIFYDT   =SYSDATE
+		  ,MODEMPID   =[MODEMPID]  		   
+	WHERE  CODE_SEQ  =[CODE_SEQ]	
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PA_008"   value-count="0" url="월 급여기초자료  조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT *
+	FROM
+		(SELECT 	ROWNUM AS SN,
+					LEVEL AS LEV,
+					CODE_SEQ AS CODENO,
+					HIGHCODE,
+					CODE,
+					CODE_NM, 
+					CODE_DETAIL,
+				    COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT,
+				    '' DOCTYPE,
+				    '' USE_TYPE,
+				    '' URL
+			FROM (SELECT * FROM BBDBO.PAY_CODE	WHERE YYMM=REPLACE([S_YYMM],'-',''))
+			START WITH HIGHCODE='PAYROLL'
+			CONNECT BY PRIOR  CODE_SEQ=HIGHCODE
+			ORDER SIBLINGS BY IDX
+		)
+	ORDER BY SN
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PA_009"   value-count="0" url="월 급여기초자료등록 내역조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			B.YYMM,
+			B.CODE_SEQ,
+			B.HIGHCODE,
+			C.CODE_NM AS HIGHCODE_NM,
+			B.CODE,
+			B.CODE_NM,
+			B.CODE_DETAIL,
+			B.PAY_AMT,
+			B.PAY_RATE1,
+			B.PAY_RATE2,
+			B.NOTE,
+			B.USE_TYPE,
+			B.CREATEDT,
+			B.MODIFYDT,
+			B.CREMPID,
+			B.MODEMPID,
+			B.IDX
+	FROM  BBDBO.PAY_CODE B ,BBDBO.PAY_CODE C
+	WHERE B.HIGHCODE =[S_HIGHCODE]
+	AND B.HIGHCODE=C.CODE_SEQ
+	AND B.YYMM=REPLACE([S_YYMM],'-','')
+	AND B.YYMM= C.YYMM	
+	ORDER BY B.IDX
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PA_010"   value-count="0" url="월 급여기초자료 UPDATE" >  
+	<sql-content>
+	<![CDATA[
+	UPDATE BBDBO.PAY_CODE SET
+			YYMM   =REPLACE([YYMM],'-','')
+			,HIGHCODE   =[HIGHCODE]
+			,CODE       =[CODE]
+			,CODE_NM    =[CODE_NM]
+			,CODE_DETAIL=[CODE_DETAIL]
+			,PAY_AMT    =REPLACE([PAY_AMT],',','')
+			,PAY_RATE1  =[PAY_RATE1]
+			,PAY_RATE2  =[PAY_RATE2]
+			,NOTE       =[NOTE]
+			,USE_TYPE    =[USE_TYPE]
+			,MODIFYDT   =SYSDATE
+			,MODEMPID   =[MODEMPID]
+			,IDX        =[IDX]
+	WHERE  CODE_SEQ  =[CODE_SEQ]
+	AND    YYMM   =REPLACE([YYMM],'-','')
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_011"   value-count="0" url="월 급여기초자료 DELETE" >  
+	<sql-content>
+	<![CDATA[
+	DELETE FROM BBDBO.PAY_CODE		
+	WHERE  CODE_SEQ  =[CODE_SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_012"   value-count="0" url="월 급여기초자료 INSERT" >  
+	<sql-content>
+	<![CDATA[
+	INSERT INTO BBDBO.PAY_CODE (YYMM
+									,CODE_SEQ
+									,HIGHCODE
+									,CODE
+									,CODE_NM
+									,CODE_DETAIL
+									,PAY_AMT
+									,PAY_RATE1
+									,PAY_RATE2
+									,NOTE
+									,USE_TYPE
+									,CREATEDT
+									,CREMPID
+									,IDX)
+			VALUES(REPLACE([YYMM],'-','')
+			,MASM_INHAUH.GET_SEQ('PACD') 
+			,[HIGHCODE]
+			,[CODE]
+			,[CODE_NM]
+			,[CODE_DETAIL]
+			,REPLACE([PAY_AMT],',','')
+			,[PAY_RATE1]
+			,[PAY_RATE2]
+			,[NOTE]
+			,'Y'
+			,SYSDATE
+			,[CREMPID]
+			,[IDX])
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="PA_013"   value-count="0" url="급여계산식 템플릿 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT *
+	FROM
+		(SELECT 	ROWNUM AS SN,
+					LEVEL AS LEV,
+					CODE_SEQ AS CODENO,
+					HIGHCODE,
+					CA_CODE AS CODE,
+					CA_NAME AS CODE_NM,
+					NOTE CODE_DETAIL,
+					COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT,
+					'' DOCTYPE,
+					'' USE_TYPE,
+					'' URL
+            FROM BBDBO.PAY_CA_TEMP
+			WHERE TEMP_TYPE=[S_TEMP_TYPE]
+            START WITH HIGHCODE='PAY_CA'
+            CONNECT BY PRIOR  CODE_SEQ=HIGHCODE
+			ORDER SIBLINGS BY IDX
+		)
+	ORDER BY SN
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_014"   value-count="0" url="급여계산식 템플릿 등록 내역조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			B.TEMP_TYPE,
+			B.CODE_SEQ,
+			B.HIGHCODE,
+			C.CODE_NM AS HIGHCODE_NM,
+			CA_TYPE,
+			CA_NAME,
+			CA_CODE,
+			CA_CALC,
+			B.NOTE,
+			B.USE_TYPE,
+			B.CREATEDT,
+			B.MODIFYDT,
+			B.CREMPID,
+			B.MODEMPID,
+			B.IDX
+	FROM  BBDBO.PAY_CA_TEMP B ,BBDBO.PAY_CODE_TEMP C
+	WHERE B.HIGHCODE =[S_HIGHCODE]
+	AND B.HIGHCODE=C.CODE_SEQ
+	ORDER BY B.IDX
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PA_015"   value-count="0" url="계산식 템플릿 UPDATE" >  
+	<sql-content>
+	<![CDATA[
+	UPDATE BBDBO.PAY_CA_TEMP SET
+			 TEMP_TYPE   =[TEMP_TYPE]
+			,HIGHCODE   =[HIGHCODE]
+			,CA_TYPE    =[CA_TYPE]
+			,CA_CODE    =[CA_CODE]
+			,CA_NAME    =[CA_NAME]
+			,CA_CALC	=[CA_CALC]
+			,NOTE       =[NOTE]
+			,USE_TYPE    =[USE_TYPE]
+			,MODIFYDT   =SYSDATE
+			,MODEMPID   =[MODEMPID]
+			,IDX        =[IDX]
+	WHERE  CODE_SEQ  =[CODE_SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_016"   value-count="0" url="계산식 템플릿 DELETE" >  
+	<sql-content>
+	<![CDATA[
+	DELETE FROM BBDBO.PAY_CA_TEMP		
+	WHERE  CODE_SEQ  =[CODE_SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_017"   value-count="0" url="계산식 템플릿 INSERT" >  
+	<sql-content>
+	<![CDATA[
+	INSERT INTO BBDBO.PAY_CA_TEMP (TEMP_TYPE
+									,CODE_SEQ
+									,HIGHCODE
+									,CA_TYPE
+									,CA_CODE
+									,CA_NAME
+									,CA_CALC
+									,NOTE
+									,USE_TYPE
+									,CREATEDT
+									,CREMPID
+									,IDX)
+			VALUES([TEMP_TYPE]
+			,MASM_INHAUH.GET_SEQ('PACD') 
+			,[HIGHCODE]
+			,[CA_TYPE]
+			,[CA_CODE]
+			,[CA_NAME]
+			,[CA_CALC]
+			,[NOTE]
+			,'Y'
+			,SYSDATE
+			,[CREMPID]
+			,[IDX])
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	
+	<sql-mapping  id="PA_018"   value-count="0" url="월 급여계산식 UPDATE" >  
+	<sql-content>
+	<![CDATA[
+	UPDATE BBDBO.PAY_CA SET
+			YYMM   =REPLACE([YYMM],'-','')
+			,HIGHCODE   =[HIGHCODE]
+			,CA_TYPE    =[CA_TYPE]
+			,CA_CODE    =[CA_CODE]
+			,CA_NAME    =[CA_NAME]
+			,CA_CALC	=[CA_CALC]
+			,NOTE       =[NOTE]
+			,USE_TYPE    =[USE_TYPE]
+			,MODIFYDT   =SYSDATE
+			,MODEMPID   =[MODEMPID]
+			,IDX        =[IDX]
+	WHERE  CODE_SEQ  =[CODE_SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_019"   value-count="0" url="월 급여계산식 DELETE" >  
+	<sql-content>
+	<![CDATA[
+	DELETE FROM BBDBO.PAY_CA
+	WHERE  CODE_SEQ  =[CODE_SEQ]
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_020"   value-count="0" url="월 급여계산식 INSERT" >  
+	<sql-content>
+	<![CDATA[
+	INSERT INTO BBDBO.PAY_CA	 (YYMM
+									,CODE_SEQ
+									,HIGHCODE
+									,CA_TYPE
+									,CA_CODE
+									,CA_NAME
+									,CA_CALC
+									,NOTE
+									,USE_TYPE
+									,CREATEDT
+									,CREMPID
+									,IDX)
+			VALUES(REPLACE([YYMM],'-','')
+			,MASM_INHAUH.GET_SEQ('PACA') 
+			,[HIGHCODE]
+			,[CA_TYPE]
+			,[CA_CODE]
+			,[CA_NAME]
+			,[CA_CALC]
+			,[NOTE]
+			,'Y'
+			,SYSDATE
+			,[CREMPID]
+			,[IDX])
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="PA_021"   value-count="0" url="급여기초자료 코드명 " >  
+	<sql-content>
+	<![CDATA[
+	SELECT CA_NAME AS CODE_NM,TEMP_TYPE
+	FROM BBDBO.PAY_CA_TEMP
+	WHERE CODE_SEQ =[S_HIGHCODE]	
+	]]>
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="PA_022"   value-count="0" url="급여계산식 템플릿 조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT *
+	FROM
+		(SELECT 	ROWNUM AS SN,
+					LEVEL AS LEV,
+					CODE_SEQ AS CODENO,
+					HIGHCODE,
+					CA_CODE AS CODE,
+					CA_NAME AS CODE_NM,
+					NOTE CODE_DETAIL,
+					COUNT(HIGHCODE) OVER(PARTITION BY HIGHCODE) AS LEVELSUBCNT,
+					'' DOCTYPE,
+					USE_TYPE,
+					'' URL
+            FROM (SELECT * FROM BBDBO.PAY_CA
+				  WHERE YYMM   =REPLACE([S_YYMM],'-',''))
+            START WITH HIGHCODE='PAY_CA'
+            CONNECT BY PRIOR  CODE_SEQ=HIGHCODE
+			ORDER SIBLINGS BY IDX
+		)
+	ORDER BY SN
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_023"   value-count="0" url="월 급여계산식 등록 내역조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT
+			B.YYMM,
+			B.CODE_SEQ,
+			B.HIGHCODE,
+			C.CA_NAME AS HIGHCODE_NM,
+			B.CA_TYPE,
+			B.CA_NAME,
+			B.CA_CODE,
+			B.CA_CALC,
+			B.NOTE,
+			B.USE_TYPE,
+			B.CREATEDT,
+			B.MODIFYDT,
+			B.CREMPID,
+			B.MODEMPID,
+			B.IDX
+	FROM  BBDBO.PAY_CA B ,BBDBO.PAY_CA_TEMP C
+	WHERE B.HIGHCODE =[S_HIGHCODE]
+	AND B.HIGHCODE=C.CODE_SEQ(+)
+	AND B.YYMM  =REPLACE([S_YYMM],'-','')
+	ORDER BY B.IDX
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PA_024"   value-count="0" url="급여 계산식 템플릿 이동 " >  
+	<sql-content>
+	<![CDATA[
+	UPDATE BBDBO.PAY_CA_TEMP SET
+  		   HIGHCODE   =[HIGHCODE]
+  		  ,MODIFYDT   =SYSDATE
+		  ,MODEMPID   =[MODEMPID]  		   
+	WHERE  CODE_SEQ  =[CODE_SEQ]	
+	]]>
+	</sql-content>
+	</sql-mapping>			
+	<sql-mapping  id="PA_025"   value-count="0" url="급여 계산식 이동 " >  
+	<sql-content>
+	<![CDATA[
+	UPDATE BBDBO.PAY_CA SET
+  		   HIGHCODE   =[HIGHCODE]
+  		  ,MODIFYDT   =SYSDATE
+		  ,MODEMPID   =[MODEMPID]  		   
+	WHERE  CODE_SEQ  =[CODE_SEQ]	
+	]]>
+	</sql-content>
+	</sql-mapping>			
+	<sql-mapping  id="PA_026"   value-count="0" url="급여기초코드 이동 " >  
+	<sql-content>
+	<![CDATA[
+	UPDATE BBDBO.PAY_CODE SET
+  		   HIGHCODE   =[HIGHCODE]
+  		  ,MODIFYDT   =SYSDATE
+		  ,MODEMPID   =[MODEMPID]  		   
+	WHERE  CODE_SEQ  =[CODE_SEQ]
+	AND YYMM = REPLACE([YYMM],'-','')	
+	]]>
+	</sql-content>
+	</sql-mapping>	
+			
+	<sql-mapping id="PA_027" value-count="0" url="급여계산 ">  
+	<sql-content>
+	<![CDATA[
+	SELECT 	U.*,
+			SUM(CALC_AMT) OVER(PARTITION BY BC05_SBN) AS CALC_TOT_AMT,
+	        COUNT(DISTINCT BC05_SBN) OVER() AS EMP_CNT
+	FROM 
+	(
+		SELECT  A.*, BC05_SBN, TRIM(BC05_NAME) AS BC05_NAME, BC05_CODE_TYPE
+		FROM
+				(SELECT --A.SN,
+						A.LEV,
+						TO_CHAR(TO_DATE(A.YYMM,'YYYYMM'),'YYYY-MM') AS YYMM,
+						A.CA_CODE,
+						B.CODE,
+							ROUND(B.PAY_AMT*NVL(C.PAY_AMT,0) 
+							+ B.PAY_AMT/DECODE(NVL(C.PAY_RATE1,1),0,1,NVL(C.PAY_RATE1,1)) 
+							+ B.PAY_AMT*(NVL(C.PAY_RATE2,0)/100),-1) 
+						AS CALC_AMT,
+						D.USE_TYPE,
+						E.IDX
+				FROM
+					(SELECT ROWNUM AS SN,
+							LEVEL AS LEV,
+							B.*
+					FROM  (SELECT * FROM BBDBO.PAY_CA B
+					WHERE B.YYMM =REPLACE([yymm],'-','')) B
+					START WITH B.CODE_SEQ ='PACA-20100917-002'
+					CONNECT BY PRIOR B.CODE_SEQ=B.HIGHCODE) A,
+					BBDBO.PAY_CODE B,
+					BBDBO.PAY_CODE C,
+					BBDBO.PAY_CA D,
+					BBDBO.PAY_CA E
+				WHERE BBDBO.GET_CODE_SEQ(A.CA_CODE,REPLACE([yymm],'-',''))= B.HIGHCODE
+				AND A.HIGHCODE=D.CODE_SEQ
+				AND D.CA_CODE=C.CODE
+				AND D.YYMM=A.YYMM
+				AND C.YYMM=A.YYMM
+				AND B.YYMM=A.YYMM
+				AND E.YYMM=A.YYMM				
+				AND A.USE_TYPE='Y'
+				AND D.USE_TYPE='Y'
+				AND E.CA_CODE=A.CA_CODE		
+                AND E.HIGHCODE=D.CODE_SEQ					
+				ORDER BY A.SN ) A,
+				BBDBO.TBBC05_VIEW B
+		WHERE B.BC05_YYMM = REPLACE([yymm],'-','')
+		AND   A.CODE = B.BC05_CODE
+	
+	UNION ALL
+
+			SELECT 	3 LEV,
+			      	TO_CHAR(TO_DATE(A.YYMM,'YYYYMM'),'YYYY-MM') AS YYMM,
+			      	A.CA_CODE,
+			      	B.CODE,
+			              ROUND(E.AMT*NVL(C.PAY_AMT,0)
+			              + E.AMT/DECODE(NVL(C.PAY_RATE1,1),0,1,NVL(C.PAY_RATE1,1))
+			              + E.AMT*(NVL(C.PAY_RATE2,0)/100),-1)
+			      AS CALC_AMT,
+ 		      	  D.USE_TYPE,
+ 		      	  D.IDX,
+			      E.EMPID,
+			      TO_EMPKNAME(E.EMPID) AS EMPKNAM,
+			      D.CA_NAME
+			FROM
+					(SELECT B.*
+					FROM  (SELECT * FROM BBDBO.PAY_CA B
+					WHERE B.YYMM =REPLACE([yymm],'-','')) B
+					START WITH B.CODE_SEQ ='PACA-20100917-002'
+					CONNECT BY PRIOR B.CODE_SEQ=B.HIGHCODE) A,
+					BBDBO.PAY_CODE_EMP E,
+					BBDBO.PAY_CODE B,
+					BBDBO.PAY_CODE C,
+					BBDBO.PAY_CA D
+			WHERE A.CA_CODE=E.CODE
+			AND BBDBO.GET_CODE_SEQ(A.CA_CODE,REPLACE([yymm],'-',''))=B.CODE_SEQ
+			AND C.CODE=E.CODE
+			AND D.CA_CODE=C.CODE
+			AND C.CODE_SEQ=B.CODE_SEQ
+			AND D.YYMM=A.YYMM
+			AND C.YYMM=A.YYMM
+			AND B.YYMM=A.YYMM
+			AND E.YYMM=A.YYMM
+			AND A.USE_TYPE='Y'
+			AND D.USE_TYPE='Y'
+		) U
+	WHERE BC05_NAME LIKE [EMPKNAME]||'%'
+	AND BC05_SBN LIKE [EMPID]||'%'
+    ORDER BY BC05_SBN,IDX
+	]]>
+	</sql-content>
+	</sql-mapping><sql-mapping  id="PA_028"   value-count="0" url="급여기초자료 코드명 " >  
+	<sql-content>
+	<![CDATA[
+	SELECT CODE_NM
+	FROM BBDBO.PAY_CODE
+	WHERE CODE_SEQ =[S_HIGHCODE]	
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="PA_029"   value-count="0" url="월 급여기초코드 생성 " >  
+	<sql-content>
+	<![CDATA[
+	INSERT INTO BBDBO.PAY_CODE
+	SELECT
+		REPLACE([S_YYMM],'-','') AS TEMP_TYPE,
+		CODE_SEQ,
+		HIGHCODE,
+		CODE,
+		CODE_NM,
+		CODE_DETAIL,
+		PAY_AMT,
+		PAY_RATE1,
+		PAY_RATE2,
+		NOTE,
+		USE_TYPE,	
+		IDX,
+		CREATEDT,
+		MODIFYDT,
+		CREMPID,
+		MODEMPID
+	FROM BBDBO.PAY_CODE_TEMP
+	WHERE TEMP_TYPE = [S_TEMP_TYPE]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PA_030"   value-count="0" url="월 급여기초계산식 생성 " >  
+	<sql-content>
+	<![CDATA[
+--	INSERT INTO BBDBO.PAY_CA
+	SELECT
+		REPLACE([S_YYMM],'-','') AS TEMP_TYPE,
+		CODE_SEQ,
+		HIGHCODE,
+		CODE,
+		CODE_NM,
+		CODE_DETAIL,
+		PAY_AMT,
+		PAY_RATE1,
+		PAY_RATE2,
+		NOTE,
+		USE_TYPE,
+		CREATEDT,
+		MODIFYDT,
+		CREMPID,
+		MODEMPID,
+		IDX
+	FROM BBDBO.PAY_CA_TEMP
+	WHERE TEMP_TYPE = [S_TEMP_TYPE]
+	]]>
+	</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="PA_031"   value-count="0" url="월 개인별 급여기초자료등록 내역조회" >  
+	<sql-content>
+	<![CDATA[
+	SELECT *
+	FROM 
+		(SELECT
+	          A.YYMM,
+	          A.EMPID,
+	          TO_EMPKNAME(A.EMPID) AS EMPKNAME,  
+			  TO_EMPGRADENAME(A.EMPID) AS GRADE,	                  
+	          A.USE_DIV,
+	          A.CODE,
+	          B.CODE_NM,
+	          A.NOTE,
+	          A.USE_TYPE,
+	          A.CREATEDT,
+	          A.MODIFYDT,
+	          A.CREMPID,
+	          A.MODEMPID,
+	          A.AMT
+	  	FROM BBDBO.PAY_CODE_EMP A,
+	  	   	BBDBO.PAY_CODE B
+		WHERE A.YYMM =REPLACE([S_YYMM],'-','')
+		AND EMPID LIKE ''||'%'
+	  	AND A.YYMM=B.YYMM
+	  	AND A.CODE=B.CODE	
+		AND A.EMPID LIKE [EMPID]||'%'
+		)
+	WHERE EMPKNAME LIKE [EMPKNAME]||'%'
+  	ORDER BY 3	  	
+	
+	]]>	
+	</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="PA_032"   value-count="0" url="월 개인별 급여결과 기타" >  
+	<sql-content>
+	<![CDATA[
+	SELECT *
+	FROM 
+     (SELECT  		 A.YYMM,
+                     A.EMPID,
+                     TO_EMPKNAME(A.EMPID) AS EMPKNAME,
+                     A.PAY_CODE,
+               		B.CODE_NM,
+                    C.CODE_NM AS HIGHCODE_NM,
+                     A.PAY_AMT,
+                     SUM(A.PAY_AMT) OVER(PARTITION BY A.EMPID) AS TOT_PAY_AMT,
+                     A.NOTE,
+                     A.USE_TYPE,
+                     A.CREATEDT,
+                     A.MODIFYDT,
+                     A.CREMPID,
+                     A.MODEMPID,
+                     COUNT(DISTINCT EMPID) OVER() AS EMP_CNT,
+                     C.IDX
+
+    FROM BBDBO.PAY_ETC A ,
+         BBDBO.PAY_CODE B,
+         BBDBO.PAY_CODE C
+	WHERE A.YYMM = REPLACE([yymm],'-','')
+	AND A.EMPID LIKE [EMPID]||'%'
+    AND B.CODE=A.PAY_CODE
+    AND B.YYMM=A.YYMM
+    AND C.YYMM=B.YYMM
+    AND B.HIGHCODE=C.CODE_SEQ    
+	)
+   	WHERE EMPKNAME LIKE [EMPKNAME]||'%'
+    ORDER BY 3,2,PAY_AMT DESC
+	]]>	
+	</sql-content>
+	</sql-mapping>			
+</sql>

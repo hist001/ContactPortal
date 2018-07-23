@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+
+   <sql-mapping  id="HanwayURL_Outsource" value-count="0" url="외주관리 Hanway 테스트서버 주소" >  
+   <sql-content>
+   <![CDATA[http://hanway.hist.co.kr/covinet/coviflownet/forms/HIST_DEF_CONTRACT.aspx?]]>
+   </sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="HanwayURL_FixAsset" value-count="0" url="고정자산 Hanway 테스트서버 주소" >  
+   <sql-content>
+   <![CDATA[http://hanway.hist.co.kr/covinet/coviflownet/forms/HIST_REQ_FIXEDPROPERTY.aspx?]]>
+   </sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="HanwayURL_CertApp" value-count="0" url="제증명 Hanway 테스트서버 주소" >  
+   <sql-content>
+   <![CDATA[http://hanway.hist.co.kr/covinet/coviflownet/forms/HIST_REQ_IDENTIFY_PERSON.aspx?]]>
+   </sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="MasmURL" value-count="0" url="외주관리 Hanway 실제서버 주소" >  
+   <sql-content>
+   <![CDATA[http://mas.inhauh.com/commonCon?]]>
+   </sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="MasmURL_Test" value-count="0" url="관리회계 Test서버 주소" >  
+   <sql-content>
+   <![CDATA[http://mastest.inhauh.com/commonCon?]]>
+   </sql-content>
+   </sql-mapping>
+
+   <sql-mapping  id="HanwayURL_Inhauh_Test" value-count="0" url="외주관리 Hanway 테스트 주소" >  
+   <sql-content>
+   <![CDATA[http://spstest.inhauh.com/covinet/coviflownet/forms/IHH_def_finance.aspx?]]>
+   </sql-content>
+   </sql-mapping>
+   
+   <sql-mapping  id="HanwayURL_Inhauh" value-count="0" url="외주관리 Hanway 실제서버 주소" >  
+   <sql-content>
+   <![CDATA[http://hanway.inhauh.com/covinet/coviflownet/forms/IHH_def_finance.aspx?]]>
+   </sql-content>
+   </sql-mapping>
+   
+ </sql>

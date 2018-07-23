@@ -1,0 +1,2242 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+	<sql-mapping  id="SC_001"   value-count="0" url="거래처목록정보 조회" >  
+		<sql-content>
+			<![CDATA[
+SELECT
+	BC.BIZREGNO BIZREGNO,
+	BC.BIZACQCD BIZACQCD,
+	BC.BIZGROUPFLAG BIZGROUPFLAG,
+	BC.BIZACQNAME BIZACQNAME,	
+	BC.BIZCEONAME BIZCEONAME,
+	BC.BIZACQADDR BIZACQADDR,
+	BC.BIZUPDDT BIZUPDDT,
+	BC.BIZTYPE BIZTYPE,
+	RTRIM(BC.BIZITEM) BIZITEM,
+	SCBC.BIZCD1 BIZCD1,
+	(SELECT BIZNAME FROM BIZ WHERE BIZ.BIZCD = SCBC.BIZCD1) AS BIZNAME1,
+	SCBC.BIZCD2 BIZCD2,
+	(SELECT BIZNAME FROM BIZ WHERE BIZ.BIZCD = SCBC.BIZCD2) AS BIZNAME2,
+	SCBC.BIZCD3 BIZCD3,
+	(SELECT BIZNAME FROM BIZ WHERE BIZ.BIZCD = SCBC.BIZCD3) AS BIZNAME3,
+	SCBC.CAPITAL CAPITAL,
+	SCBC.SALES SALES,
+	SCBC.ASSETS ASSETS,
+	SCBC.LIABILITIES LIABILITIES,
+	SCBC.ENGINEER_S ENGINEER_S,
+	SCBC.ENGINEER_H ENGINEER_H,
+	SCBC.ENGINEER_M ENGINEER_M,
+	SCBC.ENGINEER_L ENGINEER_L,
+	SCBC.MEMO MEMO,
+	SCBC.UPDDT UPDDT,
+	SCBC.ACCOUNT,
+	SCBC.UPDEMPID UPDEMPID,
+	SCBC.SUS,
+	SCBC.SUP,
+	SCBC.ENNUM,
+	SCBC.AWARD
+FROM
+	BIZACQCORP BC
+	,SC_BIZACQCORP SCBC
+WHERE 
+	BC.BIZACQCD = SCBC.BIZACQCD
+	AND BC.BIZACQCD 	LIKE '%'||keyBIZACQCD:||'%'
+	AND BC.BIZACQNAME	LIKE '%'||keyBIZACQNAME:||'%'
+	AND BC.BIZREGNO		LIKE '%'||keyBIZREGNO:||'%'
+	AND BC.BIZCEONAME	LIKE '%'||keyBIZCEONAME:||'%'
+	AND BC.BIZACQADDR	LIKE '%'||keyBIZACQADDR:||'%'
+ORDER BY
+	BC.BIZACQNAME
+					
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_002"   value-count="0" url="회사정보 조회" >  
+		<sql-content>
+			<![CDATA[
+SELECT 
+	BQ.BIZACQCD BIZACQCD--거래처코드            
+	,BQ.BIZACQNAME BIZACQNAME--거래처명            
+	,BQ.BIZGROUPFLAG BIZGROUPFLAG--그룹사구분        
+	,BQ.BIZUSEFLAG BIZUSEFLAG--사용구분            
+	,BQ.BIZDIVTYPE BIZDIVTYPE--업체형태            
+	,BQ.BIZREGNO BIZREGNO--사업자등록번호        
+	,BQ.BIZFIRMNO BIZFIRMNO--법인번호             
+	,BQ.BIZTYPE BIZTYPE--업태                   
+	,BQ.BIZITEM BIZITEM--종목                   
+	,BQ.BIZJOINITEM BIZJOINITEM--협력업종           
+	,BQ.BIZACQADDR BIZACQADDR--사업장주소          
+	,BQ.BIZEMPID BIZEMPID--등록자사번            
+	,BQ.BIZCEONAME BIZCEONAME--대표자성명          
+	,BQ.BIZPHNO BIZPHNO--전화번호               
+	,BQ.BIZFAXNO BIZFAXNO--팩스번호              
+	,BQ.BIZBANKNAME BIZBANKNAME--거래은행명         
+	,BQ.BIZACCTNO BIZACCTNO--거래계좌번호         
+	,BQ.BIZACCTNAME BIZACCTNAME--예금주             
+	,BQ.BIZACQACCTCD BIZACQACCTCD--재무거래처코드    
+	,BQ.BIZHEADSPOTFLAG BIZHEADSPOTFLAG--본지점구분     
+	,BQ.BIZHEADACQCD BIZHEADACQCD--본점코드(상위코드)
+	,BQ.BIZCURRFLAG BIZCURRFLAG--현재진행상태       
+	,BQ.BIZHOMEPAGE BIZHOMEPAGE--거래처홈페이지     
+	,BQ.BIZALIAS BIZALIAS--별칭                  
+	,BQ.BIZMEMO BIZMEMO--메모                   
+	,BQ.BIZSTARTDT BIZSTARTDT--사용시작일자        
+	,BQ.BIZENDDT BIZENDDT--사용종료일자          
+	,BQ.BIZUPDDT BIZUPDDT--최종수정일자          
+	,BQ.BIZUPDEMPID BIZUPDEMPID--최종수정자         
+FROM
+	BIZACQCORP BQ
+WHERE
+	BQ.BIZACQCD 	LIKE '%'||keyBIZACQCD:||'%'
+	AND BQ.BIZACQNAME	LIKE '%'||keyBIZACQNAME:||'%'
+	AND BQ.BIZREGNO		LIKE '%'||keyBIZREGNO:||'%'
+	AND BQ.BIZCEONAME	LIKE '%'||keyBIZCEONAME:||'%'
+	AND BQ.BIZACQADDR	LIKE '%'||keyBIZACQADDR:||'%'
+	AND BQ.BIZREGNO <> '$'
+	AND BQ.BIZACQCD NOT IN  (SELECT   BIZACQCD FROM SC_BIZACQCORP)
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_011"   value-count="0" url="거래처정보저장" >  
+		<sql-content>
+			<![CDATA[
+				INSERT INTO
+				    SC_BIZACQCORP(
+					    BIZACQCD,
+					    BIZCD1,
+						BIZCD2,
+						BIZCD3,
+						CAPITAL,
+						SALES,
+						ASSETS,
+						LIABILITIES,
+						ENGINEER_S,
+						ENGINEER_H,
+						ENGINEER_M,
+						ENGINEER_L,
+						MEMO,
+						UPDDT,
+						UPDEMPID,
+						SUS,
+						SUP,
+						ENNUM,
+						AWARD
+				    )
+				VALUES(
+					    BIZACQCD:,
+					    BIZCD1:,
+						BIZCD2:,
+						BIZCD3:,
+						CAPITAL:,
+						SALES:,
+						ASSETS:,
+						LIABILITIES:,
+						ENGINEER_S:,
+						ENGINEER_H:,
+						ENGINEER_M:,
+						ENGINEER_L:,
+						MEMO:,
+						TO_CHAR(SYSDATE,'YYYYMMDD'),
+						UPDEMPID:,
+						SUS:,
+						SUP:,
+						ENNUM:,
+						AWARD:						
+					)
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_012"   value-count="0" url="거래처정보수정" >  
+		<sql-content>
+			<![CDATA[
+				UPDATE 
+					SC_BIZACQCORP
+				SET 
+				    BIZCD1 = BIZCD1:,
+					BIZCD2 = BIZCD2:,
+					BIZCD3 = BIZCD3:,
+					CAPITAL = CAPITAL:,
+					SALES = SALES:,
+					ASSETS = ASSETS:,
+					LIABILITIES = LIABILITIES:,
+					ENGINEER_S = ENGINEER_S:,
+					ENGINEER_H = ENGINEER_H:,
+					ENGINEER_M = ENGINEER_M:,
+					ENGINEER_L = ENGINEER_L:,
+					MEMO = MEMO:,
+					UPDDT = UPDDT:,
+					ACCOUNT = ACCOUNT:,
+					UPDEMPID =UPDEMPID:,
+					SUS = SUS:,
+					SUP = SUP:,
+					ENNUM = ENNUM:,
+					AWARD = AWARD:						
+				WHERE
+					BIZACQCD = BIZACQCD:
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_013"   value-count="0" url="거래처정보삭제" >  
+		<sql-content>
+			<![CDATA[
+				DELETE
+					SC_BIZACQCORP
+				WHERE
+					BIZACQCD = BIZACQCD:
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_021"   value-count="0" url="계산서 정보 조회" >  
+		<sql-content>
+			<![CDATA[
+		SELECT
+		    INV.INV_NO 	   INV_NO,
+		    CT.BIZACQCD	   BIZACQCD,
+		    CT.CONT_NO	   CONT_NO,
+			CT.CONTNAME		CONTNAME,
+			CT.CONTDT		CONTDT,
+			BACQ.BIZACQNAME BIZACQNAME,
+		    BACQ.BIZCEONAME BIZCEONAME,
+		    INV.INVTYPE    INVTYPE,
+		    (   SELECT CCO.CODENAME
+				FROM COMCODE CCO
+				WHERE CCO.HIGHCODE='CD-20100112-001'
+				AND INV.INVTYPE = CCO.CODE  ) INVTYPENAME,
+		    INV.INVISSUEDT INVISSUEDT,
+		    INV.SUPPLYAMT  SUPPLYAMT,
+		    INV.TAXAMT     TAXAMT,
+		    INV.TOTALAMT   TOTALAMT,
+		    INV.INVREGDT   INVREGDT,
+		    INV.FILEDESC   FILEDESC,
+		    INV.REMARK     REMARK,
+		    INV.ISDELYN    ISDELYN,
+		    TO_CHAR(INV.UPDDT,'YYYY-MM-DD HH:MI:SS')	UPDDT,
+		    INV.UPDEMPID   UPDEMPID,
+		    CASE
+		        WHEN CT.UPDEMPID IS NULL THEN TO_EMPKNAME(CT.UPDEMPID)
+		            ELSE TO_EMPKNAME(CT.UPDEMPID)
+		            END EMPNAME,
+		    B.DOCNO,
+            (SELECT  MAX(FILEORIGINNAME)
+                     || DECODE(MAX(FILEORIGINNAME),NULL,'',
+                     DECODE(SIGN(COUNT(FILE_NO)-1),1,' 외 '||TO_CHAR(COUNT(FILE_NO)-1)||' 건'))
+               FROM COM_FILES D
+               WHERE INV_NO=OBJ_NO
+               AND  UI_NO='SC_INVOICE'
+               AND DELFLAG='N')AS SC_INV_FILE,
+			GET_CODENAME('ST', DECODE(B.DOCNO,'',INV.STATUS,B.STATUS))  AS STATUSNAME,
+         	DECODE(B.DOCNO,'',INV.STATUS,B.STATUS) AS  STATUS       			    
+		FROM
+		    SC_INVOICE INV
+		    ,SC_CONTRACT CT
+			,BIZACQCORP BACQ
+			,ACCTRPTSB A
+			,ACCTRPTHD B
+		WHERE
+		    INV.CONT_NO = CT.CONT_NO
+			AND CT.BIZACQCD = BACQ.BIZACQCD
+		    AND BACQ.BIZACQNAME LIKE '%'||bizAcqName:||'%'
+		    AND BACQ.BIZREGNO LIKE'%'||bizAcqRegNo:||'%'
+			AND CT.CONTNAME LIKE'%'||S_CONTNAME:||'%'
+		    AND INV.INVREGDT BETWEEN 
+		    		DECODE(Fr_yymm:,NULL,'00010101','','00010101',REPLACE(Fr_yymm:,'-'))
+			    AND DECODE(To_yymm:,NULL,'99991231','','99991231',REPLACE(To_yymm:,'-'))
+			AND A.CERTIFNO (+)=INV.INV_NO			    
+			AND A.ACCTCD (+)LIKE  '5%'
+			AND A.MAINNO=B.MAINNO(+)
+		ORDER BY CT.CONT_NO DESC 
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_022"   value-count="0" url="계산서정보저장" >  
+		<sql-content>
+			<![CDATA[
+			INSERT INTO SC_INVOICE(
+				INV_NO,
+				CONT_NO,        
+				BIZACQCD,       
+				INVTYPE,        
+				INVISSUEDT,     
+				SUPPLYAMT,      
+				TAXAMT,         
+				TOTALAMT,       
+				INVREGDT,       
+				FILEDESC,       
+				REMARK,         
+				ISDELYN,        
+				UPDDT,          
+				UPDEMPID,
+				STATUS
+			)
+			VALUES(
+			    GET_SEQ('INV'),
+				CONT_NO:,
+				BIZACQCD:,
+				NVL(INVTYPE:,''),
+				INVISSUEDT:,
+				TO_NUMBER(SUPPLYAMT:),
+				TO_NUMBER(TAXAMT:),
+				TO_NUMBER(TOTALAMT:),
+				INVREGDT:,
+				FILEDESC:,
+				REMARK:,
+				'N',
+				SYSDATE,
+				UPDEMPID:,
+				STATUS:
+			)
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_023"   value-count="0" url="계산서정보수정" >  
+		<sql-content>
+			<![CDATA[
+		UPDATE 
+			SC_INVOICE
+		SET 
+			BIZACQCD  = BIZACQCD:,    
+			INVTYPE   = NVL(INVTYPE:,''),    
+			INVISSUEDT= INVISSUEDT:, 
+			SUPPLYAMT = TO_NUMBER(SUPPLYAMT:),  
+			TAXAMT    = TO_NUMBER(TAXAMT:),     
+			--TOTALAMT  = TO_NUMBER(TOTALAMT:),   
+			TOTALAMT  = TO_NUMBER(SUPPLYAMT:)+TO_NUMBER(TAXAMT:),   
+			INVREGDT  = INVREGDT:,   
+			FILEDESC  = FILEDESC:,   
+			REMARK    = REMARK:,     
+			UPDDT     = SYSDATE,
+			UPDEMPID  = UPDEMPID:,
+			STATUS	  =	STATUS:  
+		WHERE
+			INV_NO    = INV_NO:
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_024"   value-count="0" url="계산서정보삭제" >  
+		<sql-content>
+			<![CDATA[
+				DELETE
+					SC_INVOICE
+				WHERE
+					INV_NO = INV_NO:
+			]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="SC_025"   value-count="3" url="외주계약목조회 Popup" >  
+	<sql-content>
+	<![CDATA[
+		SELECT (SELECT MAX(PJT_NO)
+				FROM CONFER
+				WHERE CONF_NO IN (SELECT DISTINCT RCONF_NO
+								FROM SC_CONTRACTDETAIL
+								WHERE D.CONT_NO = CONT_NO)) PJT_NO,
+		        D.CONT_NO,
+		        D.CONTNAME,
+		        D.ORDERPERCENT,
+		        D.CONTAMT,
+		        D.ISVAT,
+		        D.INCOMECONDITION,
+		        D.PAYCONDITION,
+		        D.ORDERSTARTDT,
+		        D.ORDERENDDT,
+		        D.BIZACQCD,
+		        TO_BIZACQNAME(D.BIZACQCD) AS BIZACQNAME,
+		        (SELECT BIZCEONAME
+		        FROM BIZACQCORP
+		        WHERE BIZACQCD = D.BIZACQCD ) AS BIZCEONAME,
+		        D.CONTDT,
+		        D.RCONF_NO,
+		        D.UPDDT,
+		        D.UPDEMPID,
+		        GET_SC_INSCONFER_ACQNAME(D.CONT_NO) ORDERACQNAME,
+				GET_CODENAME('ST', DECODE(B.DOCNO,'',INV.STATUS,B.STATUS))  AS STATUSNAME,
+                DECODE(B.DOCNO,'',INV.STATUS,B.STATUS) AS  STATUS,
+                INV.INVREGDT		        
+		FROM SC_CONTRACT D
+			,SC_INVOICE INV
+			,ACCTRPTSB A
+		    ,ACCTRPTHD B
+		WHERE INV.CONT_NO(+)=D.CONT_NO
+		AND A.CERTIFNO (+)=INV.INV_NO
+		AND A.ACCTCD (+)LIKE  '5%'
+		AND A.MAINNO=B.MAINNO(+)
+		AND CONTNAME LIKE '%'||?||'%'
+		AND   CONTDT BETWEEN REPLACE(?,'-','') AND REPLACE(?,'-','')
+		ORDER BY CONT_NO
+		]]>
+	</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="SC_031"   value-count="0" url="검수확인목록 조회" >  
+	<sql-content>
+	<![CDATA[
+			SELECT
+				CT.CONT_NO CONT_NO--계약순번
+				,CT.CONTNAME CONTNAME--계약명
+				,CT.ORDERPERCENT ORDERPERCENT--외주율
+				,CT.CONTAMT CONTAMT--계약금액
+				,CT.ISVAT ISVAT--VAT유무
+				,CT.ORDERSTARTDT ORDERSTARTDT--외주시작일자
+				,CT.ORDERENDDT ORDERENDDT--외주종료일자
+				,CT.BIZACQCD BIZACQCD--업체코드
+				,CT.CONTDT CONTDT--계약일자
+				,CT.UPDDT UPDDT--최종수정일시
+				,CT.UPDEMPID UPDEMPID--최종수정자
+				,IC.CONF_NO CONF_NO --검사품의순번
+				,IC.CONT_NO CONT_NO --계약순번
+				,IC.INSTYPE INSTYPE --검사구분
+				,IC.INSSEQ INSSEQ --검사회차
+				,IC.PROCPERCENT PROCPERCENT --공정율
+				,IC.PROCQTY PROCQTY --수행물량
+				,IC.REMARK REMARK --비고
+				,IC.MEMO MEMO --기타
+				,IC.UPDDT UPDDT --최종수정일시
+				,IC.UPDEMPID UPDEMPID --최종수정자 
+			FROM SC_CONTRACT CT ,SC_INSCONFER IC
+			WHERE CT.CONT_NO = IC.CONT_NO
+	]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_032"   value-count="0" url="검수확인서 조회" >  
+		<sql-content>
+			<![CDATA[
+				SELECT 
+					ICF.*, CF.*, CT.*, TO_BIZACQNAME(CT.BIZACQCD) ORDERACQNAME    
+				FROM 
+					SC_INSCONFER ICF
+					,CONFER CF
+					,SC_CONTRACT CT
+				WHERE	ICF.CONT_NO = CONT_NO:
+				  AND CF.CONF_NO = ICF.CONF_NO
+				  AND ICF.CONT_NO = CT.CONT_NO
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_033"   value-count="2" url="검수확인목록 조회" >  
+		<sql-content>
+			<![CDATA[
+		SELECT
+			CT.CONT_NO CONT_NO--계약순번
+			,CT.CONTNAME CONTNAME--계약명
+			,CT.ORDERPERCENT ORDERPERCENT--외주율
+			,CT.CONTAMT CONTAMT--계약금액
+			,CT.ISVAT ISVAT--VAT유무
+			,CT.ORDERSTARTDT ORDERSTARTDT--외주시작일자
+			,CT.ORDERENDDT ORDERENDDT--외주종료일자
+			,CT.BIZACQCD BIZACQCD--업체코드
+			,CT.CONTDT CONTDT--계약일자
+			,CT.UPDDT UPDDT--최종수정일시
+			,CT.UPDEMPID UPDEMPID--최종수정자
+			,IC.CONF_NO CONF_NO --검사품의순번
+			,IC.CONT_NO CONT_NO --계약순번
+			,IC.INSTYPE INSTYPE --검사구분
+			,IC.INSSEQ INSSEQ --검사회차
+			,IC.PROCPERCENT PROCPERCENT --공정율
+			,IC.PROCQTY PROCQTY --수행물량
+			,IC.REMARK REMARK --비고
+			,IC.MEMO MEMO --기타
+			,IC.UPDDT UPDDT --최종수정일시
+			,IC.UPDEMPID UPDEMPID --최종수정자 
+		FROM
+			SC_CONTRACT CT  ,SC_INSCONFER IC  ,CONFER CF
+		WHERE CT.CONT_NO = IC.CONT_NO
+		AND IC.CONF_NO = CF.CONF_NO
+		AND CF.PJT_NO = PJT_NO:
+		AND CT.BIZACQCD = OUTBIZACQCD:
+			]]>
+	</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_034"   value-count="0" url="검수확인서 세부조회" >  
+		<sql-content>
+			<![CDATA[
+				SELECT
+					*
+				FROM
+					SC_INSCONFER ICF
+					,SC_INSCONFERDETAIL ICFD
+					,SC_CONTRACT CT
+					,SC_CONTRACTDETAIL CTD
+ 				WHERE ICF.CONT_NO = CONT_NO:
+				  AND ICF.CONF_NO = ICFD.CONF_NO
+				  AND ICF.CONT_NO = CT.CONT_NO
+				  AND CT.CONT_NO = CTD.CONT_NO
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_041"   value-count="0" url="투입인력현황 목록 조회" >  
+		<sql-content>
+			<![CDATA[
+SELECT
+    BTL.SBN EMPID,
+    PJT.PJTNAME PJTNAME,
+    --PJT.PJTSTARTDT PJTSTARTDT,
+        SUBSTR(PJT.PJTSTARTDT,1,4)||'-'||SUBSTR(PJT.PJTSTARTDT,5,2)||'-'||SUBSTR(PJT.PJTSTARTDT,7,2) PJTSTARTDT,
+    --PJT.PJTENDDT PJTENDDT,
+        SUBSTR(PJT.PJTENDDT,1,4)||'-'||SUBSTR(PJT.PJTENDDT,5,2)||'-'||SUBSTR(PJT.PJTENDDT,7,2) PJTENDDT,
+    BTL.NAME||'('||BTL.SBN||')' EMPIDNAME,
+    PJT.PMEMPID PMEMPID,
+        EA.EGRADE EGRADE,
+    TO_GRADENAME(EA.EGRADE) GRADENAME,
+    BTL.CONT_STARTDT WSTARTDT,
+    BTL.CONT_ENDDT WENDDT,
+    --EA.WSTARTDT||'~'||EA.WENDDT WPERIOD,
+    TO_EMPKNAME(PJT.PMEMPID) PMEMPNAME,
+    PJT.CREMPID CREMPID,
+    TO_EMPKNAME(PJT.CREMPID) CREMPNAME,
+    PJT.SALESEMPID SALESEMPID,
+    TO_EMPKNAME(PJT.SALESEMPID) SALESEMPNAME,
+    SUBSTR(BTL.YYMM,1,4)||'-'||SUBSTR(BTL.YYMM,5,2) YYMM,
+    BTL.SBN SBN,
+    BTL.NAME NAME,
+    BTL.DEPT DEPT,
+    BTL.POSITION POSITION,
+    NVL(BTL.SALARY,0) SALARY, -- 계약금액
+    NVL(BTL.BONUS,0) BONUS,
+    NVL(BTL.GUKMIN,0) GUKMIN, -- 국민연금
+    NVL(BTL.MEDICAL,0) MEDICAL, -- 건강보험
+    FLOOR(NVL(BTL.SALARY,0)*0.0254/10)*10 GOYONG, -- 고용
+    NVL(BTL.SALARY,0)
+        -NVL(BTL.GUKMIN,0)
+        -NVL(BTL.MEDICAL,0)
+        -FLOOR(NVL(BTL.SALARY,0)*0.0254/10)*10 NETSALARY, -- 실지급액
+    NVL(BTL.YUNGUMBOJO,0) YUNGUMBOJO,
+    NVL(BTL.SHINHUPBOJO,0) SHINHUPBOJO,
+    NVL(BTL.TMPTJ,0) TMPTJ, -- 퇴직금
+    NVL(BTL.YUNCHA,0) YUNCHA,
+    FLOOR(NVL(BTL.SALARY,0)*0.011/10)*10 GOYONG2, -- 고용2
+    FLOOR(NVL(BTL.SALARY,0)*0.0054/10)*10 SANJAE, -- 산재보험
+    NVL(BTL.KY_SJAMT,0) KY_SJAMT, -- 고용산재보험
+    NVL(NULL,0) JOBINSU, -- 고용보험
+    NVL(BTL.GUKMIN,0)
+        +NVL(BTL.MEDICAL,0)
+        +FLOOR(NVL(BTL.SALARY,0)*0.011/10)*10
+                +FLOOR(NVL(BTL.SALARY,0)*0.0054/10)*10 HISTSHARE,--회사부담금
+    NVL(BTL.SALARY,0)
+        +NVL(BTL.GUKMIN,0)
+        +NVL(BTL.MEDICAL,0)
+        +FLOOR(NVL(BTL.SALARY,0)*0.011/10)*10
+        +FLOOR(NVL(BTL.SALARY,0)*0.0054/10)*10
+        +NVL(BTL.TMPTJ,0) TOT -- 합계
+FROM
+    PROJECT PJT,
+    SC_TMPEMP_LABORCOST BTL,
+        EMPALL EA
+WHERE
+	  EA.EMPID = BTL.SBN
+  AND BTL.PJT_NO = PJT.PJT_NO
+  AND BTL.BIZACQCD like OUTBIZACQCD:||'%'
+  AND PJT.PJT_NO like PJT_NO:||'%'
+  AND BTL.YYMM BETWEEN
+		DECODE(YYMM:,'',SUBSTR(PJT.PJTSTARTDT,1,6),NULL,SUBSTR(PJT.PJTSTARTDT,1,6),REPLACE(YYMM:,'-'))
+		AND
+		DECODE(YYMM:,'',SUBSTR(PJT.PJTENDDT,1,6),NULL,SUBSTR(PJT.PJTENDDT,1,6),REPLACE(YYMM:,'-'))
+ORDER BY
+    BTL.YYMM,BTL.SBN
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_042"   value-count="0" url="투입인력현황 목록 EXCEL 조회" >  
+		<sql-content>
+			<![CDATA[
+SELECT
+    BTL.SBN EMPID,
+        PJT.PJTNAME PJTNAME,
+        --PJT.PJTSTARTDT PJTSTARTDT,
+        SUBSTR(PJT.PJTSTARTDT,1,4)||'-'||SUBSTR(PJT.PJTSTARTDT,5,2)||'-'||SUBSTR(PJT.PJTSTARTDT,7,2) PJTSTARTDT,
+        --PJT.PJTENDDT PJTENDDT,
+        SUBSTR(PJT.PJTENDDT,1,4)||'-'||SUBSTR(PJT.PJTENDDT,5,2)||'-'||SUBSTR(PJT.PJTENDDT,7,2) PJTENDDT,
+    BTL.NAME||'('||BTL.SBN||')' EMPIDNAME,
+    PJT.PMEMPID PMEMPID,
+        EA.EGRADE EGRADE,
+        TO_GRADENAME(EA.EGRADE) GRADENAME,
+    BTL.CONT_STARTDT WSTARTDT,
+    BTL.CONT_ENDDT WENDDT,
+        --EA.WSTARTDT||'~'||EA.WENDDT WPERIOD,
+    TO_EMPKNAME(PJT.PMEMPID) PMEMPNAME,
+    PJT.CREMPID CREMPID,
+    TO_EMPKNAME(PJT.CREMPID) CREMPNAME,
+    PJT.SALESEMPID SALESEMPID,
+    TO_EMPKNAME(PJT.SALESEMPID) SALESEMPNAME,
+        SUBSTR(BTL.YYMM,1,4)||'-'||SUBSTR(BTL.YYMM,5,2) YYMM,
+        BTL.SBN SBN,
+        BTL.NAME NAME,
+        BTL.DEPT DEPT,
+        BTL.POSITION POSITION,
+        NVL(BTL.SALARY,0) SALARY, -- 계약금액
+        NVL(BTL.BONUS,0) BONUS,
+        NVL(BTL.GUKMIN,0) GUKMIN, -- 국민연금
+        NVL(BTL.MEDICAL,0) MEDICAL, -- 건강보험
+        FLOOR(NVL(BTL.SALARY,0)*0.0254/10)*10 GOYONG, -- 고용
+        NVL(BTL.SALARY,0)
+            -NVL(BTL.GUKMIN,0)
+                -NVL(BTL.MEDICAL,0)
+                -FLOOR(NVL(BTL.SALARY,0)*0.0254/10)*10 NETSALARY, -- 실지급액
+        NVL(BTL.YUNGUMBOJO,0) YUNGUMBOJO,
+        NVL(BTL.SHINHUPBOJO,0) SHINHUPBOJO,
+        NVL(BTL.TMPTJ,0) TMPTJ, -- 퇴직금
+        NVL(BTL.YUNCHA,0) YUNCHA,
+        FLOOR(NVL(BTL.SALARY,0)*0.011/10)*10 GOYONG2, -- 고용2
+        FLOOR(NVL(BTL.SALARY,0)*0.0054/10)*10 SANJAE, -- 산재보험
+        NVL(BTL.KY_SJAMT,0) KY_SJAMT, -- 고용산재보험
+        NVL(NULL,0) JOBINSU, -- 고용보험
+        NVL(BTL.GUKMIN,0)
+            +NVL(BTL.MEDICAL,0)
+                +FLOOR(NVL(BTL.SALARY,0)*0.011/10)*10
+                +FLOOR(NVL(BTL.SALARY,0)*0.0054/10)*10 HISTSHARE,--회사부담금
+        NVL(BTL.SALARY,0)
+            +NVL(BTL.GUKMIN,0)
+            +NVL(BTL.MEDICAL,0)
+                +FLOOR(NVL(BTL.SALARY,0)*0.011/10)*10
+                +FLOOR(NVL(BTL.SALARY,0)*0.0054/10)*10
+                +NVL(BTL.TMPTJ,0) TOT -- 합계
+FROM
+    PROJECT PJT,
+    SC_TMPEMP_LABORCOST BTL,
+    EMPALL EA
+WHERE
+ 	  EA.EMPID = BTL.SBN   AND
+      BTL.PJT_NO = PJT.PJT_NO
+  AND BTL.BIZACQCD like OUTBIZACQCD:||'%'
+  AND PJT.PJT_NO like PJT_NO:||'%'
+    AND BTL.YYMM BETWEEN
+		DECODE(YYMM:,'',SUBSTR(PJT.PJTSTARTDT,1,6),NULL,SUBSTR(PJT.PJTSTARTDT,1,6),REPLACE(YYMM:,'-'))
+		AND
+		DECODE(YYMM:,'',SUBSTR(PJT.PJTENDDT,1,6),NULL,SUBSTR(PJT.PJTENDDT,1,6),REPLACE(YYMM:,'-'))
+ORDER BY
+    BTL.YYMM,BTL.SBN
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_043"   value-count="0" url="PJT 정보조회  조회" >  
+		<sql-content>
+			<![CDATA[
+SELECT
+    PJT.PJT_NO PJT_NO,
+	PJT.PJTNAME PJTNAME,
+	--PJT.PJTSTARTDT PJTSTARTDT,
+	SUBSTR(PJT.PJTSTARTDT,1,4)||'-'||SUBSTR(PJT.PJTSTARTDT,5,2)||'-'||SUBSTR(PJT.PJTSTARTDT,7,2) PJTSTARTDT,
+	--PJT.PJTENDDT PJTENDDT,
+	SUBSTR(PJT.PJTENDDT,1,4)||'-'||SUBSTR(PJT.PJTENDDT,5,2)||'-'||SUBSTR(PJT.PJTENDDT,7,2) PJTENDDT,
+    PJT.PMEMPID PMEMPID,
+    TO_EMPKNAME(PJT.PMEMPID) PMEMPNAME,
+    PJT.CREMPID CREMPID,
+    TO_EMPKNAME(PJT.CREMPID) CREMPNAME,
+    PJT.SALESEMPID SALESEMPID,
+    TO_EMPKNAME(PJT.SALESEMPID) SALESEMPNAME
+FROM
+    PROJECT PJT
+WHERE
+    PJT.PJT_NO like PJT_NO:||'%'
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_310"   value-count="0" url="외주현황LIST" >  
+		<sql-content>
+			<![CDATA[
+SELECT
+                OUTCONTDT,
+                CONTAMTSUM,
+                BIZACQCNT,
+                PJT_NO,
+                PJTNAME,
+           ORDERCORPCD,
+           BIZACQNAME,
+           NVL(CONTAMT,0) CONTAMT,CONTSTARTDT,CONTENDDT,
+           OUTBIZACQCD,
+           OUTBIZACQNAME,
+           OUTBIZCEONAME,
+           OUTCONTAMT,ORDERPERCENT,
+           CONT_NO,PAYCONDITION,ORDERSTARTDT,
+           ORDERENDDT,CONTNAME,RCONF_NO,
+       UPDDT, UPDEMPID,ISVAT,
+       INCOMECONDITION,
+           NVL(PAYAMT,0) + NVL(PAYAMT_I,0) PAYAMT,
+           NVL(RPAYAMT,0) - NVL(PAYAMT_I,0) RPAYAMT,
+           ROUND((NVL(PAYAMT,0) + NVL(PAYAMT_I,0))/NVL(OUTCONTAMT,1)*100,1) PAYRATE,
+           NVL(INCOMEAMT,0) INCOMEAMT,NVL(LASTINCOMEDT,0) LASTINCOMEDT,NVL(INCOMAMTRATE,0)
+ INCOMAMTRATE,
+           PROCPERCENT
+FROM
+(
+                SELECT
+                           COUNT(DISTINCT A.BIZACQCD) BIZACQCNT,
+                                                   SUM(NVL(A.CONTAMT,0)) CONTAMTSUM
+                FROM SC_CONTRACT A, SC_CONTRACTDETAIL B, CONFER C,PROJECT D,BIZACQCORP I
+                WHERE A.CONT_NO = B.CONT_NO
+                AND B.RCONF_NO = C.CONF_NO
+                AND C.PJT_NO = D.PJT_NO
+                AND A.BIZACQCD = I.BIZACQCD
+                AND I.BIZACQNAME LIKE '%'||''||'%'
+                AND D.PJTDIV LIKE DECODE('G','A','','G')||'%'
+                AND D.PJT_NO LIKE ''||'%'
+                AND D.PJTSTATUS = DECODE('A','A','PGO','END')
+) Y,
+(
+               SELECT
+                                DISTINCT
+                           D.PJT_NO,
+                           D.PJTNAME,
+                           D.ORDERCORPCD,
+                           TO_BIZACQNAME(D.ORDERCORPCD) BIZACQNAME,
+                           D.CONTAMT,
+                           D.CONTSTARTDT,
+                           D.CONTENDDT,
+                           A.BIZACQCD         OUTBIZACQCD,     -- ¿???°?¾??? ????
+                           I.BIZACQNAME OUTBIZACQNAME,
+                           I.BIZCEONAME OUTBIZCEONAME,
+                           A.CONTAMT OUTCONTAMT,
+                           TO_CHAR(A.ORDERPERCENT,'90.99')     ORDERPERCENT,
+                           A.CONT_NO,
+                           A.PAYCONDITION,
+                           A.ORDERSTARTDT     ORDERSTARTDT,    -- ¿???°?¾? ½?????
+                           A.ORDERENDDT       ORDERENDDT,      -- ¿???°?¾? ?¾·???
+                           A.CONTDT           OUTCONTDT,       -- ¿???°?¾??
+                           A.CONTNAME         CONTNAME,        -- ¿???°?¾?¸?
+                           B.RCONF_NO,
+                           A.UPDDT,
+                           A.UPDEMPID,
+                           A.ISVAT,
+                           A.INCOMECONDITION,
+                           (
+                                SELECT NVL(SUM(F.AMOUNT),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G, 
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='C'
+                                AND E.DOCTYPE ='B'
+                                AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                AND F.ACCTCD IN ('50111', '50112')
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = A.BIZACQCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                           ) PAYAMT,
+                           (
+	                           SELECT SUM(NVL(SALARY,0)+NVL(BONUS,0)
+	                                      +NVL(GUKMIN,0)+NVL(MEDICAL,0)
+	                                      +NVL(YUNGUMBOJO,0)+NVL(SHINHUPBOJO,0)
+	                                      +NVL(TMPTJ,0)+NVL(YUNCHA,0)
+	                                      +NVL(KY_SJAMT,0)) SUMAMT
+	                           FROM SC_TMPEMP_LABORCOST E
+	                           WHERE E.PJT_NO =  TO_CHAR(D.PJT_NO)
+	                           AND E.BIZACQCD =  A.BIZACQCD
+                           ) PAYAMT_I,
+                           (
+                                A.CONTAMT-
+                                (
+                                SELECT NVL(SUM(F.AMOUNT),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G, 
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='C'
+                                AND E.DOCTYPE ='B'
+                                AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                AND F.ACCTCD IN ('50111', '50112')
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = A.BIZACQCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                                )
+                           ) RPAYAMT,
+                           (
+                                SELECT NVL(SUM(F.AMOUNT),0) --NVL(SUM(G.AA30_AMT3),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G, 
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='D'
+                                AND E.DOCTYPE ='A'
+                                --AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                AND (F.ACCTCD LIKE '4%' or F.ACCTCD in ('21051'))
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = D.ORDERCORPCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                           ) INCOMEAMT,
+                           ( D.CONTAMT-
+                                (
+                                SELECT NVL(SUM(F.AMOUNT),0) --NVL(SUM(G.AA30_AMT3),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G,
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='D'
+                                AND E.DOCTYPE ='A'
+                                --AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                 AND (F.ACCTCD LIKE '4%' or F.ACCTCD in ('21051'))
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = D.ORDERCORPCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                                )
+                           ) LASTINCOMEDT,
+                           (
+                            ROUND(
+                            (
+                                SELECT NVL(SUM(F.AMOUNT),0) --NVL(SUM(G.AA30_AMT3),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G,
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='D'
+                                AND E.DOCTYPE ='A'
+                                --AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                 AND (F.ACCTCD LIKE '4%' or F.ACCTCD in ('21051'))
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = D.ORDERCORPCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                                ) / DECODE(D.CONTAMT,0,1,D.CONTAMT) *100, 1)
+                           ) INCOMAMTRATE,
+                                                   (
+                                                        SELECT NVL(MAX(PROCPERCENT),0)  PROCPERCENT
+                                                        FROM SC_INSCONFER E, CONFER F, SC_CONTRACT G
+                                                        WHERE E.CONF_NO = F.CONF_NO
+                                                        AND E.CONT_NO = G.CONT_NO
+                                                    AND F.PJT_NO=D.PJT_NO
+                                                        AND G.BIZACQCD = A.BIZACQCD
+                                                   ) PROCPERCENT
+                FROM SC_CONTRACT A, SC_CONTRACTDETAIL B, CONFER C,PROJECT D,BIZACQCORP I
+                WHERE A.CONT_NO = B.CONT_NO
+                AND B.RCONF_NO = C.CONF_NO
+                AND C.PJT_NO = D.PJT_NO
+                AND A.BIZACQCD = I.BIZACQCD
+				AND I.BIZACQNAME LIKE '%'||S_BIZACQNAME:||'%'
+				AND D.PJTDIV LIKE DECODE(CONFDIV:,'A','',CONFDIV:)||'%'
+				AND D.PJT_NO LIKE PJT_NO:||'%'
+				AND D.PJTSTATUS like DECODE(S_PJTSTATUS:,'A','','END')||'%'
+) Z
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_311"   value-count="0" url="외주현황LIST_PM전용" >  
+		<sql-content>
+			<![CDATA[
+SELECT
+                OUTCONTDT,
+                CONTAMTSUM,
+                BIZACQCNT,
+                PJT_NO,
+                PJTNAME,
+           ORDERCORPCD,
+           BIZACQNAME,
+           NVL(CONTAMT,0) CONTAMT,CONTSTARTDT,CONTENDDT,
+           OUTBIZACQCD,
+           OUTBIZACQNAME,
+           OUTBIZCEONAME,
+           OUTCONTAMT,ORDERPERCENT,
+           CONT_NO,PAYCONDITION,ORDERSTARTDT,
+           ORDERENDDT,CONTNAME,RCONF_NO,
+       UPDDT, UPDEMPID,ISVAT,
+       INCOMECONDITION,
+           NVL(PAYAMT,0) + NVL(PAYAMT_I,0) PAYAMT,
+           NVL(RPAYAMT,0) - NVL(PAYAMT_I,0) RPAYAMT,
+           ROUND((NVL(PAYAMT,0) + NVL(PAYAMT_I,0))/NVL(OUTCONTAMT,1)*100,1) PAYRATE,
+           NVL(INCOMEAMT,0) INCOMEAMT,NVL(LASTINCOMEDT,0) LASTINCOMEDT,NVL(INCOMAMTRATE,0)
+ INCOMAMTRATE,
+           PROCPERCENT
+FROM
+(
+                SELECT
+                           COUNT(DISTINCT A.BIZACQCD) BIZACQCNT,
+                                                   SUM(NVL(A.CONTAMT,0)) CONTAMTSUM
+                FROM SC_CONTRACT A, SC_CONTRACTDETAIL B, CONFER C,PROJECT D,BIZACQCORP I
+                WHERE A.CONT_NO = B.CONT_NO
+                AND B.RCONF_NO = C.CONF_NO
+                AND C.PJT_NO = D.PJT_NO
+                AND A.BIZACQCD = I.BIZACQCD
+                AND I.BIZACQNAME LIKE '%'||''||'%'
+                AND D.PJTDIV LIKE DECODE('G','A','','G')||'%'
+                AND D.PJT_NO LIKE ''||'%'
+                AND D.PJTSTATUS = DECODE('A','A','PGO','END')
+) Y,
+(
+               SELECT
+                                DISTINCT
+                           D.PJT_NO,
+                           D.PJTNAME,
+                           D.ORDERCORPCD,
+                           TO_BIZACQNAME(D.ORDERCORPCD) BIZACQNAME,
+                           D.CONTAMT,
+                           D.CONTSTARTDT,
+                           D.CONTENDDT,
+                           A.BIZACQCD         OUTBIZACQCD,     -- ¿???°?¾??? ????
+                           I.BIZACQNAME OUTBIZACQNAME,
+                           I.BIZCEONAME OUTBIZCEONAME,
+                           (
+                                                        select sum(contamt) from SC_CONITEM
+                                                        where conf_no = B.rconf_no
+                                                   ) OUTCONTAMT,
+                           TO_CHAR(A.ORDERPERCENT,'90.99')     ORDERPERCENT,
+                           A.CONT_NO,
+                           A.PAYCONDITION,
+                           A.ORDERSTARTDT     ORDERSTARTDT,    -- ¿???°?¾? ½?????
+                           A.ORDERENDDT       ORDERENDDT,      -- ¿???°?¾? ?¾·???
+                           A.CONTDT           OUTCONTDT,       -- ¿???°?¾??
+                           A.CONTNAME         CONTNAME,        -- ¿???°?¾?¸?
+                           B.RCONF_NO,
+                           A.UPDDT,
+                           A.UPDEMPID,
+                           A.ISVAT,
+                           A.INCOMECONDITION,
+                           (
+                                SELECT NVL(SUM(F.AMOUNT),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G, 
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='C'
+                                AND E.DOCTYPE ='B'
+                                AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                AND F.ACCTCD IN ('50111', '50112')
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = A.BIZACQCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                           ) PAYAMT,
+                           (
+	                           SELECT SUM(NVL(SALARY,0)+NVL(BONUS,0)
+	                                      +NVL(GUKMIN,0)+NVL(MEDICAL,0)
+	                                      +NVL(YUNGUMBOJO,0)+NVL(SHINHUPBOJO,0)
+	                                      +NVL(TMPTJ,0)+NVL(YUNCHA,0)
+	                                      +NVL(KY_SJAMT,0)) SUMAMT
+	                           FROM SC_TMPEMP_LABORCOST E
+	                           WHERE E.PJT_NO =  TO_CHAR(D.PJT_NO)
+	                           AND E.BIZACQCD =  A.BIZACQCD
+                           ) PAYAMT_I,
+                           (
+                                A.CONTAMT-
+                                (
+                                SELECT NVL(SUM(F.AMOUNT),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G, 
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='C'
+                                AND E.DOCTYPE ='B'
+                                AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                AND F.ACCTCD IN ('50111', '50112')
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = A.BIZACQCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                                )
+                           ) RPAYAMT,
+                           (
+                                SELECT NVL(SUM(F.AMOUNT),0) --NVL(SUM(G.AA30_AMT3),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G, 
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='D'
+                                AND E.DOCTYPE ='A'
+                                --AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                AND F.ACCTCD LIKE '4%'
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = D.ORDERCORPCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                           ) INCOMEAMT,
+                           ( D.CONTAMT-
+                                (
+                                SELECT NVL(SUM(F.AMOUNT),0) --NVL(SUM(G.AA30_AMT3),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G,
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='D'
+                                AND E.DOCTYPE ='A'
+                                --AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                AND F.ACCTCD LIKE '4%'
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = D.ORDERCORPCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                                )
+                           ) LASTINCOMEDT,
+                           (
+                            ROUND(
+                            (
+                                SELECT NVL(SUM(F.AMOUNT),0) --NVL(SUM(G.AA30_AMT3),0)
+                                FROM ACCTRPTHD E, ACCTRPTSB F,
+									 --TBAA30@TO_INHAUH G,
+									 BIZACQCORP H
+                                WHERE E.MAINNO = F.MAINNO
+                                --AND E.DOCNO = G.AA30_JPNO
+                                AND F.CDTYPE ='D'
+                                AND E.DOCTYPE ='A'
+                                --AND E.BIZACQACCTCD = H.BIZACQACCTCD
+                                AND F.ACCTCD LIKE '4%'
+                                --AND G.AA30_AMT2 = 0
+                                --AND G.AA30_AMT4 = 0
+                                AND H.BIZACQCD = D.ORDERCORPCD
+                                AND F.JOBNO =TO_CHAR(D.PJT_NO)
+								AND E.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+                                ) / D.CONTAMT *100, 1)
+                           ) INCOMAMTRATE,
+                                                   (
+                                                        SELECT NVL(MAX(PROCPERCENT),0)  PROCPERCENT
+                                                        FROM SC_INSCONFER E, CONFER F, SC_CONTRACT G
+                                                        WHERE E.CONF_NO = F.CONF_NO
+                                                        AND E.CONT_NO = G.CONT_NO
+                                                    AND F.PJT_NO=D.PJT_NO
+                                                        AND G.BIZACQCD = A.BIZACQCD
+                                                   ) PROCPERCENT
+                FROM SC_CONTRACT A, SC_CONTRACTDETAIL B, CONFER C,PROJECT D,BIZACQCORP I
+                WHERE A.CONT_NO = B.CONT_NO
+                AND B.RCONF_NO = C.CONF_NO
+                AND C.PJT_NO = D.PJT_NO
+                AND A.BIZACQCD = I.BIZACQCD
+                AND I.BIZACQNAME LIKE '%'||''||'%'
+                AND D.PJTDIV LIKE DECODE('G','A','','G')||'%'
+                AND D.PJT_NO LIKE ''||'%'
+			AND I.BIZACQNAME LIKE '%'||S_BIZACQNAME:||'%'
+		AND D.PJTDIV LIKE DECODE(CONFDIV:,'A','',CONFDIV:)||'%'
+		AND D.PJT_NO LIKE PJT_NO:||'%'
+		AND D.PJTSTATUS like DECODE(S_PJTSTATUS:,'A','','END')||'%'
+		AND D.PMEMPID = PMEMPID:
+) Z
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_320"   value-count="0" url="입출금정보" >  
+		<sql-content>
+			<![CDATA[
+SELECT DISTINCT
+		D.PJT_NO                     PJT_NO,        -- 프로젝트번호   
+		D.PJTCD                      PJTCD,         -- 프로젝트코드
+		D.PJTNAME                    PJTNAME,       -- 프로젝트명
+		D.PJTDIV                     PJTDIV,        -- 부서구분
+		D.ORDERCORPCD                ORDERCORPCD,   -- 발주사코드
+		TO_BIZACQNAME(D.ORDERCORPCD) ORDERCORPNAME, -- 발주사명
+		D.PJTSTATUS                  PJTSTATUS,     -- 프로젝트상태
+		D.CONTAMT                    CONTAMT,       -- 계약금액
+		D.CONTSTARTDT                CONTSTARTDT,   -- 계약시작일
+		D.CONTENDDT                  CONTENDDT,     -- 계약종료일
+		A.BIZACQCD                   BIZACQCD,      -- 외주거래서
+		TO_BIZACQNAME(A.BIZACQCD)    BIZACQNAME,    -- 외주거래처명
+		A.CONTAMT                    OUTCONTAMT,    -- 외주계약금액
+		A.ORDERPERCENT               ORDERPERCENT,  -- 수입조건
+		A.PAYCONDITION               PAYCONDITION   -- 지급조건
+  FROM SC_CONTRACT A,
+	   SC_CONTRACTDETAIL B,
+	   CONFER C,
+	   PROJECT D
+ WHERE A.CONT_NO = B.CONT_NO
+   AND B.RCONF_NO = C.CONF_NO
+   AND C.PJT_NO = D.PJT_NO
+   AND D.PJT_NO LIKE '%'||PJT_NO:||'%'
+   AND A.BIZACQCD = OUTBIZACQCD:
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_330"   value-count="0" url="수입지급전표정보" >  
+		<sql-content>
+			<![CDATA[
+SELECT C.SN,
+		AMAINNO,
+		ADOCTYPE,
+		AJOBNO,
+		AAA12_JPNO,
+		AINCOMEAMT,
+		ARINCOMEAMT,
+		ALASTINCOMEDT,
+		BMAINNO,
+		BDOCTYPE,
+		BJOBNO,
+		BAA12_JPNO,
+		BBIZACQCD,
+		BPAYAMT,
+		BRPAYAMT,
+		JPDT
+FROM 
+(
+	SELECT SN,YYYY,AMAINNO,ADOCTYPE,AJOBNO,
+		   AAA12_JPNO, AINCOMEAMT,
+			CASE WHEN L.AA12_AMT IS NULL
+			   	 	  THEN 0
+			   		  ELSE ROUND( AINCOMEAMT * L.AA12_AMT/K.TOTAMT)
+			END  ARINCOMEAMT,
+			L.AA12_HGIL ALASTINCOMEDT
+	FROM
+	(
+		SELECT
+		       ROWNUM SN,A.EVENTDT YYYY,
+		        A.MAINNO AMAINNO,A.DOCTYPE ADOCTYPE,B.JOBNO AJOBNO,
+		        A.DOCNO AAA12_JPNO, SUM(B.AMOUNT) AINCOMEAMT,A.TOTAMT
+		FROM ACCTRPTHD A, ACCTRPTSB B, TBAA30@TO_INHAUH C --, TBAA12@TO_INHAUH D
+		WHERE A.MAINNO = B.MAINNO
+		AND A.DOCNO = C.AA30_JPNO (+)
+		AND A.DOCTYPE = 'A'
+		AND B.JOBNO = PJT_NO:
+		AND B.ACCTCD LIKE '4%'
+		AND A.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+		GROUP BY ROWNUM ,DOCNO,EVENTDT,A.MAINNO,DOCTYPE,JOBNO,AA30_AMT3, C.AA30_DATE,A.TOTAMT --, D.AA12_AMT, D.AA12_HGIL,A.TOTAMT
+	) K,
+	TBAA12@TO_INHAUH  L
+	WHERE L.AA12_JJNO(+) LIKE K.AAA12_JPNO||'%'
+) A,
+(
+  	SELECT ROWNUM SN, YYYY,BMAINNO, BDOCTYPE, BBIZACQCD,BJOBNO,BAA12_JPNO,
+		   ACCTCD,BPAYAMT, BRPAYAMT,JPDT
+	FROM
+	(
+ 		SELECT
+			  YYYY,BMAINNO,BDOCTYPE,BBIZACQCD,
+			  BJOBNO,BAA12_JPNO,ACCTCD,BPAYAMT,
+			  CASE WHEN L.AA12_AMT IS NULL
+		                      THEN 0
+		                      ELSE
+		                     CASE L.AA12_CDGB WHEN 'C' THEN ROUND( L.AA12_AMT  * L.AA12_AMT/K.TOTAMT)
+		  				   					WHEN 'D' THEN ROUND( L.AA12_AMT  * L.AA12_AMT/K.TOTAMT)* -1
+		                    	   END
+		       			  END  BRPAYAMT,
+			  L.AA12_HGIL JPDT
+ 		FROM
+ 		(
+               SELECT
+                          A.EVENTDT YYYY,
+                          A.MAINNO BMAINNO,
+                          A.DOCTYPE BDOCTYPE,
+                          --A.CONF_NO,
+                          --A.CONFTYPE,
+                          D.BIZACQCD BBIZACQCD,
+                          B.JOBNO BJOBNO,
+                          A.DOCNO BAA12_JPNO,
+                          B.ACCTCD,
+                          SUM(B.AMOUNT) BPAYAMT,
+					   A.TOTAMT 
+               FROM ACCTRPTHD A, ACCTRPTSB B, TBAA30@TO_INHAUH C, BIZACQCORP D 
+               WHERE A.MAINNO = B.MAINNO
+               AND A.DOCNO = C.AA30_JPNO (+)
+               --AND E.AA12_JJNO LIKE A.DOCNO||'%'
+               AND A.DOCTYPE = 'B'
+               AND A.BIZACQACCTCD = D.BIZACQACCTCD
+               AND B.JOBNO = PJT_NO:
+               AND D.BIZACQCD = OUTBIZACQCD:
+               AND B.ACCTCD LIKE '5%'
+               AND A.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+               GROUP BY ROWNUM ,DOCNO,EVENTDT,A.MAINNO,DOCTYPE,JOBNO,AA30_AMT3, C.AA30_DATE,D.BIZACQCD,B.ACCTCD,A.TOTAMT 
+		) K, TBAA12@TO_INHAUH L
+		WHERE L.AA12_JJNO(+) LIKE K.BAA12_JPNO||'%'
+		UNION
+		SELECT  
+				YYMM YYMM,
+				YYMM BMAINNO,
+				'I' BDOCTYPE,
+				BIZACQCD,
+				PJT_NO JOBNO,
+				YYMM||'21' BAA12_JPNO,
+				'' ACCTCD,
+				SUM(NVL(SALARY,0)
+				+NVL(GUKMIN,0)
+				+NVL(MEDICAL,0)
+				+FLOOR(NVL(SALARY,0)*0.011/10)*10
+				+FLOOR(NVL(SALARY,0)*0.0054/10)*10
+				+NVL(TMPTJ,0)) AMOUNT,
+				SUM(NVL(SALARY,0)
+				+NVL(GUKMIN,0)
+				+NVL(MEDICAL,0)
+				+FLOOR(NVL(SALARY,0)*0.011/10)*10
+				+FLOOR(NVL(SALARY,0)*0.0054/10)*10
+				+NVL(TMPTJ,0)) RPAYAMT,
+				YYMM||'21' JPDT
+		FROM SC_TMPEMP_LABORCOST
+		WHERE PJT_NO = PJT_NO:
+		AND BIZACQCD = OUTBIZACQCD:
+		GROUP BY YYMM, BIZACQCD, PJT_NO
+	)
+) B,
+(
+	SELECT ROWNUM SN
+	FROM
+	(
+		SELECT
+			  BMAINNO
+ 		FROM
+ 		(
+               SELECT
+                          A.MAINNO BMAINNO,
+                          A.DOCTYPE BDOCTYPE,
+                          D.BIZACQCD BBIZACQCD,
+                          B.JOBNO BJOBNO,
+                          A.DOCNO BAA12_JPNO,
+                          B.ACCTCD,
+                          SUM(B.AMOUNT) BPAYAMT,
+					   A.TOTAMT 
+               FROM ACCTRPTHD A, ACCTRPTSB B, TBAA30@TO_INHAUH C, BIZACQCORP D --, TBAA12@TO_INHAUH E
+               WHERE A.MAINNO = B.MAINNO
+               AND A.DOCNO = C.AA30_JPNO (+)
+               --AND E.AA12_JJNO LIKE A.DOCNO||'%'
+               AND A.DOCTYPE = 'B'
+               AND A.BIZACQACCTCD = D.BIZACQACCTCD
+               AND B.JOBNO = PJT_NO:
+               AND D.BIZACQCD = OUTBIZACQCD:
+               AND B.ACCTCD LIKE '5%'
+               AND A.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+               GROUP BY ROWNUM ,DOCNO,EVENTDT,A.MAINNO,DOCTYPE,JOBNO,AA30_AMT3, C.AA30_DATE,D.BIZACQCD,B.ACCTCD,A.TOTAMT 
+		) K, TBAA12@TO_INHAUH L
+		WHERE L.AA12_JJNO(+) LIKE K.BAA12_JPNO||'%'						
+		UNION ALL
+		SELECT YYMM BMAINNO
+	    FROM SC_TMPEMP_LABORCOST
+	    WHERE PJT_NO = PJT_NO:
+	    AND BIZACQCD = OUTBIZACQCD:
+	    GROUP BY YYMM, BIZACQCD, PJT_NO
+    )   
+	UNION
+	SELECT  SN
+		FROM
+		(
+			SELECT
+			       ROWNUM SN,A.EVENTDT YYYY,
+			        A.MAINNO AMAINNO,A.DOCTYPE ADOCTYPE,B.JOBNO AJOBNO,
+			        A.DOCNO AAA12_JPNO, SUM(B.AMOUNT) AINCOMEAMT,A.TOTAMT
+			FROM ACCTRPTHD A, ACCTRPTSB B, TBAA30@TO_INHAUH C
+			WHERE A.MAINNO = B.MAINNO
+			AND A.DOCNO = C.AA30_JPNO (+)
+			AND A.DOCTYPE = 'A'
+			AND B.JOBNO = PJT_NO:
+			AND B.ACCTCD LIKE '4%'
+			AND A.STATUS NOT IN ('DA0','DB0','DX0','DW0')
+			GROUP BY ROWNUM ,DOCNO,EVENTDT,A.MAINNO,DOCTYPE,JOBNO,AA30_AMT3, C.AA30_DATE,A.TOTAMT 
+		) K,
+		TBAA12@TO_INHAUH  L
+		WHERE L.AA12_JJNO(+) LIKE K.AAA12_JPNO||'%'
+) C
+where c.SN = b.SN(+)
+     and c.SN = a.SN(+)
+     Order by JPDT
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_331"   value-count="0" url="투입인력수량 조회" >  
+		<sql-content>
+			<![CDATA[
+SELECT COUNT(SBN) EMPIDCNT
+	FROM SC_TMPEMP_LABORCOST
+ WHERE PJT_NO = PJT_NO:
+	 AND BIZACQCD = OUTBIZACQCD:
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_340"   value-count="1" url="계산서 조회" >  
+		<sql-content>
+			<![CDATA[
+SELECT INV_NO, CONT_NO,BIZACQCD, TOTALAMT, AMT
+FROM
+(
+	SELECT 	DISTINCT X.INV_NO,X.CONT_NO,W.BIZACQCD,X.TOTALAMT,
+			(
+				SELECT NVL(SUM(B.AMOUNT),0) AMT
+				FROM ACCTRPTHD A, ACCTRPTSB B, BIZACQCORP C
+				WHERE A.MAINNO = B.MAINNO
+				AND A.STATUS IN ('DC0','DD0','DD1','DE0')
+				AND B.CDTYPE ='C'
+				AND A.BIZACQACCTCD = C.BIZACQACCTCD
+				AND C.BIZACQCD = W.BIZACQCD
+				AND B.JOBNO = Z.PJT_NO
+				AND B.CERTIFNO =  W.CONT_NO
+			) AMT
+	FROM SC_INVOICE X, SC_CONTRACTDETAIL Y, CONFER Z, SC_CONTRACT W
+	WHERE X.CONT_NO = Y.CONT_NO
+	AND Y.RCONF_NO =Z.CONF_NO
+	AND Y.CONT_NO = W.CONT_NO
+	AND W.CONT_NO= ?
+)
+WHERE TOTALAMT > AMT
+			]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="SC_420"   value-count="0"  url="선정평가항목 모텔 트리뷰 리스트" >  
+   	<sql-content>
+  		<![CDATA[		   
+SELECT LEVEL, B.*
+  FROM (SELECT A.CD ITEMCD, A.CDNAME ITEMNAME, A.CDDS, A.HIGHCD HIGHITEMCD, 
+               A.CDTYPE HIGHITEMCDTYPE, A.CDNAME HIGHITEMNAME, 'Y' USEFLAG, '' UNIT, '' POINT,
+               '' ISSYSCALC, '' USESTARTDT, '' USEENDDT, '' REMARK,
+               '' UPDDT, '' UPDEMPID,
+			   'PVS' CDTYPE1, A.CD CD1, 'SC_S1' CDTYPE2, '' CD2, 'SC_S2' CDTYPE3, '' CD3,
+			   '' UPDEMPNAME, '' UPDEMPGRDNAME, '' UPDORGNAME,		'' GTYPE,
+					'' SARITHSYMBOL,			0 SVALUE,		''  EARITHSYMBOL,		 0  EVALUE 
+          FROM COCODE A
+         WHERE CDTYPE = 'PVS'
+        UNION
+        SELECT DISTINCT B.CD ITEMCD, B.CDNAME ITEMNAME, B.CDDS, A.CD1 HIGHITEMCD,
+               A.CDTYPE1 HIGHITEMCDTYPE, TO_CDNAME(A.CDTYPE1, A.CD1) HIGHITEMNAME, 
+               'Y' USEFLAG, '' UNIT, '' POINT,
+               '' ISSYSCALC, '' USESTARTDT, '' USEENDDT,
+               '' REMARK, '' UPDDT, '' UPDEMPID,
+			   'PVS' CDTYPE1, A.CD1 CD1, 'SC_S1' CDTYPE2, B.CD CD2, 'SC_S2' CDTYPE3, '' CD3,
+			   '' UPDEMPNAME, '' UPDEMPGRDNAME, '' UPDORGNAME,		'' GTYPE,
+					'' SARITHSYMBOL,			0 SVALUE,		''  EARITHSYMBOL,		 0  EVALUE
+          FROM (SELECT *
+                  FROM SC_SELVALUEITEM
+                 WHERE UPPER (ITEMCD) LIKE S_ITEMCD:
+                   AND USEFLAG LIKE S_USEFLAG:) A,
+               (SELECT *
+                  FROM COCODE
+                 WHERE CDTYPE = 'SC_S1') B
+         WHERE A.CDTYPE2 = B.CDTYPE AND A.CD2 = B.CD
+        UNION
+        SELECT DISTINCT B.CD ITEMCD, B.CDNAME ITEMNAME, B.CDDS, A.CD2 HIGHITEMCD, 
+               A.CDTYPE2 HIGHITEMCDTYPE, TO_CDNAME(A.CDTYPE2, A.CD2) HIGHITEMNAME, 
+               'Y' USEFLAG, '' UNIT, '' POINT,
+               '' ISSYSCALC, '' USESTARTDT, '' USEENDDT,
+               '' REMARK, '' UPDDT, '' UPDEMPID,
+			   'PVS' CDTYPE1, A.CD1 CD1, 'SC_S1' CDTYPE2, A.CD2 CD2, 'SC_S2' CDTYPE3, B.CD CD3,
+			   '' UPDEMPNAME, '' UPDEMPGRDNAME, '' UPDORGNAME,		'' GTYPE,
+					'' SARITHSYMBOL,			0 SVALUE,		''  EARITHSYMBOL,		 0  EVALUE
+          FROM (SELECT *
+                  FROM SC_SELVALUEITEM
+                 WHERE UPPER (ITEMCD) LIKE S_ITEMCD:
+                   AND USEFLAG LIKE S_USEFLAG:) A,
+               (SELECT *
+                  FROM COCODE
+                 WHERE CDTYPE = 'SC_S2') B
+         WHERE A.CDTYPE3 = B.CDTYPE AND A.CD3 = B.CD
+        UNION
+        SELECT ITEMCD, ITEMNAME, TO_CHAR (9 - POINT) CDDS, CD3 HIGHITEMCD,
+               CDTYPE3 HIGHITEMCDTYPE, TO_CDNAME(CDTYPE3, CD3) HIGHITEMNAME, USEFLAG, UNIT,
+               CASE
+                 WHEN LENGTH (TO_CHAR (POINT)) <= 2
+                   THEN TO_CHAR (POINT) || '.0'
+                 ELSE TO_CHAR (POINT)
+               END POINT,
+               ISSYSCALC,
+               TO_CHAR (TO_DATE (USESTARTDT, 'YYYYMMDD'),'YYYY-MM-DD') USESTARTDT,
+               USEENDDT, REMARK,  TO_CHAR (UPDDT,'YYYY-MM-DD HH24:mi:ss') UPDDT, UPDEMPID,
+			   CDTYPE1, CD1, CDTYPE2, CD2, CDTYPE3, CD3,
+			   to_empkname(UPDEMPID) UPDEMPNAME, to_empgradename(UPDEMPID) UPDEMPGRDNAME, 
+			   to_orgname(UPDEMPID) UPDORGNAME,					  GTYPE,
+					SARITHSYMBOL,			  SVALUE,		  EARITHSYMBOL,		 EVALUE
+          FROM SC_SELVALUEITEM
+          WHERE UPPER (ITEMCD) LIKE S_ITEMCD: 
+   		  	AND USEFLAG LIKE S_USEFLAG:) B
+ WHERE UPPER (ITEMCD) LIKE S_ITEMCD: 
+   AND USEFLAG LIKE S_USEFLAG:
+ START WITH ITEMCD IN (SELECT CD FROM COCODE WHERE CDTYPE = 'PVS')
+ CONNECT BY PRIOR ITEMCD = HIGHITEMCD
+ ORDER SIBLINGS BY CDDS, ITEMCD
+		]]>
+	</sql-content>
+   </sql-mapping>
+	<sql-mapping  id="SC_421"   value-count="0" url="선정평가항목등록" >  
+		<sql-content>
+			<![CDATA[
+				INSERT INTO
+				    SC_SELVALUEITEM(
+						ITEMCD,    
+						CDTYPE1, 
+						CD1,  
+						CDTYPE2,     
+						CD2,   
+						CDTYPE3,   
+					  CD3, 
+					  ITEMNAME, 
+					  UNIT, 
+					  GTYPE,
+					  SARITHSYMBOL,
+					  SVALUE,
+					  EARITHSYMBOL,
+					  EVALUE,
+					  POINT, 
+					  ISSYSCALC, 
+					  USESTARTDT, 
+					  USEENDDT, 
+					  USEFLAG, 
+					  REMARK, 
+					  UPDDT, 
+					  UPDEMPID
+				    )
+				VALUES(
+					  ITEMCD:, 
+					 CDTYPE1:, 
+					 CD1:, 
+					 CDTYPE2:, 
+					 CD2:, 
+					 CDTYPE3:, 
+					 CD3:, 
+					 ITEMNAME:, 
+					 UNIT:, 
+					 GTYPE:,
+					 SARITHSYMBOL:,
+					 SVALUE:,
+					 EARITHSYMBOL:,
+					 EVALUE:,
+					 POINT:, 
+					 ISSYSCALC:, 
+					 USESTARTDT:, 
+					 '', 
+					 USEFLAG:, 
+					 REMARK:, 
+					 SYSDATE, 
+					 UPDEMPID:
+					 )
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_422"   value-count="0" url="선정평가항목수정" >  
+		<sql-content>
+			<![CDATA[
+		UPDATE SC_SELVALUEITEM SET
+					 ITEMNAME     = ITEMNAME:, 
+					 UNIT         = UNIT:, 
+					 POINT        = POINT:, 
+					 ISSYSCALC    = ISSYSCALC:, 
+					 USEFLAG      = USEFLAG:, 
+					 GTYPE        = GTYPE:,
+					 SARITHSYMBOL = SARITHSYMBOL:,
+					 SVALUE       = SVALUE:,
+					 EARITHSYMBOL = EARITHSYMBOL:,
+					 EVALUE       = EVALUE:,
+					 USEENDDT     = '', 
+					 REMARK       = REMARK:, 
+					 UPDDT        = SYSDATE, 
+					 UPDEMPID     = UPDEMPID: 
+		WHERE ITEMCD = ITEMCD:
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_423"   value-count="0" url="선정평가항목사용중지" >  
+		<sql-content>
+			<![CDATA[
+		UPDATE SC_SELVALUEITEM SET
+					 USEENDDT   = TO_CHAR(SYSDATE,'YYYYMMDD'), 
+					 USEFLAG    = 'N', 
+					 REMARK     = REMARK:, 
+					 UPDDT      = SYSDATE, 
+					 UPDEMPID   = UPDEMPID: 
+		WHERE ITEMCD = ITEMCD:
+			]]>
+		</sql-content>
+	</sql-mapping>
+   <sql-mapping  id="SC_520"   value-count="0"  url="수행평가항목 모텔 트리뷰 리스트" >  
+   	<sql-content>
+  		<![CDATA[		   
+SELECT LEVEL, B.*
+  FROM (SELECT A.CD ITEMCD, A.CDNAME ITEMNAME, A.CDDS, A.HIGHCD HIGHITEMCD, 
+               A.CDTYPE HIGHITEMCDTYPE, A.CDNAME HIGHITEMNAME, 'Y' USEFLAG, '' UNIT, '' POINT,
+               '' ISSYSCALC, '' USESTARTDT, '' USEENDDT, '' REMARK,
+               '' UPDDT, '' UPDEMPID,
+			   'PVS' CDTYPE1, A.CD CD1, 'SC_V1' CDTYPE2, '' CD2, 'SC_V2' CDTYPE3, '' CD3,
+			   '' UPDEMPNAME, '' UPDEMPGRDNAME, '' UPDORGNAME 
+          FROM COCODE A
+         WHERE CDTYPE = 'PVS'
+        UNION
+        SELECT DISTINCT B.CD ITEMCD, B.CDNAME ITEMNAME, B.CDDS, A.CD1 HIGHITEMCD,
+               A.CDTYPE1 HIGHITEMCDTYPE, TO_CDNAME(A.CDTYPE1, A.CD1) HIGHITEMNAME, 
+               'Y' USEFLAG, '' UNIT, '' POINT,
+               '' ISSYSCALC, '' USESTARTDT, '' USEENDDT,
+               '' REMARK, '' UPDDT, '' UPDEMPID,
+			   'PVS' CDTYPE1, A.CD1 CD1, 'SC_V1' CDTYPE2, B.CD CD2, 'SC_V2' CDTYPE3, '' CD3,
+			   '' UPDEMPNAME, '' UPDEMPGRDNAME, '' UPDORGNAME
+          FROM (SELECT *
+                  FROM SC_EXEVALUEITEM
+                 WHERE UPPER (ITEMCD) LIKE S_ITEMCD:
+                   AND USEFLAG LIKE S_USEFLAG:) A,
+               (SELECT *
+                  FROM COCODE
+                 WHERE CDTYPE = 'SC_V1') B
+         WHERE A.CDTYPE2 = B.CDTYPE AND A.CD2 = B.CD
+        UNION
+        SELECT DISTINCT B.CD ITEMCD, B.CDNAME ITEMNAME, B.CDDS, A.CD2 HIGHITEMCD, 
+               A.CDTYPE2 HIGHITEMCDTYPE, TO_CDNAME(A.CDTYPE2, A.CD2) HIGHITEMNAME, 
+               'Y' USEFLAG, '' UNIT, '' POINT,
+               '' ISSYSCALC, '' USESTARTDT, '' USEENDDT,
+               '' REMARK, '' UPDDT, '' UPDEMPID,
+			   'PVS' CDTYPE1, A.CD1 CD1, 'SC_V1' CDTYPE2, A.CD2 CD2, 'SC_V2' CDTYPE3, B.CD CD3,
+			   '' UPDEMPNAME, '' UPDEMPGRDNAME, '' UPDORGNAME
+          FROM (SELECT *
+                  FROM SC_EXEVALUEITEM
+                 WHERE UPPER (ITEMCD) LIKE S_ITEMCD:
+                   AND USEFLAG LIKE S_USEFLAG:) A,
+               (SELECT *
+                  FROM COCODE
+                 WHERE CDTYPE = 'SC_V2') B
+         WHERE A.CDTYPE3 = B.CDTYPE AND A.CD3 = B.CD
+        UNION
+        SELECT ITEMCD, ITEMNAME, TO_CHAR (9 - POINT) CDDS, CD3 HIGHITEMCD,
+               CDTYPE3 HIGHITEMCDTYPE, TO_CDNAME(CDTYPE3, CD3) HIGHITEMNAME, USEFLAG, UNIT,
+               CASE
+                 WHEN LENGTH (TO_CHAR (POINT)) <= 2
+                   THEN TO_CHAR (POINT) || '.0'
+                 ELSE TO_CHAR (POINT)
+               END POINT,
+               ISSYSCALC,
+               TO_CHAR (TO_DATE (USESTARTDT, 'YYYYMMDD'),'YYYY-MM-DD') USESTARTDT,
+               USEENDDT, REMARK,  TO_CHAR (UPDDT,'YYYY-MM-DD HH24:mi:ss') UPDDT, UPDEMPID,
+			   CDTYPE1, CD1, CDTYPE2, CD2, CDTYPE3, CD3,
+			   to_empkname(UPDEMPID) UPDEMPNAME, to_empgradename(UPDEMPID) UPDEMPGRDNAME, 
+			   to_orgname(UPDEMPID) UPDORGNAME
+          FROM SC_EXEVALUEITEM
+          WHERE UPPER (ITEMCD) LIKE S_ITEMCD: 
+   		  	AND USEFLAG LIKE S_USEFLAG:) B
+ WHERE UPPER (ITEMCD) LIKE S_ITEMCD: 
+   AND USEFLAG LIKE S_USEFLAG:
+ START WITH ITEMCD IN (SELECT CD FROM COCODE WHERE CDTYPE = 'PVS')
+ CONNECT BY PRIOR ITEMCD = HIGHITEMCD
+ ORDER SIBLINGS BY CDDS, ITEMCD
+		]]>
+	</sql-content>
+   </sql-mapping>
+	<sql-mapping  id="SC_521"   value-count="0" url="수행평가항목등록" >  
+		<sql-content>
+			<![CDATA[
+				INSERT INTO
+				    SC_EXEVALUEITEM(
+						ITEMCD,    
+						CDTYPE1, 
+						CD1,  
+						CDTYPE2,     
+						CD2,   
+						CDTYPE3,   
+					  CD3, 
+					  ITEMNAME, 
+					  UNIT, 
+					  POINT, 
+					  ISSYSCALC, 
+					  USESTARTDT, 
+					  USEENDDT, 
+					  USEFLAG, 
+					  REMARK, 
+					  UPDDT, 
+					  UPDEMPID
+				    )
+				VALUES(
+					 ITEMCD:, 
+					 CDTYPE1:, 
+					 CD1:, 
+					 CDTYPE2:, 
+					 CD2:, 
+					 CDTYPE3:, 
+					 CD3:, 
+					 ITEMNAME:, 
+					 UNIT:, 
+					 POINT:, 
+					 ISSYSCALC:, 
+					 USESTARTDT:, 
+					 '', 
+					 USEFLAG:, 
+					 REMARK:, 
+					 SYSDATE, 
+					 UPDEMPID: 
+					)
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_522"   value-count="0" url="수행평가항목수정" >  
+		<sql-content>
+			<![CDATA[
+		UPDATE SC_EXEVALUEITEM SET
+					 ITEMNAME   = ITEMNAME:, 
+					 UNIT       = UNIT:, 
+					 POINT      = POINT:, 
+					 ISSYSCALC  = ISSYSCALC:, 
+					 USEFLAG    = USEFLAG:, 
+					 USEENDDT   = '', 
+					 REMARK     = REMARK:, 
+					 UPDDT      = SYSDATE, 
+					 UPDEMPID   = UPDEMPID: 
+		WHERE ITEMCD = ITEMCD:
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_523"   value-count="0" url="수행평가항목사용중지" >  
+		<sql-content>
+			<![CDATA[
+		UPDATE SC_EXEVALUEITEM SET
+					 USEENDDT   = TO_CHAR(SYSDATE,'YYYYMMDD'), 
+					 USEFLAG    = 'N', 
+					 REMARK     = REMARK:, 
+					 UPDDT      = SYSDATE, 
+					 UPDEMPID   = UPDEMPID: 
+		WHERE ITEMCD = ITEMCD:
+			]]>
+		</sql-content>
+	</sql-mapping>
+	<sql-mapping  id="SC_610"   value-count="0" url="용역수행평가LIST" >  
+		<sql-content>
+			<![CDATA[
+		SELECT DISTINCT TO_BIZACQNAME(ORDERCORPCD) AS ORDERCORPNAME,
+		       A.CONF_NO      CONF_NO,      --용역수행평가품의서 번호
+		       A.CONT_NO      CONT_NO,      --외주계약 번호
+		       A.ITEMCNT      ITEMCNT,      --평가항목수
+		       A.TTLPOINT     TTLPOINT,     --평점합계
+		       A.AVGPOINT     AVGPOINT,     --평점환산
+		       A.MEMO         MEMO,         --의견
+		       A.UPDDT        UPDDT,        --수정일시
+		       A.UPDEMPID     UPDEMPID,     --수정자
+		       D.PJT_NO       PJT_NO,       --프로젝트명
+		       D.PJTNAME      PJTNAME,      --프로젝트명
+			     D.CONTAMT      CONTAMT,      --총계약금액
+			     D.PJTDIV       PJTDIV,       --프로젝트관리부분
+		       E.CONTNAME     CONTNAME,     --계약명
+			     E.BIZACQCD     BIZACQCD,     --거래처코드
+			     E.CONTAMT      CONTAMT,      --계약금액
+			     E.ORDERSTARTDT ORDERSTARTDT, --계약시작일자
+			     E.ORDERENDDT   ORDERENDDT,   --계약종료일자
+		 	     F.BIZACQNAME   BIZACQNAME,    --거래처명
+	 	       STATUS,
+               TO_CDNAME('ST',STATUS) AS STATUSNAME
+		  FROM SC_EXEVALUECONFER A, 
+			  SC_CONTRACTDETAIL B, 
+			  CONFER C, 
+			  PROJECT D, 
+			  SC_CONTRACT E, 
+			  BIZACQCORP F
+		 WHERE A.CONT_NO = B.CONT_NO
+		   AND B.RCONF_NO = C.CONF_NO
+		   AND C.PJT_NO = D.PJT_NO
+		   AND A.CONT_NO = E.CONT_NO
+		   AND E.BIZACQCD = F.BIZACQCD
+		   AND A.CONF_NO BETWEEN 'SEXE-'||REPLACE(S_STARTDT:,'-','')||'-000'
+		   				 AND 'SEXE-'||REPLACE(S_ENDDT:,'-','')||'-999'
+		   AND D.PJTDIV LIKE '%'||S_CONFDIV:||'%'
+		   AND D.PJTNAME LIKE '%'||S_PJTNAME:||'%'
+   		   AND STATUS LIKE '%'||S_STATUS:||'%'
+			]]>
+		</sql-content>
+	</sql-mapping>
+	
+	<sql-mapping  id="SC_003"   value-count="0" url="PJT 신규 평가문서 생성시 " >  
+		<sql-content>
+			<![CDATA[
+		SELECT 	PJT_NO,
+				PJTCD,
+				PJTNAME,
+				PJTSTARTDT, 
+				PJTENDDT,
+				GET_DOCNO_SEQ('SEXE') AS CONF_NO
+		FROM PROJECT
+		WHERE PJT_NO=S_PJT_NO:
+			]]>
+		</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="SC_004"   value-count="0" url="BIZACQ" >  
+		<sql-content>
+			<![CDATA[
+		SELECT BIZACQCD,BIZACQNAME,BIZACQACCTCD
+		FROM BIZACQCORP
+		WHERE BIZACQCD=S_BIZACQCD:
+			]]>
+		</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="SC_005"   value-count="0" url="평가 항목 리스트" >  
+		<sql-content>
+			<![CDATA[
+		SELECT
+				ITEMCD,
+				TO_CDNAME(CDTYPE2,CD2) as 	ITEMNAME1,
+				TO_CDNAME(CDTYPE3,CD3) as 	ITEMNAME2,
+				ITEMNAME AS 		ITEMNAME3
+		FROM SC_EXEVALUEITEM
+		WHERE 	CDTYPE1='PVS'
+			]]>
+		</sql-content>
+	</sql-mapping>	
+	
+	<sql-mapping  id="SC_006"   value-count="0" url="평가 내역 등록" >  
+		<sql-content>
+			<![CDATA[
+		INSERT INTO SC_ExeValueConfer (
+					 CONF_NO   ,
+					 CONT_NO   ,
+					 ITEMCNT   ,
+					 TTLPOINT  ,
+					 AVGPOINT  ,
+					 MEMO      ,
+					 UPDDT     ,
+					 UPDEMPID  		
+		)
+		VALUES(
+					 CONF_NO:   ,
+					 CONT_NO:   ,
+					 ITEMCNT:   ,
+					 TTLPOINT:  ,
+					 AVGPOINT:  ,
+					 MEMO:      ,
+					 SYSDATE   ,
+					 UPDEMPID:  	
+		)		
+			]]>
+		</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="SC_007"   value-count="6" url="평가 내역 세부 등록" >  
+		<sql-content>
+			<![CDATA[
+		INSERT INTO SC_EXEVALUERESULT (
+					CONF_NO, 
+					ITEMCD, 
+					ITEMNAME, 
+					ISVALUEITEM, 
+					VALUERESULT, 
+					VALUEPOINT	
+		)
+		VALUES(
+					?, 
+					?, 
+					?, 
+					?, 
+					?, 
+					?		
+		)		
+			]]>
+		</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="SC_008"   value-count="0" url="평가 문서등록" >  
+		<sql-content>
+			<![CDATA[	
+			INSERT INTO CONFER (
+					CONF_NO,
+					CONFTITLE,
+					CREMPID,
+					CRDTM,
+					STATUS,
+					CONFTYPE,
+					CONFDELFLAG,
+					PJT_NO
+					)
+			VALUES( 
+					CONF_NO:,
+					CONFTITLE:,
+					CREMPID:,
+					SYSDATE,
+					STATUS:,
+					'SEXE',
+					'N',
+					PJT_NO:
+			)
+			]]>
+		</sql-content>
+	</sql-mapping>	
+
+
+	<sql-mapping  id="SC_009"   value-count="0" url="외주사 신규 평가 생성시 " >  
+		<sql-content>
+			<![CDATA[
+		SELECT  CONF_NO,
+				PJT_NO,
+				PJTCD,
+				PJTNAME,
+				PJTSTARTDT,
+				PJTENDDT,
+				BIZACQCD,
+				BIZACQNAME,
+				BIZACQACCTCD,
+				ITEMCD,
+				TO_CDNAME(CDTYPE2,CD2) as 	ITEMNAME1,
+				TO_CDNAME(CDTYPE3,CD3) as 	ITEMNAME2,
+				ITEMNAME AS 		ITEMNAME3,
+		        'Y' as ISVALUEITEM
+		FROM SC_EXEVALUEITEM A,
+			  (SELECT GET_DOCNO_SEQ('SEXE') AS CONF_NO,
+				PJT_NO,
+				PJTCD,
+				PJTNAME,
+				PJTSTARTDT,
+				PJTENDDT
+				FROM  PROJECT
+				WHERE PJT_NO=PJT_NO: AND ROWNUM=1) B,
+			    (SELECT BIZACQCD,BIZACQNAME,BIZACQACCTCD
+			    FROM BIZACQCORP
+			    WHERE BIZACQCD=BIZACQCD: AND ROWNUM=1 ) C
+		WHERE 	 A.CDTYPE1='PVS'
+
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="SC_010"   value-count="0" url="외주사 평가 조회 " >  
+		<sql-content>
+			<![CDATA[
+		SELECT 	A.CONF_NO,
+				A.CONT_NO,
+				A.ITEMCNT,
+				SUM(VALUERESULT) OVER() AS TTLPOINT,
+				ROUND(SUM(VALUERESULT) OVER() / SUM(DECODE(ISVALUEITEM,'Y',1,0)) OVER(),2) AS AVGPOINT,
+				A.MEMO,
+				A.UPDDT,
+				A.UPDEMPID,
+				B.PJT_NO,
+				C.PJT_NO,
+				C.PJTCD,
+				C.PJTNAME,
+				C.PJTSTARTDT,
+				C.PJTENDDT,
+				E.BIZACQCD,
+				E.BIZACQNAME,
+				E.BIZACQACCTCD,
+				F.ITEMCD, 
+				F.ITEMNAME, 
+				F.ISVALUEITEM, 
+				F.VALUERESULT, 
+				F.VALUEPOINT,
+				TO_CDNAME(CDTYPE2,CD2) as 	ITEMNAME1,
+				TO_CDNAME(CDTYPE3,CD3) as 	ITEMNAME2,
+				F.ITEMNAME AS 		ITEMNAME3,
+				STATUS,
+				TO_CDNAME('ST',STATUS) AS STATUSNAME,
+				SUM(DECODE(ISVALUEITEM,'Y',1,0)*5) OVER(PARTITION BY A.CONF_NO) AS BPOINT
+		FROM SC_EXEVALUECONFER A,
+			 CONFER B,
+			 PROJECT C,
+			 SC_CONTRACT D,
+			 BIZACQCORP E,
+			 SC_EXEVALUERESULT F,
+			 SC_EXEVALUEITEM G
+		WHERE A.CONF_NO = CONF_NO:
+		AND   A.CONT_NO = CONT_NO:||fn_split(params:,1)
+		AND   A.CONF_NO=B.CONF_NO
+		AND   B.PJT_NO=C.PJT_NO
+		AND   A.CONT_NO=D.CONT_NO
+		AND   D.BIZACQCD=E.BIZACQCD
+		AND   A.CONF_NO=F.CONF_NO
+        AND   F.ITEMCD=G.ITEMCD
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="SC_014"   value-count="0" url="평가 내역 세부 삭제" >  
+		<sql-content>
+			<![CDATA[
+		DELETE SC_EXEVALUERESULT 
+		WHERE CONF_NO = CONF_NO:
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="SC_015"   value-count="0" url="평가 내역 삭제" >  
+		<sql-content>
+			<![CDATA[
+		DELETE SC_ExeValueConfer 
+		WHERE CONF_NO = CONF_NO:
+		AND   CONT_NO = CONT_NO:
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="SC_016"   value-count="0" url="평가문서삭제" >  
+		<sql-content>
+			<![CDATA[
+		DELETE confer 
+		WHERE CONF_NO = CONF_NO:
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="SC_017"   value-count="0" url="외주계약등록조회" >  
+		<sql-content>
+			<![CDATA[
+		SELECT 	CONT_NO,
+				CONTNAME,
+ 			    TO_CHAR(ORDERPERCENT,'00.00') AS ORDERPERCENT,
+				CONTAMT,
+				ISVAT,
+				INCOMECONDITION,
+				PAYCONDITION,
+				ORDERSTARTDT,
+				ORDERENDDT,
+				BIZACQCD,
+ 			    TO_BIZACQNAME(BIZACQCD) AS BIZACQNAME,
+				CONTDT,
+				RCONF_NO,
+				UPDDT,
+				UPDEMPID
+		FROM SC_CONTRACT
+		WHERE CONT_NO LIKE '%'||S_CONT_NO:||'%'
+		AND CONTNAME LIKE '%'||S_CONTNAME:||'%'
+		AND CONTDT BETWEEN REPLACE(S_STARTDT:,'-','') AND REPLACE(S_ENDDT:,'-','')
+
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="SC_027"   value-count="0" url="외주계약등록조회" >  
+		<sql-content>
+			<![CDATA[
+		SELECT 	A.CONF_NO,
+				A.RCONF_NO AS CONF_NO,
+				A.ORDERREASON,
+				A.ORDERDETAIL,
+				A.CONTCONDITION,
+				A.PAYCONDITION,
+				A.CORPREASON,
+				A.UPDDT,
+				A.UPDEMPID ,
+				B.CONF_NO AS RCONF_NO,
+				B.WORKID,
+				B.SEQ,
+				B.WORKITEM,
+				B.UNIT,
+				B.QTY,
+				B.ORDERPERCENT,
+				B.CONTAMT AS AMT,
+				B.ISVAT,
+				B.ORDERSTARTDT,
+				B.ORDERENDDT,
+				B.BIZACQCD,
+				TO_BIZACQNAME(B.BIZACQCD) AS BIZACQNAME,
+				B.ISCONT,
+				C.PJT_NO,
+				TO_PJTNO_TOCODE(C.PJT_NO) AS PJTCD,
+				TO_PJTNAME(C.PJT_NO) AS PJTNAME,
+				D.CONTAMT,
+				D.CONTSTARTDT,
+				D.CONTENDDT,
+				TO_BIZACQNAME(ORDERCORPCD) AS ORDERCORPNAME,
+				'' AS CONTNAME,
+				'1' AS PAYCONDITION,
+				 (SELECT GET_DOCNO_SEQ('SCOT') AS CONT_NO FROM DUAL WHERE ROWNUM=1) AS CONT_NO,
+				 SUM(B.CONTAMT) OVER() AS TOT_AMT,				 
+				'Y' AS  ISVAT
+		
+		FROM SC_CONCONFER A,
+			  SC_CONITEM B,
+			  CONFER C,
+			  PROJECT D
+		WHERE A.CONF_NO=B.CONF_NO
+		AND   A.CONF_NO=C.CONF_NO
+		AND   C.PJT_NO =PJT_NO:
+		AND   B.BIZACQCD=BIZACQCD:
+		AND   C.PJT_NO=D.PJT_NO
+		AND   C.STATUS='DD1'
+        AND (B.ISCONT<>'Y' OR B.ISCONT IS NULL)
+		ORDER BY B.SEQ
+
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="SC_018"   value-count="0" url="외주계약삭제" >  
+		<sql-content>
+			<![CDATA[
+		DELETE SC_CONTRACT 
+		WHERE CONT_NO = CONT_NO:
+			]]>
+		</sql-content>
+	</sql-mapping>			
+	<sql-mapping  id="SC_019"   value-count="0" url="외주계약등록" >  
+		<sql-content>
+			<![CDATA[
+		INSERT INTO SC_CONTRACT (
+					CONT_NO, 
+					CONTNAME, 
+					ORDERPERCENT, 
+					CONTAMT, 
+					ISVAT, 
+					INCOMECONDITION, 
+					PAYCONDITION, 
+					ORDERSTARTDT, 
+					ORDERENDDT, 
+					BIZACQCD, 
+					CONTDT, 
+					RCONF_NO, 
+					UPDDT, 
+					UPDEMPID		
+		)
+		VALUES(
+					CONT_NO:, 
+					CONTNAME:, 
+					ORDERPERCENT:, 
+					TOT_AMT:, 
+					ISVAT:, 
+					INCOMECONDITION:, 
+					PAYCONDITION:, 
+					ORDERSTARTDT:, 
+					ORDERENDDT:, 
+					BIZACQCD:, 
+					REPLACE(CONTDT:,'-',''), 
+					RCONF_NO:, 
+					SYSDATE, 
+					UPDEMPID:	
+		)		
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	
+	<sql-mapping  id="SC_020"   value-count="0" url="계약등록 세부 삭제" >  
+		<sql-content>
+			<![CDATA[
+		DELETE SC_CONTRACTDETAIL 
+		WHERE CONT_NO = CONT_NO:
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	
+	<sql-mapping  id="SC_035"   value-count="4" url="계약등록 여부 저장" >  
+		<sql-content>
+			<![CDATA[
+		UPDATE SC_CONITEM SET
+		ISCONT=DECODE(?,'D','N','C','Y','') --삭제시 'N', 등록시 'Y' 처리 
+		WHERE CONF_NO=?
+		AND WORKID=?
+		AND SEQ=?
+			]]>
+		</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="SC_028"   value-count="9" url="계약등록세부 등록" >  
+		<sql-content>
+			<![CDATA[
+		INSERT INTO SC_CONTRACTDETAIL (
+					CONT_NO, 
+					RCONF_NO, 
+					WORKID, 
+					SEQ, 
+					WORKITEM, 
+					UNIT, 
+					QTY, 
+					WORDERPERCENT, 
+					UPDDT, 
+					UPDEMPID
+		)
+		VALUES(
+					?, 
+					?, 
+					?, 
+					?, 
+					?,
+					?, 
+					?, 
+					?, 
+					SYSDATE, 
+					?		
+		)		
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="SC_029"   value-count="0" url="계약등록조회" >  
+		<sql-content>
+			<![CDATA[
+			SELECT A.CONT_NO,
+				A.CONTNAME,
+				A.ORDERPERCENT,
+				A.CONTAMT,
+				A.ISVAT,
+				A.INCOMECONDITION,
+				A.PAYCONDITION,
+				A.ORDERSTARTDT,
+				A.ORDERENDDT,
+				A.BIZACQCD,
+		        TO_BIZACQNAME(A.BIZACQCD) as BIZACQNAME,
+				A.CONTDT,
+				A.RCONF_NO,
+				A.UPDDT,
+				A.UPDEMPID,
+				B.RCONF_NO,
+				B.WORKID,
+				B.SEQ,
+				B.WORKITEM,
+				B.UNIT,
+				B.QTY,
+				B.WORDERPERCENT,
+				B.UPDDT,
+				B.UPDEMPID,
+	            C.PJT_NO,
+	            TO_PJTNO_TOCODE(C.PJT_NO) AS PJTCD,
+	            TO_PJTNAME(C.PJT_NO) AS PJTNAME,
+            	TO_BIZACQNAME(C.ORDERCORPCD) AS ORDERCORPNAME,
+           	    E.CONTAMT AS AMT,
+                SUM(E.CONTAMT) OVER() AS TOT_AMT,
+           	    B.WORDERPERCENT,
+				C.CONTAMT AS  PJTCONTAMT,
+				C.CONTSTARTDT,
+				C.CONTENDDT           	    
+			FROM SC_CONTRACT A,
+				SC_CONTRACTDETAIL B,
+			    PROJECT C,
+			    CONFER D,
+                SC_CONITEM E
+			WHERE A.CONT_NO=B.CONT_NO(+)
+			AND   A.CONT_NO=CONT_NO:
+			AND   B.RCONF_NO=D.CONF_NO(+)
+			AND   D.PJT_NO=C.PJT_NO(+)
+   			AND E.WORKID(+)=B.WORKID
+			AND E.SEQ(+) =B.SEQ
+			AND E.CONF_NO(+)=  B.RCONF_NO
+			ORDER BY B.RCONF_NO,SEQ
+			]]>
+		</sql-content>
+	</sql-mapping>		
+	<sql-mapping  id="SC_030"   value-count="0" url="외주 용역비" >  
+		<sql-content>
+			<![CDATA[
+		SELECT *
+		FROM
+	  		(SELECT  YYMM,
+                     SBN,
+                     NAME,
+                     DEPT,
+                     TO_ORGCDNAME( DEPT) AS DEPT_NM,
+                     POSITION,
+                     TO_CDNAME('EAA',POSITION) AS POSITION_NM,
+                             COUNT(PJT_NO) OVER(PARTITION BY PJT_NO) AS PJT_CNT,
+                     PJT_NO,
+                     TO_PJTCDNAME(TO_PJTNO_TOCODE(PJT_NO)) AS  PJT_NM,
+                     BIZACQCD,
+                     TO_BIZACQNAME(BIZACQCD) AS BIZ_NM,
+                     CONT_STARTDT,
+                     CONT_ENDDT,
+                     NVL(SALARY     ,'0')   AS SALARY      ,
+                     NVL(BONUS      ,'0')   AS BONUS       ,
+                     NVL(GUKMIN     ,'0')   AS GUKMIN      ,
+                     NVL(MEDICAL    ,'0')   AS MEDICAL     ,
+                     NVL(YUNGUMBOJO ,'0')   AS YUNGUMBOJO  ,
+                     NVL(SHINHUPBOJO,'0')   AS SHINHUPBOJO ,
+                     NVL(TMPTJ      ,'0')   AS TMPTJ       ,
+                     NVL(YUNCHA     ,'0')   AS YUNCHA      ,
+                     NVL(KY_SJAMT   ,'0')   AS KY_SJAMT
+            FROM SC_TMPEMP_LABORCOST
+            WHERE YYMM LIKE  REPLACE(S_YYMM:,'-','')||'%'
+			AND   NAME LIKE '%'||S_NAME:||'%'
+	        )
+		WHERE (PJT_NM LIKE '%' ||S_PJT_NM:||'%' OR  S_PJT_NM: IS NULL)
+		AND   (BIZ_NM LIKE '%' ||S_BIZ_NM:||'%' OR  S_BIZ_NM: IS NULL)		
+		ORDER BY PJT_NM,POSITION
+			]]>
+		</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="SC_0221"   value-count="12" url="계산서정보저장_외주현황" >  
+		<sql-content>
+			<![CDATA[
+		INSERT INTO SC_INVOICE(
+			INV_NO,
+			CONT_NO,        
+			BIZACQCD,       
+			INVTYPE,        
+			INVISSUEDT,     
+			SUPPLYAMT,      
+			TAXAMT,         
+			TOTALAMT,       
+			INVREGDT,       
+			FILEDESC,       
+			REMARK,         
+			ISDELYN,        
+			UPDDT,          
+			UPDEMPID,
+			STATUS
+		)
+		VALUES(
+		    GET_SEQ('INV'),
+			?,
+			?,
+			?,
+			?,
+			TO_NUMBER(?),
+			TO_NUMBER(?),
+			TO_NUMBER(?),
+			?,
+			?,
+			?,
+			'N',
+			SYSDATE,
+			?,
+			?
+		)
+					]]>
+		</sql-content>
+	</sql-mapping>	
+
+	<sql-mapping  id="SC_036"   value-count="12" url="외주용역비 수정" >  
+		<sql-content>
+			<![CDATA[
+	UPDATE SC_TMPEMP_LABORCOST SET
+			YYMM=REPLACE(YYMM:,'-',''),
+			SBN=SBN:, 
+			NAME=NAME:, 
+			DEPT=DEPT:, 
+			POSITION=POSITION:, 
+			PJT_NO=PJT_NO:, 
+			BIZACQCD=BIZACQCD:, 
+			SALARY=SALARY:, 
+--			BONUS=BONUS:, 
+			GUKMIN=GUKMIN:, 
+			MEDICAL=MEDICAL:, 
+--			YUNGUMBOJO=YUNGUMBOJO:, 
+--			SHINHUPBOJO=SHINHUPBOJO:, 
+			TMPTJ=TMPTJ:, 
+			YUNCHA=YUNCHA:, 
+			KY_SJAMT=KY_SJAMT:, 
+			CONT_STARTDT=REPLACE(CONT_STARTDT:,'-',''), 
+			CONT_ENDDT =REPLACE(CONT_ENDDT:,'-','')
+	WHERE YYMM=	YYMM:
+	AND   SBN = SBN:
+			]]>
+		</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="SC_037"   value-count="12" url="외주용역비 등록" >  
+		<sql-content>
+			<![CDATA[
+	INSERT INTO SC_TMPEMP_LABORCOST (
+			YYMM, 
+			SBN, 
+			NAME, 
+			DEPT, 
+			POSITION, 
+			PJT_NO, 
+			BIZACQCD, 
+			SALARY, 
+--			BONUS, 
+			GUKMIN, 
+			MEDICAL, 
+--			YUNGUMBOJO, 
+--			SHINHUPBOJO, 
+			TMPTJ, 
+			YUNCHA, 
+			KY_SJAMT, 
+			CONT_STARTDT, 
+			CONT_ENDDT)
+		VALUES(
+			REPLACE(YYMM:,'-',''), 
+			SBN:, 
+			NAME:, 
+			DEPT:, 
+			POSITION:, 
+			PJT_NO:, 
+			BIZACQCD:, 
+			SALARY:, 
+--			BONUS:, 
+			GUKMIN:, 
+			MEDICAL:, 
+--			YUNGUMBOJO:, 
+--			SHINHUPBOJO:, 
+			TMPTJ:, 
+			YUNCHA:, 
+			KY_SJAMT:, 
+			REPLACE(CONT_STARTDT:,'-',''), 
+			REPLACE(CONT_ENDDT:,'-','')	
+		)
+			]]>
+		</sql-content>
+	</sql-mapping>	
+	<sql-mapping  id="SC_038"   value-count="12" url="외주용역비 삭제" >  
+		<sql-content>
+			<![CDATA[
+		DELETE FROM SC_TMPEMP_LABORCOST
+		WHERE YYMM=REPLACE(YYMM:,'-','')
+		AND   SBN =SBN:
+		AND   PJT_NO=PJT_NO:
+			]]>
+		</sql-content>
+	</sql-mapping>	
+
+</sql>
+

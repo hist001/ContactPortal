@@ -1,0 +1,820 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<sql>
+<sql-mapping  id="listSalesPlan"   value-count="4" url="매출계획 리스트" >  
+<sql-content>
+<![CDATA[
+	select a.*, a.mercamt+a.servamt sumamt		   
+		   ,sum(a.servamt)over(partition by yplancd) totservamt
+		   ,sum(a.mercamt)over(partition by yplancd) totmercamt
+		   ,sum(a.mercamt+a.servamt)over(partition by yplancd) totamt 
+	from (
+	select a.yplancd
+		  ,a.yplanname
+		  ,b.dyplancd
+		  ,b.dyplanname
+		  ,b.dyplanstartdt
+		  ,b.dyplanenddt
+		  ,b.crempid
+		  ,to_empkname(b.crempid) crempname
+		  ,b.dyplanstatus
+		  ,b.isdefect
+		  ,b.yearplantype
+		  ,b.orgcd
+		  ,to_orgCdName(b.orgCd) orgName
+		  ,sum(decode(c.acctcd,'41010',c.amt_01+c.amt_02+c.amt_03+c.amt_04+c.amt_05+c.amt_06+c.amt_07+c.amt_08+c.amt_09+c.amt_10+c.amt_11+c.amt_12,0)) SERVAMT
+		  ,sum(decode(c.acctcd,'41020',c.amt_01+c.amt_02+c.amt_03+c.amt_04+c.amt_05+c.amt_06+c.amt_07+c.amt_08+c.amt_09+c.amt_10+c.amt_11+c.amt_12,0)) MERCAMT 
+	from  yearplan a, detailyearplan b, budgetplan c
+	where a.yplancd = b.yplancd
+	and	  b.dyplancd = c.dyplancd
+	and	  b.yplancd = ?							--사업계획코드
+	and	  b.crempid like '%'||?||'%'			--작성자사업
+	and	  b.dyplanname like '%'||?||'%'			--제품/조직명
+	and	  b.yearplantype = 'P'
+	and   c.isdefault='C'
+	and	  b.orgcd in (							
+	select orgcd 
+	from org a
+	where to_char(sysdate,'yyyymmdd') between startdt and enddt                                
+	connect by a.highorgcd = prior a.orgcd
+	start with a.orgcd = ?		   		  	    --조직코드(최상위는 0000)
+	)
+	group by a.yplancd
+		  ,a.yplanname
+		  ,b.dyplancd
+		  ,b.dyplanname
+		  ,b.dyplanstartdt
+		  ,b.dyplanenddt
+		  ,b.crempid
+		  ,b.dyplanstatus
+		  ,b.isdefect
+		  ,b.yearplantype
+		  ,b.orgcd
+	) a
+	order by a.yplancd desc, a.dyplancd desc
+]]>     
+</sql-content>
+</sql-mapping>
+   
+<sql-mapping  id="selectSalesPlan"   value-count="5" url="매출계획 한건조회" >  
+<sql-content>
+<![CDATA[
+	select a.yplancd
+		   ,a.dyplancd
+		   ,a.dyplanname
+		   ,a.crEmpId
+		   ,to_empkname(a.crEmpId) crEmpName
+		   ,a.orgcd
+		   ,to_orgcdname(a.orgcd) orgname
+		   ,a.yearPlanType
+		   ,nvl(b.amtofmerc,0)+nvl(b.amtofinserv,0) expBizAmt
+		   ,nvl(b.amtofmerc,0) amtOfMerc
+		   ,nvl(b.amtofInserv,0) amtOfInServ
+		   ,b.recvorderview
+		   ,nvl(b.prodStartDt,'19000101') prodStartDt
+		   ,nvl(b.prodEndDt,'99991231') prodEndDt
+		   ,a.dyPlanStatus
+		   ,nvl(b.amt_01,0) amt_01,nvl(b.amt_02,0) amt_02,nvl(b.amt_03,0) amt_03
+		   ,nvl(b.amt_04,0) amt_04,nvl(b.amt_05,0) amt_05,nvl(b.amt_06,0) amt_06
+		   ,nvl(b.amt_07,0) amt_07,nvl(b.amt_08,0) amt_08,nvl(b.amt_09,0) amt_09
+		   ,nvl(b.amt_10,0) amt_10,nvl(b.amt_11,0) amt_11,nvl(b.amt_12,0) amt_12
+		   ,b.viewType
+	from detailyearplan a, (				
+	         select a.opptno,a.amtofmerc, a.amtofInserv, a.recvorderview, a.prodStartDt, a.prodEndDt,a.viewType
+			 		,b.amt_01,b.amt_02,b.amt_03,b.amt_04,b.amt_05,b.amt_06
+					,b.amt_07,b.amt_08,b.amt_09,b.amt_10,b.amt_11,b.amt_12		
+	         from oppt a, (
+			 	  	   	    --수주조회시 시스템판매인 경우 월별데이터도 불러옴
+							select opptno
+								   ,sum(decode(months,'01',amt,0)) amt_01
+								   ,sum(decode(months,'02',amt,0)) amt_02
+								   ,sum(decode(months,'03',amt,0)) amt_03
+								   ,sum(decode(months,'04',amt,0)) amt_04
+								   ,sum(decode(months,'05',amt,0)) amt_05
+								   ,sum(decode(months,'06',amt,0)) amt_06
+								   ,sum(decode(months,'07',amt,0)) amt_07
+								   ,sum(decode(months,'08',amt,0)) amt_08
+								   ,sum(decode(months,'09',amt,0)) amt_09
+								   ,sum(decode(months,'10',amt,0)) amt_10
+								   ,sum(decode(months,'11',amt,0)) amt_11
+								   ,sum(decode(months,'12',amt,0)) amt_12
+							from (
+								 select opptno,substr(dopptdt,5,2) months,amt from detailoppt
+								where opptno = ?
+								and   doppttype = 'P'
+								and   dopptdt like ?||'%'
+							)
+							group by opptno
+							) b
+	         --수주등록형태가 사업계획인것만 불러옴
+			 where a.opptno = b.opptno(+)
+	         and   a.createType = 'P06'			--parameter 로 처리할 것
+			 and   a.opptno = ?			  
+	 ) b
+	where a.dyPlanCd = b.opptno(+)
+	and   a.yPlanCd = ?
+	and   a.dyplancd = ?
+]]>
+</sql-content>
+</sql-mapping>
+   
+<sql-mapping  id="selectSalesPlanGrid"   value-count="2" url="매출계획 한건조회 그리" >  
+<sql-content>
+<![CDATA[
+	select a.yplancd
+		   ,a.dyplancd
+		   ,a.isdefault	
+		   ,a.acctcd
+		   ,to_acctname(a.acctcd) acctname
+		   ,a.isdefault
+		   ,a.amt_01
+		   ,a.amt_02
+		   ,a.amt_03
+		   ,a.amt_04
+		   ,a.amt_05
+		   ,a.amt_06
+		   ,a.amt_07
+		   ,a.amt_08
+		   ,a.amt_09
+		   ,a.amt_10
+		   ,a.amt_11
+		   ,a.amt_12
+		   ,a.budgetplannote
+	from budgetplan a
+	where a.yplancd = ?
+	and	  a.dyplancd = ?
+	and   a.acctcd in ('41010','41020')
+	and   a.isDefault = 'C'
+	order by acctcd asc
+]]>
+</sql-content>
+</sql-mapping>
+   
+<sql-mapping  id="updateSalesPlanGrid"   value-count="1" url="매출계획 한건조회 그리" >  
+<sql-content>
+<![CDATA[
+	select a.acctcd
+		   ,to_acctname(a.acctcd) acctname
+		   ,a.isdefault
+		   ,a.amt_01
+		   ,a.amt_02
+		   ,a.amt_03
+		   ,a.amt_04
+		   ,a.amt_05
+		   ,a.amt_06
+		   ,a.amt_07
+		   ,a.amt_08
+		   ,a.amt_09
+		   ,a.amt_10
+		   ,a.amt_11
+		   ,a.amt_12
+		   ,a.budgetplannote
+	from budgetplan a
+	where a.dyplancd = ?
+	and   a.acctcd in ('41010','41020')
+	and   a.isDefault = 'C'
+]]>
+</sql-content>
+</sql-mapping>
+   
+<sql-mapping  id="selectSalesPlanFull"   value-count="5" url="매출계획 일괄처리 메인화면" >  
+<sql-content>
+<![CDATA[
+	select a.*
+	from (
+	select a.*
+		   ,b.acctcd
+		   ,to_acctname(b.acctcd) acctname
+		   ,b.isdefault
+		   ,b.amt_01
+		   ,b.amt_02
+		   ,b.amt_03
+		   ,b.amt_04
+		   ,b.amt_05
+		   ,b.amt_06
+		   ,b.amt_07
+		   ,b.amt_08
+		   ,b.amt_09
+		   ,b.amt_10
+		   ,b.amt_11
+		   ,b.amt_12
+		   ,b.budgetplannote
+	from (
+	select rank()over(order by a.yplancd desc, a.dyplancd desc) no
+		   ,a.yplancd||a.dyplancd key
+		   ,a.yplancd
+		   ,a.dyplancd	   
+		   ,a.dyplanname
+		   ,a.crEmpId	 
+		   ,to_empkname(a.crempid) crEmpName
+		   ,c.bizno
+		   ,to_bizname(c.bizno) bizname	
+		   ,d.amtofmerc+d.amtofinserv expBizAmt
+		   ,d.amtofmerc
+		   ,d.amtofInserv
+		   ,d.recvorderview
+		   ,d.prodStartDt
+		   ,d.prodEndDt
+		   ,count(a.dyplancd)over() totCnt   
+	from detailyearplan a, prod c, (
+		 select a.opptno,a.amtofmerc, a.amtofInserv, a.recvorderview, a.prodStartDt, a.prodEndDt
+		 from oppt a
+		 --수주등록형태가 사업계획인것만 불러옴
+		 where a.createType = 'Y'
+	 ) d
+	where a.dyplancd = c.prodtype||c.prodno
+	and	  a.dyplancd = d.opptno(+)
+	and   a.dyplanname like '%'||?||'%'
+	and	  a.crempid like '%'||?||'%'
+	and	  c.bizno like ?||'%'
+	) a, (
+	  select * from budgetplan
+	) b
+	where a.dyplancd = b.dyplancd
+	order by no
+	) a
+	where a.no between ? and ?
+	]]>
+</sql-content>
+</sql-mapping>
+	
+<sql-mapping  id="deleteYearPlan"   value-count="1" url="사업계획 전체 삭제" >  
+<sql-content>
+<![CDATA[
+	delete YEARPLAN where yPlanCd=?
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="selectSalesPlanAll"   value-count="4" url="매출계획 일괄처리 메인화면" >  
+<sql-content>
+<![CDATA[
+	select a.yplancd||a.dyplancd||b.acctcd||b.isdefault key
+		   ,a.yplancd
+		   ,a.dyplancd
+		   ,a.dyplanname
+		   ,a.dyplanstartdt
+		   ,a.dyplanenddt
+		   ,a.crempid
+		   ,to_empkname(a.crempid) crEmpName
+		   ,a.dyplanstatus
+		   ,a.isdefect
+		   ,a.orgcd
+		   ,to_orgcdname(a.orgcd) orgname
+		   ,a.yearplantype
+		   ,b.acctcd
+		   ,to_acctname(b.acctcd) acctname
+		   ,b.isdefault
+		   ,b.amt_01
+		   ,b.amt_02
+		   ,b.amt_03
+		   ,b.amt_04
+		   ,b.amt_05
+		   ,b.amt_06
+		   ,b.amt_07
+		   ,b.amt_08
+		   ,b.amt_09
+		   ,b.amt_10
+		   ,b.amt_11
+		   ,b.amt_12
+		   ,b.budgetplannote
+	from detailyearplan a, budgetplan b
+	where a.dyplancd = b.dyplancd
+	and   a.yplancd = ?			                      --사업계획코드
+	and   a.crempid like '%'||?||'%'                  --작성자사업
+	and   a.dyplanname like '%'||?||'%'               --제품/조직명
+	and   a.orgcd in (
+	select orgcd
+	from org a
+	where to_char(sysdate,'yyyymmdd') between startdt and enddt
+	connect by a.highorgcd = prior a.orgcd
+	start with a.orgcd = ?                           --조직코드(최상위는 0000)
+	)
+	and	  b.acctcd in ('41010','41020')
+	and   b.isDefault = 'C' 
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="updateSalesPlan"   value-count="4" url="매출계획 한건수정" >  
+<sql-content>
+<![CDATA[
+	UPDATE DETAILYEARPLAN SET CREMPID = ?,DYPLANNAME=?
+	WHERE DYPLANCD = ?
+	AND	  YPLANCD = ?
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="updateProdContAmt"   value-count="3" url="제품매출정보 수정" >  
+<sql-content>
+<![CDATA[
+	UPDATE PROD SET CONTAMT = ?
+	WHERE PRODTYPE = ?
+	AND	  PRODNO = ?
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="updateYearPlanStatus"   value-count="2" url="사업계획 상태변경" >  
+<sql-content>
+<![CDATA[
+	update yearplan set yplanstatus = ?
+	where yplancd = ?
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="updateDetailYearPlanStatusAll"   value-count="2" url="전체 세부사업계획 상태변경" >  
+<sql-content>
+<![CDATA[
+	update detailyearplan set dyplanstatus = ?
+	where yplancd = ?
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="updateOpptStatus"   value-count="1" url="수주정보등록형태변경" >  
+<sql-content>
+<![CDATA[
+	update oppt set createType = 'Y'
+	where createType = ?
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="updateCostDescStatus"   value-count="1" url="사업계획에서 작성된 견적원가 상태변경" >  
+<sql-content>
+<![CDATA[
+	update costdesc set apstatus='WCO'
+	where (prodtype,prodno,version,costtype) in ( 
+		select prodtype,prodno,version,costtype
+		from (
+			select a.*, rank()over(partition by a.prodtype, a.prodno order by version desc) rank 
+			from costdesc a
+			where costtype='E'
+			and   apstatus='WES'
+			and   prodtype||prodno in (
+			  	select dyplancd from detailyearplan
+				where yearplantype='P'
+				and	  yplancd=?
+			)
+		)
+		where rank=1
+	)
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="searchDetailYearPlan"   value-count="4" url="사업계획 검색" >  
+<sql-content>
+<![CDATA[
+	SELECT 	YPLANCD,
+			DYPLANCD,
+			DYPLANSTARTDT,
+			DYPLANENDDT,
+			CREMPID,
+			TO_EMPKNAME(CREMPID) CREMPNAME,
+			DYPLANSTATUS,
+			ISDEFECT,
+			DYPLANNAME,
+			ORGCD,
+				(SELECT YPLANNAME
+				FROM YEARPLAN
+				WHERE YPLANCD=ORGCD)
+			AS  ORGNAME,
+			YEARPLANTYPE
+	FROM DETAILYEARPLAN A
+	WHERE A.YEARPLANTYPE=?
+	AND   A.DYPLANCD LIKE UPPER('%'||?||'%')
+	AND   A.DYPLANNAME LIKE '%'||?||'%'
+	AND   A.YPLANCD=?
+	ORDER BY YPLANCD DESC,DYPLANCD DESC
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="listOpptPlanInq$"   value-count="8" url="년간수주계획 조회" >  
+<sql-content>
+<![CDATA[
+	SELECT 	A.OPPTNO||A.ACCTCD KEY,
+			A.OPPTNO,
+			A.OPPTNAME,
+			A.EXPCONTDT,
+			A.VIEWTYPE,
+			A.OPPTEMPID,
+			A.OPPTEMPNAME,
+			A.BIZNO,
+			TO_BIZNAME(A.BIZNO) BIZNAME,
+			A.ACCTCD,
+			A.ACCTNAME,
+			A.RECVORDERVIEW,
+			A.PRODSTARTDT,
+			A.PRODENDDT,
+			A.CORPNO,
+			TO_BIZACQNAME(A.CORPNO) CORPNAME,
+			A.ISOUTBIZ
+		   ,A.AMT_01,A.AMT_02,A.AMT_03,A.AMT_04,A.AMT_05,A.AMT_06
+		   ,A.AMT_07,A.AMT_08,A.AMT_09,A.AMT_10,A.AMT_11,A.AMT_12
+		   ,A.SUMAMT
+		   ,SUM(A.AMT_01)OVER() SUMAMT_01
+		   ,SUM(A.AMT_02)OVER() SUMAMT_02
+		   ,SUM(A.AMT_03)OVER() SUMAMT_03
+		   ,SUM(A.AMT_04)OVER() SUMAMT_04
+		   ,SUM(A.AMT_05)OVER() SUMAMT_05
+		   ,SUM(A.AMT_06)OVER() SUMAMT_06
+		   ,SUM(A.AMT_07)OVER() SUMAMT_07
+		   ,SUM(A.AMT_08)OVER() SUMAMT_08
+		   ,SUM(A.AMT_09)OVER() SUMAMT_09
+		   ,SUM(A.AMT_10)OVER() SUMAMT_10
+		   ,SUM(A.AMT_11)OVER() SUMAMT_11
+		   ,SUM(A.AMT_12)OVER() SUMAMT_12
+		   ,SUM(A.AMT_01+A.AMT_02+A.AMT_03+A.AMT_04+A.AMT_05+A.AMT_06
+		   +A.AMT_07+A.AMT_08+A.AMT_09+A.AMT_10+A.AMT_11+A.AMT_12) OVER() SUMAMTALL
+	FROM(		   
+		SELECT A.OPPTNO,A.OPPTNAME, A.EXPCONTDT,A.VIEWTYPE,
+				A.OPPTEMPID,TO_EMPKNAME(A.OPPTEMPID) OPPTEMPNAME,
+				A.BIZNO,A.ACCTCD,A.ACCTNAME
+			   ,A.RECVORDERVIEW,A.PRODSTARTDT,A.PRODENDDT,A.CORPNO,A.ISOUTBIZ
+			   ,A.AMT_01,A.AMT_02,A.AMT_03,A.AMT_04,A.AMT_05,A.AMT_06
+			   ,A.AMT_07,A.AMT_08,A.AMT_09,A.AMT_10,A.AMT_11,A.AMT_12
+			   ,A.AMT_01+A.AMT_02+A.AMT_03+A.AMT_04+A.AMT_05+A.AMT_06
+			   +A.AMT_07+A.AMT_08+A.AMT_09+A.AMT_10+A.AMT_11+A.AMT_12 SUMAMT	   
+		FROM (		
+			SELECT A.OPPTNO,A.OPPTNAME, A.EXPCONTDT,A.VIEWTYPE,
+				A.OPPTEMPID,A.BIZNO,DECODE(A.SN,1,'41020','41010') ACCTCD,
+				TO_ACCTNAME(DECODE(A.SN,1,'41020','41010')) ACCTNAME
+			   ,A.RECVORDERVIEW,A.PRODSTARTDT,A.PRODENDDT,A.CORPNO,A.ISOUTBIZ,
+				case when substr(bizno,1,1)='B'  then
+				nvl(trunc(A.OPPTAMT/12),0)		
+				when   A.OPPTNO in ('P1778','P1776') then
+				0			
+				else NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200601',A.OPPTAMT),0)
+				end AMT_01,
+				case when substr(bizno,1,1)='B'   then
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				0								
+				else NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200602',A.OPPTAMT),0)
+				end AMT_02,
+				case when substr(bizno,1,1)='B'   then
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)								
+				else  NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200603',A.OPPTAMT),0)
+				end AMT_03,
+				case when substr(bizno,1,1)='B'   then
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)													
+				else  NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200604',A.OPPTAMT),0)
+				end   AMT_04,
+				case when substr(bizno,1,1)='B'   then					
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)													
+				else   NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200605',A.OPPTAMT),0)
+				end AMT_05,
+				case when substr(bizno,1,1)='B'  then
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)													
+				else  NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200606',A.OPPTAMT),0) 
+				end  AMT_06,
+				case when substr(bizno,1,1)='B'  then					
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)													
+				else  NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200607',A.OPPTAMT),0)
+				end AMT_07,
+				case when substr(bizno,1,1)='B'  then
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)													
+				else  NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200608',A.OPPTAMT),0)
+				end AMT_08,
+				case when substr(bizno,1,1)='B'  then
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)													
+				else  NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200609',A.OPPTAMT),0)
+				end  AMT_09,
+				case when substr(bizno,1,1)='B'  then
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)													
+				else  NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200610',A.OPPTAMT),0)
+				end AMT_10,
+				case when substr(bizno,1,1)='B'  then
+				nvl(trunc(A.OPPTAMT/12),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)													
+				else  NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200611',A.OPPTAMT),0) 
+				end  AMT_11,
+				case when substr(bizno,1,1)='B'  then
+				nvl(trunc(A.OPPTAMT/12),0)+nvl(trunc(mod(A.OPPTAMT,12)),0)
+				when   A.OPPTNO in ('P1778','P1776') then
+				nvl(trunc(A.OPPTAMT/10),0)+nvl(trunc(mod(A.OPPTAMT,10)),0)													
+				else   NVL(DECODE(SUBSTR(A.EXPCONTDT,1,6),'200612',A.OPPTAMT),0)
+				end AMT_12
+			FROM (
+				SELECT A.OPPTNO,A.OPPTNAME,A.EXPCONTDT,A.VIEWTYPE,
+						A.OPPTEMPID,A.BIZNO,B.SN,DECODE(SN,1,A.AMTOFMERC,
+						A.AMTOFINSERV) OPPTAMT,A.RECVORDERVIEW,
+						A.PRODSTARTDT,A.PRODENDDT,A.CORPNO,A.ISOUTBIZ   	   		
+				FROM (							
+					SELECT A.*,B.CORPNO 
+					FROM OPPT A,RELCORP B
+					WHERE A.CREATETYPE=?		--2006년도사업계획
+					AND	  A.VIEWTYPE='P'
+					AND   A.BIZNO LIKE ?||'%'				 --담당자만 처리가능
+					AND A.OPPTEMPID like ?||'%'	   		 --권한처리	
+					AND A.OPPTNAME LIKE '%'||?||'%'
+					AND A.OPPTNO=B.OPPTNO
+					AND B.RELCORPTYPE='A'													
+				) A,(	
+					SELECT SN FROM MONTHS
+					WHERE SN <=2
+				) B				
+			) A			
+		) A		
+		UNION ALL		
+		SELECT A.OPPTNO,A.OPPTNAME,'' EXPCONTDT,A.VIEWTYPE,A.OPPTEMPID,TO_EMPKNAME(A.OPPTEMPID) OPPTEMPNAME,A.BIZNO,B.ACCTCD,TO_ACCTNAME(B.ACCTCD) ACCTNAME
+			   ,A.RECVORDERVIEW,A.PRODSTARTDT,A.PRODENDDT,C.CORPNO,A.ISOUTBIZ
+			   ,AMT_01,AMT_02,AMT_03,AMT_04,AMT_05,AMT_06
+			   ,AMT_07,AMT_08,AMT_09,AMT_10,AMT_11,AMT_12
+			   ,B.AMT_01+B.AMT_02+B.AMT_03+B.AMT_04+B.AMT_05+B.AMT_06+B.AMT_07+B.AMT_08+B.AMT_09+B.AMT_10+B.AMT_11+B.AMT_12 SUMAMT	   
+		FROM OPPT A, (	 
+			 SELECT A.OPPTNO,DECODE(SN,'1','41020','41010') ACCTCD
+			 		,DECODE(SN,'1',AMT_01,0) AMT_01
+					,DECODE(SN,'1',AMT_02,0) AMT_02
+					,DECODE(SN,'1',AMT_03,0) AMT_03
+					,DECODE(SN,'1',AMT_04,0) AMT_04
+					,DECODE(SN,'1',AMT_05,0) AMT_05
+					,DECODE(SN,'1',AMT_06,0) AMT_06
+					,DECODE(SN,'1',AMT_07,0) AMT_07
+					,DECODE(SN,'1',AMT_08,0) AMT_08
+					,DECODE(SN,'1',AMT_09,0) AMT_09
+					,DECODE(SN,'1',AMT_10,0) AMT_10
+					,DECODE(SN,'1',AMT_11,0) AMT_11
+					,DECODE(SN,'1',AMT_12,0) AMT_12
+			 FROM (
+				 SELECT A.OPPTNO,'41020' ACCTCD
+				 		,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200601',A.AMT)),0) AMT_01
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200602',A.AMT)),0) AMT_02
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200603',A.AMT)),0) AMT_03
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200604',A.AMT)),0) AMT_04
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200605',A.AMT)),0) AMT_05
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200606',A.AMT)),0) AMT_06
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200607',A.AMT)),0) AMT_07
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200608',A.AMT)),0) AMT_08
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200609',A.AMT)),0) AMT_09
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200610',A.AMT)),0) AMT_10
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200611',A.AMT)),0) AMT_11
+						,NVL(SUM(DECODE(SUBSTR(A.DOPPTDT,1,6),'200612',A.AMT)),0) AMT_12
+				 FROM	DETAILOPPT A
+				 WHERE  A.DOPPTTYPE='P'
+				 GROUP BY A.OPPTNO
+			 ) A,(
+			   	 SELECT SN FROM MONTHS WHERE SN<=2
+			 ) B	 	 
+		) B,(
+		  SELECT OPPTNO,RELCORPTYPE,CORPNO  
+		  FROM RELCORP 
+		  WHERE RELCORPTYPE='A'
+		) C
+		WHERE A.VIEWTYPE='S'
+		AND A.CREATETYPE=?				--2006년도사업계획
+		AND A.OPPTNO=B.OPPTNO 
+		AND A.BIZNO LIKE ?||'%'                 --담당자만 조회가능
+		AND A.OPPTEMPID LIKE ?||'%'	   		 --권한처리
+		AND A.OPPTNAME LIKE '%'||?||'%'
+		AND A.OPPTNO=C.OPPTNO
+	) A
+	ORDER BY SUBSTR(A.BIZNO,1,1),A.EXPCONTDT,A.OPPTNO DESC,A.VIEWTYPE,A.ACCTCD
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="listOpptPlanInq"   value-count="8" url="년간수주계획 조회" >  
+<sql-content>
+<![CDATA[
+SELECT  
+		PJT_NO||ACCTCD KEY,
+		PJT_NO AS OPPTNO,
+		PJTNAME AS OPPTNAME,
+		RECVORDERVIEW AS EXPCONTDT,
+		ISOUTBIZ AS VIEWTYPE,
+		PMEMPID AS OPPTEMPID,
+		(SELECT EMPKNAME FROM EMPALL B WHERE B.EMPID=A.PMEMPID) AS OPPTEMPNAME,
+		A.PJTTYPE AS BIZNO, --PJTTYPE으로 대체 사용
+		(SELECT PJTCD FROM PROJECT B WHERE B.PJT_NO=A.PJT_NO) AS BIZNAME,
+		A.ACCTCD,
+		(SELECT ACCTKNAME FROM ACCTTB B WHERE B.ACCTCD=A.ACCTCD) AS ACCTNAME,
+		A.RECVORDERVIEW,
+		PJTSTARTDT AS PRODSTARTDT,
+		PJTENDDT AS PRODENDDT,
+		(SELECT C.BIZNAME 
+		FROM PJTBIZ B ,BIZ C 
+		WHERE B.BIZTYPECD='1' 
+		AND B.PJT_NO=A.PJT_NO 
+		AND B.BIZCD=C.BIZCD) AS CORPNO, --사업유형코드로 사용
+		ORDERCORPCD,
+		(SELECT BIZACQNAME
+		FROM BIZACQCORP B
+		WHERE B.BIZACQCD =A.ORDERCORPCD) AS CORPNAME,
+		A.ISOUTBIZ
+	   ,A.AMT_01,A.AMT_02,A.AMT_03,A.AMT_04,A.AMT_05,A.AMT_06
+	   ,A.AMT_07,A.AMT_08,A.AMT_09,A.AMT_10,A.AMT_11,A.AMT_12
+	   ,A.AMT_01+A.AMT_02+A.AMT_03+A.AMT_04+A.AMT_05+A.AMT_06
+	   +A.AMT_07+A.AMT_08+A.AMT_09+A.AMT_10+A.AMT_11+A.AMT_12 AS sumAmt
+       ,SUM(A.AMT_01)OVER(PARTITION BY ACCTCD) SUMAMT_01
+       ,SUM(A.AMT_02)OVER(PARTITION BY ACCTCD) SUMAMT_02
+       ,SUM(A.AMT_03)OVER(PARTITION BY ACCTCD) SUMAMT_03
+       ,SUM(A.AMT_04)OVER(PARTITION BY ACCTCD) SUMAMT_04
+       ,SUM(A.AMT_05)OVER(PARTITION BY ACCTCD) SUMAMT_05
+       ,SUM(A.AMT_06)OVER(PARTITION BY ACCTCD) SUMAMT_06
+       ,SUM(A.AMT_07)OVER(PARTITION BY ACCTCD) SUMAMT_07
+       ,SUM(A.AMT_08)OVER(PARTITION BY ACCTCD) SUMAMT_08
+       ,SUM(A.AMT_09)OVER(PARTITION BY ACCTCD) SUMAMT_09
+       ,SUM(A.AMT_10)OVER(PARTITION BY ACCTCD) SUMAMT_10
+       ,SUM(A.AMT_11)OVER(PARTITION BY ACCTCD) SUMAMT_11
+       ,SUM(A.AMT_12)OVER(PARTITION BY ACCTCD) SUMAMT_12
+       ,SUM(A.AMT_01+A.AMT_02+A.AMT_03+A.AMT_04+A.AMT_05+A.AMT_06
+       +A.AMT_07+A.AMT_08+A.AMT_09+A.AMT_10+A.AMT_11+A.AMT_12) OVER(PARTITION BY ACCTCD) SUMAMTALL
+FROM
+(SELECT PJTTYPE,
+		PJT_NO,
+		PJTNAME,
+		ACCTCD,
+		NVL(SUM(AMT_01),0) AS AMT_01,
+		NVL(SUM(AMT_02),0) AS AMT_02,
+		NVL(SUM(AMT_03),0) AS AMT_03,
+		NVL(SUM(AMT_04),0) AS AMT_04,
+		NVL(SUM(AMT_05),0) AS AMT_05,
+		NVL(SUM(AMT_06),0) AS AMT_06,
+		NVL(SUM(AMT_07),0) AS AMT_07,
+		NVL(SUM(AMT_08),0) AS AMT_08,
+		NVL(SUM(AMT_09),0) AS AMT_09,
+		NVL(SUM(AMT_10),0) AS AMT_10,
+		NVL(SUM(AMT_11),0) AS AMT_11,
+		NVL(SUM(AMT_12),0) AS AMT_12,
+		PMEMPID,
+		RECVORDERVIEW,
+		ISOUTBIZ,
+		PJTSTARTDT,
+		PJTENDDT,
+		ORDERCORPCD,
+		CONTDT
+
+FROM(SELECT DISTINCT A.PJTTYPE,
+			A.PJT_NO,
+			A.PJTNAME,
+			A.PMEMPID,
+			B.RECVORDERVIEW,
+			B.ISOUTBIZ,
+			A.PJTSTARTDT,
+			A.PJTENDDT,
+			A.ORDERCORPCD,
+			B.CONTDT,  --계약일자
+			ACCTCD,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'01',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_01 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'02',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_02 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'03',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_03 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'04',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_04 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'05',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_05 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'06',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_06 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'07',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_07 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'08',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_08 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'09',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_09 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'10',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_10 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'11',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_11 ,
+			DECODE(DECODE(B.BUSINESSTYPE,'S',MONTH,SUBSTR(B.CONTDT,5,2)),'12',SUM(DECODE(B.BUSINESSTYPE,'P',DECODE(ACCTCD,'41011',OUTSERVAMT,'41021',GOODSAMT),'S',C.AMT))) AS AMT_12
+FROM
+		PROJECT A ,
+		BUSINESSPJT B,
+		PJTCOSTDETAIL C
+	WHERE A.PJT_NO=B.PJT_NO
+	AND   A.PJT_NO=C.PJT_NO
+	AND C.YEAR= substr(?,1,4)
+	AND A.PJTDIV LIKE '%'||?||'%' 
+	AND A.PMEMPID LIKE  '%'||?||'%' 
+	AND A.PJTNAME LIKE '%'||?||'%'
+	AND C.COSTTYPE='T'
+	AND C.ACCTCD IN ('41011','41021','41011','41021')--2007-11-29
+	AND B.CONTDT>= substr(?,1,4)||'%'  --||?||?||?
+	GROUP BY A.PJTTYPE,
+			 A.PJT_NO,
+			 PJTNAME,
+			 A.PMEMPID,
+			 B.RECVORDERVIEW,
+			 B.ISOUTBIZ,
+			 A.PJTSTARTDT,
+			 A.PJTENDDT,
+			 A.ORDERCORPCD,
+			 B.CONTDT,
+			 ACCTCD,
+			 MONTH,
+			 B.BUSINESSTYPE
+)
+GROUP BY	PJTTYPE,
+			PJT_NO,
+			PJTNAME,
+			ACCTCD ,
+			PMEMPID,
+			RECVORDERVIEW,
+			ISOUTBIZ,
+			PJTSTARTDT,
+			PJTENDDT,
+			ORDERCORPCD,
+			CONTDT
+) A
+order by pjt_no
+]]>
+</sql-content>
+</sql-mapping>
+
+<sql-mapping  id="listSalesPlanInq"   value-count="5" url="년간매출계획 조회" >  
+<sql-content>
+<![CDATA[
+	SELECT (SELECT PJT_NO FROM PROJECT B WHERE B.PJTCD=A.DYPLANCD) AS PJT_NO,	
+		   A.YPLANCD,A.DYPLANCD,A.DYPLANSTARTDT,A.DYPLANENDDT,
+		   A.CREMPID,TO_EMPKNAME(A.CREMPID) CREMPNAME,
+		   A.DYPLANSTATUS,A.ISDEFECT,A.DYPLANNAME,
+		   A.ORGCD,TO_ORGCDNAME(A.ORGCD) ORGNAME,A.YEARPLANTYPE,
+		   A.ACCTCD,TO_ACCTNAME(A.ACCTCD) ACCTNAME,
+		   A.AMT_01,A.AMT_02,A.AMT_03,A.AMT_04,A.AMT_05,A.AMT_06,
+		   A.AMT_07,A.AMT_08,A.AMT_09,A.AMT_10,A.AMT_11,A.AMT_12,
+		   A.SUMAMT,
+		    SUM(A.AMT_01)OVER() SUMAMT_01,
+			SUM(A.AMT_02)OVER() SUMAMT_02,
+			SUM(A.AMT_03)OVER() SUMAMT_03,
+			SUM(A.AMT_04)OVER() SUMAMT_04,
+			SUM(A.AMT_05)OVER() SUMAMT_05,
+			SUM(A.AMT_06)OVER() SUMAMT_06,
+			SUM(A.AMT_07)OVER() SUMAMT_07,
+			SUM(A.AMT_08)OVER() SUMAMT_08,
+			SUM(A.AMT_09)OVER() SUMAMT_09,
+			SUM(A.AMT_10)OVER() SUMAMT_10,
+			SUM(A.AMT_11)OVER() SUMAMT_11,
+			SUM(A.AMT_12)OVER() SUMAMT_12,
+			A.SUMAMTALL,
+            SUM(A.AMT_01)OVER(PARTITION BY ACCTCD) SUBSUMAMT_01,
+            SUM(A.AMT_02)OVER(PARTITION BY ACCTCD) SUBSUMAMT_02,
+            SUM(A.AMT_03)OVER(PARTITION BY ACCTCD) SUBSUMAMT_03,
+            SUM(A.AMT_04)OVER(PARTITION BY ACCTCD) SUBSUMAMT_04,
+            SUM(A.AMT_05)OVER(PARTITION BY ACCTCD) SUBSUMAMT_05,
+            SUM(A.AMT_06)OVER(PARTITION BY ACCTCD) SUBSUMAMT_06,
+            SUM(A.AMT_07)OVER(PARTITION BY ACCTCD) SUBSUMAMT_07,
+            SUM(A.AMT_08)OVER(PARTITION BY ACCTCD) SUBSUMAMT_08,
+            SUM(A.AMT_09)OVER(PARTITION BY ACCTCD) SUBSUMAMT_09,
+            SUM(A.AMT_10)OVER(PARTITION BY ACCTCD) SUBSUMAMT_10,
+            SUM(A.AMT_11)OVER(PARTITION BY ACCTCD) SUBSUMAMT_11,
+            SUM(A.AMT_12)OVER(PARTITION BY ACCTCD) SUBSUMAMT_12,
+			SUM(A.SUMAMT)OVER(PARTITION BY ACCTCD) subSumAmtAll,
+            (SELECT DECODE(ISOUTBIZ,'B','대내','대외') FROM BUSINESSPJT G WHERE G.PJT_NO=TO_PJTCD_TONO(A.DYPLANCD)) AS BIZDIV
+	FROM (
+		SELECT 	A.YPLANCD,A.DYPLANCD,A.DYPLANSTARTDT,A.DYPLANENDDT,
+				A.CREMPID,TO_EMPKNAME(A.CREMPID) CREMPNAME,
+			    A.DYPLANSTATUS,A.ISDEFECT,A.DYPLANNAME,A.ORGCD,
+			    TO_ORGCDNAME(A.ORGCD) ORGNAME,A.YEARPLANTYPE
+			   ,B.ACCTCD,TO_ACCTNAME(B.ACCTCD) ACCTNAME
+			   ,B.AMT_01,B.AMT_02,B.AMT_03,B.AMT_04,B.AMT_05,B.AMT_06
+			   ,B.AMT_07,B.AMT_08,B.AMT_09,B.AMT_10,B.AMT_11,B.AMT_12
+			   ,B.AMT_01+B.AMT_02+B.AMT_03+B.AMT_04+B.AMT_05
+			   +B.AMT_06+B.AMT_07+B.AMT_08+B.AMT_09+B.AMT_10
+			   +B.AMT_11+B.AMT_12 SUMAMT
+			   ,SUM(B.AMT_01+B.AMT_02+B.AMT_03+B.AMT_04+B.AMT_05
+			   +B.AMT_06+B.AMT_07+B.AMT_08+B.AMT_09+B.AMT_10
+			   +B.AMT_11+B.AMT_12)OVER()	SUMAMTALL   
+		FROM (
+			SELECT * 
+			FROM DETAILYEARPLAN A
+			WHERE A.YEARPLANTYPE='P'
+			AND   A.YPLANCD = ?
+			AND  (A.CREMPID LIKE ?||'%' OR ? IS NULL)
+			AND   A.DYPLANNAME LIKE '%'||?||'%'
+			AND   A.ORGCD IN (									
+					SELECT ORGCD 
+					FROM ORG A
+					WHERE ORG_NO IN (SELECT ORG_NO FROM ORGHISTORY WHERE ENDDT >= TO_CHAR(SYSDATE,'YYYYMMDD'))
+					START WITH A.ORGCD = ?
+					CONNECT BY PRIOR TO_CHAR(A.ORG_NO) = A.HIGHORGCD 
+					)
+		) A,(
+			 SELECT * 
+			 FROM BUDGETPLAN A
+			 WHERE A.ACCTCD IN ('41011','41021','41010','41020')
+			 AND   A.ISDEFAULT='C'
+		) B
+		WHERE A.DYPLANCD = B.DYPLANCD 
+		AND A.YPLANCD=B.YPLANCD
+	) A
+	ORDER BY A.YPLANCD,A.ORGCD,A.DYPLANCD,A.ACCTCD
+ 
+]]>
+</sql-content>
+</sql-mapping>
+
+	
+	
+</sql>
